@@ -80,7 +80,7 @@ let inline parseJSON (x: string) : 'a ChoiceS =
 let inline (.>) (o: IReadOnlyDictionary<string, JsonValue>) key = 
     match o.TryGetValue key with
     | true, value -> fromJSON value
-    | _ -> Failure ("Key " + key  + " not found")
+    | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
 
 let inline private tuple2 x y = x,y
 let inline private tuple3 x y z = x,y,z
