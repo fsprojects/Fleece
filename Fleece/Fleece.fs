@@ -52,6 +52,11 @@ type FromJSON = FromJSON with
         | JString b -> Success b
         | a -> Failure ("Expected string, actual " + a.ToString())
 
+    static member instance (FromJSON, _: decimal, _: decimal ChoiceS) = fun (x: JsonValue) ->
+        match x with
+        | JNumber b -> Success b
+        | a -> Failure ("Expected decimal, actual " + a.ToString())
+
     static member instance (FromJSON, _: int, _: int ChoiceS) = fun (x: JsonValue) -> 
         match x with
         | JNumber b ->
