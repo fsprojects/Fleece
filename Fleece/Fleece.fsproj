@@ -42,33 +42,56 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FsControl.Core">
+    <Reference Include="FsControl.Core" Condition="$(TargetFrameworkVersion) != 'v3.5'">
       <HintPath>..\packages\FsControl.1.0.7\lib\net40\FsControl.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="FSharpPlus">
+    <Reference Include="FsControl.Core" Condition="$(TargetFrameworkVersion) == 'v3.5'">
+      <HintPath>..\lib\FsControl.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharpPlus" Condition="$(TargetFrameworkVersion) != 'v3.5'">
       <HintPath>..\packages\FSharpPlus.0.0.2\lib\net40\FSharpPlus.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Reference Include="FSharpPlus" Condition="$(TargetFrameworkVersion) == 'v3.5'">
+      <HintPath>..\lib\FSharpPlus.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ReadOnlyCollectionsExtensions">
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition="$(TargetFrameworkVersion) != 'v3.5'">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Core, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition="$(TargetFrameworkVersion) == 'v3.5'">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ReadOnlyCollectionsExtensions" Condition="$(TargetFrameworkVersion) != 'v3.5'">
       <HintPath>..\packages\ReadOnlyCollectionExtensions.1.0.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ReadOnlyCollectionsInterfaces">
+    <Reference Include="ReadOnlyCollectionsInterfaces" Condition="$(TargetFrameworkVersion) != 'v3.5'">
       <HintPath>..\packages\ReadOnlyCollectionInterfaces.1.0.0\lib\NET40-client\ReadOnlyCollectionsInterfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ReadOnlyCollectionsExtensions" Condition="$(TargetFrameworkVersion) == 'v3.5'">
+      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.0.0\lib\NET35\ReadOnlyCollectionsExtensions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ReadOnlyCollectionsInterfaces" Condition="$(TargetFrameworkVersion) == 'v3.5'">
+      <HintPath>..\packages\ReadOnlyCollectionInterfaces.1.0.0\lib\NET20\ReadOnlyCollectionsInterfaces.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Json">
+    <Reference Include="System.Json" Condition="$(TargetFrameworkVersion) != 'v3.5'">
       <HintPath>..\packages\System.Json.4.0.20126.16343\lib\net40\System.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Numerics" />
+    <Reference Include="System.Json" Condition="$(TargetFrameworkVersion) == 'v3.5'">
+      <HintPath>..\lib\System.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics" Condition="$(TargetFrameworkVersion) != 'v3.5'" />
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
