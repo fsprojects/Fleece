@@ -1,0 +1,5 @@
+*.ide
+*.suo
+*/bin/*
+*/obj/*
+packages/*
