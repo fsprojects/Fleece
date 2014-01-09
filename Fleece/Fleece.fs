@@ -66,6 +66,12 @@ type FromJSON = FromJSON with
 
 let inline fromJSON (x: JsonValue) : 'a ChoiceS = Inline.instance (FromJSON, Unchecked.defaultof<'a>) x
 
+let inline parseJSON (x: string) : 'a ChoiceS =
+    try
+        let json = JsonValue.Parse x
+        fromJSON json
+    with e -> Failure (e.ToString())
+
 let inline (.>) (o: IReadOnlyDictionary<string, JsonValue>) key = 
     match o.TryGetValue key with
     | true, value -> fromJSON value
