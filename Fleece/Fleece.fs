@@ -77,6 +77,9 @@ let inline (.>) (o: IReadOnlyDictionary<string, JsonValue>) key =
     | true, value -> fromJSON value
     | _ -> Failure ("Key " + key  + " not found")
 
+let inline private tuple2 x y = x,y
+let inline private tuple3 x y z = x,y,z
+
 type FromJSON with
     static member inline instance (FromJSON,  _: 'a array, _: 'a array ChoiceS) = fun (x: JsonValue) ->
         match x with
@@ -90,6 +93,24 @@ type FromJSON with
         | JArray a -> 
             let xx : 'a ChoiceS seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toList
+        | a -> Failure ("Expected array, found " + a.ToString())
+
+    static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ChoiceS) = fun (x: JsonValue) ->
+        match x with
+        | JArray a ->
+            if a.Count <> 2 then
+                Failure ("Expected array with 2 items, was: " + x.ToString())
+            else
+                tuple2 <!> (fromJSON a.[0]) <*> (fromJSON a.[1])
+        | a -> Failure ("Expected array, found " + a.ToString())
+
+    static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ChoiceS) = fun (x: JsonValue) ->
+        match x with
+        | JArray a ->
+            if a.Count <> 3 then
+                Failure ("Expected array with 3 items, was: " + x.ToString())
+            else
+                tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
         | a -> Failure ("Expected array, found " + a.ToString())
 
 //type Person = {
