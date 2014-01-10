@@ -117,20 +117,3 @@ type FromJSON with
             else
                 tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
         | a -> Failure ("Expected array, found " + a.ToString())
-
-//type Person = {
-//    Name: string
-//    Age: int
-//    Children: Person list
-//}
-//
-//type Person with
-//    static member Create (name: string) (age: int) (children: Person list) = { Person.Name = name; Age = age; Children = children }
-//    static member instance (FromJSON, _: Person, _: Person ChoiceS) = fun (x: JsonValue) ->
-//        match x with
-//        | JObject o -> Person.Create <!> (o .> "name") <*> (o .> "age") <*> (o .> "children")
-//        | _ -> Failure ("Expected object, found " + x.ToString())
-//
-//let json = JsonValue.Parse """{"name": "John", "age": 23, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
-//let x : Person ChoiceS = fromJSON json
-//printfn "%A" x
