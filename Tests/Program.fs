@@ -11,7 +11,7 @@ type Person = {
 
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
-    static member instance (FromJSON, _: Person, _: Person ChoiceS) = 
+    static member instance (FromJSON, _: Person, _: Person ParseResult) = 
         function
         | JObject o -> Person.Create <!> (o .> "name") <*> (o .> "age") <*> (o .> "children")
         | x -> Failure ("Expected person, found " + x.ToString())
@@ -22,7 +22,7 @@ type Attribute = {
 }
 
 type Attribute with
-    static member instance (FromJSON, _: Attribute, _: Attribute ChoiceS) =
+    static member instance (FromJSON, _: Attribute, _: Attribute ParseResult) =
         function
         | JObject o -> 
             monad {
@@ -41,7 +41,7 @@ type Attribute with
 let tests = 
     testList "From JSON" [
         test "attribute ok" {
-            let actual : Attribute ChoiceS = parseJSON """{"name": "a name", "value": "a value"}"""
+            let actual : Attribute ParseResult = parseJSON """{"name": "a name", "value": "a value"}"""
             let expected = 
                 { Attribute.Name = "a name"
                   Value = "a value" }
@@ -49,14 +49,14 @@ let tests =
         }
 
         test "attribute with null name" {
-            let actual : Attribute ChoiceS = parseJSON """{"name": null, "value": "a value"}"""
+            let actual : Attribute ParseResult = parseJSON """{"name": null, "value": "a value"}"""
             match actual with
-            | Choice1Of2 a -> failtest "should have failed"
-            | Choice2Of2 e -> ()
+            | Success a -> failtest "should have failed"
+            | Failure e -> ()
         }
 
         test "attribute with null value" {
-            let actual : Attribute ChoiceS = parseJSON """{"name": "a name", "value": null}"""
+            let actual : Attribute ParseResult = parseJSON """{"name": "a name", "value": null}"""
             let expected = 
                 { Attribute.Name = "a name"
                   Value = null }
@@ -64,7 +64,7 @@ let tests =
         }
 
         test "Person recursive" {
-            let actual : Person ChoiceS = parseJSON """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
+            let actual : Person ParseResult = parseJSON """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
             let expectedPerson = 
                 { Person.Name = "John"
                   Age = 44

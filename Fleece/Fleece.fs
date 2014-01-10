@@ -32,34 +32,38 @@ let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
 let inline JString (x: string) = JsonPrimitive x :> JsonValue
 let JNull = JsonPrimitive("").ValueOrDefault(0)
 
+let (|Success|Failure|) =
+    function
+    | Choice1Of2 x -> Success x
+    | Choice2Of2 x -> Failure x
+
+let inline Success x = Choice1Of2 x
+let inline Failure x = Choice2Of2 x
 
 open FsControl
 open FsControl.Core
 open FSharpPlus
 
-let inline Success x = Choice1Of2 x
-let inline Failure x = Choice2Of2 x
-
-type 'a ChoiceS = Choice<'a, string>
+type 'a ParseResult = Choice<'a, string>
 
 type FromJSON = FromJSON with
-    static member instance (FromJSON, _: bool, _: bool ChoiceS) = 
+    static member instance (FromJSON, _: bool, _: bool ParseResult) = 
         function
         | JBool b -> Success b
         | a -> Failure (sprintf "Expected bool, actual %A" a)
 
-    static member instance (FromJSON, _: string, _: string ChoiceS) =
+    static member instance (FromJSON, _: string, _: string ParseResult) =
         function
         | JString b -> Success b
         | JNull -> Success null
         | a -> Failure (sprintf "Expected string, actual %A" a)
 
-    static member instance (FromJSON, _: decimal, _: decimal ChoiceS) =
+    static member instance (FromJSON, _: decimal, _: decimal ParseResult) =
         function
         | JNumber b -> Success b
         | a -> Failure (sprintf "Expected decimal, actual %A" a)
 
-    static member instance (FromJSON, _: int, _: int ChoiceS) =
+    static member instance (FromJSON, _: int, _: int ParseResult) =
         function
         | JNumber b ->
             if Decimal.Truncate b = b then
@@ -71,9 +75,9 @@ type FromJSON = FromJSON with
                 Failure ("Invalid int " + b.ToString(CultureInfo.InvariantCulture))
         | a -> Failure (sprintf "Expected int, actual %A" a)
 
-let inline fromJSON (x: JsonValue) : 'a ChoiceS = Inline.instance (FromJSON, Unchecked.defaultof<'a>) x
+let inline fromJSON (x: JsonValue) : 'a ParseResult = Inline.instance (FromJSON, Unchecked.defaultof<'a>) x
 
-let inline parseJSON (x: string) : 'a ChoiceS =
+let inline parseJSON (x: string) : 'a ParseResult =
     try
         let json = JsonValue.Parse x
         fromJSON json
@@ -88,21 +92,21 @@ let inline private tuple2 x y = x,y
 let inline private tuple3 x y z = x,y,z
 
 type FromJSON with
-    static member inline instance (FromJSON,  _: 'a array, _: 'a array ChoiceS) =
+    static member inline instance (FromJSON,  _: 'a array, _: 'a array ParseResult) =
         function
         | JArray a -> 
-            let xx : 'a ChoiceS seq = Seq.map fromJSON a
+            let xx : 'a ParseResult seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toArray
         | a -> Failure (sprintf "Expected array, found %A" a)
 
-    static member inline instance (FromJSON,  _: 'a list, _: 'a list ChoiceS) =
+    static member inline instance (FromJSON,  _: 'a list, _: 'a list ParseResult) =
         function
         | JArray a -> 
-            let xx : 'a ChoiceS seq = Seq.map fromJSON a
+            let xx : 'a ParseResult seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toList
         | a -> Failure (sprintf "Expected array, found %A" a)
 
-    static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ChoiceS) =
+    static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ParseResult) =
         function
         | JArray a as x ->
             if a.Count <> 2 then
@@ -111,7 +115,7 @@ type FromJSON with
                 tuple2 <!> (fromJSON a.[0]) <*> (fromJSON a.[1])
         | a -> Failure (sprintf "Expected array, found %A" a)
 
-    static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ChoiceS) =
+    static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ParseResult) =
         function
         | JArray a as x ->
             if a.Count <> 3 then
