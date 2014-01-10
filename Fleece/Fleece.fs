@@ -21,6 +21,7 @@ let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         | JsonType.String -> JString (x.ReadAs<string>())
         | JsonType.Default -> JNull
         | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
+    | null -> JNull
     | _ -> failwithf "Invalid JsonValue %A" o
 
 
@@ -45,17 +46,18 @@ type FromJSON = FromJSON with
     static member instance (FromJSON, _: bool, _: bool ChoiceS) = fun (x: JsonValue) -> 
         match x with
         | JBool b -> Success b
-        | a -> Failure ("Expected bool, actual " + a.ToString())
+        | a -> Failure (sprintf "Expected bool, actual %A" a)
 
     static member instance (FromJSON, _: string, _: string ChoiceS) = fun (x: JsonValue) -> 
         match x with
         | JString b -> Success b
-        | a -> Failure ("Expected string, actual " + a.ToString())
+        | JNull -> Success null
+        | a -> Failure (sprintf "Expected string, actual %A" a)
 
     static member instance (FromJSON, _: decimal, _: decimal ChoiceS) = fun (x: JsonValue) ->
         match x with
         | JNumber b -> Success b
-        | a -> Failure ("Expected decimal, actual " + a.ToString())
+        | a -> Failure (sprintf "Expected decimal, actual %A" a)
 
     static member instance (FromJSON, _: int, _: int ChoiceS) = fun (x: JsonValue) -> 
         match x with
@@ -67,7 +69,7 @@ type FromJSON = FromJSON with
                 | :? OverflowException -> Failure ("Int overflow: " + b.ToString(CultureInfo.InvariantCulture))
             else
                 Failure ("Invalid int " + b.ToString(CultureInfo.InvariantCulture))
-        | a -> Failure ("Expected int, actual " + a.ToString())
+        | a -> Failure (sprintf "Expected int, actual %A" a)
 
 let inline fromJSON (x: JsonValue) : 'a ChoiceS = Inline.instance (FromJSON, Unchecked.defaultof<'a>) x
 
@@ -91,14 +93,14 @@ type FromJSON with
         | JArray a -> 
             let xx : 'a ChoiceS seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toArray
-        | a -> Failure ("Expected array, found " + a.ToString())
+        | a -> Failure (sprintf "Expected array, found %A" a)
 
     static member inline instance (FromJSON,  _: 'a list, _: 'a list ChoiceS) = fun (x: JsonValue) ->
         match x with
         | JArray a -> 
             let xx : 'a ChoiceS seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toList
-        | a -> Failure ("Expected array, found " + a.ToString())
+        | a -> Failure (sprintf "Expected array, found %A" a)
 
     static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ChoiceS) = fun (x: JsonValue) ->
         match x with
@@ -107,7 +109,7 @@ type FromJSON with
                 Failure ("Expected array with 2 items, was: " + x.ToString())
             else
                 tuple2 <!> (fromJSON a.[0]) <*> (fromJSON a.[1])
-        | a -> Failure ("Expected array, found " + a.ToString())
+        | a -> Failure (sprintf "Expected array, found %A" a)
 
     static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ChoiceS) = fun (x: JsonValue) ->
         match x with
@@ -116,4 +118,4 @@ type FromJSON with
                 Failure ("Expected array with 3 items, was: " + x.ToString())
             else
                 tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
-        | a -> Failure ("Expected array, found " + a.ToString())
+        | a -> Failure (sprintf "Expected array, found %A" a)
