@@ -8,6 +8,7 @@ open ReadOnlyCollectionsExtensions
 
 let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
     match o with
+    | null -> JNull
     | :? JsonArray as x ->
         let values = (x :> JsonValue IList).AsReadOnlyList()
         JArray values
@@ -21,7 +22,6 @@ let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         | JsonType.String -> JString (x.ReadAs<string>())
         | JsonType.Default -> JNull
         | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
-    | null -> JNull
     | _ -> failwithf "Invalid JsonValue %A" o
 
 
@@ -43,24 +43,24 @@ let inline Failure x = Choice2Of2 x
 type 'a ChoiceS = Choice<'a, string>
 
 type FromJSON = FromJSON with
-    static member instance (FromJSON, _: bool, _: bool ChoiceS) = fun (x: JsonValue) -> 
-        match x with
+    static member instance (FromJSON, _: bool, _: bool ChoiceS) = 
+        function
         | JBool b -> Success b
         | a -> Failure (sprintf "Expected bool, actual %A" a)
 
-    static member instance (FromJSON, _: string, _: string ChoiceS) = fun (x: JsonValue) -> 
-        match x with
+    static member instance (FromJSON, _: string, _: string ChoiceS) =
+        function
         | JString b -> Success b
         | JNull -> Success null
         | a -> Failure (sprintf "Expected string, actual %A" a)
 
-    static member instance (FromJSON, _: decimal, _: decimal ChoiceS) = fun (x: JsonValue) ->
-        match x with
+    static member instance (FromJSON, _: decimal, _: decimal ChoiceS) =
+        function
         | JNumber b -> Success b
         | a -> Failure (sprintf "Expected decimal, actual %A" a)
 
-    static member instance (FromJSON, _: int, _: int ChoiceS) = fun (x: JsonValue) -> 
-        match x with
+    static member instance (FromJSON, _: int, _: int ChoiceS) =
+        function
         | JNumber b ->
             if Decimal.Truncate b = b then
                 try
@@ -88,32 +88,32 @@ let inline private tuple2 x y = x,y
 let inline private tuple3 x y z = x,y,z
 
 type FromJSON with
-    static member inline instance (FromJSON,  _: 'a array, _: 'a array ChoiceS) = fun (x: JsonValue) ->
-        match x with
+    static member inline instance (FromJSON,  _: 'a array, _: 'a array ChoiceS) =
+        function
         | JArray a -> 
             let xx : 'a ChoiceS seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toArray
         | a -> Failure (sprintf "Expected array, found %A" a)
 
-    static member inline instance (FromJSON,  _: 'a list, _: 'a list ChoiceS) = fun (x: JsonValue) ->
-        match x with
+    static member inline instance (FromJSON,  _: 'a list, _: 'a list ChoiceS) =
+        function
         | JArray a -> 
             let xx : 'a ChoiceS seq = Seq.map fromJSON a
             sequenceA xx |> map Seq.toList
         | a -> Failure (sprintf "Expected array, found %A" a)
 
-    static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ChoiceS) = fun (x: JsonValue) ->
-        match x with
-        | JArray a ->
+    static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ChoiceS) =
+        function
+        | JArray a as x ->
             if a.Count <> 2 then
                 Failure ("Expected array with 2 items, was: " + x.ToString())
             else
                 tuple2 <!> (fromJSON a.[0]) <*> (fromJSON a.[1])
         | a -> Failure (sprintf "Expected array, found %A" a)
 
-    static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ChoiceS) = fun (x: JsonValue) ->
-        match x with
-        | JArray a ->
+    static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ChoiceS) =
+        function
+        | JArray a as x ->
             if a.Count <> 3 then
                 Failure ("Expected array with 3 items, was: " + x.ToString())
             else
