@@ -6,6 +6,8 @@ open System.Json
 open System.Collections.Generic
 open ReadOnlyCollectionsExtensions
 
+// pseudo-AST, wrapping JsonValue subtypes:
+
 let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
     match o with
     | null -> JNull
@@ -32,6 +34,8 @@ let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
 let inline JString (x: string) = JsonPrimitive x :> JsonValue
 let JNull = JsonPrimitive("").ValueOrDefault(0)
 
+// results:
+
 let (|Success|Failure|) =
     function
     | Choice1Of2 x -> Success x
@@ -39,6 +43,8 @@ let (|Success|Failure|) =
 
 let inline Success x = Choice1Of2 x
 let inline Failure x = Choice2Of2 x
+
+// Deserializing:
 
 open FsControl
 open FsControl.Core
@@ -123,3 +129,28 @@ type FromJSON with
             else
                 tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
         | a -> Failure (sprintf "Expected array, found %A" a)
+
+// Serializing:
+
+type ToJSON = ToJSON with
+    static member instance (ToJSON, x: bool, _:JsonValue) = fun () -> JBool x
+    static member instance (ToJSON, x: decimal, _:JsonValue) = fun () -> JNumber x
+    static member instance (ToJSON, x: string, _:JsonValue) = fun () -> JString x
+    static member instance (ToJSON, x: int, _:JsonValue) = fun () -> JNumber (decimal x)
+
+let inline toJSON (x: 'a) : JsonValue = Inline.instance (ToJSON, x) ()
+let jobj x = JObject ((dict x).AsReadOnlyDictionary())
+let inline jpair (key: string) value = key, toJSON value
+
+type ToJSON with
+    static member inline instance (ToJSON, x: 'a list, _:JsonValue) = fun () ->
+        JArray ((List.map toJSON x).ToReadOnlyList())
+
+    static member inline instance (ToJSON, x: 'a array, _:JsonValue) = fun () ->
+        JArray ((Array.map toJSON x).AsReadOnlyList())
+
+    static member inline instance (ToJSON, (a, b), _:JsonValue) = fun () ->
+        JArray ([|toJSON a; toJSON b|].AsReadOnlyList())
+
+    static member inline instance (ToJSON, (a, b, c), _:JsonValue) = fun () ->
+        JArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
