@@ -94,10 +94,25 @@ let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key =
     | true, value -> fromJSON value
     | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
 
+let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key =
+    match o.TryGetValue key with
+    | true, value -> fromJSON value |> map Some
+    | _ -> Success None
+
 let inline private tuple2 x y = x,y
 let inline private tuple3 x y z = x,y,z
 
+
 type FromJSON with
+    static member inline instance (FromJSON, _: Choice<'a, 'b>, _: Choice<'a, 'b> ParseResult) =
+        function
+        | JObject o as jobj ->
+            match Seq.toList o with
+            | [KeyValue("Choice1Of2", a)] -> a |> fromJSON |> map Choice1Of2
+            | [KeyValue("Choice2Of2", a)] -> a |> fromJSON |> map Choice2Of2
+            | _ -> Failure (sprintf "Expected Choice, found %A" jobj)
+        | a -> Failure (sprintf "Expected Choice, found %A" a)
+
     static member inline instance (FromJSON, _: 'a option, _: 'a option ParseResult) =
         function
         | JNull a -> Success None
@@ -150,6 +165,11 @@ let jobj x = JObject ((dict x).AsReadOnlyDictionary())
 let inline jpair (key: string) value = key, toJSON value
 
 type ToJSON with
+    static member inline instance (ToJSON, x: Choice<'a, 'b>, _:JsonValue) = fun () ->
+        match x with
+        | Choice1Of2 a -> jobj [ jpair "Choice1Of2" a ]
+        | Choice2Of2 a -> jobj [ jpair "Choice2Of2" a ]
+
     static member inline instance (ToJSON, x: 'a option, _:JsonValue) = fun () ->
         match x with
         | None -> JNull

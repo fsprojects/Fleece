@@ -137,6 +137,7 @@ let tests =
             yield testProperty "int array" (roundtrip<int array>)
             yield testProperty "int option array" (roundtrip<int option array>)
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
+            yield testProperty "Choice<(int * string) list, Choice<decimal option, string>>" (roundtrip<Choice<(int * string) list, Choice<decimal option, string>>>)
         ]
     ]
 
