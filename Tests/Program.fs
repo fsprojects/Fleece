@@ -135,6 +135,7 @@ let tests =
             yield testProperty "attribute" (roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "int array" (roundtrip<int array>)
+            yield testProperty "int option array" (roundtrip<int option array>)
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
         ]
     ]

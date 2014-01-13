@@ -32,7 +32,7 @@ let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :>
 let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
 let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
 let inline JString (x: string) = JsonPrimitive x :> JsonValue
-let JNull = JsonPrimitive("").ValueOrDefault(0)
+let JNull : JsonValue = null
 
 // results:
 
@@ -98,7 +98,14 @@ let inline private tuple2 x y = x,y
 let inline private tuple3 x y z = x,y,z
 
 type FromJSON with
-    static member inline instance (FromJSON,  _: 'a array, _: 'a array ParseResult) =
+    static member inline instance (FromJSON, _: 'a option, _: 'a option ParseResult) =
+        function
+        | JNull a -> Success None
+        | x -> 
+            let a: 'a ParseResult = fromJSON x
+            map Some a
+
+    static member inline instance (FromJSON, _: 'a array, _: 'a array ParseResult) =
         function
         | JArray a -> 
             let xx : 'a ParseResult seq = Seq.map fromJSON a
@@ -143,6 +150,11 @@ let jobj x = JObject ((dict x).AsReadOnlyDictionary())
 let inline jpair (key: string) value = key, toJSON value
 
 type ToJSON with
+    static member inline instance (ToJSON, x: 'a option, _:JsonValue) = fun () ->
+        match x with
+        | None -> JNull
+        | Some a -> toJSON a
+
     static member inline instance (ToJSON, x: 'a list, _:JsonValue) = fun () ->
         JArray ((List.map toJSON x).ToReadOnlyList())
 
