@@ -17,7 +17,7 @@ type Person with
 
     static member instance (FromJSON, _: Person, _: Person ParseResult) = 
         function
-        | JObject o -> Person.Create <!> (o .> "name") <*> (o .> "age") <*> (o .> "children")
+        | JObject o -> Person.Create <!> jget o "name" <*> jget o "age" <*> jget o "children"
         | x -> Failure (sprintf "Expected person, found %A" x)
 
     static member instance (ToJSON, x: Person, _:JsonValue) = fun () ->
@@ -37,11 +37,11 @@ type Attribute with
         function
         | JObject o -> 
             monad {
-                let! name = o .> "name"
+                let! name = jget o "name"
                 if name = null then 
                     return! Failure "Attribute name was null"
                 else
-                    let! value = o .> "value"
+                    let! value = jget o "value"
                     return {
                         Attribute.Name = name
                         Value = value

@@ -89,7 +89,7 @@ let inline parseJSON (x: string) : 'a ParseResult =
         fromJSON json
     with e -> Failure (e.ToString())
 
-let inline (.>) (o: IReadOnlyDictionary<string, JsonValue>) key = 
+let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key =
     match o.TryGetValue key with
     | true, value -> fromJSON value
     | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
