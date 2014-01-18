@@ -102,9 +102,12 @@ module Fleece =
         | true, value -> fromJSON value |> map Some
         | _ -> Success None
 
-    let inline private tuple2 x y = x,y
-    let inline private tuple3 x y z = x,y,z
-
+    let inline private tuple2 a b = a,b
+    let inline private tuple3 a b c = a,b,c
+    let inline private tuple4 a b c d = a,b,c,d
+    let inline private tuple5 a b c d e = a,b,c,d,e
+    let inline private tuple6 a b c d e f = a,b,c,d,e,f
+    let inline private tuple7 a b c d e f g = a,b,c,d,e,f,g
 
     type FromJSON with
         static member inline instance (FromJSON, _: Choice<'a, 'b>, _: Choice<'a, 'b> ParseResult) =
@@ -155,6 +158,42 @@ module Fleece =
                     tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd, _: ('a * 'b * 'c * 'd) ParseResult) =
+            function
+            | JArray a as x ->
+                if a.Count <> 4 then
+                    Failure ("Expected array with 4 items, was: " + x.ToString())
+                else
+                    tuple4 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3])
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd * 'e, _: ('a * 'b * 'c * 'd * 'e) ParseResult) =
+            function
+            | JArray a as x ->
+                if a.Count <> 5 then
+                    Failure ("Expected array with 5 items, was: " + x.ToString())
+                else
+                    tuple5 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4])
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd * 'e * 'f, _: ('a * 'b * 'c * 'd * 'e * 'f) ParseResult) =
+            function
+            | JArray a as x ->
+                if a.Count <> 6 then
+                    Failure ("Expected array with 6 items, was: " + x.ToString())
+                else
+                    tuple6 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4]) <*> (fromJSON a.[5])
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: ('a * 'b * 'c * 'd * 'e * 'f * 'g) ParseResult) =
+            function
+            | JArray a as x ->
+                if a.Count <> 7 then
+                    Failure ("Expected array with 7 items, was: " + x.ToString())
+                else
+                    tuple7 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4]) <*> (fromJSON a.[5]) <*> (fromJSON a.[6])
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
     // Serializing:
 
     type ToJSON = ToJSON with
@@ -189,6 +228,18 @@ module Fleece =
 
         static member inline instance (ToJSON, (a, b, c), _:JsonValue) = fun () ->
             JArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
+
+        static member inline instance (ToJSON, (a, b, c, d), _:JsonValue) = fun () ->
+            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d|].AsReadOnlyList())
+
+        static member inline instance (ToJSON, (a, b, c, d, e), _:JsonValue) = fun () ->
+            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e|].AsReadOnlyList())
+
+        static member inline instance (ToJSON, (a, b, c, d, e, f), _:JsonValue) = fun () ->
+            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f|].AsReadOnlyList())
+
+        static member inline instance (ToJSON, (a, b, c, d, e, f, g), _:JsonValue) = fun () ->
+            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f; toJSON g|].AsReadOnlyList())
 
     module Operators =
         let inline (.=) key value = jpair key value
