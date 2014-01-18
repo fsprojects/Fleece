@@ -119,6 +119,16 @@ module Fleece =
                 | _ -> Failure (sprintf "Expected Choice, found %A" jobj)
             | a -> Failure (sprintf "Expected Choice, found %A" a)
 
+        static member inline instance (FromJSON, _: Choice<'a, 'b, 'c>, _: Choice<'a, 'b, 'c> ParseResult) =
+            function
+            | JObject o as jobj ->
+                match Seq.toList o with
+                | [KeyValue("Choice1Of3", a)] -> a |> fromJSON |> map Choice1Of3
+                | [KeyValue("Choice2Of3", a)] -> a |> fromJSON |> map Choice2Of3
+                | [KeyValue("Choice3Of3", a)] -> a |> fromJSON |> map Choice3Of3
+                | _ -> Failure (sprintf "Expected Choice, found %A" jobj)
+            | a -> Failure (sprintf "Expected Choice, found %A" a)
+
         static member inline instance (FromJSON, _: 'a option, _: 'a option ParseResult) =
             function
             | JNull a -> Success None
@@ -211,6 +221,12 @@ module Fleece =
             match x with
             | Choice1Of2 a -> jobj [ jpair "Choice1Of2" a ]
             | Choice2Of2 a -> jobj [ jpair "Choice2Of2" a ]
+
+        static member inline instance (ToJSON, x: Choice<'a, 'b, 'c>, _:JsonValue) = fun () ->
+            match x with
+            | Choice1Of3 a -> jobj [ jpair "Choice1Of3" a ]
+            | Choice2Of3 a -> jobj [ jpair "Choice2Of3" a ]
+            | Choice3Of3 a -> jobj [ jpair "Choice3Of3" a ]
 
         static member inline instance (ToJSON, x: 'a option, _:JsonValue) = fun () ->
             match x with
