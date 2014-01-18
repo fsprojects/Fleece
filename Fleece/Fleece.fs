@@ -186,3 +186,8 @@ type ToJSON with
 
     static member inline instance (ToJSON, (a, b, c), _:JsonValue) = fun () ->
         JArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
+
+module Operators =
+    let inline (.=) key value = jpair key value
+    let inline (.@) o key = jget o key
+    let inline (.@?) o key = jgetopt o key

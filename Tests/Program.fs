@@ -4,6 +4,7 @@ open System.Json
 open System.Linq
 open Fuchu
 open Fleece
+open Fleece.Operators
 open FSharpPlus
 
 type Person = {
@@ -17,14 +18,14 @@ type Person with
 
     static member instance (FromJSON, _: Person, _: Person ParseResult) = 
         function
-        | JObject o -> Person.Create <!> jget o "name" <*> jget o "age" <*> jget o "children"
+        | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
     static member instance (ToJSON, x: Person, _:JsonValue) = fun () ->
         jobj [ 
-            jpair "name" x.Name
-            jpair "age" x.Age
-            jpair "children" x.Children
+            "name" .= x.Name
+            "age" .= x.Age
+            "children" .= x.Children
         ]
 
 type Attribute = {
@@ -37,11 +38,11 @@ type Attribute with
         function
         | JObject o -> 
             monad {
-                let! name = jget o "name"
+                let! name = o .@ "name"
                 if name = null then 
                     return! Failure "Attribute name was null"
                 else
-                    let! value = jget o "value"
+                    let! value = o .@ "value"
                     return {
                         Attribute.Name = name
                         Value = value
@@ -50,7 +51,29 @@ type Attribute with
         | x -> Failure (sprintf "Expected Attribute, found %A" x)
 
     static member instance (ToJSON, x: Attribute, _:JsonValue) = fun () ->
-        jobj [ jpair "name" x.Name; jpair "value" x.Value ]
+        jobj [ "name" .= x.Name; "value" .= x.Value ]
+
+type Item = {
+    Id: int
+    Brand: string
+    Availability: string option
+}
+
+type Item with
+    static member instance (FromJSON, _: Item, _: Item ParseResult) =
+        function
+        | JObject o ->
+            monad {
+                let! id = o .@ "id"
+                let! brand = o .@ "brand"
+                let! availability = o .@? "availability"
+                return {
+                    Item.Id = id
+                    Brand = brand
+                    Availability = availability
+                }
+            }
+        | x -> Failure (sprintf "Expected Item, found %A" x)
 
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
@@ -59,6 +82,15 @@ type Assert with
 let tests = 
     TestList [
         testList "From JSON" [
+            test "item with missing key" {
+                let actual : Item ParseResult = parseJSON """{"id": 1, "brand": "Sony"}"""
+                let expected = 
+                    { Item.Id = 1
+                      Brand = "Sony"
+                      Availability = None }
+                Assert.Equal("item", Choice1Of2 expected, actual)
+            }
+
             test "attribute ok" {
                 let actual : Attribute ParseResult = parseJSON """{"name": "a name", "value": "a value"}"""
                 let expected = 
