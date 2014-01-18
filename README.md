@@ -66,9 +66,11 @@ type Person with
                 }
             | x -> Failure (sprintf "Error parsing person: %A" x)
         | x -> Failure (sprintf "Expected person, found %A" x)
+        
+let john : Person ParseResult = parseJSON """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""        
 ```
 
-Though it's much easier to do this in a monadic or applicative way. For example, using [FSharpPlus](https://github.com/gmpl/FSharpPlus):
+Though it's much easier to do this in a monadic or applicative way. For example, using [FSharpPlus](https://github.com/gmpl/FSharpPlus) (which is already a dependency of Fleece):
 
 ```fsharp
 open FSharpPlus
