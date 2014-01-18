@@ -7,6 +7,9 @@ module Fleece =
     open System.Globalization
     open System.Json
     open System.Collections.Generic
+    open FsControl
+    open FsControl.Core
+    open FSharpPlus
     open ReadOnlyCollectionsExtensions
 
     // pseudo-AST, wrapping JsonValue subtypes:
@@ -22,7 +25,7 @@ module Fleece =
             JObject values
         | :? JsonPrimitive as x ->
             match x.JsonType with
-            | JsonType.Number -> JNumber (x.ReadAs<decimal>())
+            | JsonType.Number -> JNumber x
             | JsonType.Boolean -> JBool (x.ReadAs<bool>())
             | JsonType.String -> JString (x.ReadAs<string>())
             | JsonType.Default -> JNull
@@ -49,10 +52,6 @@ module Fleece =
 
     // Deserializing:
 
-    open FsControl
-    open FsControl.Core
-    open FSharpPlus
-
     type 'a ParseResult = Choice<'a, string>
 
     type FromJSON = FromJSON with
@@ -69,19 +68,18 @@ module Fleece =
 
         static member instance (FromJSON, _: decimal, _: decimal ParseResult) =
             function
-            | JNumber b -> Success b
+            | JNumber j -> 
+                match j.TryReadAs<decimal>() with
+                | true, v -> Success v
+                | _ -> Failure (sprintf "Expected decimal, actual %A" j)
             | a -> Failure (sprintf "Expected decimal, actual %A" a)
 
         static member instance (FromJSON, _: int, _: int ParseResult) =
             function
-            | JNumber b ->
-                if Decimal.Truncate b = b then
-                    try
-                        Success (int b)
-                    with
-                    | :? OverflowException -> Failure ("Int overflow: " + b.ToString(CultureInfo.InvariantCulture))
-                else
-                    Failure ("Invalid int " + b.ToString(CultureInfo.InvariantCulture))
+            | JNumber j ->
+                match j.TryReadAs<int>() with
+                | true, v -> Success v
+                | _ -> Failure (sprintf "Expected int, actual %A" j)
             | a -> Failure (sprintf "Expected int, actual %A" a)
 
     let inline fromJSON (x: JsonValue) : 'a ParseResult = Inline.instance (FromJSON, Unchecked.defaultof<'a>) x
