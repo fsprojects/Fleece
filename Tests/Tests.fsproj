@@ -79,7 +79,7 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.fs" />
+    <Compile Include="Tests.fs" />
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
