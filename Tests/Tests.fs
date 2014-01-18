@@ -159,11 +159,23 @@ let tests =
         ]
 
         testList "Roundtrip" [
-            let inline roundtrip p = p |> toJSON |> fromJSON = Success p
+            let inline roundtrip p = 
+                let actual = p |> toJSON |> fromJSON
+                let ok = actual = Success p
+                if not ok then printfn "Got %A from %A" actual p
+                ok
+
             let testProperty name = testPropertyWithConfig { FsCheck.Config.Default with MaxTest = 10000 } name
             yield testProperty "int" (roundtrip<int>)
+            //yield testProperty "uint32" (roundtrip<uint32>) // not handled by FsCheck
+            yield testProperty "int64" (roundtrip<int64>)
+            //yield testProperty "float" (roundtrip<float>) // wrong error due to nan <> nan
+            //yield testProperty "float32" (roundtrip<float32>)  // not handled by FsCheck
             yield testProperty "string" (roundtrip<string>)
             yield testProperty "decimal" (roundtrip<decimal>)
+            yield testProperty "char" (roundtrip<char>)
+            yield testProperty "byte" (roundtrip<byte>)
+            yield testProperty "sbyte" (roundtrip<sbyte>)
             yield testProperty "attribute" (roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "int array" (roundtrip<int array>)
