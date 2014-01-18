@@ -16,3 +16,20 @@ type Person = {
 }
 ```
 
+You can map it to JSON like this:
+
+```fsharp
+open System.Json
+open Fleece
+open Fleece.Operators
+
+type Person with
+    static member instance (ToJSON, x: Person, _:JsonValue) = fun () ->
+        jobj [ 
+            "name" .= x.Name
+            "age" .= x.Age
+            "children" .= x.Children
+        ]
+
+```
+
