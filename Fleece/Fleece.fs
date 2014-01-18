@@ -161,6 +161,13 @@ module Fleece =
                 sequenceA xx |> map Seq.toList
             | a -> failparse "array" a
 
+        static member inline instance (FromJSON,  _: 'a Set, _: 'a Set ParseResult) =
+            function
+            | JArray a -> 
+                let xx : 'a ParseResult seq = Seq.map fromJSON a
+                sequenceA xx |> map set
+            | a -> failparse "array" a
+
         static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ParseResult) =
             function
             | JArray a as x ->
@@ -256,6 +263,9 @@ module Fleece =
 
         static member inline instance (ToJSON, x: 'a list, _:JsonValue) = fun () ->
             JArray ((List.map toJSON x).ToReadOnlyList())
+
+        static member inline instance (ToJSON, x: 'a Set, _:JsonValue) = fun () ->
+            JArray ((Seq.map toJSON x).ToReadOnlyList())
 
         static member inline instance (ToJSON, x: 'a array, _:JsonValue) = fun () ->
             JArray ((Array.map toJSON x).AsReadOnlyList())
