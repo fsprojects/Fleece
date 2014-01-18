@@ -31,6 +31,20 @@ type Person with
             "children" .= x.Children
         ]
 
+let p = 
+    { Person.Name = "John"
+      Age = 44
+      Children = 
+      [
+        { Person.Name = "Katy"
+          Age = 5
+          Children = [] }
+        { Person.Name = "Johnny"
+          Age = 7
+          Children = [] }
+      ] }
+
+printfn "%s" ((toJSON p).ToString())
 ```
 
 And you can map it from JSON like this:
