@@ -98,6 +98,26 @@ module Fleece =
         static member FromJSON (_: Double) = tryRead<Double> "double"
         static member FromJSON (_: Single) = tryRead<Single> "single"
 
+        static member FromJSON (_: DateTime) =
+            function
+            | JString s ->
+                if s = null 
+                    then Failure "Expected DateTime, got null"
+                    else match DateTime.TryParseExact(s, "yyyy-MM-ddTHH:mm:ssZ", null, DateTimeStyles.RoundtripKind) with
+                         | true, t -> Success t
+                         | _ -> Failure (sprintf "Invalid DateTime %s" s)
+            | a -> failparse "DateTime" a
+
+        static member FromJSON (_: DateTimeOffset) =
+            function
+            | JString s ->
+                if s = null 
+                    then Failure "Expected DateTimeOffset, got null"
+                    else match DateTimeOffset.TryParseExact(s, "yyyy-MM-ddTHH:mm:ssK", null, DateTimeStyles.RoundtripKind) with
+                         | true, t -> Success t
+                         | _ -> Failure (sprintf "Invalid DateTimeOffset %s" s)
+            | a -> failparse "DateTimeOffset" a
+
     module internal FromJSONOverloads =
         let inline instance (a: ^a, b: ^b) =
             ((^a or ^b) : (static member FromJSON: ^b -> (JsonValue -> ^b ParseResult)) b)
@@ -246,6 +266,8 @@ module Fleece =
         static member ToJSON (x: byte) = JsonPrimitive x :> JsonValue
         static member ToJSON (x: sbyte) = JsonPrimitive x :> JsonValue
         static member ToJSON (x: char) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: DateTime) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssZ")) // JsonPrimitive is incorrect for DateTime
+        static member ToJSON (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssK")) // JsonPrimitive is incorrect for DateTimeOffset
 
     module internal ToJSONOverloads =
         let inline instance (a: ^a, b: ^b) =

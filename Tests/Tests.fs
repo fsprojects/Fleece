@@ -1,4 +1,5 @@
-﻿open ReadOnlyCollectionsExtensions
+﻿open System
+open ReadOnlyCollectionsExtensions
 open System.Collections.Generic
 open System.Json
 open System.Linq
@@ -141,6 +142,14 @@ let tests =
                 Assert.JSON("[1,2]", (1,2))
             }
 
+            test "DateTime" {
+                Assert.JSON("\"2000-03-01T16:23:34Z\"", DateTime(2000, 3, 1, 16, 23, 34))
+            }
+
+            test "DateTimeOffset" {
+                Assert.JSON("\"2000-03-01T16:23:34+03:00\"", DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
+            }
+
             test "Person" {
                 let p = 
                     { Person.Name = "John"
@@ -173,6 +182,8 @@ let tests =
             //yield testProperty "float32" (roundtrip<float32>)  // not handled by FsCheck
             yield testProperty "string" (roundtrip<string>)
             yield testProperty "decimal" (roundtrip<decimal>)
+            yield testProperty "DateTime" (roundtrip<DateTime>)
+            yield testProperty "DateTimeOffset" (roundtrip<DateTimeOffset>)
             yield testProperty "char" (roundtrip<char>)
             yield testProperty "byte" (roundtrip<byte>)
             yield testProperty "sbyte" (roundtrip<sbyte>)
