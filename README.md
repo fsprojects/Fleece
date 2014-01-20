@@ -109,3 +109,6 @@ type Person with
             }
         | x -> Failure (sprintf "Expected person, found %A" x)
 ```
+
+
+You can see more examples in the [EdmundsNet](https://github.com/mausch/EdmundsNet) project.
