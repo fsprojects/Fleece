@@ -92,8 +92,8 @@ module Fleece =
 
         static member FromJSON (_: byte) = tryRead<byte> "byte"
         static member FromJSON (_: sbyte) = tryRead<sbyte> "sbyte"
-        static member FromJSON (_: Double) = tryRead<Double> "int"
-        static member FromJSON (_: Single) = tryRead<Single> "int"
+        static member FromJSON (_: Double) = tryRead<Double> "double"
+        static member FromJSON (_: Single) = tryRead<Single> "single"
 
     module internal FromJSONOverloads =
         let inline instance (a: ^a, b: ^b) =
