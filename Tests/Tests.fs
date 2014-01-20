@@ -183,6 +183,11 @@ let tests =
             yield testProperty "int option array" (roundtrip<int option array>)
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
             yield testProperty "Choice<(int * string) list, Choice<decimal option, string>>" (roundtrip<Choice<(int * string) list, Choice<decimal option, string>>>)
+
+            yield test "null string" {
+                let a: string = null
+                if not (roundtrip a) then failtest ""
+            }
         ]
     ]
 

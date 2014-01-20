@@ -36,8 +36,11 @@ module Fleece =
     let inline JArray (x: JsonValue IReadOnlyList) = JsonArray x :> JsonValue
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :> JsonValue
     let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
-    let inline JString (x: string) = JsonPrimitive x :> JsonValue
     let JNull : JsonValue = null
+    let inline JString (x: string) = 
+        if x = null 
+            then JNull
+            else JsonPrimitive x :> JsonValue
 
     // results:
 
