@@ -24,7 +24,7 @@ open Fleece
 open Fleece.Operators
 
 type Person with
-    static member instance (ToJSON, x: Person, _:JsonValue) = fun () ->
+    static member ToJSON (x: Person) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
@@ -51,7 +51,7 @@ And you can map it from JSON like this:
 
 ```fsharp
 type Person with
-    static member instance (FromJSON, _: Person, _: Person ParseResult) = 
+    static member FromJSON (_: Person) =
         function
         | JObject o ->
             let name = o .@ "name"
@@ -78,7 +78,7 @@ open FSharpPlus
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member instance (FromJSON, _: Person, _: Person ParseResult) = 
+    static member FromJSON (_: Person) =
         function
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
@@ -90,7 +90,7 @@ Or monadically:
 
 ```fsharp
 type Person with
-    static member instance (FromJSON, _: Person, _: Person ParseResult) = 
+    static member FromJSON (_: Person) = 
         function
         | JObject o -> 
             monad {
