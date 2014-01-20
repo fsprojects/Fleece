@@ -16,12 +16,12 @@ type Person = {
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member instance (FromJSON, _: Person, _: Person ParseResult) = 
+    static member FromJSON (_: Person) = 
         function
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
-    static member instance (ToJSON, x: Person, _:JsonValue) = fun () ->
+    static member ToJSON (x: Person) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
@@ -34,7 +34,7 @@ type Attribute = {
 }
 
 type Attribute with
-    static member instance (FromJSON, _: Attribute, _: Attribute ParseResult) =
+    static member FromJSON (_: Attribute) =
         function
         | JObject o -> 
             monad {
@@ -50,7 +50,7 @@ type Attribute with
             }
         | x -> Failure (sprintf "Expected Attribute, found %A" x)
 
-    static member instance (ToJSON, x: Attribute, _:JsonValue) = fun () ->
+    static member ToJSON (x: Attribute) =
         jobj [ "name" .= x.Name; "value" .= x.Value ]
 
 type Item = {
@@ -60,7 +60,7 @@ type Item = {
 }
 
 type Item with
-    static member instance (FromJSON, _: Item, _: Item ParseResult) =
+    static member FromJSON (_: Item) =
         function
         | JObject o ->
             monad {

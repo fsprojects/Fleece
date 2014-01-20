@@ -63,26 +63,26 @@ module Fleece =
             | _ -> failparse s j
         | a -> failparse s a
 
-    type FromJSON = FromJSON with
-        static member instance (FromJSON, _: bool, _: bool ParseResult) = 
+    type FromJSONClass = FromJSONClass with
+        static member FromJSON (_: bool) = 
             function
             | JBool b -> Success b
             | a -> failparse "bool" a
 
-        static member instance (FromJSON, _: string, _: string ParseResult) =
+        static member FromJSON (_: string) =
             function
             | JString b -> Success b
             | JNull -> Success null
             | a -> failparse "string" a
 
-        static member instance (FromJSON, _: decimal, _: decimal ParseResult) = tryRead<decimal> "decimal"
-        static member instance (FromJSON, _: int, _: int ParseResult) = tryRead<int> "int"
-        static member instance (FromJSON, _: uint32, _: uint32 ParseResult) = tryRead<uint32> "uint32"
-        static member instance (FromJSON, _: int64, _: int64 ParseResult) = tryRead<int64> "int64"
-        static member instance (FromJSON, _: uint64, _: uint64 ParseResult) = tryRead<uint64> "uint64"
-        static member instance (FromJSON, _: int16, _: int16 ParseResult) = tryRead<int16> "int16"
-        static member instance (FromJSON, _: uint16, _: uint16 ParseResult) = tryRead<uint16> "uint16"
-        static member instance (FromJSON, _: char, _: char ParseResult) =
+        static member FromJSON (_: decimal) = tryRead<decimal> "decimal"
+        static member FromJSON (_: int) = tryRead<int> "int"
+        static member FromJSON (_: uint32) = tryRead<uint32> "uint32"
+        static member FromJSON (_: int64) = tryRead<int64> "int64"
+        static member FromJSON (_: uint64) = tryRead<uint64> "uint64"
+        static member FromJSON (_: int16) = tryRead<int16> "int16"
+        static member FromJSON (_: uint16) = tryRead<uint16> "uint16"
+        static member FromJSON (_: char) =
             function
             | JString s -> 
                 if s = null
@@ -90,12 +90,16 @@ module Fleece =
                     else Success s.[0]
             | a -> failparse "char" a
 
-        static member instance (FromJSON, _: byte, _: byte ParseResult) = tryRead<byte> "byte"
-        static member instance (FromJSON, _: sbyte, _: sbyte ParseResult) = tryRead<sbyte> "sbyte"
-        static member instance (FromJSON, _: Double, _: Double ParseResult) = tryRead<Double> "int"
-        static member instance (FromJSON, _: Single, _: Single ParseResult) = tryRead<Single> "int"
+        static member FromJSON (_: byte) = tryRead<byte> "byte"
+        static member FromJSON (_: sbyte) = tryRead<sbyte> "sbyte"
+        static member FromJSON (_: Double) = tryRead<Double> "int"
+        static member FromJSON (_: Single) = tryRead<Single> "int"
 
-    let inline fromJSON (x: JsonValue) : 'a ParseResult = Inline.instance (FromJSON, Unchecked.defaultof<'a>) x
+    module internal FromJSONOverloads =
+        let inline instance (a: ^a, b: ^b) =
+            ((^a or ^b) : (static member FromJSON: ^b -> (JsonValue -> ^b ParseResult)) b)
+
+    let inline fromJSON (x: JsonValue) : 'a ParseResult = FromJSONOverloads.instance (FromJSONClass, Unchecked.defaultof<'a>) x
 
     let inline parseJSON (x: string) : 'a ParseResult =
         try
@@ -120,8 +124,8 @@ module Fleece =
     let inline private tuple6 a b c d e f = a,b,c,d,e,f
     let inline private tuple7 a b c d e f g = a,b,c,d,e,f,g
 
-    type FromJSON with
-        static member inline instance (FromJSON, _: Choice<'a, 'b>, _: Choice<'a, 'b> ParseResult) =
+    type FromJSONClass with
+        static member inline FromJSON (_: Choice<'a, 'b>) =
             function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -130,7 +134,7 @@ module Fleece =
                 | _ -> failparse "Choice" jobj
             | a -> failparse "Choice" a
 
-        static member inline instance (FromJSON, _: Choice<'a, 'b, 'c>, _: Choice<'a, 'b, 'c> ParseResult) =
+        static member inline FromJSON (_: Choice<'a, 'b, 'c>) =
             function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -140,35 +144,35 @@ module Fleece =
                 | _ -> failparse "Choice" jobj
             | a -> failparse "Choice" a
 
-        static member inline instance (FromJSON, _: 'a option, _: 'a option ParseResult) =
+        static member inline FromJSON (_: 'a option) =
             function
             | JNull a -> Success None
             | x -> 
                 let a: 'a ParseResult = fromJSON x
                 map Some a
 
-        static member inline instance (FromJSON, _: 'a array, _: 'a array ParseResult) =
+        static member inline FromJSON (_: 'a array) =
             function
             | JArray a -> 
                 let xx : 'a ParseResult seq = Seq.map fromJSON a
                 sequenceA xx |> map Seq.toArray
             | a -> failparse "array" a
 
-        static member inline instance (FromJSON,  _: 'a list, _: 'a list ParseResult) =
+        static member inline FromJSON (_: 'a list) =
             function
             | JArray a -> 
                 let xx : 'a ParseResult seq = Seq.map fromJSON a
                 sequenceA xx |> map Seq.toList
             | a -> failparse "array" a
 
-        static member inline instance (FromJSON,  _: 'a Set, _: 'a Set ParseResult) =
+        static member inline FromJSON (_: 'a Set) =
             function
             | JArray a -> 
                 let xx : 'a ParseResult seq = Seq.map fromJSON a
                 sequenceA xx |> map set
             | a -> failparse "array" a
 
-        static member inline instance (FromJSON, _: 'a * 'b, _: ('a * 'b) ParseResult) =
+        static member inline FromJSON (_: 'a * 'b) =
             function
             | JArray a as x ->
                 if a.Count <> 2 then
@@ -177,7 +181,7 @@ module Fleece =
                     tuple2 <!> (fromJSON a.[0]) <*> (fromJSON a.[1])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
-        static member inline instance (FromJSON, _: 'a * 'b * 'c, _: ('a * 'b * 'c) ParseResult) =
+        static member inline FromJSON (_: 'a * 'b * 'c) =
             function
             | JArray a as x ->
                 if a.Count <> 3 then
@@ -186,7 +190,7 @@ module Fleece =
                     tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
-        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd, _: ('a * 'b * 'c * 'd) ParseResult) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd) =
             function
             | JArray a as x ->
                 if a.Count <> 4 then
@@ -195,7 +199,7 @@ module Fleece =
                     tuple4 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
-        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd * 'e, _: ('a * 'b * 'c * 'd * 'e) ParseResult) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e) =
             function
             | JArray a as x ->
                 if a.Count <> 5 then
@@ -204,7 +208,7 @@ module Fleece =
                     tuple5 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
-        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd * 'e * 'f, _: ('a * 'b * 'c * 'd * 'e * 'f) ParseResult) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f) =
             function
             | JArray a as x ->
                 if a.Count <> 6 then
@@ -213,7 +217,7 @@ module Fleece =
                     tuple6 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4]) <*> (fromJSON a.[5])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
-        static member inline instance (FromJSON, _: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: ('a * 'b * 'c * 'd * 'e * 'f * 'g) ParseResult) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g) =
             function
             | JArray a as x ->
                 if a.Count <> 7 then
@@ -224,68 +228,73 @@ module Fleece =
 
     // Serializing:
 
-    type ToJSON = ToJSON with
-        static member instance (ToJSON, x: bool, _:JsonValue) = fun () -> JBool x
-        static member instance (ToJSON, x: string, _:JsonValue) = fun () -> JString x
-        static member instance (ToJSON, x: decimal, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: Double, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: Single, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: int, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: uint32, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: int64, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: uint64, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: int16, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: uint16, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: byte, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: sbyte, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
-        static member instance (ToJSON, x: char, _:JsonValue) = fun () -> JsonPrimitive x :> JsonValue
+    type ToJSONClass = ToJSONClass with
+        static member ToJSON (x: bool) = JBool x
+        static member ToJSON (x: string) = JString x
+        static member ToJSON (x: decimal) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: Double) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: Single) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: int) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: uint32) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: int64) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: uint64) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: int16) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: uint16) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: byte) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: sbyte) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: char) = JsonPrimitive x :> JsonValue
 
-    let inline toJSON (x: 'a) : JsonValue = Inline.instance (ToJSON, x) ()
+    module internal ToJSONOverloads =
+        let inline instance (a: ^a, b: ^b) =
+            ((^a or ^b) : (static member ToJSON: ^b -> JsonValue) b)
+
+    let inline toJSON (x: 'a) : JsonValue = ToJSONOverloads.instance (ToJSONClass, x)
+
     let jobj x = JObject ((dict x).AsReadOnlyDictionary())
     let inline jpair (key: string) value = key, toJSON value
 
-    type ToJSON with
-        static member inline instance (ToJSON, x: Choice<'a, 'b>, _:JsonValue) = fun () ->
+    type ToJSONClass with
+        static member inline ToJSON (x: Choice<'a, 'b>) =
             match x with
             | Choice1Of2 a -> jobj [ jpair "Choice1Of2" a ]
             | Choice2Of2 a -> jobj [ jpair "Choice2Of2" a ]
 
-        static member inline instance (ToJSON, x: Choice<'a, 'b, 'c>, _:JsonValue) = fun () ->
+        static member inline ToJSON (x: Choice<'a, 'b, 'c>) =
             match x with
             | Choice1Of3 a -> jobj [ jpair "Choice1Of3" a ]
             | Choice2Of3 a -> jobj [ jpair "Choice2Of3" a ]
             | Choice3Of3 a -> jobj [ jpair "Choice3Of3" a ]
 
-        static member inline instance (ToJSON, x: 'a option, _:JsonValue) = fun () ->
+        static member inline ToJSON (x: 'a option) =
             match x with
             | None -> JNull
             | Some a -> toJSON a
 
-        static member inline instance (ToJSON, x: 'a list, _:JsonValue) = fun () ->
+        static member inline ToJSON (x: 'a list) =
             JArray ((List.map toJSON x).ToReadOnlyList())
 
-        static member inline instance (ToJSON, x: 'a Set, _:JsonValue) = fun () ->
+        static member inline ToJSON (x: 'a Set) =
             JArray ((Seq.map toJSON x).ToReadOnlyList())
 
-        static member inline instance (ToJSON, x: 'a array, _:JsonValue) = fun () ->
+        static member inline ToJSON (x: 'a array) =
             JArray ((Array.map toJSON x).AsReadOnlyList())
 
-        static member inline instance (ToJSON, (a, b), _:JsonValue) = fun () ->
+        static member inline ToJSON ((a, b)) =
             JArray ([|toJSON a; toJSON b|].AsReadOnlyList())
 
-        static member inline instance (ToJSON, (a, b, c), _:JsonValue) = fun () ->
+        static member inline ToJSON ((a, b, c)) =
             JArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
 
-        static member inline instance (ToJSON, (a, b, c, d), _:JsonValue) = fun () ->
+        static member inline ToJSON ((a, b, c, d)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d|].AsReadOnlyList())
 
-        static member inline instance (ToJSON, (a, b, c, d, e), _:JsonValue) = fun () ->
+        static member inline ToJSON ((a, b, c, d, e)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e|].AsReadOnlyList())
 
-        static member inline instance (ToJSON, (a, b, c, d, e, f), _:JsonValue) = fun () ->
+        static member inline ToJSON ((a, b, c, d, e, f)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f|].AsReadOnlyList())
 
-        static member inline instance (ToJSON, (a, b, c, d, e, f, g), _:JsonValue) = fun () ->
+        static member inline ToJSON ((a, b, c, d, e, f, g)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f; toJSON g|].AsReadOnlyList())
 
     module Operators =
