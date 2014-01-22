@@ -56,15 +56,38 @@ module Fleece =
 
     type 'a ParseResult = Choice<'a, string>
 
-    let inline private failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
+    module Helpers =
+        let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
 
-    let inline private tryRead<'a> s = 
-        function
-        | JNumber j -> 
-            match j.TryReadAs<'a>() with
-            | true, v -> Success v
-            | _ -> failparse s j
-        | a -> failparse s a
+        let inline tryRead<'a> s = 
+            function
+            | JNumber j -> 
+                match j.TryReadAs<'a>() with
+                | true, v -> Success v
+                | _ -> failparse s j
+            | a -> failparse s a
+
+        let inline iFromJSON (a: ^a, b: ^b) =
+            ((^a or ^b) : (static member FromJSON: ^b -> (JsonValue -> ^b ParseResult)) b)
+
+        let inline iToJSON (a: ^a, b: ^b) =
+            ((^a or ^b) : (static member ToJSON: ^b -> JsonValue) b)
+
+        let inline tuple2 a b = a,b
+        let inline tuple3 a b c = a,b,c
+        let inline tuple4 a b c d = a,b,c,d
+        let inline tuple5 a b c d e = a,b,c,d,e
+        let inline tuple6 a b c d e f = a,b,c,d,e,f
+        let inline tuple7 a b c d e f g = a,b,c,d,e,f,g
+
+        let listAsReadOnly (l: _ list) =
+            { new IReadOnlyList<_> with
+                member x.Count = l.Length
+                member x.Item with get index = l.[index]
+                member x.GetEnumerator() = (l :> _ seq).GetEnumerator()
+                member x.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
+
+    open Helpers
 
     type FromJSONClass = FromJSONClass with
         static member FromJSON (_: bool) = 
@@ -118,11 +141,7 @@ module Fleece =
                          | _ -> Failure (sprintf "Invalid DateTimeOffset %s" s)
             | a -> failparse "DateTimeOffset" a
 
-    module internal FromJSONOverloads =
-        let inline instance (a: ^a, b: ^b) =
-            ((^a or ^b) : (static member FromJSON: ^b -> (JsonValue -> ^b ParseResult)) b)
-
-    let inline fromJSON (x: JsonValue) : 'a ParseResult = FromJSONOverloads.instance (FromJSONClass, Unchecked.defaultof<'a>) x
+    let inline fromJSON (x: JsonValue) : 'a ParseResult = iFromJSON (FromJSONClass, Unchecked.defaultof<'a>) x
 
     let inline parseJSON (x: string) : 'a ParseResult =
         try
@@ -139,13 +158,6 @@ module Fleece =
         match o.TryGetValue key with
         | true, value -> fromJSON value |> map Some
         | _ -> Success None
-
-    let inline private tuple2 a b = a,b
-    let inline private tuple3 a b c = a,b,c
-    let inline private tuple4 a b c d = a,b,c,d
-    let inline private tuple5 a b c d e = a,b,c,d,e
-    let inline private tuple6 a b c d e f = a,b,c,d,e,f
-    let inline private tuple7 a b c d e f g = a,b,c,d,e,f,g
 
     type FromJSONClass with
         static member inline FromJSON (_: Choice<'a, 'b>) =
@@ -269,11 +281,7 @@ module Fleece =
         static member ToJSON (x: DateTime) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssZ")) // JsonPrimitive is incorrect for DateTime
         static member ToJSON (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssK")) // JsonPrimitive is incorrect for DateTimeOffset
 
-    module internal ToJSONOverloads =
-        let inline instance (a: ^a, b: ^b) =
-            ((^a or ^b) : (static member ToJSON: ^b -> JsonValue) b)
-
-    let inline toJSON (x: 'a) : JsonValue = ToJSONOverloads.instance (ToJSONClass, x)
+    let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
 
     let jobj x = JObject ((dict x).AsReadOnlyDictionary())
     let inline jpair (key: string) value = key, toJSON value
@@ -296,7 +304,7 @@ module Fleece =
             | Some a -> toJSON a
 
         static member inline ToJSON (x: 'a list) =
-            JArray ((List.map toJSON x).ToReadOnlyList())
+            JArray (listAsReadOnly (List.map toJSON x))
 
         static member inline ToJSON (x: 'a Set) =
             JArray ((Seq.map toJSON x).ToReadOnlyList())
