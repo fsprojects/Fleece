@@ -141,19 +141,24 @@ module Fleece =
                          | _ -> Failure (sprintf "Invalid DateTimeOffset %s" s)
             | a -> failparse "DateTimeOffset" a
 
+    /// Maps JSON to a type
     let inline fromJSON (x: JsonValue) : 'a ParseResult = iFromJSON (FromJSONClass, Unchecked.defaultof<'a>) x
 
+    /// Parses JSON and maps to a type
     let inline parseJSON (x: string) : 'a ParseResult =
         try
             let json = JsonValue.Parse x
             fromJSON json
         with e -> Failure (e.ToString())
 
+    /// Gets a value from a JSON object
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> fromJSON value
         | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
 
+    /// Tries to get a value from a JSON object.
+    /// Returns None if key is not present in the object.
     let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> fromJSON value |> map Some
@@ -281,9 +286,13 @@ module Fleece =
         static member ToJSON (x: DateTime) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssZ")) // JsonPrimitive is incorrect for DateTime
         static member ToJSON (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssK")) // JsonPrimitive is incorrect for DateTimeOffset
 
+    /// Maps a value to JSON
     let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
 
+    /// Creates a new JSON object for serialization
     let jobj x = JObject ((dict x).AsReadOnlyDictionary())
+
+    /// Creates a new JSON key,value pair for a JSON object
     let inline jpair (key: string) value = key, toJSON value
 
     type ToJSONClass with
@@ -331,6 +340,12 @@ module Fleece =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f; toJSON g|].AsReadOnlyList())
 
     module Operators =
+        /// Creates a new JSON key,value pair for a JSON object
         let inline (.=) key value = jpair key value
+
+        /// Gets a value from a JSON object
         let inline (.@) o key = jget o key
+
+        /// Tries to get a value from a JSON object.
+        /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetopt o key
