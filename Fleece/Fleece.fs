@@ -87,6 +87,8 @@ module Fleece =
                 member x.GetEnumerator() = (l :> _ seq).GetEnumerator()
                 member x.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
 
+        let dict x = (dict x).AsReadOnlyDictionary()
+
     open Helpers
 
     type FromJSONClass = FromJSONClass with
@@ -290,7 +292,7 @@ module Fleece =
     let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
 
     /// Creates a new JSON object for serialization
-    let jobj x = JObject ((dict x).AsReadOnlyDictionary())
+    let jobj x = JObject (dict x)
 
     /// Creates a new JSON key,value pair for a JSON object
     let inline jpair (key: string) value = key, toJSON value
