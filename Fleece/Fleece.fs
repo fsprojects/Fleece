@@ -89,6 +89,12 @@ module Fleece =
 
         let dict x = (dict x).AsReadOnlyDictionary()
 
+        let keys (x: IReadOnlyDictionary<_,_>) =
+            Seq.map (fun (KeyValue(k,_)) -> k) x
+
+        let values (x: IReadOnlyDictionary<_,_>) =
+            Seq.map (fun (KeyValue(_,v)) -> v) x
+
     open Helpers
 
     type FromJSONClass = FromJSONClass with
@@ -214,6 +220,13 @@ module Fleece =
                 sequenceA xx |> map set
             | a -> failparse "array" a
 
+        static member inline FromJSON (_: Map<string, 'a>) =
+            function
+            | JObject o as jobj ->
+                let xx : 'a ParseResult seq = Seq.map fromJSON (values o)
+                sequenceA xx |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
+            | a -> failparse "Map" a
+
         static member inline FromJSON (_: 'a * 'b) =
             function
             | JArray a as x ->
@@ -322,6 +335,10 @@ module Fleece =
 
         static member inline ToJSON (x: 'a array) =
             JArray ((Array.map toJSON x).AsReadOnlyList())
+
+        static member inline ToJSON (x: Map<string, 'a>) =
+            let v = Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) x |> dict
+            JObject v
 
         static member inline ToJSON ((a, b)) =
             JArray ([|toJSON a; toJSON b|].AsReadOnlyList())

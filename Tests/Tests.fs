@@ -191,6 +191,7 @@ let tests =
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
+            yield testProperty "Map<string, char>" (roundtrip<Map<string, char>>)
             yield testProperty "int option array" (roundtrip<int option array>)
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
             yield testProperty "Choice<(int * string) list, Choice<decimal option, string>>" (roundtrip<Choice<(int * string) list, Choice<decimal option, string>>>)
