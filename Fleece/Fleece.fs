@@ -202,6 +202,14 @@ module Fleece =
                 map Some a
 
     type FromJSONClass with
+        static member inline FromJSON (_: 'a Nullable) =
+            function
+            | JNull a -> Success (Nullable())
+            | x -> 
+                let a: 'a ParseResult = fromJSON x
+                map (fun x -> Nullable x) a
+
+    type FromJSONClass with
         static member inline FromJSON (_: 'a array) =
             function
             | JArray a -> 
@@ -340,6 +348,12 @@ module Fleece =
             match x with
             | None -> JNull
             | Some a -> toJSON a
+
+    type ToJSONClass with
+        static member inline ToJSON (x: 'a Nullable) =
+            if x.HasValue 
+                then toJSON x.Value
+                else JNull
 
     type ToJSONClass with
         static member inline ToJSON (x: 'a list) =

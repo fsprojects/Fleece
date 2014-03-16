@@ -193,11 +193,22 @@ let tests =
             yield testProperty "int array" (roundtrip<int array>)
             yield testProperty "Map<string, char>" (roundtrip<Map<string, char>>)
             yield testProperty "int option array" (roundtrip<int option array>)
+            //yield testProperty "int Nullable array" (roundtrip<int Nullable array>) // not handled by FsCheck
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
             yield testProperty "Choice<(int * string) list, Choice<decimal option, string>>" (roundtrip<Choice<(int * string) list, Choice<decimal option, string>>>)
 
             yield test "null string" {
                 let a: string = null
+                if not (roundtrip a) then failtest ""
+            }
+
+            yield test "null nullable" {
+                let a = Nullable<int>()
+                if not (roundtrip a) then failtest ""
+            }
+
+            yield test "nullable with value" {
+                let a = Nullable 2
                 if not (roundtrip a) then failtest ""
             }
         ]
