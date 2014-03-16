@@ -182,6 +182,7 @@ module Fleece =
                 | _ -> failparse "Choice" jobj
             | a -> failparse "Choice" a
 
+    type FromJSONClass with
         static member inline FromJSON (_: Choice<'a, 'b, 'c>) =
             function
             | JObject o as jobj ->
@@ -192,6 +193,7 @@ module Fleece =
                 | _ -> failparse "Choice" jobj
             | a -> failparse "Choice" a
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a option) =
             function
             | JNull a -> Success None
@@ -199,6 +201,7 @@ module Fleece =
                 let a: 'a ParseResult = fromJSON x
                 map Some a
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a array) =
             function
             | JArray a -> 
@@ -206,6 +209,7 @@ module Fleece =
                 sequenceA xx |> map Seq.toArray
             | a -> failparse "array" a
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a list) =
             function
             | JArray a -> 
@@ -213,6 +217,7 @@ module Fleece =
                 sequenceA xx |> map Seq.toList
             | a -> failparse "array" a
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a Set) =
             function
             | JArray a -> 
@@ -220,6 +225,7 @@ module Fleece =
                 sequenceA xx |> map set
             | a -> failparse "array" a
 
+    type FromJSONClass with
         static member inline FromJSON (_: Map<string, 'a>) =
             function
             | JObject o as jobj ->
@@ -227,6 +233,7 @@ module Fleece =
                 sequenceA xx |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
             | a -> failparse "Map" a
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b) =
             function
             | JArray a as x ->
@@ -236,6 +243,7 @@ module Fleece =
                     tuple2 <!> (fromJSON a.[0]) <*> (fromJSON a.[1])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b * 'c) =
             function
             | JArray a as x ->
@@ -245,6 +253,7 @@ module Fleece =
                     tuple3 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b * 'c * 'd) =
             function
             | JArray a as x ->
@@ -254,6 +263,7 @@ module Fleece =
                     tuple4 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e) =
             function
             | JArray a as x ->
@@ -263,6 +273,7 @@ module Fleece =
                     tuple5 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f) =
             function
             | JArray a as x ->
@@ -272,6 +283,7 @@ module Fleece =
                     tuple6 <!> (fromJSON a.[0]) <*> (fromJSON a.[1]) <*> (fromJSON a.[2]) <*> (fromJSON a.[3]) <*> (fromJSON a.[4]) <*> (fromJSON a.[5])
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g) =
             function
             | JArray a as x ->
@@ -316,45 +328,57 @@ module Fleece =
             | Choice1Of2 a -> jobj [ jpair "Choice1Of2" a ]
             | Choice2Of2 a -> jobj [ jpair "Choice2Of2" a ]
 
+    type ToJSONClass with
         static member inline ToJSON (x: Choice<'a, 'b, 'c>) =
             match x with
             | Choice1Of3 a -> jobj [ jpair "Choice1Of3" a ]
             | Choice2Of3 a -> jobj [ jpair "Choice2Of3" a ]
             | Choice3Of3 a -> jobj [ jpair "Choice3Of3" a ]
 
+    type ToJSONClass with
         static member inline ToJSON (x: 'a option) =
             match x with
             | None -> JNull
             | Some a -> toJSON a
 
+    type ToJSONClass with
         static member inline ToJSON (x: 'a list) =
             JArray (listAsReadOnly (List.map toJSON x))
 
+    type ToJSONClass with
         static member inline ToJSON (x: 'a Set) =
             JArray ((Seq.map toJSON x).ToReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON (x: 'a array) =
             JArray ((Array.map toJSON x).AsReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON (x: Map<string, 'a>) =
             let v = Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) x |> dict
             JObject v
 
+    type ToJSONClass with
         static member inline ToJSON ((a, b)) =
             JArray ([|toJSON a; toJSON b|].AsReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON ((a, b, c)) =
             JArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON ((a, b, c, d)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d|].AsReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON ((a, b, c, d, e)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e|].AsReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON ((a, b, c, d, e, f)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f|].AsReadOnlyList())
 
+    type ToJSONClass with
         static member inline ToJSON ((a, b, c, d, e, f, g)) =
             JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f; toJSON g|].AsReadOnlyList())
 
