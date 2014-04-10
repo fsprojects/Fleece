@@ -216,4 +216,16 @@ let tests =
 
 [<EntryPoint>]
 let main argv = 
+    printfn "Running tests..."
+(*
+    let tests = 
+        tests 
+        |> Test.replaceTestCode (fun name testCode ->
+                                    test name {
+                                        //printfn "start %s" name
+                                        testCode()
+                                        //printfn "finished %s" name
+                                        printf "."
+                                    })
+*)
     runParallel tests

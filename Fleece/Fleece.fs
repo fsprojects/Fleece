@@ -213,32 +213,32 @@ module Fleece =
         static member inline FromJSON (_: 'a array) =
             function
             | JArray a -> 
-                let xx : 'a ParseResult seq = Seq.map fromJSON a
-                sequenceA xx |> map Seq.toArray
+                let xx : 'a seq ParseResult = traverse fromJSON a 
+                map Seq.toArray xx
             | a -> failparse "array" a
 
     type FromJSONClass with
         static member inline FromJSON (_: 'a list) =
             function
             | JArray a -> 
-                let xx : 'a ParseResult seq = Seq.map fromJSON a
-                sequenceA xx |> map Seq.toList
+                let xx : 'a seq ParseResult = traverse fromJSON a
+                map Seq.toList xx
             | a -> failparse "array" a
 
     type FromJSONClass with
         static member inline FromJSON (_: 'a Set) =
             function
             | JArray a -> 
-                let xx : 'a ParseResult seq = Seq.map fromJSON a
-                sequenceA xx |> map set
+                let xx : 'a seq ParseResult = traverse fromJSON a
+                map set xx
             | a -> failparse "array" a
 
     type FromJSONClass with
         static member inline FromJSON (_: Map<string, 'a>) =
             function
             | JObject o as jobj ->
-                let xx : 'a ParseResult seq = Seq.map fromJSON (values o)
-                sequenceA xx |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
+                let xx : 'a seq ParseResult = traverse fromJSON (values o)
+                map (fun values -> Seq.zip (keys o) values |> Map.ofSeq) xx
             | a -> failparse "Map" a
 
     type FromJSONClass with
