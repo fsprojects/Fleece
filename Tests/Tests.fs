@@ -97,7 +97,7 @@ let tests =
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = "a value" }
-                Assert.Equal("attribute", Choice1Of2 expected, actual)
+                Assert.Equal("attribute", Success expected, actual)
             }
 
             test "attribute with null name" {
@@ -112,7 +112,7 @@ let tests =
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = null }
-                Assert.Equal("attribute", Choice1Of2 expected, actual)           
+                Assert.Equal("attribute", Success expected, actual)           
             }
 
             test "Person recursive" {
@@ -129,7 +129,7 @@ let tests =
                           Age = 7
                           Children = [] }
                       ] }
-                Assert.Equal("Person", Choice1Of2 expectedPerson, actual)
+                Assert.Equal("Person", Success expectedPerson, actual)
             }
         ]
 
