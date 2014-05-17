@@ -12,6 +12,12 @@ module Fleece =
     open FSharpPlus
     open ReadOnlyCollectionsExtensions
 
+    type JsonObject with
+        member x.AsReadOnlyDictionary() =
+            (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary()
+
+        static member GetValues (x: JsonObject) = x.AsReadOnlyDictionary()
+
     // pseudo-AST, wrapping JsonValue subtypes:
 
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
@@ -21,8 +27,7 @@ module Fleece =
             let values = (x :> JsonValue IList).AsReadOnlyList()
             JArray values
         | :? JsonObject as x ->
-            let values = (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary()
-            JObject values
+            JObject (x.AsReadOnlyDictionary())
         | :? JsonPrimitive as x ->
             match x.JsonType with
             | JsonType.Number -> JNumber x
@@ -98,6 +103,12 @@ module Fleece =
     open Helpers
 
     type FromJSONClass = FromJSONClass with
+        static member FromJSON (_: JsonObject) =
+            fun (o: JsonValue) ->
+                match box o with
+                | :? JsonObject as x -> Success x
+                | a -> failparse "JsonObject" a
+
         static member FromJSON (_: bool) = 
             function
             | JBool b -> Success b

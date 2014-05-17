@@ -76,6 +76,26 @@ type Item with
             }
         | x -> Failure (sprintf "Expected Item, found %A" x)
 
+type NestedItem = NestedItem of Item
+
+type NestedItem with
+    static member FromJSON (_: NestedItem) =
+        function
+        | JObject o ->
+            monad {
+                let! id = o .@ "id"
+                let! sub = o .@ "blah" |> map JsonObject.GetValues
+                let! brand = sub .@ "brand"
+                let! availability = sub .@? "availability"
+                return NestedItem {
+                    Item.Id = id
+                    Brand = brand
+                    Availability = availability
+                }
+            }
+        | x -> Failure (sprintf "Expected Item, found %A" x)
+        
+
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
         Assert.Equal("", expected, (toJSON value).ToString())
@@ -89,7 +109,18 @@ let tests =
                     { Item.Id = 1
                       Brand = "Sony"
                       Availability = None }
-                Assert.Equal("item", Choice1Of2 expected, actual)
+                Assert.Equal("item", Success expected, actual)
+            }
+
+            test "nested item" {
+                let actual: NestedItem ParseResult = parseJSON """{"id": 1, "blah": {"brand": "Sony", "availability": "1 week"}}"""
+                let expected = 
+                    NestedItem {
+                        Item.Id = 1
+                        Brand = "Sony"
+                        Availability = Some "1 week"
+                    }
+                Assert.Equal("item", Success expected, actual)
             }
 
             test "attribute ok" {
