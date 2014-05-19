@@ -66,8 +66,8 @@
     <Reference Include="FSharp.Core, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition="$(TargetFrameworkVersion) == 'v3.5'">
       <Private>True</Private>
     </Reference>
-    <Reference Include="ReadOnlyCollectionsExtensions" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.0.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
+    <Reference Include="ReadOnlyCollectionsExtensions">
+      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.1.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="ReadOnlyCollectionsInterfaces" Condition="$(TargetFrameworkVersion) != 'v3.5'">
