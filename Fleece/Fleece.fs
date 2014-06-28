@@ -261,7 +261,11 @@ module Fleece =
             function
             | JObject o as jobj ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
-                map (fun values -> Dictionary(Seq.zip (keys o) values |> Map.ofSeq)) (xx)
+                xx |> map (fun values ->
+                        let kv = Seq.zip (keys o) values
+                        let d = Dictionary()
+                        for k,v in kv do d.[k] <- v
+                        d)
             | a -> failparse "Dictionary" a
 
         static member inline FromJSON (_: 'a ResizeArray) =
@@ -410,7 +414,7 @@ module Fleece =
             JObject v
 
         static member inline ToJSON (x: 'a ResizeArray) =
-            JArray (listAsReadOnly (List.map toJSON (Seq.toList x)))
+            JArray ((Seq.map toJSON x).ToReadOnlyList())
 
         static member inline ToJSON ((a, b)) =
             JArray ([|toJSON a; toJSON b|].AsReadOnlyList())
