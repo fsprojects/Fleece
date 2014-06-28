@@ -199,13 +199,21 @@ let tests =
         ]
 
         testList "Roundtrip" [
-            let inline roundtrip p = 
+            let inline roundtripEq (isEq: 'a -> 'a -> bool) p =
                 let actual = p |> toJSON |> fromJSON
-                let ok = actual = Success p
+                let ok = 
+                    match actual with
+                    | Success actual -> isEq actual p
+                    | _ -> false
                 if not ok then printfn "Got %A from %A" actual p
                 ok
 
+            let inline roundtrip p = roundtripEq (=) p
+
             let testProperty name = testPropertyWithConfig { FsCheck.Config.Default with MaxTest = 10000 } name
+
+            let kvset = Seq.map (fun (KeyValue(k,v)) -> k,v) >> set
+
             yield testProperty "int" (roundtrip<int>)
             //yield testProperty "uint32" (roundtrip<uint32>) // not handled by FsCheck
             yield testProperty "int64" (roundtrip<int64>)
@@ -222,7 +230,9 @@ let tests =
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
+            yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
             yield testProperty "Map<string, char>" (roundtrip<Map<string, char>>)
+            yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
             yield testProperty "int option array" (roundtrip<int option array>)
             //yield testProperty "int Nullable array" (roundtrip<int Nullable array>) // not handled by FsCheck
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
