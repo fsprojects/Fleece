@@ -12,6 +12,10 @@ module Fleece =
     open FSharpPlus
     open ReadOnlyCollectionsExtensions
 
+    type Id<'t>(v:'t) =
+        let value = v
+        member this.getValue = value
+
     type JsonObject with
         member x.AsReadOnlyDictionary() =
             (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary()
@@ -253,6 +257,23 @@ module Fleece =
             | a -> failparse "Map" a
 
     type FromJSONClass with
+        static member inline FromJSON (_: Dictionary<string, 'a>) =
+            function
+            | JObject o as jobj ->
+                let xx : 'a seq ParseResult = traverse fromJSON (values o)
+                map (fun values -> Dictionary(Seq.zip (keys o) values |> Map.ofSeq)) (xx)
+            | a -> failparse "Dictionary" a
+
+        static member inline FromJSON (_: 'a ResizeArray) =
+            function
+            | JArray a -> 
+                let xx : 'a seq ParseResult = traverse fromJSON a
+                map (fun x -> ResizeArray<_>(x: 'a seq)) xx
+            | a -> failparse "ResizeArray" a
+
+        static member inline FromJSON (_: 'a Id) = fun _ -> Success (Id<'a>(Unchecked.defaultof<'a>))
+
+    type FromJSONClass with
         static member inline FromJSON (_: 'a * 'b) =
             function
             | JArray a as x ->
@@ -384,6 +405,13 @@ module Fleece =
             JObject v
 
     type ToJSONClass with
+        static member inline ToJSON (x: Dictionary<string, 'a>) =
+            let v = Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) x |> dict
+            JObject v
+
+        static member inline ToJSON (x: 'a ResizeArray) =
+            JArray (listAsReadOnly (List.map toJSON (Seq.toList x)))
+
         static member inline ToJSON ((a, b)) =
             JArray ([|toJSON a; toJSON b|].AsReadOnlyList())
 
