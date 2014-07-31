@@ -47,7 +47,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FsControl.Core" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\FsControl.1.0.8\lib\net40\FsControl.Core.dll</HintPath>
+      <HintPath>..\packages\FsControl.1.0.9\lib\net40\FsControl.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharpPlus" Condition="$(TargetFrameworkVersion) == 'v3.5'">
@@ -55,7 +55,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharpPlus" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\FSharpPlus.0.0.3\lib\net40\FSharpPlus.dll</HintPath>
+      <HintPath>..\packages\FSharpPlus.0.0.4\lib\net40\FSharpPlus.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
@@ -65,8 +65,8 @@
     <Reference Include="FSharp.Core, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition="$(TargetFrameworkVersion) == 'v3.5'">
       <Private>True</Private>
     </Reference>
-    <Reference Include="ReadOnlyCollectionsExtensions">
-      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.1.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
+    <Reference Include="ReadOnlyCollectionsExtensions" Condition="$(TargetFrameworkVersion) != 'v3.5'">
+      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.2.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="ReadOnlyCollectionsInterfaces" Condition="$(TargetFrameworkVersion) != 'v3.5'">

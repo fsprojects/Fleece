@@ -12,9 +12,9 @@
     <projectUrl>https://github.com/mausch/Fleece</projectUrl>
     <tags>json fsharp</tags>
     <dependencies>
-      <dependency id="FSharpPlus" version="0.0.3"/>
+      <dependency id="FSharpPlus" version="0.0.4"/>
       <dependency id="ReadOnlyCollectionInterfaces" version="[1.0.0]"/>
-      <dependency id="ReadOnlyCollectionExtensions" version="1.1.0"/>
+      <dependency id="ReadOnlyCollectionExtensions" version="1.2.0"/>
       <dependency id="System.Json" version="4.0.20126.16343"/>
     </dependencies>
   </metadata>
