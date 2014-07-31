@@ -35,6 +35,8 @@ type Attribute = {
 }
 
 type Attribute with
+    static member Create name value = { Attribute.Name = name; Value = value }
+
     static member FromJSON (_: Attribute) =
         function
         | JObject o -> 
@@ -99,6 +101,10 @@ type NestedItem with
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
         Assert.Equal("", expected, (toJSON value).ToString())
+
+
+open FsCheck
+open FsCheck.GenOperators
 
 let tests = 
     TestList [
@@ -210,9 +216,22 @@ let tests =
 
             let inline roundtrip p = roundtripEq (=) p
 
-            let testProperty name = testPropertyWithConfig { FsCheck.Config.Default with MaxTest = 10000 } name
+            let testProperty name = testPropertyWithConfig { Config.Default with MaxTest = 10000 } name
 
             let kvset = Seq.map (fun (KeyValue(k,v)) -> k,v) >> set
+
+            let attributeArb = 
+                lazy (gen {
+                    let! name = Arb.generate |> Gen.suchThat ((<>) null)
+                    let! value = Arb.generate
+                    return { Attribute.Name = name; Value = value }
+                } |> Arb.fromGen)
+
+            let mapArb : Lazy<Arbitrary<Map<string, char>>> =
+                lazy (gen {
+                    let! keyvalues = Arb.generate
+                    return keyvalues |> List.filter (fun (k,_) -> k <> null) |> Map.ofList
+                } |> Arb.fromGen)
 
             yield testProperty "int" (roundtrip<int>)
             //yield testProperty "uint32" (roundtrip<uint32>) // not handled by FsCheck
@@ -227,12 +246,12 @@ let tests =
             yield testProperty "byte" (roundtrip<byte>)
             yield testProperty "sbyte" (roundtrip<sbyte>)
             yield testProperty "Guid" (roundtrip<Guid>)
-            yield testProperty "attribute" (roundtrip<Attribute>)
+            yield testProperty "attribute" (Prop.forAll attributeArb.Value roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
             yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
-            yield testProperty "Map<string, char>" (roundtrip<Map<string, char>>)
+            yield testProperty "Map<string, char>" (Prop.forAll mapArb.Value roundtrip<Map<string, char>>)
             yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
             yield testProperty "int option array" (roundtrip<int option array>)
             //yield testProperty "int Nullable array" (roundtrip<int Nullable array>) // not handled by FsCheck
@@ -257,7 +276,7 @@ let tests =
     ]
 
 [<EntryPoint>]
-let main argv = 
+let main _ = 
     printfn "Running tests..."
 (*
     let tests = 
