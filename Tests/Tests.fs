@@ -226,6 +226,7 @@ let tests =
             yield testProperty "char" (roundtrip<char>)
             yield testProperty "byte" (roundtrip<byte>)
             yield testProperty "sbyte" (roundtrip<sbyte>)
+            yield testProperty "Guid" (roundtrip<Guid>)
             yield testProperty "attribute" (roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)

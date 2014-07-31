@@ -144,6 +144,17 @@ module Fleece =
         static member FromJSON (_: Double) = tryRead<Double> "double"
         static member FromJSON (_: Single) = tryRead<Single> "single"
 
+        static member FromJSON (_: Guid) =
+            function
+            | JString s -> 
+                if s = null
+                    then Failure "Expected Guid, got null"
+                    else 
+                        match Guid.TryParse s with
+                        | false, _ -> Failure ("Invalid Guid " + s)
+                        | true, g -> Success g
+            | a -> failparse "Guid" a
+
         static member FromJSON (_: DateTime) =
             function
             | JString s ->
@@ -354,6 +365,7 @@ module Fleece =
         static member ToJSON (x: byte) = JsonPrimitive x :> JsonValue
         static member ToJSON (x: sbyte) = JsonPrimitive x :> JsonValue
         static member ToJSON (x: char) = JsonPrimitive x :> JsonValue
+        static member ToJSON (x: Guid) = JsonPrimitive x :> JsonValue
         static member ToJSON (x: DateTime) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssZ")) // JsonPrimitive is incorrect for DateTime
         static member ToJSON (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ssK")) // JsonPrimitive is incorrect for DateTimeOffset
 
