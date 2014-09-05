@@ -168,6 +168,18 @@ let tests =
                       ] }
                 Assert.Equal("Person", Success expectedPerson, actual)
             }
+
+            test "DateTime with milliseconds" {
+                let actual : DateTime ParseResult = fromJSON (JsonPrimitive "2014-09-05T04:38:07.862Z")
+                let expected = new DateTime(2014,9,5,4,38,7,862)
+                Assert.Equal("DateTime", Success expected, actual)
+            }
+
+            test "DateTime without milliseconds" {
+                let actual : DateTime ParseResult = fromJSON (JsonPrimitive "2014-09-05T04:38:07Z")
+                let expected = new DateTime(2014,9,5,4,38,7)
+                Assert.Equal("DateTime", Success expected, actual)
+            }
         ]
 
         testList "To JSON" [
@@ -180,11 +192,19 @@ let tests =
             }
 
             test "DateTime" {
-                Assert.JSON("\"2000-03-01T16:23:34Z\"", DateTime(2000, 3, 1, 16, 23, 34))
+                Assert.JSON("\"2000-03-01T16:23:34.000Z\"", DateTime(2000, 3, 1, 16, 23, 34))
+            }
+
+            test "DateTime with milliseconds" {
+                Assert.JSON("\"2000-03-01T16:23:34.123Z\"", DateTime(2000, 3, 1, 16, 23, 34, 123))
             }
 
             test "DateTimeOffset" {
-                Assert.JSON("\"2000-03-01T16:23:34+03:00\"", DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
+                Assert.JSON("\"2000-03-01T16:23:34.000+03:00\"", DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
+            }
+
+            test "DateTimeOffset with milliseconds" {
+                Assert.JSON("\"2000-03-01T16:23:34.078+03:00\"", DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
             }
 
             test "Person" {
