@@ -19,6 +19,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="Fleece\bin\Release\Fleece.*" target="lib\NET40"/>
+    <file src="Fleece\bin\SystemJson\Fleece.*" target="lib\NET40"/>
   </files>
 </package>
