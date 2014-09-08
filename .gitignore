@@ -4,3 +4,4 @@
 */obj/*
 packages/*
 .nuget/*.exe
+*.nupkg

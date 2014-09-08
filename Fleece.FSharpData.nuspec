@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Fleece.FSharpData</id>
+    <version>0.3.0</version>
+    <authors>Mauricio Scheffer,Lev Gorodinski</authors>
+    <owners>mausch</owners>
+    <licenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>JSON mapper for FSharp.Data</description>
+    <copyright>Copyright Mauricio Scheffer 2014</copyright>
+    <projectUrl>https://github.com/mausch/Fleece</projectUrl>
+    <tags>json fsharp</tags>
+    <dependencies>
+      <dependency id="FSharpPlus" version="0.0.4"/>
+      <dependency id="ReadOnlyCollectionInterfaces" version="[1.0.0]"/>
+      <dependency id="ReadOnlyCollectionExtensions" version="1.2.0"/>
+      <dependency id="FSharp.Data" version="2.0.14"/>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="Fleece\bin\FSharpData\Fleece.*" target="lib\NET40"/>
+  </files>
+</package>

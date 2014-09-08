@@ -10,9 +10,13 @@ if not exist .nuget\nuget.exe %MSBUILD% .nuget\nuget.targets /t:CheckPrerequisit
 if ERRORLEVEL 1 (
 	echo Error building Fleece for System.Json
 	exit /b 1
+) else (
+	.nuget\nuget.exe pack Fleece.nuspec
 )
 %MSBUILD% /m /p:Configuration=FSharpData Fleece.sln
 if ERRORLEVEL 1 (
 	echo Error building Fleece for FSharp.Data
 	exit /b 2
+) else (
+	.nuget\nuget.exe pack Fleece.FSharpData.nuspec
 )

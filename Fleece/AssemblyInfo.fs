@@ -3,7 +3,7 @@
 open System.Reflection
 
 [<assembly: AssemblyTitle("Fleece")>]
-[<assembly: AssemblyDescription("JSON mapper for System.Json")>]
+[<assembly: AssemblyDescription("JSON mapper")>]
 
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("")>]

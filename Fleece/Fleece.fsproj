@@ -8,7 +8,6 @@
     <ProjectGuid>4eacc663-044c-49ae-946b-a966f57708cb</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
-    <AssemblyName>Fleece</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>Fleece</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -16,6 +15,7 @@
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'SystemJson' ">
+    <AssemblyName>Fleece</AssemblyName>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
@@ -25,13 +25,14 @@
     <DocumentationFile>bin\SystemJson\Fleece.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'FSharpData' ">
+    <AssemblyName>Fleece.FSharpData</AssemblyName>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\FSharpData\</OutputPath>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\FSharpData\Fleece.XML</DocumentationFile>
+    <DocumentationFile>bin\FSharpData\Fleece.FSharpData.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

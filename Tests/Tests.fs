@@ -174,7 +174,8 @@ let tests =
                       ] }
                 Assert.Equal("Person", Success expectedPerson, actual)
             }
-
+            #if FSHARPDATA
+            #else
             test "DateTime with milliseconds" {
                 let actual : DateTime ParseResult = fromJSON (JsonPrimitive "2014-09-05T04:38:07.862Z")
                 let expected = new DateTime(2014,9,5,4,38,7,862)
@@ -186,6 +187,7 @@ let tests =
                 let expected = new DateTime(2014,9,5,4,38,7)
                 Assert.Equal("DateTime", Success expected, actual)
             }
+            #endif
         ]
 
         testList "To JSON" [
