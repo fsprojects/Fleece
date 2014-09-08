@@ -1,12 +1,18 @@
 ﻿open System
 open ReadOnlyCollectionsExtensions
 open System.Collections.Generic
-open System.Json
 open System.Linq
 open Fuchu
 open Fleece
 open Fleece.Operators
 open FSharpPlus
+
+#if FSHARPDATA
+open FSharp.Data
+#else
+open System.Json
+#endif
+
 
 type Person = {
     Name: string
@@ -86,7 +92,7 @@ type NestedItem with
         | JObject o ->
             monad {
                 let! id = o .@ "id"
-                let! sub = o .@ "blah" |> map JsonObject.GetValues
+                let! sub = o .@ "blah" |> map jsonObjectGetValues
                 let! brand = sub .@ "brand"
                 let! availability = sub .@? "availability"
                 return NestedItem {

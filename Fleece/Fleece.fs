@@ -4,8 +4,7 @@
 module Fleece =
 
     open System
-    open System.Globalization
-    open System.Json
+    open System.Globalization    
     open System.Collections.Generic
     open FsControl
     open FsControl.Core
@@ -16,11 +15,138 @@ module Fleece =
         let value = v
         member this.getValue = value
 
+
+    #if FSHARPDATA
+    
+    open FSharp.Data
+        
+    type JsonObject = (string * JsonValue)[]
+
+    // unify JsonValue.Number and JsonValue.Float
+    type JsonValue with
+        
+        member private x.FoldNumeric (e:decimal -> 'a, f:float -> 'a) : 'a =
+            match x with
+            | JsonValue.Number n -> e n
+            | JsonValue.Float n -> f n 
+            | j -> failwith (sprintf "Expected numeric but was %A" j)
+
+        member private x.ToDecimal() = x.FoldNumeric(id,decimal)
+        member private x.ToDouble() = x.FoldNumeric(double,double)
+        member private x.ToSingle() = x.FoldNumeric(single,single)
+        member private x.ToInt16() = x.FoldNumeric(int16,int16)
+        member private x.ToInt32() = x.FoldNumeric(int,int)
+        member private x.ToInt64() = x.FoldNumeric(int64,int64)
+        member private x.ToUInt16() = x.FoldNumeric(uint16,uint16)
+        member private x.ToUInt32() = x.FoldNumeric(uint32,uint32)
+        member private x.ToUInt64() = x.FoldNumeric(uint64,uint64)
+        member private x.ToByte() = x.FoldNumeric(byte,byte)
+        member private x.ToSByte() = x.FoldNumeric(sbyte,sbyte)
+            
+    
+    type private JsonHelpers() =
+        static member create (x : decimal) : JsonValue = JsonValue.Number x
+        static member create (x : Double) : JsonValue = JsonValue.Float x
+        static member create (x : Single) : JsonValue = JsonValue.Float (float x)
+        static member create (x : int) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : bool) : JsonValue = JsonValue.Boolean x
+        static member create (x : uint32) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : int64) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : uint64) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : int16) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : uint16) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : byte) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : sbyte) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x : char) : JsonValue = JsonValue.String (string x)
+        static member create (x : Guid) : JsonValue = JsonValue.String (string x)
+
+
+    type private ReadOnlyJsonPropertiesDictionary(properties:(string * JsonValue)[]) =                
+        
+        let properties = properties
+
+        member __.Properties = properties
+
+        with
+            interface System.Collections.IEnumerable with
+                member __.GetEnumerator() = (properties |> Seq.map (fun (k,v) -> KeyValuePair(k,v))).GetEnumerator() :> System.Collections.IEnumerator
+
+            interface IEnumerable<KeyValuePair<string, JsonValue>> with
+                member __.GetEnumerator() = (properties |> Seq.map (fun (k,v) -> KeyValuePair(k,v))).GetEnumerator()
+
+            interface IReadOnlyCollection<KeyValuePair<string,JsonValue>> with
+                member __.Count = properties.Length
+        
+            interface IReadOnlyDictionary<string, JsonValue> with
+                member __.Keys = properties |> Seq.map fst                
+                member __.Values = properties |> Seq.map snd                
+                member __.Item with get(key:string) = properties |> Array.find (fun (k,v) -> k = key) |> snd                
+                member __.ContainsKey(key:string) = properties |> Array.exists (fun (k,_) -> k = key)                
+                member __.TryGetValue(key:string, value:byref<JsonValue>) =
+                    match properties |> Array.tryFindIndex (fun (k,_) -> k = key) with
+                    | Some i -> 
+                        value <- snd properties.[i]
+                        true
+                    | None -> false                                
+
+
+    let jsonObjectGetValues (x : JsonObject) = ReadOnlyJsonPropertiesDictionary(x) :> IReadOnlyDictionary<string, JsonValue>
+
+
+    // FSharp.Data.JsonValue AST adapter
+
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JsonValue) =
+        match o with
+        | JsonValue.Null -> JNull
+        | JsonValue.Array els -> JArray (els.AsReadOnlyList())
+        | JsonValue.Record props -> JObject (jsonObjectGetValues props)
+        | JsonValue.Number _ as x -> JNumber x
+        | JsonValue.Float _ as x -> JNumber x
+        | JsonValue.Boolean x -> JBool x
+        | JsonValue.String x -> JString x
+    
+    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) : JsonObject = 
+        match x with
+        | :? ReadOnlyJsonPropertiesDictionary as x -> x.Properties
+        | _ -> x |> Seq.map (fun p -> p.Key,p.Value) |> Array.ofSeq
+
+    let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
+    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
+    let inline JBool (x: bool) = JsonValue.Boolean x
+    let JNull : JsonValue = JsonValue.Null
+    let inline JString (x: string) = 
+        if x = null 
+            then JsonValue.Null
+            else JsonValue.String x
+    
+    #else
+    
+    open System.Json
+
     type JsonObject with
         member x.AsReadOnlyDictionary() =
             (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary()
 
         static member GetValues (x: JsonObject) = x.AsReadOnlyDictionary()
+
+    let jsonObjectGetValues (x : JsonObject) = JsonObject.GetValues x
+
+
+    type private JsonHelpers() =
+        static member create (x: decimal) = JsonPrimitive x :> JsonValue
+        static member create (x: Double) = JsonPrimitive x :> JsonValue
+        static member create (x: Single) = JsonPrimitive x :> JsonValue
+        static member create (x: int) = JsonPrimitive x :> JsonValue
+        static member create (x: uint32) = JsonPrimitive x :> JsonValue
+        static member create (x: int64) = JsonPrimitive x :> JsonValue
+        static member create (x: uint64) = JsonPrimitive x :> JsonValue
+        static member create (x: int16) = JsonPrimitive x :> JsonValue
+        static member create (x: uint16) = JsonPrimitive x :> JsonValue
+        static member create (x: byte) = JsonPrimitive x :> JsonValue
+        static member create (x: sbyte) = JsonPrimitive x :> JsonValue
+        static member create (x: char) = JsonPrimitive x :> JsonValue
+        static member create (x: Guid) = JsonPrimitive x :> JsonValue
+
 
     // pseudo-AST, wrapping JsonValue subtypes:
 
@@ -41,7 +167,6 @@ module Fleece =
             | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
         | _ -> failwithf "Invalid JsonValue %A" o
 
-
     let inline JArray (x: JsonValue IReadOnlyList) = JsonArray x :> JsonValue
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :> JsonValue
     let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
@@ -50,6 +175,9 @@ module Fleece =
         if x = null 
             then JNull
             else JsonPrimitive x :> JsonValue
+
+    #endif
+
 
     // results:
 
@@ -66,7 +194,64 @@ module Fleece =
     type 'a ParseResult = Choice<'a, string>
 
     module Helpers =
+        
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
+
+        #if FSHARPDATA
+
+        type JsonHelpers with
+        
+            static member tryReadDecimal = function
+                | JNumber n -> n.ToDecimal() |> Success
+                | a -> failparse "decimal" a   
+
+            static member tryReadInt16 = function
+                | JNumber n -> n.ToInt16() |> Success
+                | a -> failparse "int16" a
+            
+            static member tryReadInt = function
+                | JNumber n -> n.ToInt32() |> Success
+                | a -> failparse "int" a    
+
+            static member tryReadInt64 = function
+                | JNumber n -> n.ToInt64() |> Success
+                | a -> failparse "int64" a
+
+            static member tryReadUInt16 = function
+                | JNumber n -> n.ToUInt16() |> Success
+                | a -> failparse "unint16" a
+
+            static member tryReadUInt32 = function
+                | JNumber n -> n.ToUInt32() |> Success
+                | a -> failparse "unint32" a
+
+            static member tryReadUInt64 = function
+                | JNumber n -> n.ToUInt64() |> Success
+                | a -> failparse "unint64" a
+
+            static member tryReadByte = function
+                | JNumber n -> n.ToByte() |> Success
+                | a -> failparse "byte" a
+
+            static member tryReadSByte = function
+                | JNumber n -> n.ToSByte() |> Success
+                | a -> failparse "sbyte" a
+
+            static member tryReadDouble = function
+                | JNumber n -> n.ToDouble() |> Success
+                | a -> failparse "double" a
+
+            static member tryReadSingle = function
+                | JNumber n -> n.ToSingle() |> Success
+                | a -> failparse "single" a      
+                
+            static member jsonObjectFromJSON =
+                fun (o: JsonValue) ->
+                    match o with
+                    | JObject x -> Success (dictAsProps x)
+                    | a -> failparse "JsonObject" a     
+
+        #else
 
         let inline tryRead<'a> s = 
             function
@@ -75,6 +260,29 @@ module Fleece =
                 | true, v -> Success v
                 | _ -> failparse s j
             | a -> failparse s a
+
+        type JsonHelpers with        
+            
+            static member inline tryReadDecimal = tryRead<decimal> "decimal"  
+            static member inline tryReadInt16 = tryRead<int16> "int16"
+            static member inline tryReadInt = tryRead<int> "int"
+            static member inline tryReadInt64 = tryRead<int64> "int64"
+            static member inline tryReadUInt16 = tryRead<uint16> "uint16"
+            static member inline tryReadUInt32 = tryRead<uint32> "uint32"
+            static member inline tryReadUInt64 = tryRead<uint64> "uint64"
+            static member inline tryReadByte = tryRead<byte> "byte"
+            static member inline tryReadSByte = tryRead<sbyte> "sbyte"
+            static member inline tryReadDouble = tryRead<double> "double"
+            static member inline tryReadSingle = tryRead<single> "single"
+
+            static member inline jsonObjectFromJSON =
+                fun (o: JsonValue) ->
+                    match box o with
+                    | :? JsonObject as x -> Success x
+                    | a -> failparse "JsonObject" a
+
+        #endif
+
 
         let inline iFromJSON (a: ^a, b: ^b) =
             ((^a or ^b) : (static member FromJSON: ^b -> (JsonValue -> ^b ParseResult)) b)
@@ -107,12 +315,7 @@ module Fleece =
     open Helpers
 
     type FromJSONClass = FromJSONClass with
-        static member FromJSON (_: JsonObject) =
-            fun (o: JsonValue) ->
-                match box o with
-                | :? JsonObject as x -> Success x
-                | a -> failparse "JsonObject" a
-
+        
         static member FromJSON (_: bool) = 
             function
             | JBool b -> Success b
@@ -124,13 +327,19 @@ module Fleece =
             | JNull -> Success null
             | a -> failparse "string" a
 
-        static member FromJSON (_: decimal) = tryRead<decimal> "decimal"
-        static member FromJSON (_: int) = tryRead<int> "int"
-        static member FromJSON (_: uint32) = tryRead<uint32> "uint32"
-        static member FromJSON (_: int64) = tryRead<int64> "int64"
-        static member FromJSON (_: uint64) = tryRead<uint64> "uint64"
-        static member FromJSON (_: int16) = tryRead<int16> "int16"
-        static member FromJSON (_: uint16) = tryRead<uint16> "uint16"
+        static member FromJSON (_: JsonObject) = JsonHelpers.jsonObjectFromJSON
+        static member FromJSON (_:decimal) = JsonHelpers.tryReadDecimal        
+        static member FromJSON (_:int16) = JsonHelpers.tryReadInt16
+        static member FromJSON (_:int) = JsonHelpers.tryReadInt        
+        static member FromJSON (_:int64) = JsonHelpers.tryReadInt64                
+        static member FromJSON (_:uint16) = JsonHelpers.tryReadUInt16
+        static member FromJSON (_:uint32) = JsonHelpers.tryReadUInt32
+        static member FromJSON (_:uint64) = JsonHelpers.tryReadUInt64
+        static member FromJSON (_:byte) = JsonHelpers.tryReadByte
+        static member FromJSON (_:sbyte) = JsonHelpers.tryReadSByte
+        static member FromJSON (_:double) = JsonHelpers.tryReadDouble
+        static member FromJSON (_:single) = JsonHelpers.tryReadSingle
+
         static member FromJSON (_: char) =
             function
             | JString s -> 
@@ -138,11 +347,6 @@ module Fleece =
                     then Failure "Expected char, got null"
                     else Success s.[0]
             | a -> failparse "char" a
-
-        static member FromJSON (_: byte) = tryRead<byte> "byte"
-        static member FromJSON (_: sbyte) = tryRead<sbyte> "sbyte"
-        static member FromJSON (_: Double) = tryRead<Double> "double"
-        static member FromJSON (_: Single) = tryRead<Single> "single"
 
         static member FromJSON (_: Guid) =
             function
@@ -199,7 +403,7 @@ module Fleece =
         | _ -> Success None
 
     type FromJSONClass with
-        static member inline FromJSON (_: Choice<'a, 'b>) =
+        static member inline FromJSON (_: Choice<'a, 'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> =
             function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -209,7 +413,7 @@ module Fleece =
             | a -> failparse "Choice" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: Choice<'a, 'b, 'c>) =
+        static member inline FromJSON (_: Choice<'a, 'b, 'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> =
             function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -220,7 +424,7 @@ module Fleece =
             | a -> failparse "Choice" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a option) =
+        static member inline FromJSON (_: 'a option) : JsonValue -> ParseResult<'a option> =
             function
             | JNull a -> Success None
             | x -> 
@@ -228,7 +432,7 @@ module Fleece =
                 map Some a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a Nullable) =
+        static member inline FromJSON (_: 'a Nullable) : JsonValue -> ParseResult<'a Nullable> =
             function
             | JNull a -> Success (Nullable())
             | x -> 
@@ -236,7 +440,7 @@ module Fleece =
                 map (fun x -> Nullable x) a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a array) =
+        static member inline FromJSON (_: 'a array) : JsonValue -> ParseResult<'a array> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a 
@@ -244,7 +448,7 @@ module Fleece =
             | a -> failparse "array" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a list) =
+        static member inline FromJSON (_: list<'a>) : JsonValue -> ParseResult<list<'a>> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a
@@ -252,7 +456,7 @@ module Fleece =
             | a -> failparse "array" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a Set) =
+        static member inline FromJSON (_: 'a Set) : JsonValue -> ParseResult<'a Set> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a
@@ -260,7 +464,7 @@ module Fleece =
             | a -> failparse "array" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: Map<string, 'a>) =
+        static member inline FromJSON (_: Map<string, 'a>) : JsonValue -> ParseResult<Map<string, 'a>> =
             function
             | JObject o as jobj ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
@@ -268,7 +472,7 @@ module Fleece =
             | a -> failparse "Map" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: Dictionary<string, 'a>) =
+        static member inline FromJSON (_: Dictionary<string, 'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> =
             function
             | JObject o as jobj ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
@@ -279,17 +483,17 @@ module Fleece =
                         d)
             | a -> failparse "Dictionary" a
 
-        static member inline FromJSON (_: 'a ResizeArray) =
+        static member inline FromJSON (_: 'a ResizeArray) : JsonValue -> ParseResult<'a ResizeArray> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a
                 map (fun x -> ResizeArray<_>(x: 'a seq)) xx
             | a -> failparse "ResizeArray" a
 
-        static member inline FromJSON (_: 'a Id) = fun _ -> Success (Id<'a>(Unchecked.defaultof<'a>))
+        static member inline FromJSON (_: 'a Id) : JsonValue -> ParseResult<Id<'a>> = fun _ -> Success (Id<'a>(Unchecked.defaultof<'a>))
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b) =
+        static member inline FromJSON (_: 'a * 'b) : JsonValue -> ParseResult<'a * 'b> =
             function
             | JArray a as x ->
                 if a.Count <> 2 then
@@ -299,7 +503,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c) =
+        static member inline FromJSON (_: 'a * 'b * 'c) : JsonValue -> ParseResult<'a * 'b * 'c> =
             function
             | JArray a as x ->
                 if a.Count <> 3 then
@@ -309,7 +513,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
             function
             | JArray a as x ->
                 if a.Count <> 4 then
@@ -319,7 +523,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
             function
             | JArray a as x ->
                 if a.Count <> 5 then
@@ -329,7 +533,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
             function
             | JArray a as x ->
                 if a.Count <> 6 then
@@ -339,7 +543,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g) =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
             function
             | JArray a as x ->
                 if a.Count <> 7 then
@@ -353,21 +557,22 @@ module Fleece =
     type ToJSONClass = ToJSONClass with
         static member ToJSON (x: bool) = JBool x
         static member ToJSON (x: string) = JString x
-        static member ToJSON (x: decimal) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: Double) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: Single) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: int) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: uint32) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: int64) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: uint64) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: int16) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: uint16) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: byte) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: sbyte) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: char) = JsonPrimitive x :> JsonValue
-        static member ToJSON (x: Guid) = JsonPrimitive x :> JsonValue
         static member ToJSON (x: DateTime) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
         static member ToJSON (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+        static member ToJSON (x: decimal) = JsonHelpers.create x
+        static member ToJSON (x: Double) = JsonHelpers.create x
+        static member ToJSON (x: Single) = JsonHelpers.create x
+        static member ToJSON (x: int) = JsonHelpers.create x
+        static member ToJSON (x: uint32) = JsonHelpers.create x
+        static member ToJSON (x: int64) = JsonHelpers.create x
+        static member ToJSON (x: uint64) = JsonHelpers.create x
+        static member ToJSON (x: int16) = JsonHelpers.create x
+        static member ToJSON (x: uint16) = JsonHelpers.create x
+        static member ToJSON (x: byte) = JsonHelpers.create x
+        static member ToJSON (x: sbyte) = JsonHelpers.create x
+        static member ToJSON (x: char) = JsonHelpers.create x
+        static member ToJSON (x: Guid) = JsonHelpers.create x
+
 
     /// Maps a value to JSON
     let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
@@ -404,7 +609,7 @@ module Fleece =
                 else JNull
 
     type ToJSONClass with
-        static member inline ToJSON (x: 'a list) =
+        static member inline ToJSON (x: list<'a>) =
             JArray (listAsReadOnly (List.map toJSON x))
 
     type ToJSONClass with
