@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Fleece</id>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
     <authors>Mauricio Scheffer</authors>
     <owners>mausch</owners>
     <licenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</licenseUrl>
