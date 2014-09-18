@@ -230,6 +230,16 @@ let tests =
                       ] }
                 Assert.JSON("""{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}""", p)
             }
+
+            test "Map with null key" {
+                let p: Map<string, _> = Map.ofList [null, "a"]
+                Assert.JSON("{}", p)
+            }
+
+            test "JObj with null key" {
+                let j = jobj [null, JString "a"]
+                Assert.Equal("json", expected = "{}", actual = j.ToString())
+            }
         ]
 
         testList "Roundtrip" [

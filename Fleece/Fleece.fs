@@ -305,6 +305,8 @@ module Fleece =
         let values (x: IReadOnlyDictionary<_,_>) =
             Seq.map (fun (KeyValue(_,v)) -> v) x
 
+        let inline notNull a = not (obj.ReferenceEquals(a, null))
+
     open Helpers
 
     type FromJSONClass = FromJSONClass with
@@ -571,7 +573,7 @@ module Fleece =
     let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
 
     /// Creates a new JSON object for serialization
-    let jobj x = JObject (dict x)
+    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> notNull k) |> dict)
 
     /// Creates a new JSON key,value pair for a JSON object
     let inline jpair (key: string) value = key, toJSON value
@@ -615,12 +617,12 @@ module Fleece =
 
     type ToJSONClass with
         static member inline ToJSON (x: Map<string, 'a>) =
-            let v = Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) x |> dict
+            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> notNull k) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
             JObject v
 
     type ToJSONClass with
         static member inline ToJSON (x: Dictionary<string, 'a>) =
-            let v = Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) x |> dict
+            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> notNull k) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
             JObject v
 
         static member inline ToJSON (x: 'a ResizeArray) =
