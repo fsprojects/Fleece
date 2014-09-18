@@ -290,13 +290,6 @@ module Fleece =
         let inline iToJSON (a: ^a, b: ^b) =
             ((^a or ^b) : (static member ToJSON: ^b -> JsonValue) b)
 
-        let inline tuple2 a b = a,b
-        let inline tuple3 a b c = a,b,c
-        let inline tuple4 a b c d = a,b,c,d
-        let inline tuple5 a b c d e = a,b,c,d,e
-        let inline tuple6 a b c d e f = a,b,c,d,e,f
-        let inline tuple7 a b c d e f g = a,b,c,d,e,f,g
-
         let listAsReadOnly (l: _ list) =
             { new IReadOnlyList<_> with
                 member x.Count = l.Length
