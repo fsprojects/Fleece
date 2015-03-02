@@ -1,12 +1,13 @@
 Fleece
 ======
 
-Fleece is a JSON mapper for F#. It simplifies mapping from [System.Json](http://bit.ly/1axIBoA)'s JsonValue onto your types, and mapping from your types onto JsonValue.
+Fleece is a JSON mapper for F#. It simplifies mapping from [System.Json](http://bit.ly/1axIBoA)'s JsonValue onto your types, and mapping from your types onto JsonValue. It's also available for [FSharp.Data](http://fsharp.github.io/FSharp.Data/)'s JSON types if you prefer it over System.Json.
 Its design is strongly influenced by Haskell's [Aeson](http://hackage.haskell.org/package/aeson-0.7.0.0/docs/Data-Aeson.html). Like Aeson, Fleece is designed around two typeclasses (in [FsControl](https://github.com/gmpl/FsControl) style) ToJSON and FromJSON.
 
 ### Download binaries
 
-[Available on NuGet](https://www.nuget.org/packages/Fleece/).
+* [For FSharp.Data](https://www.nuget.org/packages/Fleece.FSharpData/)
+* [For System.Json](https://www.nuget.org/packages/Fleece/)
 
 ###Example
 
