@@ -23,7 +23,7 @@ type Person = {
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member FromJSON (_: Person) = 
+    static member FromJSON () = 
         function
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
@@ -43,7 +43,7 @@ type Attribute = {
 type Attribute with
     static member Create name value = { Attribute.Name = name; Value = value }
 
-    static member FromJSON (_: Attribute) =
+    static member FromJSON () =
         function
         | JObject o -> 
             monad {
@@ -69,7 +69,7 @@ type Item = {
 }
 
 type Item with
-    static member FromJSON (_: Item) =
+    static member FromJSON () =
         function
         | JObject o ->
             monad {
@@ -87,7 +87,7 @@ type Item with
 type NestedItem = NestedItem of Item
 
 type NestedItem with
-    static member FromJSON (_: NestedItem) =
+    static member FromJSON () =
         function
         | JObject o ->
             monad {
@@ -104,15 +104,17 @@ type NestedItem with
         | x -> Failure (sprintf "Expected Item, found %A" x)
         
 
+let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
+
 type Assert with
-    static member inline JSON(expected: string, value: 'a) =
-        Assert.Equal("", expected, (toJSON value).ToString())
+    static member inline JSON(expected: string, value: 'a) =        
+        Assert.Equal("", expected, strCleanUp ((toJSON value).ToString()))
 
 
 open FsCheck
 open FsCheck.GenOperators
 
-let tests = 
+let tests =
     TestList [
         testList "From JSON" [
             test "item with missing key" {
@@ -238,7 +240,7 @@ let tests =
 
             test "JObj with null key" {
                 let j = jobj [null, JString "a"]
-                Assert.Equal("json", expected = "{}", actual = j.ToString())
+                Assert.Equal("json", expected = "{}", actual = strCleanUp(j.ToString()))
             }
         ]
 
