@@ -9,11 +9,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Tests</RootNamespace>
     <AssemblyName>Tests</AssemblyName>
+    <NoWarn>3186</NoWarn>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>Tests</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <NoWarn>3186</NoWarn>
     <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'SystemJson' ">
@@ -44,7 +44,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FsControl.Core">
-      <HintPath>..\packages\FsControl.1.0.9\lib\net40\FsControl.Core.dll</HintPath>
+      <HintPath>..\packages\FsControl.2.0.0-CI00016\lib\net40\FsControl.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -55,7 +55,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharpPlus">
-      <HintPath>..\packages\FSharpPlus.0.0.4\lib\net40\FSharpPlus.dll</HintPath>
+      <HintPath>..\packages\FSharpPlus.1.0.0-CI00002\lib\net40\FSharpPlus.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Fuchu">
