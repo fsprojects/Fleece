@@ -111,6 +111,6 @@ type Person with
         | x -> Failure (sprintf "Expected person, found %A" x)
 ```
 
-Or you can use the Choice monad/applicative in [FSharpx.Core](https://github.com/fsprojects/fsharpx) instead, if you prefer.
+Or you can use the Choice monad/applicative in [FSharpx.Extras](https://github.com/fsprojects/FSharpx.Extras) instead, if you prefer.
 
 You can see more examples in the [EdmundsNet](https://github.com/mausch/EdmundsNet) project.
