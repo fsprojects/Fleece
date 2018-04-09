@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">SystemJson</Configuration>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-    <ProjectGuid>4eacc663-044c-49ae-946b-a966f57708cb</ProjectGuid>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
     <Name>Fleece</Name>
@@ -21,16 +19,8 @@
     <PackageTags>json fsharp</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for System.Json</Description>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SystemJson' ">
     <AssemblyName>Fleece</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
-    <OutputPath>bin\SystemJson\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'FSharpData' ">
-    <AssemblyName>Fleece.FSharpData</AssemblyName>
-    <OutputPath>bin\FSharpData\</OutputPath>
-    <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -38,9 +28,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0-RC2" />
-    <PackageReference Include="ReadOnlyCollectionExtensions" Version="1.2.0" />
+    <PackageReference Include="ReadOnlyCollectionExtensions" Version="1.3.0" />
     <PackageReference Include="ReadOnlyCollectionInterfaces" Version="1.0.0" />
-    <PackageReference Include="FSharp.Data" Version="2.4.6" Condition=" '$(Configuration)' == 'FSharpData' " />
-    <PackageReference Include="System.Json" Version="4.4.0" Condition=" '$(Configuration)' == 'SystemJson' " />
+    <PackageReference Include="System.Json" Version="4.4.0" />
   </ItemGroup>
 </Project>
