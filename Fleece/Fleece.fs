@@ -6,8 +6,6 @@ module Fleece =
     open System
     open System.Globalization    
     open System.Collections.Generic
-    open FsControl
-    open FsControl.Core
     open FSharpPlus
     open ReadOnlyCollectionsExtensions
 

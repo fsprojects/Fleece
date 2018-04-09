@@ -1,123 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">SystemJson</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SchemaVersion>2.0</SchemaVersion>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
     <ProjectGuid>4eacc663-044c-49ae-946b-a966f57708cb</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>Fleece</Name>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
-    <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+    <WarningLevel>3</WarningLevel>
+    <VersionPrefix>0.4.1</VersionPrefix>
+    <VersionSuffix>alpha-1</VersionSuffix>
+    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
+    <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
+    <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
+    <FileVersion>$(VersionPrefix).0</FileVersion>
+    <RepositoryUrl>https://github.com/mausch/Fleece</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/mausch/Fleece</PackageProjectUrl>
+    <PackageTags>json fsharp</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>JSON mapper for System.Json</Description>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'SystemJson' ">
     <AssemblyName>Fleece</AssemblyName>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <OutputPath>bin\SystemJson\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\SystemJson\Fleece.XML</DocumentationFile>
+    <OutputPath>bin\SystemJson\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'FSharpData' ">
     <AssemblyName>Fleece.FSharpData</AssemblyName>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
     <OutputPath>bin\FSharpData\</OutputPath>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\FSharpData\Fleece.FSharpData.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Fleece.fs" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FsControl.Core" Condition="$(TargetFrameworkVersion) == 'v3.5'">
-      <HintPath>..\lib\FsControl.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FsControl.Core" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\FsControl.1.0.9\lib\net40\FsControl.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Data" Condition="$(DefineConstants.Contains('FSHARPDATA'))">
-      <HintPath>..\packages\FSharp.Data.2.0.14\lib\net40\FSharp.Data.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharpPlus" Condition="$(TargetFrameworkVersion) == 'v3.5'">
-      <HintPath>..\lib\FSharpPlus.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharpPlus" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\FSharpPlus.0.0.4\lib\net40\FSharpPlus.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" Condition="$(TargetFrameworkVersion) == 'v3.5'">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ReadOnlyCollectionsExtensions" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.2.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ReadOnlyCollectionsInterfaces" Condition="$(TargetFrameworkVersion) != 'v3.5'">
-      <HintPath>..\packages\ReadOnlyCollectionInterfaces.1.0.0\lib\NET40-client\ReadOnlyCollectionsInterfaces.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ReadOnlyCollectionsExtensions" Condition="$(TargetFrameworkVersion) == 'v3.5'">
-      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.0.0\lib\NET35\ReadOnlyCollectionsExtensions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ReadOnlyCollectionsInterfaces" Condition="$(TargetFrameworkVersion) == 'v3.5'">
-      <HintPath>..\packages\ReadOnlyCollectionInterfaces.1.0.0\lib\NET20\ReadOnlyCollectionsInterfaces.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Json" Condition="$(TargetFrameworkVersion) != 'v3.5' And !$(DefineConstants.Contains('FSHARPDATA'))">
-      <HintPath>..\packages\System.Json.4.0.20126.16343\lib\net40\System.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Json" Condition="$(TargetFrameworkVersion) == 'v3.5' And !$(DefineConstants.Contains('FSHARPDATA'))">
-      <HintPath>..\lib\System.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Numerics" Condition="$(TargetFrameworkVersion) != 'v3.5'" />
-    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="FSharpPlus" Version="1.0.0-RC2" />
+    <PackageReference Include="ReadOnlyCollectionExtensions" Version="1.2.0" />
+    <PackageReference Include="ReadOnlyCollectionInterfaces" Version="1.0.0" />
+    <PackageReference Include="FSharp.Data" Version="2.4.6" Condition=" '$(Configuration)' == 'FSharpData' " />
+    <PackageReference Include="System.Json" Version="4.4.0" Condition=" '$(Configuration)' == 'SystemJson' " />
   </ItemGroup>
-  <Choose>
-    <When Condition="'$(VisualStudioVersion)' == '11.0'">
-      <PropertyGroup>
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-  <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

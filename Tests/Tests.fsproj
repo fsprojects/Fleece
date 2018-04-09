@@ -1,122 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">SystemJson</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>971d0407-903e-445b-8dc4-55177db30367</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Tests</RootNamespace>
     <AssemblyName>Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <Name>Tests</Name>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <TargetFSharpCoreVersion>4.3.0.0</TargetFSharpCoreVersion>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+    <WarningLevel>3</WarningLevel>
+    <TargetFrameworks>netcoreapp2.0;net45</TargetFrameworks>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'SystemJson' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
     <OutputPath>bin\SystemJson\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\SystemJson\Tests.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'FSharpData' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
     <OutputPath>bin\FSharpData\</OutputPath>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
-    <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\FSharpData\Tests.XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FsCheck">
-      <HintPath>..\packages\FsCheck.0.9.4.0\lib\net40-Client\FsCheck.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FsControl.Core">
-      <HintPath>..\packages\FsControl.1.0.9\lib\net40\FsControl.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharp.Data">
-      <HintPath>..\packages\FSharp.Data.2.0.14\lib\net40\FSharp.Data.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="FSharpPlus">
-      <HintPath>..\packages\FSharpPlus.0.0.4\lib\net40\FSharpPlus.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Fuchu">
-      <HintPath>..\packages\Fuchu.0.4.0.0\lib\Fuchu.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Fuchu.FsCheck">
-      <HintPath>..\packages\Fuchu.FsCheck.0.4.0.0\lib\Fuchu.FsCheck.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="mscorlib" />
-    <Reference Include="ReadOnlyCollectionsExtensions">
-      <HintPath>..\packages\ReadOnlyCollectionExtensions.1.2.0\lib\NET40-client\ReadOnlyCollectionsExtensions.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="ReadOnlyCollectionsInterfaces">
-      <HintPath>..\packages\ReadOnlyCollectionInterfaces.1.0.0\lib\NET40-client\ReadOnlyCollectionsInterfaces.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Json">
-      <HintPath>..\packages\System.Json.4.0.20126.16343\lib\net40\System.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="FsCheck" Version="0.9.4.0" />
+    <PackageReference Include="Fuchu" Version="0.4.0.0" />
+    <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
+    <PackageReference Include="FSharp.Data" Version="2.4.6" Condition=" '$(Configuration)' == 'FSharpData' " />
+    <PackageReference Include="System.Json" Version="4.4.0" Condition=" '$(Configuration)' == 'SystemJson' " />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Tests.fs" />
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Fleece\Fleece.fsproj">
-      <Name>Fleece</Name>
-      <Project>{4eacc663-044c-49ae-946b-a966f57708cb}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <PropertyGroup>
-    <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
-  </PropertyGroup>
-  <Choose>
-    <When Condition="'$(VisualStudioVersion)' == '11.0'">
-      <PropertyGroup>
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </When>
-    <Otherwise>
-      <PropertyGroup>
-        <FSharpTargetsPath>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets</FSharpTargetsPath>
-      </PropertyGroup>
-    </Otherwise>
-  </Choose>
-  <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
