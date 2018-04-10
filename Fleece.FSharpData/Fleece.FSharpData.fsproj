@@ -16,11 +16,12 @@
     <FileVersion>$(VersionPrefix).0</FileVersion>
     <RepositoryUrl>https://github.com/mausch/Fleece</RepositoryUrl>
     <PackageProjectUrl>https://github.com/mausch/Fleece</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</PackageLicenseUrl>
     <PackageTags>json fsharp</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>JSON mapper for System.Json</Description>
+    <Description>JSON mapper for FSharp.Data</Description>
     <AssemblyName>Fleece.FSharpData</AssemblyName>
-    <!--<OutputPath>bin\FSharpData\</OutputPath>-->
+    <Authors>Mauricio Scheffer,Lev Gorodinski</Authors>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
