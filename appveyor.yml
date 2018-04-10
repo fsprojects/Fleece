@@ -2,5 +2,5 @@ image: Visual Studio 2017
 init:
   - git config --global core.autocrlf input
 build_script:
-  - cmd: build.cmd 
+  - cmd: build.bat 
 
