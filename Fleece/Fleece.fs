@@ -159,8 +159,9 @@ module Fleece =
         | :? JsonPrimitive as x ->
             match x.JsonType with
             | JsonType.Number -> JNumber x
-            | JsonType.Boolean -> JBool (JsonValue.op_Implicit x :bool)
-            | JsonType.String -> JString (JsonValue.op_Implicit x : string)
+            | JsonType.Boolean -> JBool (x.ReadAs<bool>())
+            | JsonType.String -> JString (x.ReadAs<string>())
+            | JsonType.Default -> JNull
             | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
         | _ -> failwithf "Invalid JsonValue %A" o
 
@@ -250,30 +251,27 @@ module Fleece =
 
         #else
 
-        let inline tryRead s value=
-              match value with
-              | JNumber j ->
-                try
-                  match tryParse(JsonValue.op_Implicit j :string) with
-                  | Some v ->  Success v
-                  | _ -> failparse s j
-                with
-                  | ex -> failparse s j
-              | a -> failparse s a
+        let inline tryRead<'a> s = 
+            function
+            | JNumber j -> 
+                match j.TryReadAs<'a>() with
+                | true, v -> Success v
+                | _ -> failparse s j
+            | a -> failparse s a
 
         type JsonHelpers with        
             
-            static member inline tryReadDecimal v : Choice<decimal,string> = tryRead "decimal" v
-            static member inline tryReadInt16 v : Choice<int16,string> = tryRead "int16" v
-            static member inline tryReadInt v : Choice<int,string> = tryRead "int" v
-            static member inline tryReadInt64 v : Choice<int64,string> = tryRead "int64" v
-            static member inline tryReadUInt16 v : Choice<int64,string> = tryRead "uint16" v
-            static member inline tryReadUInt32 v : Choice<uint32,string> = tryRead "uint32" v
-            static member inline tryReadUInt64 v : Choice<uint64,string> = tryRead "uint64" v
-            static member inline tryReadByte v : Choice<byte,string> = tryRead "byte" v
-            static member inline tryReadSByte v : Choice<sbyte,string> = tryRead "sbyte" v
-            static member inline tryReadDouble v : Choice<double,string> = tryRead "double" v
-            static member inline tryReadSingle v : Choice<single,string> = tryRead "single" v
+            static member inline tryReadDecimal = tryRead<decimal> "decimal"  
+            static member inline tryReadInt16 = tryRead<int16> "int16"
+            static member inline tryReadInt = tryRead<int> "int"
+            static member inline tryReadInt64 = tryRead<int64> "int64"
+            static member inline tryReadUInt16 = tryRead<uint16> "uint16"
+            static member inline tryReadUInt32 = tryRead<uint32> "uint32"
+            static member inline tryReadUInt64 = tryRead<uint64> "uint64"
+            static member inline tryReadByte = tryRead<byte> "byte"
+            static member inline tryReadSByte = tryRead<sbyte> "sbyte"
+            static member inline tryReadDouble = tryRead<double> "double"
+            static member inline tryReadSingle = tryRead<single> "single"
 
             static member inline jsonObjectFromJSON =
                 fun (o: JsonValue) ->
