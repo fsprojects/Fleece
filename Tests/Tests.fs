@@ -103,10 +103,10 @@ type NestedItem with
             }
         | x -> Failure (sprintf "Expected Item, found %A" x)
         
-
+let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
-        Assert.Equal("", expected, (toJSON value).ToString())
+        Assert.Equal("", expected, strCleanUp ((toJSON value).ToString()))
 
 
 open FsCheck
@@ -238,7 +238,7 @@ let tests =
 
             test "JObj with null key" {
                 let j = jobj [null, JString "a"]
-                Assert.Equal("json", expected = "{}", actual = j.ToString())
+                Assert.Equal("json", expected = "{}", actual = strCleanUp(j.ToString()))
             }
         ]
 
