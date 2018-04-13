@@ -3,4 +3,6 @@ init:
   - git config --global core.autocrlf input
 build_script:
   - cmd: build.bat 
-
+test_script:
+  - dotnet run --project .\Tests\Tests.fsproj --framework net461
+  - dotnet run --project .\Tests.FSharpData\Tests.FSharpData.fsproj --framework net461
