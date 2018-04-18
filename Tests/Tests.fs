@@ -23,8 +23,8 @@ type Person = {
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member FromJSON (_: Person) = 
-        function
+    static member FromJSON json = 
+        match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
@@ -69,8 +69,8 @@ type Item = {
 }
 
 type Item with
-    static member FromJSON (_: Item) =
-        function
+    static member FromJSON json =
+        match json with
         | JObject o ->
             monad {
                 let! id = o .@ "id"
@@ -87,8 +87,8 @@ type Item with
 type NestedItem = NestedItem of Item
 
 type NestedItem with
-    static member FromJSON (_: NestedItem) =
-        function
+    static member FromJSON json =
+        match json with
         | JObject o ->
             monad {
                 let! id = o .@ "id"
