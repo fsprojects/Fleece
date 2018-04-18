@@ -56,8 +56,8 @@ And you can map it from JSON like this:
 
 ```fsharp
 type Person with
-    static member FromJSON (_: Person) =
-        function
+    static member FromJSON json =
+        match json with
         | JObject o ->
             let name = o .@ "name"
             let age = o .@ "age"
@@ -83,8 +83,8 @@ open FSharpPlus
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member FromJSON (_: Person) =
-        function
+    static member FromJSON json =
+        match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
@@ -95,8 +95,8 @@ Or monadically:
 
 ```fsharp
 type Person with
-    static member FromJSON (_: Person) = 
-        function
+    static member FromJSON json =
+        match json with
         | JObject o -> 
             monad {
                 let! name = o .@ "name"
