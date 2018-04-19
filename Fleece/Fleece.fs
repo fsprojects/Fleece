@@ -14,14 +14,21 @@ module Fleece =
         member this.getValue = value
 
     type JsonValue =
-        | JsonObject of Map<string,JsonValue>
-        | JsonArray of JsonValue list
+        | JsonObject of IReadOnlyDictionary<string,JsonValue>
+        | JsonArray of IReadOnlyList<JsonValue>
         | JsonString of string
         | JsonNumber of float
         | JsonNull
         | JsonBool of bool
 
-
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JsonValue) =
+        match o with
+        | JsonNull -> JNull
+        | JsonArray a -> JArray a
+        | JsonNumber x -> JNumber x
+        | JsonBool x -> JBool x
+        | JsonString x -> JString x
+        | JsonObject x -> JObject x
     // results:
 
     let (|Success|Failure|) =
@@ -79,7 +86,7 @@ module Fleece =
             | JString b -> Success b
             | JNull -> Success null
             | a -> failparse "string" a
-
+(*
         static member FromJSON (_: JsonObject, FromJSONClass) = JsonHelpers.jsonObjectFromJSON
         static member FromJSON (_:decimal, FromJSONClass) = JsonHelpers.tryReadDecimal        
         static member FromJSON (_:int16, FromJSONClass) = JsonHelpers.tryReadInt16
@@ -131,22 +138,23 @@ module Fleece =
                          | true, t -> Success t
                          | _ -> Failure (sprintf "Invalid DateTimeOffset %s" s)
             | a -> failparse "DateTimeOffset" a
-
+*)
     /// Maps JSON to a type
     let inline fromJSON (x: JsonValue) : 'a ParseResult = iFromJSON (FromJSONClass, Unchecked.defaultof<'a>) x
 
     /// Parses JSON and maps to a type
+    (*
     let inline parseJSON (x: string) : 'a ParseResult =
         try
             let json = JsonValue.Parse x
             fromJSON json
         with e -> Failure (e.ToString())
-
+    *)
     /// Gets a value from a JSON object
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> fromJSON value
-        | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
+        | _ -> Failure ("Key '" + key + "' not found in " + JsonObject(o).ToString())
 
     /// Tries to get a value from a JSON object.
     /// Returns None if key is not present in the object.
@@ -313,10 +321,11 @@ module Fleece =
     // Serializing:
 
     type ToJSONClass = ToJSONClass with
-        static member ToJSON (x: bool) = JBool x
-        static member ToJSON (x: string) = JString x
-        static member ToJSON (x: DateTime) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
-        static member ToJSON (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+        static member ToJSON (x: bool) = JsonBool x
+        static member ToJSON (x: string) = JsonString x
+        static member ToJSON (x: DateTime) = JsonString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
+        static member ToJSON (x: DateTimeOffset) = JsonString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+        (*
         static member ToJSON (x: decimal) = JsonHelpers.create x
         static member ToJSON (x: Double) = JsonHelpers.create x
         static member ToJSON (x: Single) = JsonHelpers.create x
@@ -330,13 +339,13 @@ module Fleece =
         static member ToJSON (x: sbyte) = JsonHelpers.create x
         static member ToJSON (x: char) = JsonHelpers.create x
         static member ToJSON (x: Guid) = JsonHelpers.create x
-
+        *)
 
     /// Maps a value to JSON
     let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
 
     /// Creates a new JSON object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> notNull k) |> dict)
+    let jobj x = JsonObject (x |> Seq.filter (fun (k,_) -> notNull k) |> dict)
 
     /// Creates a new JSON key,value pair for a JSON object
     let inline jpair (key: string) value = key, toJSON value
@@ -357,62 +366,62 @@ module Fleece =
     type ToJSONClass with
         static member inline ToJSON (x: 'a option) =
             match x with
-            | None -> JNull
+            | None -> JsonNull
             | Some a -> toJSON a
 
     type ToJSONClass with
         static member inline ToJSON (x: 'a Nullable) =
             if x.HasValue 
                 then toJSON x.Value
-                else JNull
+                else JsonNull
 
     type ToJSONClass with
         static member inline ToJSON (x: list<'a>) =
-            JArray (listAsReadOnly (List.map toJSON x))
+            JsonArray (listAsReadOnly (List.map toJSON x))
 
     type ToJSONClass with
         static member inline ToJSON (x: 'a Set) =
-            JArray ((Seq.map toJSON x).ToReadOnlyList())
+            JsonArray ((Seq.map toJSON x).ToReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON (x: 'a array) =
-            JArray ((Array.map toJSON x).AsReadOnlyList())
+            JsonArray ((Array.map toJSON x).AsReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON (x: Map<string, 'a>) =
             let v = x |> Seq.filter (fun (KeyValue(k, _)) -> notNull k) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
-            JObject v
+            JsonObject v
 
     type ToJSONClass with
         static member inline ToJSON (x: Dictionary<string, 'a>) =
             let v = x |> Seq.filter (fun (KeyValue(k, _)) -> notNull k) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
-            JObject v
+            JsonObject v
 
         static member inline ToJSON (x: 'a ResizeArray) =
-            JArray ((Seq.map toJSON x).ToReadOnlyList())
+            JsonArray ((Seq.map toJSON x).ToReadOnlyList())
 
         static member inline ToJSON ((a, b)) =
-            JArray ([|toJSON a; toJSON b|].AsReadOnlyList())
+            JsonArray ([|toJSON a; toJSON b|].AsReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON ((a, b, c)) =
-            JArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
+            JsonArray ([|toJSON a; toJSON b; toJSON c|].AsReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON ((a, b, c, d)) =
-            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d|].AsReadOnlyList())
+            JsonArray ([|toJSON a; toJSON b; toJSON c; toJSON d|].AsReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON ((a, b, c, d, e)) =
-            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e|].AsReadOnlyList())
+            JsonArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e|].AsReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON ((a, b, c, d, e, f)) =
-            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f|].AsReadOnlyList())
+            JsonArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f|].AsReadOnlyList())
 
     type ToJSONClass with
         static member inline ToJSON ((a, b, c, d, e, f, g)) =
-            JArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f; toJSON g|].AsReadOnlyList())
+            JsonArray ([|toJSON a; toJSON b; toJSON c; toJSON d; toJSON e; toJSON f; toJSON g|].AsReadOnlyList())
 
     module Operators =
         /// Creates a new JSON key,value pair for a JSON object
