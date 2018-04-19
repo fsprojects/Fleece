@@ -27,6 +27,7 @@
   <ItemGroup>
     <Compile Include="../Fleece/AssemblyInfo.fs" />
     <Compile Include="../Fleece/Fleece.fs" />
+    <Compile Include="Fleece.FSharp.Data.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0-RC2" />
