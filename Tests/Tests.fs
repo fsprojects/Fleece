@@ -9,8 +9,12 @@ open FSharpPlus
 
 #if FSHARPDATA
 open FSharp.Data
-#else
+#endif
+#if SYSTEMJSON
 open System.Json
+#endif
+#if NEWTONSOFT
+open Newtonsoft.Json
 #endif
 
 
@@ -174,8 +178,7 @@ let tests =
                       ] }
                 Assert.Equal("Person", Success expectedPerson, actual)
             }
-            #if FSHARPDATA
-            #else
+            #if SYSTEMJSON
             test "DateTime with milliseconds" {
                 let actual : DateTime ParseResult = fromJSON (JsonPrimitive "2014-09-05T04:38:07.862Z")
                 let expected = new DateTime(2014,9,5,4,38,7,862)

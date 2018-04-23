@@ -22,7 +22,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for System.Json</Description>
     <AssemblyName>Fleece</AssemblyName>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />

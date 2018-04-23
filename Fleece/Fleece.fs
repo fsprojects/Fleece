@@ -13,7 +13,83 @@ module Fleece =
         let value = v
         member this.getValue = value
 
+    #if NEWTONSOFT
+    
+    open Newtonsoft.Json.Linq
+    type JsonValue = JToken
+    type JObject with
+        member x.AsReadOnlyDictionary() =
+            (x.Properties() |> Seq.map ( fun p-> (p.Name,p.Value) ) |> dict).AsReadOnlyDictionary()
 
+        static member GetValues (x: JObject) = x.AsReadOnlyDictionary()
+
+    let jsonObjectGetValues (x : JObject) = JObject.GetValues x
+
+    type JsonObject = JObject
+    // unify JsonValue.Number and JsonValue.Float
+    type JValue with
+        
+        member private x.FoldNumeric (e:decimal -> 'a, f:float -> 'a) : 'a =
+            match x.Type with
+            | JTokenType.Integer -> e (x.ToObject())
+            | JTokenType.Float -> f (x.ToObject())
+            | j -> failwith (sprintf "Expected numeric but was %A" j)
+
+        member private x.ToDecimal() = x.FoldNumeric(id,decimal)
+        member private x.ToDouble() = x.FoldNumeric(double,double)
+        member private x.ToSingle() = x.FoldNumeric(single,single)
+        member private x.ToInt16() = x.FoldNumeric(int16,int16)
+        member private x.ToInt32() = x.FoldNumeric(int,int)
+        member private x.ToInt64() = x.FoldNumeric(int64,int64)
+        member private x.ToUInt16() = x.FoldNumeric(uint16,uint16)
+        member private x.ToUInt32() = x.FoldNumeric(uint32,uint32)
+        member private x.ToUInt64() = x.FoldNumeric(uint64,uint64)
+        member private x.ToByte() = x.FoldNumeric(byte,byte)
+        member private x.ToSByte() = x.FoldNumeric(sbyte,sbyte)
+            
+    
+    type private JsonHelpers() =
+        static member create (x : decimal) = JValue x :> JToken
+        static member create (x : Double) = JValue x :> JToken
+        static member create (x : Single) = JValue (float x) :> JToken
+        static member create (x : int) = JValue (decimal x) :> JToken
+        static member create (x : bool) = JValue x :> JToken
+        static member create (x : uint32) = JValue (decimal x) :> JToken
+        static member create (x : int64) = JValue (decimal x) :> JToken
+        static member create (x : uint64) = JValue (decimal x) :> JToken
+        static member create (x : int16) = JValue (decimal x) :> JToken
+        static member create (x : uint16) = JValue (decimal x) :> JToken
+        static member create (x : byte) = JValue (decimal x) :> JToken
+        static member create (x : sbyte) = JValue (decimal x)  :> JToken
+        static member create (x : char) = JValue (string x) :> JToken
+        static member create (x : Guid) = JValue (string x) :> JToken
+
+
+    // FSharp.Newtonsoft.Json AST adapter
+
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JToken) =
+        match o.Type with
+        | JTokenType.Null -> JNull
+        | JTokenType.Array -> JArray ( (o :?> JArray).AsReadOnlyList())
+        | JTokenType.Object -> JObject (jsonObjectGetValues (o :?> JObject))
+        | JTokenType.Integer  -> JNumber o
+        | JTokenType.Float -> JNumber o
+        | JTokenType.Boolean -> JBool (o.ToObject() :bool)
+        | JTokenType.String -> JString (o.ToObject() :string)
+    
+    let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = 
+        x |> Seq.map (fun p -> p.Key,p.Value) |> Array.ofSeq 
+
+    let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
+    let inline JObject (x: IReadOnlyDictionary<string, JToken>) = JObject (dictAsProps x) :> JToken
+    let inline JBool (x: bool) = JValue x :> JToken
+    let JNull = JValue.CreateNull() :> JToken
+    let inline JString (x: string) = 
+        if x = null 
+            then JNull
+            else JValue x :> JToken
+    
+    #endif
     #if FSHARPDATA
     
     open FSharp.Data
@@ -103,9 +179,9 @@ module Fleece =
         | JsonValue.Boolean x -> JBool x
         | JsonValue.String x -> JString x
     
-    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) : JsonObject = 
+    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = 
         match x with
-        | :? ReadOnlyJsonPropertiesDictionary as x -> x.Properties
+        | :? ReadOnlyJsonPropertiesDictionary as x' -> x'.Properties
         | _ -> x |> Seq.map (fun p -> p.Key,p.Value) |> Array.ofSeq
 
     let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
@@ -117,7 +193,8 @@ module Fleece =
             then JsonValue.Null
             else JsonValue.String x
     
-    #else
+    #endif
+    #if SYSTEMJSON
     
     open System.Json
 
@@ -192,9 +269,39 @@ module Fleece =
     type 'a ParseResult = Choice<'a, string>
 
     module Helpers =
-        
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
+        #if NEWTONSOFT
 
+        let inline tryRead<'a> s = 
+            function
+            | JNumber j -> 
+                try
+                  Success (j.ToObject<'a>())
+                with 
+                | exn -> failparse s j
+            | a -> failparse s a
+
+        type JsonHelpers with        
+            
+            static member inline tryReadDecimal = tryRead<decimal> "decimal"  
+            static member inline tryReadInt16 = tryRead<int16> "int16"
+            static member inline tryReadInt = tryRead<int> "int"
+            static member inline tryReadInt64 = tryRead<int64> "int64"
+            static member inline tryReadUInt16 = tryRead<uint16> "uint16"
+            static member inline tryReadUInt32 = tryRead<uint32> "uint32"
+            static member inline tryReadUInt64 = tryRead<uint64> "uint64"
+            static member inline tryReadByte = tryRead<byte> "byte"
+            static member inline tryReadSByte = tryRead<sbyte> "sbyte"
+            static member inline tryReadDouble = tryRead<double> "double"
+            static member inline tryReadSingle = tryRead<single> "single"
+                
+            static member jsonObjectFromJSON =
+                fun (o: JToken) ->
+                    match o.Type with
+                    | JTokenType.Object -> Success ( o :?> JObject )
+                    | a -> failparse "JsonObject" a     
+
+        #endif
         #if FSHARPDATA
 
         type JsonHelpers with
@@ -249,7 +356,8 @@ module Fleece =
                     | JObject x -> Success (dictAsProps x)
                     | a -> failparse "JsonObject" a     
 
-        #else
+        #endif
+        #if SYSTEMJSON
 
         let inline tryRead<'a> s = 
             function
