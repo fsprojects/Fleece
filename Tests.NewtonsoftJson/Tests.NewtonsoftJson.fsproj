@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,11 +9,11 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
-    <TargetFrameworks>net461</TargetFrameworks>    
-    <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
+    <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
+    <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Tests.fs" />
+    <Compile Include="../Tests/Tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsCheck" Version="0.9.4.0" />
@@ -21,7 +21,6 @@
     <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Fleece\Fleece.fsproj" />
+    <ProjectReference Include="..\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
   </ItemGroup>
-  
 </Project>

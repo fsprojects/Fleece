@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Fleece</RootNamespace>
+    <Name>Fleece</Name>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+    <WarningLevel>3</WarningLevel>
+    <VersionPrefix>0.4.1</VersionPrefix>
+    <VersionSuffix>alpha-1</VersionSuffix>
+    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
+    <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
+    <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
+    <FileVersion>$(VersionPrefix).0</FileVersion>
+    <RepositoryUrl>https://github.com/mausch/Fleece</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/mausch/Fleece</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</PackageLicenseUrl>
+    <PackageTags>json fsharp</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>JSON mapper for Newtonsoft Json</Description>
+    <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
+    <Authors>Mauricio Scheffer,Lev Gorodinski</Authors>
+    <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Fleece/AssemblyInfo.fs" />
+    <Compile Include="../Fleece/Fleece.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharpPlus" Version="1.0.0-RC2" />
+    <PackageReference Include="ReadOnlyCollectionExtensions" Version="1.3.0" />
+    <PackageReference Include="ReadOnlyCollectionInterfaces" Version="1.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+</Project>
