@@ -9,9 +9,17 @@ module Fleece =
     open FSharpPlus
     open ReadOnlyCollectionsExtensions
 
-    type Id<'t>(v:'t) =
+    type Id1<'t>(v:'t) =
         let value = v
         member this.getValue = value
+
+    type Id2<'t>(v:'t) =
+        let value = v
+        member this.getValue = value
+
+    type Default3 = class end
+    type Default2 = class inherit Default3 end
+    type Default1 = class inherit Default2 end
 
     #if NEWTONSOFT
     
@@ -415,33 +423,33 @@ module Fleece =
 
     open Helpers
 
-    type FromJSONClass = FromJSONClass with
+    type FromJSONClass =
+        inherit Default1
         
-        static member FromJSON (_: bool, FromJSONClass) = 
+        static member FromJSON (_: bool, _:FromJSONClass) = 
             function
             | JBool b -> Success b
             | a -> failparse "bool" a
 
-        static member FromJSON (_: string, FromJSONClass) =
+        static member FromJSON (_: string, _:FromJSONClass) =
             function
             | JString b -> Success b
             | JNull -> Success null
             | a -> failparse "string" a
 
-        static member FromJSON (_: JsonObject, FromJSONClass) = JsonHelpers.jsonObjectFromJSON
-        static member FromJSON (_:decimal, FromJSONClass) = JsonHelpers.tryReadDecimal        
-        static member FromJSON (_:int16, FromJSONClass) = JsonHelpers.tryReadInt16
-        static member FromJSON (_:int, FromJSONClass) = JsonHelpers.tryReadInt        
-        static member FromJSON (_:int64, FromJSONClass) = JsonHelpers.tryReadInt64                
-        static member FromJSON (_:uint16, FromJSONClass) = JsonHelpers.tryReadUInt16
-        static member FromJSON (_:uint32, FromJSONClass) = JsonHelpers.tryReadUInt32
-        static member FromJSON (_:uint64, FromJSONClass) = JsonHelpers.tryReadUInt64
-        static member FromJSON (_:byte, FromJSONClass) = JsonHelpers.tryReadByte
-        static member FromJSON (_:sbyte, FromJSONClass) = JsonHelpers.tryReadSByte
-        static member FromJSON (_:double, FromJSONClass) = JsonHelpers.tryReadDouble
-        static member FromJSON (_:single, FromJSONClass) = JsonHelpers.tryReadSingle
+        static member FromJSON (_:decimal, _:FromJSONClass) = JsonHelpers.tryReadDecimal        
+        static member FromJSON (_:int16, _:FromJSONClass) = JsonHelpers.tryReadInt16
+        static member FromJSON (_:int, _:FromJSONClass) = JsonHelpers.tryReadInt        
+        static member FromJSON (_:int64, _:FromJSONClass) = JsonHelpers.tryReadInt64                
+        static member FromJSON (_:uint16, _:FromJSONClass) = JsonHelpers.tryReadUInt16
+        static member FromJSON (_:uint32, _:FromJSONClass) = JsonHelpers.tryReadUInt32
+        static member FromJSON (_:uint64, _:FromJSONClass) = JsonHelpers.tryReadUInt64
+        static member FromJSON (_:byte, _:FromJSONClass) = JsonHelpers.tryReadByte
+        static member FromJSON (_:sbyte, _:FromJSONClass) = JsonHelpers.tryReadSByte
+        static member FromJSON (_:double, _:FromJSONClass) = JsonHelpers.tryReadDouble
+        static member FromJSON (_:single, _:FromJSONClass) = JsonHelpers.tryReadSingle
 
-        static member FromJSON (_: char, FromJSONClass) =
+        static member FromJSON (_: char, _:FromJSONClass) =
             function
             | JString s -> 
                 if s = null
@@ -449,7 +457,7 @@ module Fleece =
                     else Success s.[0]
             | a -> failparse "char" a
 
-        static member FromJSON (_: Guid, FromJSONClass) =
+        static member FromJSON (_: Guid, _:FromJSONClass) =
             function
             | JString s -> 
                 if s = null
@@ -460,7 +468,7 @@ module Fleece =
                         | true, g -> Success g
             | a -> failparse "Guid" a
 
-        static member FromJSON (_: DateTime, FromJSONClass) =
+        static member FromJSON (_: DateTime, _:FromJSONClass) =
             function
             | JString s ->
                 if s = null 
@@ -470,7 +478,7 @@ module Fleece =
                          | _ -> Failure (sprintf "Invalid DateTime %s" s)
             | a -> failparse "DateTime" a
 
-        static member FromJSON (_: DateTimeOffset, FromJSONClass) =
+        static member FromJSON (_: DateTimeOffset, _:FromJSONClass) =
             function
             | JString s ->
                 if s = null 
@@ -481,7 +489,7 @@ module Fleece =
             | a -> failparse "DateTimeOffset" a
 
     /// Maps JSON to a type
-    let inline fromJSON (x: JsonValue) : 'a ParseResult = iFromJSON (FromJSONClass, Unchecked.defaultof<'a>) x
+    let inline fromJSON (x: JsonValue) : 'a ParseResult = iFromJSON (Unchecked.defaultof<FromJSONClass>, Unchecked.defaultof<'a>) x
 
     /// Parses JSON and maps to a type
     let inline parseJSON (x: string) : 'a ParseResult =
@@ -504,7 +512,7 @@ module Fleece =
         | _ -> Success None
 
     type FromJSONClass with
-        static member inline FromJSON (_: Choice<'a, 'b>, FromJSONClass) : JsonValue -> ParseResult<Choice<'a, 'b>> =
+        static member inline FromJSON (_: Choice<'a, 'b>, _:FromJSONClass) : JsonValue -> ParseResult<Choice<'a, 'b>> =
             function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -514,7 +522,7 @@ module Fleece =
             | a -> failparse "Choice" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: Choice<'a, 'b, 'c>, FromJSONClass) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> =
+        static member inline FromJSON (_: Choice<'a, 'b, 'c>, _:FromJSONClass) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> =
             function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -525,7 +533,7 @@ module Fleece =
             | a -> failparse "Choice" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a option, FromJSONClass) : JsonValue -> ParseResult<'a option> =
+        static member inline FromJSON (_: 'a option, _:FromJSONClass) : JsonValue -> ParseResult<'a option> =
             function
             | JNull a -> Success None
             | x -> 
@@ -533,7 +541,7 @@ module Fleece =
                 map Some a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a Nullable, FromJSONClass) : JsonValue -> ParseResult<'a Nullable> =
+        static member inline FromJSON (_: 'a Nullable, _:FromJSONClass) : JsonValue -> ParseResult<'a Nullable> =
             function
             | JNull a -> Success (Nullable())
             | x -> 
@@ -541,7 +549,7 @@ module Fleece =
                 map (fun x -> Nullable x) a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a array, FromJSONClass) : JsonValue -> ParseResult<'a array> =
+        static member inline FromJSON (_: 'a array, _:FromJSONClass) : JsonValue -> ParseResult<'a array> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a 
@@ -549,7 +557,7 @@ module Fleece =
             | a -> failparse "array" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: list<'a>, FromJSONClass) : JsonValue -> ParseResult<list<'a>> =
+        static member inline FromJSON (_: list<'a>, _:FromJSONClass) : JsonValue -> ParseResult<list<'a>> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a
@@ -557,7 +565,7 @@ module Fleece =
             | a -> failparse "array" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a Set, FromJSONClass) : JsonValue -> ParseResult<'a Set> =
+        static member inline FromJSON (_: 'a Set, _:FromJSONClass) : JsonValue -> ParseResult<'a Set> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a
@@ -565,7 +573,7 @@ module Fleece =
             | a -> failparse "array" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: Map<string, 'a>, FromJSONClass) : JsonValue -> ParseResult<Map<string, 'a>> =
+        static member inline FromJSON (_: Map<string, 'a>, _:FromJSONClass) : JsonValue -> ParseResult<Map<string, 'a>> =
             function
             | JObject o as jobj ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
@@ -573,7 +581,7 @@ module Fleece =
             | a -> failparse "Map" a
 
     type FromJSONClass with
-        static member inline FromJSON (_: Dictionary<string, 'a>, FromJSONClass) : JsonValue -> ParseResult<Dictionary<string, 'a>> =
+        static member inline FromJSON (_: Dictionary<string, 'a>, _:FromJSONClass) : JsonValue -> ParseResult<Dictionary<string, 'a>> =
             function
             | JObject o as jobj ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
@@ -584,17 +592,18 @@ module Fleece =
                         d)
             | a -> failparse "Dictionary" a
 
-        static member inline FromJSON (_: 'a ResizeArray, FromJSONClass) : JsonValue -> ParseResult<'a ResizeArray> =
+        static member inline FromJSON (_: 'a ResizeArray, _:FromJSONClass) : JsonValue -> ParseResult<'a ResizeArray> =
             function
             | JArray a -> 
                 let xx : 'a seq ParseResult = traverse fromJSON a
                 map (fun x -> ResizeArray<_>(x: 'a seq)) xx
             | a -> failparse "ResizeArray" a
 
-        static member inline FromJSON (_: 'a Id, FromJSONClass) : JsonValue -> ParseResult<Id<'a>> = fun _ -> Success (Id<'a>(Unchecked.defaultof<'a>))
+        static member inline FromJSON (_: 'a Id1, _:FromJSONClass) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a>(Unchecked.defaultof<'a>))
+        static member inline FromJSON (_: 'a Id2, _:FromJSONClass) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a>(Unchecked.defaultof<'a>))
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b, FromJSONClass) : JsonValue -> ParseResult<'a * 'b> =
+        static member inline FromJSON (_: 'a * 'b, _:FromJSONClass) : JsonValue -> ParseResult<'a * 'b> =
             function
             | JArray a as x ->
                 if a.Count <> 2 then
@@ -604,7 +613,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c, FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c> =
+        static member inline FromJSON (_: 'a * 'b * 'c, _:FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c> =
             function
             | JArray a as x ->
                 if a.Count <> 3 then
@@ -614,7 +623,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd, FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd, _:FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
             function
             | JArray a as x ->
                 if a.Count <> 4 then
@@ -624,7 +633,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e, FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e, _:FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
             function
             | JArray a as x ->
                 if a.Count <> 5 then
@@ -634,7 +643,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f, FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f, _:FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
             function
             | JArray a as x ->
                 if a.Count <> 6 then
@@ -644,7 +653,7 @@ module Fleece =
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type FromJSONClass with
-        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
+        static member inline FromJSON (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _:FromJSONClass) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
             function
             | JArray a as x ->
                 if a.Count <> 7 then
@@ -655,9 +664,11 @@ module Fleece =
 
     // Default, for external classes.
     type FromJSONClass with 
-        static member inline FromJSON (r:'R, _:obj                             ) = (^R : (static member FromJSON: ^R   -> (JsonValue -> ^R ParseResult)) r ) : JsonValue ->  ^R ParseResult
-        static member inline FromJSON (_:'R, _:Collections.IStructuralEquatable) = fun js -> (^R : (static member FromJSON: JsonValue -> ^R ParseResult) js) : ^R ParseResult
+        static member inline FromJSON (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R   -> (JsonValue -> ^R ParseResult)) r ) : JsonValue ->  ^R ParseResult
+        static member inline FromJSON (_: 'R, _:Default2) = fun js -> (^R : (static member FromJSON: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
+        static member FromJSON (_:JsonObject, _:Default1) = JsonHelpers.jsonObjectFromJSON
+        
     // Serializing:
 
     type ToJSONClass = ToJSONClass with
