@@ -23,6 +23,7 @@
     <AssemblyName>Fleece.FSharpData</AssemblyName>
     <Authors>Mauricio Scheffer,Lev Gorodinski</Authors>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
+    <OtherFlags>--warnon:1182</OtherFlags>    
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Fleece/AssemblyInfo.fs" />

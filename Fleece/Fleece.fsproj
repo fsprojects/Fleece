@@ -23,6 +23,7 @@
     <Description>JSON mapper for System.Json</Description>
     <AssemblyName>Fleece</AssemblyName>
     <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
+     <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
