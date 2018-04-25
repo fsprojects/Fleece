@@ -11,11 +11,11 @@ module Fleece =
 
     type Id1<'t>(v:'t) =
         let value = v
-        member this.getValue = value
+        member __.getValue = value
 
     type Id2<'t>(v:'t) =
         let value = v
-        member this.getValue = value
+        member __.getValue = value
 
     type Default3 = class end
     type Default2 = class inherit Default3 end
@@ -84,6 +84,7 @@ module Fleece =
         | JTokenType.Float -> JNumber o
         | JTokenType.Boolean -> JBool (o.ToObject() :bool)
         | JTokenType.String -> JString (o.ToObject() :string)
+        | t -> failwithf "Invalid JTokenType %A" t
     
     let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = 
         x |> Seq.map (fun p -> p.Key,p.Value) |> Array.ofSeq 
@@ -162,7 +163,7 @@ module Fleece =
             interface IReadOnlyDictionary<string, JsonValue> with
                 member __.Keys = properties |> Seq.map fst                
                 member __.Values = properties |> Seq.map snd                
-                member __.Item with get(key:string) = properties |> Array.find (fun (k,v) -> k = key) |> snd                
+                member __.Item with get(key:string) = properties |> Array.find (fun (k,_) -> k = key) |> snd                
                 member __.ContainsKey(key:string) = properties |> Array.exists (fun (k,_) -> k = key)                
                 member __.TryGetValue(key:string, value:byref<JsonValue>) =
                     match properties |> Array.tryFindIndex (fun (k,_) -> k = key) with
@@ -286,7 +287,7 @@ module Fleece =
                 try
                   Success (j.ToObject<'a>())
                 with 
-                | exn -> failparse s j
+                | _ -> failparse s j
             | a -> failparse s a
 
         type JsonHelpers with        
@@ -401,15 +402,15 @@ module Fleece =
         let inline iFromJSON (a: ^a, b: ^b) =
             ((^a or ^b) : (static member FromJSON: ^b*_ -> (JsonValue -> ^b ParseResult)) b, a)
 
-        let inline iToJSON (a: ^a, b: ^b) =
+        let inline iToJSON (_: ^a, b: ^b) =
             ((^a or ^b) : (static member ToJSON: ^b -> JsonValue) b)
 
         let listAsReadOnly (l: _ list) =
             { new IReadOnlyList<_> with
-                member x.Count = l.Length
-                member x.Item with get index = l.[index]
-                member x.GetEnumerator() = (l :> _ seq).GetEnumerator()
-                member x.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
+                member __.Count = l.Length
+                member __.Item with get index = l.[index]
+                member __.GetEnumerator() = (l :> _ seq).GetEnumerator()
+                member __.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
 
         let dict x = (dict x).AsReadOnlyDictionary()
 
@@ -535,7 +536,7 @@ module Fleece =
     type FromJSONClass with
         static member inline FromJSON (_: 'a option, _:FromJSONClass) : JsonValue -> ParseResult<'a option> =
             function
-            | JNull a -> Success None
+            | JNull _ -> Success None
             | x -> 
                 let a: 'a ParseResult = fromJSON x
                 map Some a
@@ -543,7 +544,7 @@ module Fleece =
     type FromJSONClass with
         static member inline FromJSON (_: 'a Nullable, _:FromJSONClass) : JsonValue -> ParseResult<'a Nullable> =
             function
-            | JNull a -> Success (Nullable())
+            | JNull _ -> Success (Nullable())
             | x -> 
                 let a: 'a ParseResult = fromJSON x
                 map (fun x -> Nullable x) a
@@ -575,7 +576,7 @@ module Fleece =
     type FromJSONClass with
         static member inline FromJSON (_: Map<string, 'a>, _:FromJSONClass) : JsonValue -> ParseResult<Map<string, 'a>> =
             function
-            | JObject o as jobj ->
+            | JObject o ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
                 map (fun values -> Seq.zip (keys o) values |> Map.ofSeq) xx
             | a -> failparse "Map" a
@@ -583,7 +584,7 @@ module Fleece =
     type FromJSONClass with
         static member inline FromJSON (_: Dictionary<string, 'a>, _:FromJSONClass) : JsonValue -> ParseResult<Dictionary<string, 'a>> =
             function
-            | JObject o as jobj ->
+            | JObject o ->
                 let xx : 'a seq ParseResult = traverse fromJSON (values o)
                 xx |> map (fun values ->
                         let kv = Seq.zip (keys o) values

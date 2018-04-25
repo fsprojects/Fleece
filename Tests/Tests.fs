@@ -17,6 +17,7 @@ open System.Json
 open Newtonsoft.Json
 #endif
 
+#nowarn "0686"
 
 type Person = {
     Name: string
