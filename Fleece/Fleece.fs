@@ -93,10 +93,7 @@ module Fleece =
     let inline JObject (x: IReadOnlyDictionary<string, JToken>) = JObject (dictAsProps x) :> JToken
     let inline JBool (x: bool) = JValue x :> JToken
     let JNull = JValue.CreateNull() :> JToken
-    let inline JString (x: string) = 
-        if x = null 
-            then JNull
-            else JValue x :> JToken
+    let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
     
     #endif
     #if FSHARPDATA
@@ -197,10 +194,7 @@ module Fleece =
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
     let inline JBool (x: bool) = JsonValue.Boolean x
     let JNull : JsonValue = JsonValue.Null
-    let inline JString (x: string) = 
-        if x = null 
-            then JsonValue.Null
-            else JsonValue.String x
+    let inline JString (x: string) = if isNull x then JsonValue.Null else JsonValue.String x
     
     #endif
     #if SYSTEMJSON
@@ -255,10 +249,7 @@ module Fleece =
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :> JsonValue
     let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
     let JNull : JsonValue = null
-    let inline JString (x: string) = 
-        if x = null 
-            then JNull
-            else JsonPrimitive x :> JsonValue
+    let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
 
     #endif
 
@@ -420,8 +411,6 @@ module Fleece =
         let values (x: IReadOnlyDictionary<_,_>) =
             Seq.map (fun (KeyValue(_,v)) -> v) x
 
-        let inline notNull a = not (obj.ReferenceEquals(a, null))
-
     open Helpers
 
     type FromJSONClass =
@@ -452,41 +441,35 @@ module Fleece =
 
         static member FromJSON (_: char, _:FromJSONClass) =
             function
-            | JString s -> 
-                if s = null
-                    then Failure "Expected char, got null"
-                    else Success s.[0]
+            | JString null -> Failure "Expected char, got null"
+            | JString s    -> Success s.[0]
             | a -> failparse "char" a
 
         static member FromJSON (_: Guid, _:FromJSONClass) =
             function
-            | JString s -> 
-                if s = null
-                    then Failure "Expected Guid, got null"
-                    else 
-                        match Guid.TryParse s with
-                        | false, _ -> Failure ("Invalid Guid " + s)
-                        | true, g -> Success g
+            | JString null -> Failure "Expected Guid, got null"
+            | JString s    ->
+                match Guid.TryParse s with
+                | false, _ -> Failure ("Invalid Guid " + s)
+                | true , g -> Success g
             | a -> failparse "Guid" a
 
         static member FromJSON (_: DateTime, _:FromJSONClass) =
             function
-            | JString s ->
-                if s = null 
-                    then Failure "Expected DateTime, got null"
-                    else match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
-                         | true, t -> Success t
-                         | _ -> Failure (sprintf "Invalid DateTime %s" s)
+            | JString null -> Failure "Expected DateTime, got null"
+            | JString s    ->
+                match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                | true, t -> Success t
+                | _       -> Failure (sprintf "Invalid DateTime %s" s)
             | a -> failparse "DateTime" a
 
         static member FromJSON (_: DateTimeOffset, _:FromJSONClass) =
             function
-            | JString s ->
-                if s = null 
-                    then Failure "Expected DateTimeOffset, got null"
-                    else match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
-                         | true, t -> Success t
-                         | _ -> Failure (sprintf "Invalid DateTimeOffset %s" s)
+            | JString null -> Failure "Expected DateTimeOffset, got null"
+            | JString s    ->
+                match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+                | true, t -> Success t
+                | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
             | a -> failparse "DateTimeOffset" a
 
     /// Maps JSON to a type
@@ -696,7 +679,7 @@ module Fleece =
     let inline toJSON (x: 'a) : JsonValue = iToJSON (ToJSONClass, x)
 
     /// Creates a new JSON object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> notNull k) |> dict)
+    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
 
     /// Creates a new JSON key,value pair for a JSON object
     let inline jpair (key: string) value = key, toJSON value
@@ -740,12 +723,12 @@ module Fleece =
 
     type ToJSONClass with
         static member inline ToJSON (x: Map<string, 'a>) =
-            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> notNull k) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
+            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
             JObject v
 
     type ToJSONClass with
         static member inline ToJSON (x: Dictionary<string, 'a>) =
-            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> notNull k) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
+            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, toJSON v) |> dict
             JObject v
 
         static member inline ToJSON (x: 'a ResizeArray) =
