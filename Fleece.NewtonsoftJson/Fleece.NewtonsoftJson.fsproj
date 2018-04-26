@@ -31,8 +31,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0-RC2" />
-    <PackageReference Include="ReadOnlyCollectionExtensions" Version="1.3.0" />
-    <PackageReference Include="ReadOnlyCollectionInterfaces" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 </Project>
