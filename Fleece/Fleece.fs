@@ -7,8 +7,15 @@ module Fleece =
     open System.Globalization    
     open System.Collections.Generic
     open FSharpPlus
-    open ReadOnlyCollectionsExtensions
-
+    module ReadOnlyCollections=
+        open System.Collections.ObjectModel
+        type IDictionary<'key, 'value> with
+            member self.AsReadOnlyDictionary() = ReadOnlyDictionary(self) :> IReadOnlyDictionary<_,_>
+        type IList<'value> with
+            member self.AsReadOnlyList() = ReadOnlyCollection(self) :> IReadOnlyList<_>
+        type IEnumerable<'value> with
+            member self.ToReadOnlyList() = System.Linq.Enumerable.ToList(self).AsReadOnlyList()
+    open ReadOnlyCollections
     type Id1<'t>(v:'t) =
         let value = v
         member __.getValue = value
