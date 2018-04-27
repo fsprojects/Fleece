@@ -2,7 +2,7 @@ Fleece
 ======
 
 Fleece is a JSON mapper for F#. It simplifies mapping from [System.Json](http://bit.ly/1axIBoA)'s JsonValue onto your types, and mapping from your types onto JsonValue. It's also available for [FSharp.Data](http://fsharp.github.io/FSharp.Data/)'s JSON types if you prefer it over System.Json.
-Its design is strongly influenced by Haskell's [Aeson](http://hackage.haskell.org/package/aeson-0.7.0.0/docs/Data-Aeson.html). Like Aeson, Fleece is designed around two typeclasses (in [FsControl](https://github.com/gmpl/FsControl) style) ToJSON and FromJSON.
+Its design is strongly influenced by Haskell's [Aeson](http://hackage.haskell.org/package/aeson-0.7.0.0/docs/Data-Aeson.html). Like Aeson, Fleece is designed around two typeclasses (in [FsControl](https://github.com/gmpl/FsControl) style) ToJson and OfJson.
 
 ### Download binaries
 
@@ -29,7 +29,7 @@ open Fleece
 open Fleece.Operators
 
 type Person with
-    static member ToJSON (x: Person) =
+    static member ToJson (x: Person) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
@@ -49,14 +49,14 @@ let p =
           Children = [] }
       ] }
 
-printfn "%s" ((toJSON p).ToString())
+printfn "%s" ((toJson p).ToString())
 ```
 
 And you can map it from JSON like this:
 
 ```fsharp
 type Person with
-    static member FromJSON json =
+    static member OfJson json =
         match json with
         | JObject o ->
             let name = o .@ "name"
@@ -72,7 +72,7 @@ type Person with
             | x -> Failure (sprintf "Error parsing person: %A" x)
         | x -> Failure (sprintf "Expected person, found %A" x)
         
-let john : Person ParseResult = parseJSON """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""        
+let john : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""        
 ```
 
 Though it's much easier to do this in a monadic or applicative way. For example, using [FSharpPlus](https://github.com/gmpl/FSharpPlus) (which is already a dependency of Fleece):
@@ -83,7 +83,7 @@ open FSharpPlus
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member FromJSON json =
+    static member OfJson json =
         match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
@@ -95,7 +95,7 @@ Or monadically:
 
 ```fsharp
 type Person with
-    static member FromJSON json =
+    static member OfJson json =
         match json with
         | JObject o -> 
             monad {

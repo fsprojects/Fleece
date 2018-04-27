@@ -27,17 +27,17 @@ type Person = {
 type Person with
     static member Create name age children = { Person.Name = name; Age = age; Children = children }
 
-    static member FromJSON json = 
+    static member OfJson json = 
         match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
-    static member ToJSON (x: Person) =
+    static member ToJson (x: Person) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
             "children" .= x.Children
-        ]
+        ] 
 
 type Attribute = {
     Name: string
@@ -63,7 +63,7 @@ type Attribute with
             }
         | x -> Failure (sprintf "Expected Attribute, found %A" x)
 
-    static member ToJSON (x: Attribute) =
+    static member ToJson (x: Attribute) =
         jobj [ "name" .= x.Name; "value" .= x.Value ]
 
 type Item = {
@@ -73,7 +73,7 @@ type Item = {
 }
 
 type Item with
-    static member FromJSON json =
+    static member OfJson json =
         match json with
         | JObject o ->
             monad {
@@ -91,7 +91,7 @@ type Item with
 type NestedItem = NestedItem of Item
 
 type NestedItem with
-    static member FromJSON json =
+    static member OfJson json =
         match json with
         | JObject o ->
             monad {
@@ -110,7 +110,7 @@ type NestedItem with
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
-        Assert.Equal("", expected, strCleanUp ((toJSON value).ToString()))
+        Assert.Equal("", expected, strCleanUp ((toJson value).ToString()))
 
 
 open FsCheck
@@ -120,7 +120,7 @@ let tests =
     TestList [
         testList "From JSON" [
             test "item with missing key" {
-                let actual : Item ParseResult = parseJSON """{"id": 1, "brand": "Sony"}"""
+                let actual : Item ParseResult = parseJson """{"id": 1, "brand": "Sony"}"""
                 let expected = 
                     { Item.Id = 1
                       Brand = "Sony"
@@ -129,7 +129,7 @@ let tests =
             }
 
             test "nested item" {
-                let actual: NestedItem ParseResult = parseJSON """{"id": 1, "blah": {"brand": "Sony", "availability": "1 week"}}"""
+                let actual: NestedItem ParseResult = parseJson """{"id": 1, "blah": {"brand": "Sony", "availability": "1 week"}}"""
                 let expected = 
                     NestedItem {
                         Item.Id = 1
@@ -140,7 +140,7 @@ let tests =
             }
 
             test "attribute ok" {
-                let actual : Attribute ParseResult = parseJSON """{"name": "a name", "value": "a value"}"""
+                let actual : Attribute ParseResult = parseJson """{"name": "a name", "value": "a value"}"""
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = "a value" }
@@ -148,14 +148,14 @@ let tests =
             }
 
             test "attribute with null name" {
-                let actual : Attribute ParseResult = parseJSON """{"name": null, "value": "a value"}"""
+                let actual : Attribute ParseResult = parseJson """{"name": null, "value": "a value"}"""
                 match actual with
                 | Success a -> failtest "should have failed"
                 | Failure e -> ()
             }
 
             test "attribute with null value" {
-                let actual : Attribute ParseResult = parseJSON """{"name": "a name", "value": null}"""
+                let actual : Attribute ParseResult = parseJson """{"name": "a name", "value": null}"""
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = null }
@@ -163,7 +163,7 @@ let tests =
             }
 
             test "Person recursive" {
-                let actual : Person ParseResult = parseJSON """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
+                let actual : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
                 let expectedPerson = 
                     { Person.Name = "John"
                       Age = 44
@@ -180,13 +180,13 @@ let tests =
             }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
-                let actual : DateTime ParseResult = fromJSON (JsonPrimitive "2014-09-05T04:38:07.862Z")
+                let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07.862Z")
                 let expected = new DateTime(2014,9,5,4,38,7,862)
                 Assert.Equal("DateTime", Success expected, actual)
             }
 
             test "DateTime without milliseconds" {
-                let actual : DateTime ParseResult = fromJSON (JsonPrimitive "2014-09-05T04:38:07Z")
+                let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07Z")
                 let expected = new DateTime(2014,9,5,4,38,7)
                 Assert.Equal("DateTime", Success expected, actual)
             }
@@ -247,7 +247,7 @@ let tests =
 
         testList "Roundtrip" [
             let inline roundtripEq (isEq: 'a -> 'a -> bool) p =
-                let actual = p |> toJSON |> fromJSON
+                let actual = p |> toJson |> ofJson
                 let ok = 
                     match actual with
                     | Success actual -> isEq actual p
