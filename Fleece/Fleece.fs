@@ -789,3 +789,14 @@ module Fleece =
         /// Tries to get a value from a Json object.
         /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetopt o key
+
+    module Lens =
+        open FSharpPlus.Lens
+        let inline _String x= (prism JString <| fun v -> match v with JString s -> Ok s| _ -> Error v) x
+        let inline _Object x= (prism JObject <| fun v -> match v with JObject s -> Ok s| _ -> Error v) x
+        let inline _Array x= (prism JArray <| fun v -> match v with JArray s -> Ok s| _ -> Error v) x
+        let inline _Bool x= (prism JBool <| fun v -> match v with JBool s -> Ok s| _ -> Error v) x
+        //let inline _Null x = prism (konst null) (fun v -> match v with Null -> Ok ()| _ -> Error v)
+        //let inline nonNull x = prism id (fun v -> if not<< _Null v then Ok v else Error v) x
+
+        //let nth i = _Array << ix i
