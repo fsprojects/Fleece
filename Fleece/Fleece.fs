@@ -265,15 +265,15 @@ module Fleece =
 
     let (|Success|Failure|) =
         function
-        | Choice1Of2 x -> Success x
-        | Choice2Of2 x -> Failure x
+        | Ok x -> Success x
+        | Error x -> Failure x
 
-    let inline Success x = Choice1Of2 x
-    let inline Failure x = Choice2Of2 x
+    let inline Success x = Ok x
+    let inline Failure x = Error x
 
     // Deserializing:
 
-    type 'a ParseResult = Choice<'a, string>
+    type 'a ParseResult = Result<'a, string>
 
     module Helpers =
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
@@ -798,5 +798,5 @@ module Fleece =
         let inline _Bool x= (prism JBool <| fun v -> match v with JBool s -> Ok s| _ -> Error v) x
         //let inline _Null x = prism (konst null) (fun v -> match v with Null -> Ok ()| _ -> Error v)
         //let inline nonNull x = prism id (fun v -> if not<< _Null v then Ok v else Error v) x
-
-        //let nth i = _Array << ix i
+        
+        //let nth i = _Array << (nth i)
