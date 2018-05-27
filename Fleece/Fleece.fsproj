@@ -8,6 +8,7 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
+    <NoWarn>0686</NoWarn>
     <VersionPrefix>0.4.1</VersionPrefix>
     <VersionSuffix>alpha-1</VersionSuffix>
     <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>

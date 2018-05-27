@@ -14,7 +14,7 @@ module Fleece =
         type IList<'value> with
             member self.AsReadOnlyList() = ReadOnlyCollection(self) :> IReadOnlyList<_>
         type IEnumerable<'value> with
-            member self.ToReadOnlyList() = System.Linq.Enumerable.ToList(self).AsReadOnlyList()
+            member self.ToReadOnlyList() = ResizeArray(self).AsReadOnlyList()
     open ReadOnlyCollections
     type Id1<'t>(v:'t) =
         let value = v
@@ -94,7 +94,7 @@ module Fleece =
         | t -> failwithf "Invalid JTokenType %A" t
     
     let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = 
-        x |> Seq.map (fun p -> p.Key,p.Value) |> Array.ofSeq 
+        x |> Seq.map (|KeyValue|) |> Array.ofSeq 
 
     let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
     let inline JObject (x: IReadOnlyDictionary<string, JToken>) = JObject (dictAsProps x) :> JToken
@@ -156,10 +156,10 @@ module Fleece =
 
         with
             interface System.Collections.IEnumerable with
-                member __.GetEnumerator() = (properties |> Seq.map (fun (k,v) -> KeyValuePair(k,v))).GetEnumerator() :> System.Collections.IEnumerator
+                member __.GetEnumerator() = (properties |> Seq.map KeyValuePair).GetEnumerator() :> System.Collections.IEnumerator
 
             interface IEnumerable<KeyValuePair<string, JsonValue>> with
-                member __.GetEnumerator() = (properties |> Seq.map (fun (k,v) -> KeyValuePair(k,v))).GetEnumerator()
+                member __.GetEnumerator() = (properties |> Seq.map KeyValuePair).GetEnumerator()
 
             interface IReadOnlyCollection<KeyValuePair<string,JsonValue>> with
                 member __.Count = properties.Length
@@ -195,7 +195,7 @@ module Fleece =
     let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = 
         match x with
         | :? ReadOnlyJsonPropertiesDictionary as x' -> x'.Properties
-        | _ -> x |> Seq.map (fun p -> p.Key,p.Value) |> Array.ofSeq
+        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq
 
     let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
@@ -455,10 +455,7 @@ module Fleece =
         static member OfJson (_: Guid, _:OfJsonClass) =
             function
             | JString null -> Failure "Expected Guid, got null"
-            | JString s    ->
-                match Guid.TryParse s with
-                | false, _ -> Failure ("Invalid Guid " + s)
-                | true , g -> Success g
+            | JString s    -> tryParse<Guid> s |> option Success (Failure ("Invalid Guid " + s))
             | a -> failparse "Guid" a
 
         static member OfJson (_: DateTime, _:OfJsonClass) =
@@ -548,52 +545,36 @@ module Fleece =
     type OfJsonClass with
         static member inline OfJson (_: 'a array, _:OfJsonClass) : JsonValue -> ParseResult<'a array> =
             function
-            | JArray a -> 
-                let xx : 'a seq ParseResult = traverse ofJson a 
-                map Seq.toArray xx
+            | JArray a -> traverse ofJson a |> map Seq.toArray
             | a -> failparse "array" a
 
     type OfJsonClass with
         static member inline OfJson (_: list<'a>, _:OfJsonClass) : JsonValue -> ParseResult<list<'a>> =
             function
-            | JArray a -> 
-                let xx : 'a seq ParseResult = traverse ofJson a
-                map Seq.toList xx
+            | JArray a -> traverse ofJson a |> map Seq.toList
             | a -> failparse "array" a
 
     type OfJsonClass with
         static member inline OfJson (_: 'a Set, _:OfJsonClass) : JsonValue -> ParseResult<'a Set> =
             function
-            | JArray a -> 
-                let xx : 'a seq ParseResult = traverse ofJson a
-                map set xx
+            | JArray a -> traverse ofJson a |> map set
             | a -> failparse "array" a
 
     type OfJsonClass with
         static member inline OfJson (_: Map<string, 'a>, _:OfJsonClass) : JsonValue -> ParseResult<Map<string, 'a>> =
             function
-            | JObject o ->
-                let xx : 'a seq ParseResult = traverse ofJson (values o)
-                map (fun values -> Seq.zip (keys o) values |> Map.ofSeq) xx
+            | JObject o -> traverse ofJson (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
             | a -> failparse "Map" a
 
     type OfJsonClass with
         static member inline OfJson (_: Dictionary<string, 'a>, _:OfJsonClass) : JsonValue -> ParseResult<Dictionary<string, 'a>> =
             function
-            | JObject o ->
-                let xx : 'a seq ParseResult = traverse ofJson (values o)
-                xx |> map (fun values ->
-                        let kv = Seq.zip (keys o) values
-                        let d = Dictionary()
-                        for k,v in kv do d.[k] <- v
-                        d)
+            | JObject o -> traverse ofJson (values o) |> map (fun values -> Seq.zip (keys o) values |> ofSeq)
             | a -> failparse "Dictionary" a
 
         static member inline OfJson (_: 'a ResizeArray, _:OfJsonClass) : JsonValue -> ParseResult<'a ResizeArray> =
             function
-            | JArray a -> 
-                let xx : 'a seq ParseResult = traverse ofJson a
-                map (fun x -> ResizeArray<_>(x: 'a seq)) xx
+            | JArray a -> traverse ofJson a |> map (fun x -> ResizeArray<_>(x: 'a seq))
             | a -> failparse "ResizeArray" a
 
         static member inline OfJson (_: 'a Id1, _:OfJsonClass) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a>(Unchecked.defaultof<'a>))
@@ -604,9 +585,9 @@ module Fleece =
             function
             | JArray a as x ->
                 if a.Count <> 2 then
-                    Failure ("Expected array with 2 items, was: " + x.ToString())
+                    Failure ("Expected array with 2 items, was: " + string x)
                 else
-                    tuple2 <!> (ofJson a.[0]) <*> (ofJson a.[1])
+                    tuple2 <!> ofJson a.[0] <*> ofJson a.[1]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type OfJsonClass with
@@ -614,9 +595,9 @@ module Fleece =
             function
             | JArray a as x ->
                 if a.Count <> 3 then
-                    Failure ("Expected array with 3 items, was: " + x.ToString())
+                    Failure ("Expected array with 3 items, was: " + string x)
                 else
-                    tuple3 <!> (ofJson a.[0]) <*> (ofJson a.[1]) <*> (ofJson a.[2])
+                    tuple3 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type OfJsonClass with
@@ -624,9 +605,9 @@ module Fleece =
             function
             | JArray a as x ->
                 if a.Count <> 4 then
-                    Failure ("Expected array with 4 items, was: " + x.ToString())
+                    Failure ("Expected array with 4 items, was: " + string x)
                 else
-                    tuple4 <!> (ofJson a.[0]) <*> (ofJson a.[1]) <*> (ofJson a.[2]) <*> (ofJson a.[3])
+                    tuple4 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2] <*> ofJson a.[3]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type OfJsonClass with
@@ -634,9 +615,9 @@ module Fleece =
             function
             | JArray a as x ->
                 if a.Count <> 5 then
-                    Failure ("Expected array with 5 items, was: " + x.ToString())
+                    Failure ("Expected array with 5 items, was: " + string x)
                 else
-                    tuple5 <!> (ofJson a.[0]) <*> (ofJson a.[1]) <*> (ofJson a.[2]) <*> (ofJson a.[3]) <*> (ofJson a.[4])
+                    tuple5 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2] <*> ofJson a.[3] <*> ofJson a.[4]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type OfJsonClass with
@@ -644,9 +625,9 @@ module Fleece =
             function
             | JArray a as x ->
                 if a.Count <> 6 then
-                    Failure ("Expected array with 6 items, was: " + x.ToString())
+                    Failure ("Expected array with 6 items, was: " + string x)
                 else
-                    tuple6 <!> (ofJson a.[0]) <*> (ofJson a.[1]) <*> (ofJson a.[2]) <*> (ofJson a.[3]) <*> (ofJson a.[4]) <*> (ofJson a.[5])
+                    tuple6 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2] <*> ofJson a.[3] <*> ofJson a.[4] <*> ofJson a.[5]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     type OfJsonClass with
@@ -654,9 +635,9 @@ module Fleece =
             function
             | JArray a as x ->
                 if a.Count <> 7 then
-                    Failure ("Expected array with 7 items, was: " + x.ToString())
+                    Failure ("Expected array with 7 items, was: " + string x)
                 else
-                    tuple7 <!> (ofJson a.[0]) <*> (ofJson a.[1]) <*> (ofJson a.[2]) <*> (ofJson a.[3]) <*> (ofJson a.[4]) <*> (ofJson a.[5]) <*> (ofJson a.[6])
+                    tuple7 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2] <*> ofJson a.[3] <*> ofJson a.[4] <*> ofJson a.[5] <*> ofJson a.[6]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
     // Default, for external classes.
@@ -740,13 +721,11 @@ module Fleece =
 
     type ToJsonClass with
         static member inline ToJson (x: Map<string, 'a>, _:ToJsonClass) =
-            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, toJson v) |> dict
-            JObject v
+            x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, toJson v) |> dict |> JObject
 
     type ToJsonClass with
         static member inline ToJson (x: Dictionary<string, 'a>, _:ToJsonClass) =
-            let v = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, toJson v) |> dict
-            JObject v
+            x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, toJson v) |> dict |> JObject
 
         static member inline ToJson (x: 'a ResizeArray, _:ToJsonClass) =
             JArray ((Seq.map toJson x).ToReadOnlyList())
