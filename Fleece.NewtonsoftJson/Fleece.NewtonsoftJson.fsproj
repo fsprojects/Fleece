@@ -22,7 +22,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
     <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
-    <Authors>Mauricio Scheffer,Lev Gorodinski</Authors>
+    <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
