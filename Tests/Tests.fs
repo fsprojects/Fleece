@@ -1,4 +1,5 @@
-﻿open System
+﻿module Tests.Tests
+open System
 open System.Collections.Generic
 open System.Linq
 open Fuchu

@@ -6,4 +6,5 @@ packages/*
 .nuget/*.exe
 *.nupkg
 .vs/
+.idea/
 

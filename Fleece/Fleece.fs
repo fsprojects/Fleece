@@ -99,6 +99,7 @@ module Fleece =
     let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
     let inline JObject (x: IReadOnlyDictionary<string, JToken>) = JObject (dictAsProps x) :> JToken
     let inline JBool (x: bool) = JValue x :> JToken
+    let inline JNumber (x: decimal) = JValue x :> JToken
     let JNull = JValue.CreateNull() :> JToken
     let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
     
@@ -200,6 +201,7 @@ module Fleece =
     let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
     let inline JBool (x: bool) = JsonValue.Boolean x
+    let inline JNumber (x: decimal) = JsonValue.Number x
     let JNull : JsonValue = JsonValue.Null
     let inline JString (x: string) = if isNull x then JsonValue.Null else JsonValue.String x
     
@@ -257,7 +259,7 @@ module Fleece =
     let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
     let JNull : JsonValue = null
     let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
-
+    let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
     #endif
 
 
@@ -265,15 +267,15 @@ module Fleece =
 
     let (|Success|Failure|) =
         function
-        | Ok x -> Success x
-        | Error x -> Failure x
+        | Choice1Of2 x -> Success x
+        | Choice2Of2 x -> Failure x
 
-    let inline Success x = Ok x
-    let inline Failure x = Error x
+    let inline Success x = Choice1Of2 x
+    let inline Failure x = Choice2Of2 x
 
     // Deserializing:
 
-    type 'a ParseResult = Result<'a, string>
+    type 'a ParseResult = Choice<'a, string>
 
     module Helpers =
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
@@ -796,7 +798,7 @@ module Fleece =
         let inline _Object x= (prism JObject <| fun v -> match v with JObject s -> Ok s| _ -> Error v) x
         let inline _Array x= (prism JArray <| fun v -> match v with JArray s -> Ok s| _ -> Error v) x
         let inline _Bool x= (prism JBool <| fun v -> match v with JBool s -> Ok s| _ -> Error v) x
-        //let inline _Null x = prism (konst null) (fun v -> match v with Null -> Ok ()| _ -> Error v)
-        //let inline nonNull x = prism id (fun v -> if not<< _Null v then Ok v else Error v) x
-        
-        //let nth i = _Array << (nth i)
+        let inline _Number x= (prism JNumber <| fun v -> match v with JNumber s -> Ok s| _ -> Error v) x
+        let inline _Null x = prism (konst null) (fun v -> match v with JNull -> Ok ()| _ -> Error null) x
+        //// Like 'item', but for 'Object' with Text indices. 
+        let inline key i = _Object << (item i)

@@ -9,10 +9,11 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
-    <TargetFrameworks>net461</TargetFrameworks>    
+    <TargetFrameworks>net461</TargetFrameworks>
     <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Lenses.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -23,5 +24,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Fleece\Fleece.fsproj" />
   </ItemGroup>
-  
 </Project>
