@@ -24,7 +24,8 @@ module Fleece =
         let value = v
         member __.getValue = value
 
-    type Default3 = class end
+    type Default4 = class end
+    type Default3 = class inherit Default4 end
     type Default2 = class inherit Default3 end
     type Default1 = class inherit Default2 end
 
@@ -640,8 +641,36 @@ module Fleece =
                     tuple7 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2] <*> ofJson a.[3] <*> ofJson a.[4] <*> ofJson a.[5] <*> ofJson a.[6]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+
+
+    type Decoder<'S, 't> = Decoder of ('S -> ParseResult<'t>) with
+        static member run (Decoder f) = f
+
+        static member Map (Decoder d, f) = Decoder (d >=> (Success << f))
+
+        static member (<*>) (Decoder dfa, Decoder da) = Decoder <| fun a ->
+                    let result1 = dfa a
+                    let result2 = da a
+                    result1 <*> result2                                        
+
+    type Encoder<'t, 'S> = Encoder of ('t -> 'S) with
+        static member run (Encoder f) = f
+
+    type Codec<'S, 't, 'u> =
+        {
+            decoder : Decoder<'S, 't>
+            encoder : Encoder<'u, 'S>
+        } with
+        static member runDecoder {decoder = x} = Decoder.run x
+        static member runEncoder {encoder = x} = Encoder.run x   
+
+
     // Default, for external classes.
     type OfJsonClass with 
+        static member inline OfJson (_: 'R, _:Default4) = fun js -> 
+            let codec = (^R : (static member JsonCodec: Codec<JsonValue,'R,'R>) ())
+            Codec.runDecoder codec js : ^R ParseResult
+
         static member inline OfJson (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _:Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
@@ -752,13 +781,46 @@ module Fleece =
     type ToJsonClass with
         static member inline ToJson ((a, b, c, d, e, f, g), _:ToJsonClass) =
             JArray ([|toJson a; toJson b; toJson c; toJson d; toJson e; toJson f; toJson g|].AsReadOnlyList())
-
+   
     // Default, for external classes.
-    type ToJsonClass with 
+    type ToJsonClass with
+        static member inline ToJson (t: 'T, _:Default4) = 
+            let codec = (^T : (static member JsonCodec: Codec<JsonValue,'T,'T>) ())
+            Codec.runEncoder codec t
+
         static member inline ToJson (t: 'T, _:Default3) = (^T : (static member ToJSON: ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
 
-    module Operators =
+   
+    let mergeJson = function
+        | JNull, x | x, JNull                   -> x
+        | JObject dct1, JObject dct2            -> IReadOnlyDictionary.union dct1 dct2 |> JObject
+        | JObject dct, json | json, JObject dct -> dct |> IReadOnlyDictionary.add (sprintf "%d" dct.Count) json |> JObject
+        | json1      , json2                    -> Map [("1", json1); ("2", json2)] |> JObject
+
+    let inline deriveFieldCodec prop =
+        {
+            decoder = Decoder (function JObject j -> jget j prop | _ -> Choice2Of2 "Not a Json Object")
+            encoder = Encoder (fun (str: 't) -> toJson (Map.ofSeq [prop, str]))
+        }
+
+    let diPure f = 
+        { 
+            decoder = Decoder (fun _ -> Success f)
+            encoder = Encoder (fun _ -> JNull)
+        }
+
+    let diApply combiner toBC (remainderFields: Codec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f, 'f>) =
+        { 
+            decoder = (remainderFields.decoder: Decoder<'S, 'f -> 'r>) <*> currentField.decoder
+            encoder = Encoder (toBC >> (Codec.runEncoder currentField *** Codec.runEncoder remainderFields) >> combiner)
+        }
+   
+   
+   module Operators =
+
+        open FSharpPlus
+      
         /// Creates a new Json key,value pair for a Json object
         let inline (.=) key value = jpair key value
 
@@ -768,3 +830,8 @@ module Fleece =
         /// Tries to get a value from a Json object.
         /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetopt o key
+
+
+        let inline (<*/>) r (n, g) = diApply mergeJson (fanout g id) r (deriveFieldCodec n)
+        let inline (<!.>) f x      = diPure f <*/> x
+        let inline (^=) a b = (a, b)

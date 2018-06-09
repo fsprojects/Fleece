@@ -115,3 +115,30 @@ type Person with
 Or you can use the Choice monad/applicative in [FSharpx.Extras](https://github.com/fsprojects/FSharpx.Extras) instead, if you prefer.
 
 You can see more examples in the [EdmundsNet](https://github.com/mausch/EdmundsNet) project.
+
+
+CODEC (WIP)
+===========
+
+```fsharp
+// Example
+
+type Person =
+  { 
+    name : string * string
+    age : int
+    children: Person list
+  } with
+    static member JsonCodec =
+        fun f l a c -> { name = (f, l); age = a; children = c }
+        <!.> "firstName" ^= fun x -> fst x.name
+        <*/> "lastName"  ^= fun x -> snd x.name
+        <*/> "age"       ^= fun x -> x.age
+        <*/> "children"  ^= fun x -> x.children
+
+// Test
+
+let person = {name = ("John", "Doe"); age = 42; children = [{name = ("Johnny", "Doe"); age = 21; children = []}]}
+let personJson = toJson person
+let personResult = ofJson<Person> personJson
+```
