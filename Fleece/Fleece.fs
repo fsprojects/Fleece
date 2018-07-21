@@ -782,9 +782,9 @@ module Fleece =
         let inline _Null x = prism (konst null) (fun v -> match v with JNull -> Ok ()| _ -> Error null) x
         //let inline jkey i f t = map (fun x -> IReadOnlyDictionary.add i (toJson x) t) (f (match jget t i with Choice1Of2 s -> Some s | Choice2Of2 _ -> None))
         // ->  error FS0001: The type ''a option' is not compatible with the type 'JsonValue'
-        let inline jkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (match IReadOnlyDictionary.tryGetValue i t with Some s -> s | None -> JNull))
-        // "key" "example 1" -> error FS0043: Type mismatch. Expecting a    'Data.Const<Data.First<decimal>,JsonValue>'    but given a    'Data.Const<Data.First<JsonPrimitive>,JsonValue>'    The type 'decimal' does not match the type 'JsonPrimitive' [/Users/mathieu/src/Fleece/Tests/Tests.fsproj]
 
         /// Like 'item', but for 'Object' with Text indices.
-        let inline key i = _Object << jkey i
+        let inline _key i = 
+            let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (match IReadOnlyDictionary.tryGetValue i t with Some s -> s | None -> JNull))
+            _Object << dkey i
 

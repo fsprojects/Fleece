@@ -23,24 +23,24 @@ open Newtonsoft.Json.Linq
 let tests = 
     TestList [
         testList "key" [
-            (*test "example 1" {
-                let actual = JsonValue.Parse( "{\"a\": 100, \"b\": 200}" ) ^? (key "a" << _Number)
-                let expected = 100m 
+            test "example 1" {
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_key "a" << _Bool)
+                let expected = true
                 Assert.Equal("item", Some expected, actual)
-            }*)
+            }
             test "example 2" {
-                let actual = JsonValue.Parse( "[1,2,3]" ) ^? key "a"
+                let actual = JsonValue.Parse( "[1,2,3]" ) ^? _key "a"
                 Assert.Equal("item", None, actual)
             }
         ]
         testList "_String" [
             test "example 1" {
-                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (key "a" << _String)
+                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (_key "a" << _String)
                 let expected = "xyz"
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 2" {
-                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (key "b" << _String)
+                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (_key "b" << _String)
                 Assert.Equal("item", None, actual)
             }
         ]
