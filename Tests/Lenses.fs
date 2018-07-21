@@ -23,11 +23,11 @@ open Newtonsoft.Json.Linq
 let tests = 
     TestList [
         testList "key" [
-            test "example 1" {
+            (*test "example 1" {
                 let actual = JsonValue.Parse( "{\"a\": 100, \"b\": 200}" ) ^? (key "a" << _Number)
                 let expected = 100m 
                 Assert.Equal("item", Some expected, actual)
-            }
+            }*)
             test "example 2" {
                 let actual = JsonValue.Parse( "[1,2,3]" ) ^? key "a"
                 Assert.Equal("item", None, actual)
