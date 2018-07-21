@@ -19,6 +19,7 @@ module Fleece =
     open ReadOnlyCollections
     module ReadOnlyList=
         let ofArray (a:_ array) = a.AsReadOnlyList()
+        let toArray (a:IReadOnlyList<_>) = a |> Array.ofSeq
 
     type Id1<'t>(v:'t) =
         let value = v
@@ -788,8 +789,6 @@ module Fleece =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (match IReadOnlyDictionary.tryGetValue i t with Some s -> s | None -> JNull))
             _Object << dkey i
         let inline _nth i =
-            let setNth i v (a:_ array)=
-                a.[i] <- v
-                a
-            let inline dnth i f t = map (fun x -> t |> Array.ofSeq |> setNth i x |> ReadOnlyList.ofArray) (f (t |> Array.ofSeq |> nth i))
+            let setNth i v (a:_ array) = a.[i] <- v; a
+            let inline dnth i f t = map (fun x -> t |> Array.ofSeq |> setNth i x |> ReadOnlyList.ofArray) (f (t |> ReadOnlyList.toArray |> nth i))
             _Array << dnth i
