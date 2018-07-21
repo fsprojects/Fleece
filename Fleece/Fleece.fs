@@ -17,6 +17,9 @@ module Fleece =
         type IEnumerable<'value> with
             member self.ToReadOnlyList() = ResizeArray(self).AsReadOnlyList()
     open ReadOnlyCollections
+    module ReadOnlyList=
+        let ofArray (a:_ array) = a.AsReadOnlyList()
+
     type Id1<'t>(v:'t) =
         let value = v
         member __.getValue = value
@@ -778,13 +781,15 @@ module Fleece =
         let inline _Object x= (prism JObject <| fun v -> match v with JObject s -> Ok s| _ -> Error v) x
         let inline _Array x= (prism JArray <| fun v -> match v with JArray s -> Ok s| _ -> Error v) x
         let inline _Bool x= (prism JBool <| fun v -> match v with JBool s -> Ok s| _ -> Error v) x
-        let inline _Number x= (prism JNumber <| fun v -> match v with JNumber s -> Ok s| _ -> Error v) x
+        let inline _Number (x:decimal->_)= (prism JNumber <| fun v -> match ofJson v with Success s -> Ok s| _ -> Error v) x
         let inline _Null x = prism (konst null) (fun v -> match v with JNull -> Ok ()| _ -> Error null) x
-        //let inline jkey i f t = map (fun x -> IReadOnlyDictionary.add i (toJson x) t) (f (match jget t i with Choice1Of2 s -> Some s | Choice2Of2 _ -> None))
-        // ->  error FS0001: The type ''a option' is not compatible with the type 'JsonValue'
-
-        /// Like 'item', but for 'Object' with Text indices.
-        let inline _key i = 
+        /// Like '_nth', but for 'Object' with Text indices.
+        let inline _key i =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (match IReadOnlyDictionary.tryGetValue i t with Some s -> s | None -> JNull))
             _Object << dkey i
-
+        let inline _nth i =
+            let setNth i v (a:_ array)=
+                a.[i] <- v
+                a
+            let inline dnth i f t = map (fun x -> t |> Array.ofSeq |> setNth i x |> ReadOnlyList.ofArray) (f (t |> Array.ofSeq |> nth i))
+            _Array << dnth i

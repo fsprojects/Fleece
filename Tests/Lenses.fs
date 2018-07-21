@@ -29,6 +29,11 @@ let tests =
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 2" {
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_key "b" << _Number)
+                let expected = 200m
+                Assert.Equal("item", Some expected, actual)
+            }
+            test "example 3" {
                 let actual = JsonValue.Parse( "[1,2,3]" ) ^? _key "a"
                 Assert.Equal("item", None, actual)
             }
@@ -44,4 +49,24 @@ let tests =
                 Assert.Equal("item", None, actual)
             }
         ]
+        testList "Integer" [
+            test "example 1" {
+                let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") ^? (_key "a" << _Number)
+                let expected = 100m
+                Assert.Equal("item", Some expected, actual)
+            }
+        ]
+        testList "array" [
+            test "example 1" {
+                let actual = JsonValue.Parse ("[\"a\"]") ^? (_nth 0 << _String)
+                let expected = "a"
+                Assert.Equal("item", Some expected, actual)
+            }
+            test "example 2" {
+                let actual = JsonValue.Parse ("[123]") ^? (_nth 0 << _Number)
+                let expected = 123m
+                Assert.Equal("item", Some expected, actual)
+            }
+        ]
+
     ]
