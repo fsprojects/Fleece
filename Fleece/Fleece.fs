@@ -20,6 +20,19 @@ module Fleece =
     module ReadOnlyList=
         let ofArray (a:_ array) = a.AsReadOnlyList()
         let toArray (a:IReadOnlyList<_>) = a |> Array.ofSeq
+        // add has same shape as add for Map.add
+        /// Returns a new IReadOnlyList from a given IReadOnlyList, with replaced binding for index.
+        let add i value (a:IReadOnlyList<_>)=
+            let setNth i v (a:_ array) = a.[i] <- v; a
+            if 0<=i && i<a.Count then
+                a |> Array.ofSeq |> setNth i value |> ofArray |> Some
+            else
+                None
+        let tryNth i (a:IReadOnlyList<_>)=
+            if 0<=i && i<a.Count then
+                Some a.[i]
+            else
+                None
 
     type Id1<'t>(v:'t) =
         let value = v
@@ -786,9 +799,8 @@ module Fleece =
         let inline _Null x = prism (konst null) (fun v -> match v with JNull -> Ok ()| _ -> Error null) x
         /// Like '_nth', but for 'Object' with Text indices.
         let inline _key i =
-            let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (match IReadOnlyDictionary.tryGetValue i t with Some s -> s | None -> JNull))
+            let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
             _Object << dkey i
         let inline _nth i =
-            let setNth i v (a:_ array) = a.[i] <- v; a
-            let inline dnth i f t = map (fun x -> t |> Array.ofSeq |> setNth i x |> ReadOnlyList.ofArray) (f (t |> ReadOnlyList.toArray |> nth i))
+            let inline dnth i f t = map (fun x -> t |> ReadOnlyList.add i x |> Option.defaultValue t) (f (ReadOnlyList.tryNth i t |> Option.defaultValue JNull))
             _Array << dnth i
