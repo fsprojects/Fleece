@@ -75,14 +75,14 @@ let tests = [
                 Assert.Equal("item", None, actual)
             }
             test "example 4: write" {
-                let actual = JsonValue.Parse ("[1,2,3]") |> (_nth 1  << _String) .-> "a"
-                let expected = JsonValue.Parse ("[1,\"a\",3]")
-                Assert.Equal("item", expected, actual)
+                let actual = JsonValue.Parse ("[1,2,3]") |> (_nth 1  << _Number) .-> 2.5m
+                let expected = JsonValue.Parse ("[1,2.5,3]")
+                Assert.Equal("item", expected.ToString(), actual.ToString())
             }
             test "example 5: write for missing index" {
                 let actual = JsonValue.Parse ("[1]") |> (_nth 1 << _String) .-> "a"
                 let expected = JsonValue.Parse ("[1]")
-                Assert.Equal("item", expected, actual)
+                Assert.Equal("item", expected.ToString(), actual.ToString())
             }
         ]
     ]
