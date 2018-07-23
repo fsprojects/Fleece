@@ -117,8 +117,7 @@ type Assert with
 open FsCheck
 open FsCheck.GenOperators
 
-let tests = 
-    TestList [
+let tests = [
         testList "From JSON" [
             test "item with missing key" {
                 let actual : Item ParseResult = parseJson """{"id": 1, "brand": "Sony"}"""
@@ -331,4 +330,4 @@ let main _ =
                                         printf "."
                                     })
 *)
-    runParallel tests
+    runParallel (TestList (tests @ Lenses.tests))
