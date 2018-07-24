@@ -222,8 +222,8 @@ module Fleece =
         static member create (x: uint16 ) = JsonPrimitive x :> JsonValue
         static member create (x: byte   ) = JsonPrimitive x :> JsonValue
         static member create (x: sbyte  ) = JsonPrimitive x :> JsonValue
-        static member create (x: char   ) = JsonPrimitive x :> JsonValue
-        static member create (x: Guid   ) = JsonPrimitive x :> JsonValue
+        static member create (x: char   ) = JsonPrimitive (string x) :> JsonValue
+        static member create (x: Guid   ) = JsonPrimitive (string x) :> JsonValue
 
 
     // pseudo-AST, wrapping JsonValue subtypes:
@@ -238,10 +238,9 @@ module Fleece =
             JObject (x.AsReadOnlyDictionary())
         | :? JsonPrimitive as x ->
             match x.JsonType with
-            | JsonType.Number  -> JNumber x
-            | JsonType.Boolean -> JBool (x.ReadAs<bool> ())
-            | JsonType.String  -> JString (x.ReadAs<string> ())
-            | JsonType.Default -> JNull
+            | JsonType.Number -> JNumber x
+            | JsonType.Boolean -> JBool (implicit x:bool)
+            | JsonType.String -> JString (implicit x:string)
             | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
         | _ -> failwithf "Invalid JsonValue %A" o
 
@@ -324,12 +323,13 @@ module Fleece =
         #endif
         #if SYSTEMJSON
 
-        let inline tryRead<'a> s = 
+        let inline tryRead s = 
             function
             | JNumber j -> 
-                match j.TryReadAs<'a>() with
-                | true, v -> Success v
-                | _ -> failparse s j
+                try
+                    Success (implicit j)
+                with e->
+                    failparse s j
             | a -> failparse s a
 
         type JsonHelpers with
