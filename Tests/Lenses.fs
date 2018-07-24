@@ -63,8 +63,8 @@ let tests = [
                 Assert.Equal("item", None, actual)
             }
             test "example 3" {
-                let actual = JsonValue.Parse ("\"a\"") |>  _String .-> "b"
-                let expected = JsonValue.Parse( "\"b\"" )
+                let actual = JString "a" |>  _String .-> "b"
+                let expected = JString "b" 
                 Assert.Equal("item", expected.ToString(), actual.ToString())
             }
         ]
