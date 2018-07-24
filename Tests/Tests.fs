@@ -196,9 +196,13 @@ let tests = [
                     |> string
             #if NEWTONSOFT
                 let expected = """{"id": 1.0, "brand": "Sony"}"""
-            #else
+            #endif
+            #if FSHARPDATA
                 let expected = """{"id": 1, "brand": "Sony"}"""
-            #endif              
+            #endif
+            #if SYSTEMJSON
+                let expected = """{"brand": "Sony", "id": 1}"""
+            #endif
                     
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
             }
@@ -270,13 +274,19 @@ let tests = [
                           Age = 7
                           Children = [] }
                       ] }
-                let expected = 
                 #if NEWTONSOFT
-                    """{"name":"John","age":44.0,"children":[{"name":"Katy","age":5.0,"children":[]},{"name":"Johnny","age":7.0,"children":[]}]}"""
-                #else
-                    """{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}"""
-                #endif
+                let expected = """{"name":"John","age":44.0,"children":[{"name":"Katy","age":5.0,"children":[]},{"name":"Johnny","age":7.0,"children":[]}]}"""
                 Assert.JSON(expected, p)
+                #endif
+                #if FSHARPDATA
+                let expected = """{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}"""
+                Assert.JSON(expected, p)
+                #endif
+                #if SYSTEMJSON
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"name":"Katy"},{"age":7,"children":[],"name":"Johnny"}],"name":"John"}"""
+                Assert.JSON(expected, p)
+                #endif
+
             }
 
             test "Map with null key" {
