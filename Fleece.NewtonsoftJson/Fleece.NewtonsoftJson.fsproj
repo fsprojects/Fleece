@@ -9,7 +9,7 @@
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
     <NoWarn>0686</NoWarn>
-    <VersionPrefix>0.5.0</VersionPrefix>
+    <VersionPrefix>0.5.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
     <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
