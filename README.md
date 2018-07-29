@@ -10,7 +10,7 @@ Its design is strongly influenced by Haskell's [Aeson](http://hackage.haskell.or
 * [For FSharp.Data](https://www.nuget.org/packages/Fleece.FSharpData/)
 * [For NewtonSoft](https://www.nuget.org/packages/Fleece.NewtonSoftJson/)
 
-###Example
+### Example
 
 For example, given this data type:
 
