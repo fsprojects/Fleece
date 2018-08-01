@@ -24,6 +24,7 @@
     <Description>JSON mapper for System.Json</Description>
     <AssemblyName>Fleece</AssemblyName>
     <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
+    <DefineConstants Condition=" '$(Benchmark)'=='True' ">TRACE;SYSTEMJSON;BENCHMARK;BENCHMARK_SYSTEMJSON</DefineConstants>
      <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
   <ItemGroup>

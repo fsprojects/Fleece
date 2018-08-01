@@ -1,7 +1,18 @@
 ﻿namespace Fleece
-
+#if BENCHMARK_NEWTONSOFT
+module FleeceNewtonsoftJson =
+#endif
+#if BENCHMARK_FSHARPDATA
+module FleeceFSharpData =
+#endif
+#if BENCHMARK_SYSTEMJSON
+module FleeceSystemJson =
+#endif
+#if BENCHMARK
+#else
 [<AutoOpen>]
 module Fleece =
+#endif
 
     open System
     open System.Globalization    

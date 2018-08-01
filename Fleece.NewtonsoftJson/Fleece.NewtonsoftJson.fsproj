@@ -24,6 +24,7 @@
     <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
     <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
+    <DefineConstants Condition=" '$(Benchmark)'=='True' ">TRACE;NEWTONSOFT;BENCHMARK;BENCHMARK_NEWTONSOFT</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>

@@ -24,6 +24,7 @@
     <AssemblyName>Fleece.FSharpData</AssemblyName>
     <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
+    <DefineConstants Condition=" '$(Benchmark)'=='True' ">TRACE;FSHARPDATA;BENCHMARK;BENCHMARK_FSHARPDATA</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>    
   </PropertyGroup>
   <ItemGroup>
