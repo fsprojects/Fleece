@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
     <Name>Fleece</Name>
@@ -26,12 +26,17 @@
     <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
      <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Benchmarks|AnyCPU' ">
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DefineConstants>TRACE;SYSTEMJSON;BENCHMARK;BENCHMARK_SYSTEMJSON</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0" />
+    <PackageReference Include="FSharp.Core" Version="4.3.*" />
     <PackageReference Include="System.Json" Version="[4.0.20126.16343]" />
   </ItemGroup>
 </Project>
