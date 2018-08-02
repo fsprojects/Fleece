@@ -9,29 +9,44 @@ module Bench =
     let resetStream (stream : #Stream) =
         stream.Seek(0L, SeekOrigin.Begin) |> ignore
 
-    module Fleece =
+    module SystemJson =
         open FleeceSystemJson
-        let inline parse (stream: #Stream): JsonObject =
-            let reader = new StreamReader(stream)
-            reader.ReadToEnd()
+        open System.Json
+        let inline parse (s: string): JsonObject =
+            s
             |> parseJson
             |> function | Success v->v | Failure e ->failwith "%A" e 
 
-    module FleeceNewtonsoftJson =
+        let inline parseStream (stream: #Stream): JsonObject =
+            let reader = new StreamReader(stream)
+            reader.ReadToEnd()
+            |> parse
+
+    module NewtonsoftJson =
         open FleeceNewtonsoftJson
-        let inline parse (stream: #Stream): JsonObject =
-            let reader = new StreamReader(stream)
-            reader.ReadToEnd()
+        open Newtonsoft.Json.Linq
+        let inline parse (s: string): JsonObject =
+            s
             |> parseJson
             |> function | Success v->v | Failure e ->failwith "%A" e 
 
-    module FleeceFSharpData =
-        open FleeceFSharpData
-        let inline parse (stream: #Stream): JsonObject =
+        let inline parseStream (stream: #Stream): JsonObject =
             let reader = new StreamReader(stream)
             reader.ReadToEnd()
+            |> parse
+
+    module FSharpData =
+        open FleeceFSharpData
+        open FSharp.Data
+        let inline parse (s: string): JsonObject =
+            s
             |> parseJson
             |> function | Success v->v | Failure e ->failwith "%A" e 
+
+        let inline parseStream (stream: #Stream): JsonObject =
+            let reader = new StreamReader(stream)
+            reader.ReadToEnd()
+            |> parse
 
 
 
@@ -43,17 +58,22 @@ type ParseTest () =
     [<Setup>]
     member this.Setup () =
         jsonString <- loadJsonResourceAsString this.Name
-        jsonStream <- loadJsonResource this.Name
+        //jsonStream <- loadJsonResource this.Name
 
     [<Params("error", "fparsec", "user", "prettyuser", "social")>]
     member val Name = "<null>" with get, set
 
     [<Benchmark>]
-    member __.Fleece_New (): Fleece.JsonResult<Fleece.Json> =
-        Fleece.Parsing.Json.parse jsonString
+    member __.SystemJson () =
+        Bench.SystemJson.parse jsonString
 
     [<Benchmark>]
-    member __.Newtonsoft () =
+    member __.NewtonsoftJson () =
         Bench.resetStream jsonStream
-        Bench.JsonNET.parse jsonStream
+        Bench.NewtonsoftJson.parse jsonString
+
+    [<Benchmark>]
+    member __.FSharpData () =
+        Bench.resetStream jsonStream
+        Bench.FSharpData.parse jsonString
 

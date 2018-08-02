@@ -2,12 +2,16 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <DebugType>none</DebugType>
     <IsPackable>false</IsPackable>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Benchmarks|AnyCPU' ">
+  </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="**/*.json" />
     <Compile Include="Prelude.fs" />
     <Compile Include="ParsingAndFormatting.fs" />
     <Compile Include="WriteString.fs" />
@@ -16,13 +20,10 @@
     <Compile Include="Encode.fs" />
     <Compile Include="Decode.fs" />
     <Compile Include="Main.fs" />
-    <EmbeddedResource Include="**/*.json" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.10.*" />
+    <PackageReference Include="FSharp.Core" Version="4.3.*" />
     <ProjectReference Include="..\Fleece\Fleece.fsproj" />
     <ProjectReference Include="..\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
     <ProjectReference Include="..\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
   </ItemGroup>
-
 </Project>

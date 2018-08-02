@@ -24,8 +24,11 @@
     <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
     <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
-    <DefineConstants Condition=" '$(Benchmark)'=='True' ">TRACE;NEWTONSOFT;BENCHMARK;BENCHMARK_NEWTONSOFT</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Benchmarks|AnyCPU' ">
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DefineConstants>TRACE;NEWTONSOFT;BENCHMARK;BENCHMARK_NEWTONSOFT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Fleece/AssemblyInfo.fs" />
@@ -33,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0" />
+    <PackageReference Include="FSharp.Core" Version="4.3.*" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 </Project>

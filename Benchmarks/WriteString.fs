@@ -138,7 +138,8 @@ type WriteString () =
     [<Benchmark(Baseline=true)>]
     member x.WriteString () =
         let sb = System.Text.StringBuilder()
-        Fleece.Formatting.StringBuilder.writeString sb (getString x.String)
+        failwith "!"
+        //Fleece.Formatting.StringBuilder.writeString sb (getString x.String)
 
     [<Benchmark>]
     member x.WriteStringAlt1 () =

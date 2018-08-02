@@ -24,8 +24,11 @@
     <AssemblyName>Fleece.FSharpData</AssemblyName>
     <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
-    <DefineConstants Condition=" '$(Benchmark)'=='True' ">TRACE;FSHARPDATA;BENCHMARK;BENCHMARK_FSHARPDATA</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>    
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Benchmarks|AnyCPU' ">
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DefineConstants>TRACE;FSHARPDATA;BENCHMARK;BENCHMARK_FSHARPDATA</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Fleece/AssemblyInfo.fs" />
@@ -33,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0" />
-    <PackageReference Include="FSharp.Data" Version="2.4.6" />
+    <PackageReference Include="FSharp.Core" Version="4.3.*" />
+    <PackageReference Include="FSharp.Data" Version="3.0.0-beta4" />
   </ItemGroup>
 </Project>
