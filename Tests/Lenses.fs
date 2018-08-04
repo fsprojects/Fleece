@@ -76,8 +76,13 @@ let tests = [
             }
             test "example 2: write" {
                 let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") |> (_key "a" << _Number) .-> 200m
-                let expected = JsonValue.Parse ("{\"a\": 200, \"b\": true}")
-                Assert.Equal("item", expected.ToString(), actual.ToString())
+                let expected =
+                                #if NEWTONSOFT
+                                "{\"a\": 200.0, \"b\": true}"
+                                #else
+                                "{\"a\": 200, \"b\": true}"
+                                #endif
+                Assert.Equal("item", ((JsonValue.Parse expected).ToString()), actual.ToString())
             }
         ]
         testList "array" [
