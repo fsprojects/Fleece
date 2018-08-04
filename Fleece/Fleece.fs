@@ -115,7 +115,12 @@ module Fleece =
         x |> Seq.map (|KeyValue|) |> Array.ofSeq 
 
     let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
-    let inline JObject (x: IReadOnlyDictionary<string, JToken>) = JObject (dictAsProps x) :> JToken
+    let inline JObject (x: IReadOnlyDictionary<string, JToken>) 
+        =
+        let o = JObject()
+        for kv in x do
+            o.Add(kv.Key, kv.Value)
+        o :> JToken
     let inline JBool (x: bool) = JValue x :> JToken
     let inline JNumber (x: decimal) = JValue x :> JToken
     let JNull = JValue.CreateNull() :> JToken
