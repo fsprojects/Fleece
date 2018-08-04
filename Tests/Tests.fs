@@ -2,18 +2,22 @@
 open System.Collections.Generic
 open System.Linq
 open Fuchu
-open Fleece
-open Fleece.Operators
 open FSharpPlus
 
 #if FSHARPDATA
 open FSharp.Data
+open Fleece.FSharpData
+open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
+open Fleece
+open Fleece.Operators
 open System.Json
 #endif
 #if NEWTONSOFT
 open Newtonsoft.Json
+open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 #endif
 
 #nowarn "0686"
