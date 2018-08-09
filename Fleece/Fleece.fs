@@ -7,6 +7,7 @@ module Fleece =
     open System.Globalization    
     open System.Collections.Generic
     open FSharpPlus
+    open FSharpPlus.Data
     module ReadOnlyCollections=
         open System.Collections.ObjectModel
         type IDictionary<'key, 'value> with
@@ -643,33 +644,32 @@ module Fleece =
 
 
 
-    type Decoder<'S, 't> = Decoder of ('S -> ParseResult<'t>) with
-        static member run (Decoder f) = f
+    /// Encodes a value of type 't into a value of type 'S.
+    type Encoder<'S, 't> = 't -> 'S
 
-        static member Map (Decoder d, f) = Decoder (d >=> (Success << f))
+    /// Decodes a value of type 'S into a value of type 't, possibly returning an error.
+    type Decoder<'S, 't> = 'S -> ParseResult<'t>
 
-        static member (<*>) (Decoder dfa, Decoder da) = Decoder <| fun a ->
-                    let result1 = dfa a
-                    let result2 = da a
-                    result1 <*> result2                                        
+    /// A decoder from type 'S1 and encoder to type 'S2 for types 't1 and 't2.
+    type Codec<'S1, 'S2, 't1, 't2> = Decoder<'S1, 't1> * Encoder<'S2, 't2>
 
-    type Encoder<'t, 'S> = Encoder of ('t -> 'S) with
-        static member run (Encoder f) = f
+    /// A decoder from type 'S1 and encoder to type 'S2 for type 't.
+    type Codec<'S1, 'S2, 't> = Codec<'S1, 'S2, 't, 't>
 
-    type Codec<'S, 't, 'u> =
-        {
-            decoder : Decoder<'S, 't>
-            encoder : Encoder<'u, 'S>
-        } with
-        static member runDecoder {decoder = x} = Decoder.run x
-        static member runEncoder {encoder = x} = Encoder.run x   
+    type Codec'<'S, 't1, 't2> = Codec<'S, 'S, 't1, 't2>
+
+    /// A codec for raw type 'S to type 't.
+    type Codec<'S, 't> = Codec<'S, 'S, 't>
+
+    let decode (d: Decoder<'i, 'a>) (i: 'i) : ParseResult<'a> = d i
+    let encode (e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
 
     // Default, for external classes.
     type OfJsonClass with 
         static member inline OfJson (_: 'R, _:Default4) = fun js -> 
-            let codec = (^R : (static member JsonCodec: Codec<JsonValue,'R,'R>) ())
-            Codec.runDecoder codec js : ^R ParseResult
+            let codec = (^R : (static member JsonCodec: Codec<JsonValue,'R>) ())
+            decode (fst codec) js : ^R ParseResult
 
         static member inline OfJson (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _:Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
@@ -785,8 +785,8 @@ module Fleece =
     // Default, for external classes.
     type ToJsonClass with
         static member inline ToJson (t: 'T, _:Default4) = 
-            let codec = (^T : (static member JsonCodec: Codec<JsonValue,'T,'T>) ())
-            Codec.runEncoder codec t
+            let codec = (^T : (static member JsonCodec: Codec<JsonValue,'T>) ())
+            encode (snd codec) t
 
         static member inline ToJson (t: 'T, _:Default3) = (^T : (static member ToJSON: ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
@@ -799,23 +799,18 @@ module Fleece =
         | json1      , json2                    -> Map [("1", json1); ("2", json2)] |> JObject
 
     let inline deriveFieldCodec prop =
-        {
-            decoder = Decoder (function JObject j -> jget j prop | _ -> Choice2Of2 "Not a Json Object")
-            encoder = Encoder (fun (str: 't) -> toJson (Map.ofSeq [prop, str]))
-        }
+        (
+            (function JObject j -> jget j prop | _ -> Choice2Of2 "Not a Json Object"),
+            (fun (str: 't) -> toJson (Map.ofSeq [prop, str]))
+        )
 
-    let diPure f = 
-        { 
-            decoder = Decoder (fun _ -> Success f)
-            encoder = Encoder (fun _ -> JNull)
-        }
+    let diPure f = (fun _ -> Success f), (fun _ -> JNull)
 
-    let diApply combiner toBC (remainderFields: Codec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f, 'f>) =
-        { 
-            decoder = (remainderFields.decoder: Decoder<'S, 'f -> 'r>) <*> currentField.decoder
-            encoder = Encoder (toBC >> (Codec.runEncoder currentField *** Codec.runEncoder remainderFields) >> combiner)
-        }
-   
+    let diApply combiner toBC (remainderFields: Codec'<'S, 'f ->'r, 'T>) (currentField: Codec'<'S, 'f, 'f>) =
+        ( 
+            Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
+            toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
+        )
    
    module Operators =
 
