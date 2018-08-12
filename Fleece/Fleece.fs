@@ -811,6 +811,8 @@ module Fleece =
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
             toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
         )
+
+    let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
    
    module Operators =
 
