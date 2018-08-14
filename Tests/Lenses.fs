@@ -4,18 +4,24 @@ open System.Collections.Generic
 open System.Linq
 open Fuchu
 open Fleece
-open Fleece.Operators
-open Fleece.Lens
 open FSharpPlus
 open FSharpPlus.Lens
 
 #if FSHARPDATA
 open FSharp.Data
+open Fleece.FSharpData
+open Fleece.FSharpData.Operators
+open Fleece.FSharpData.Lens
 #endif
 #if SYSTEMJSON
 open System.Json
+open Fleece.Operators
+open Fleece.Lens
 #endif
 #if NEWTONSOFT
+open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
+open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 #endif
