@@ -1,9 +1,16 @@
 ﻿namespace Fleece
 
 open FSharpPlus
+#if NEWTONSOFT
+module Newtonsoft =
+#endif
+#if FSHARPDATA
+module FSharpData =
+#endif
+#if SYSTEMJSON
 [<AutoOpen>]
 module Fleece =
-
+#endif
     open System
     open System.Globalization    
     open System.Collections.Generic
