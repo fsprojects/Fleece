@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
@@ -8,8 +8,9 @@
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
-    <VersionPrefix>0.4.1</VersionPrefix>
-    <VersionSuffix>alpha-1</VersionSuffix>
+    <NoWarn>0686</NoWarn>
+    <VersionPrefix>0.5.1</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
     <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
     <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
@@ -21,7 +22,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
     <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
-    <Authors>Mauricio Scheffer,Lev Gorodinski</Authors>
+    <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
@@ -30,7 +31,7 @@
     <Compile Include="../Fleece/Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharpPlus" Version="1.0.0-RC2" />
+    <PackageReference Include="FSharpPlus" Version="1.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 </Project>

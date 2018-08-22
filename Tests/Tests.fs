@@ -2,18 +2,22 @@
 open System.Collections.Generic
 open System.Linq
 open Fuchu
-open Fleece
-open Fleece.Operators
 open FSharpPlus
 
 #if FSHARPDATA
 open FSharp.Data
+open Fleece.FSharpData
+open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
+open Fleece
+open Fleece.Operators
 open System.Json
 #endif
 #if NEWTONSOFT
 open Newtonsoft.Json
+open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 #endif
 
 #nowarn "0686"
@@ -199,23 +203,53 @@ let tests =
             }
 
             test "tuple 2" {
-                Assert.JSON("[1,2]", (1,2))
+                let expected = 
+                #if NEWTONSOFT
+                    "[1.0,2.0]"
+                #else
+                    "[1,2]"
+                #endif
+                Assert.JSON(expected, (1,2))
             }
 
             test "DateTime" {
-                Assert.JSON("\"2000-03-01T16:23:34.000Z\"", DateTime(2000, 3, 1, 16, 23, 34))
+                let expected = 
+                #if NEWTONSOFT
+                    "2000-03-01T16:23:34.000Z"
+                #else
+                    "\"2000-03-01T16:23:34.000Z\""
+                #endif
+                Assert.JSON(expected, DateTime(2000, 3, 1, 16, 23, 34))
             }
 
             test "DateTime with milliseconds" {
-                Assert.JSON("\"2000-03-01T16:23:34.123Z\"", DateTime(2000, 3, 1, 16, 23, 34, 123))
+                let expected = 
+                #if NEWTONSOFT
+                    "2000-03-01T16:23:34.123Z"
+                #else
+                    "\"2000-03-01T16:23:34.123Z\""
+                #endif
+                Assert.JSON(expected, DateTime(2000, 3, 1, 16, 23, 34, 123))
             }
 
             test "DateTimeOffset" {
-                Assert.JSON("\"2000-03-01T16:23:34.000+03:00\"", DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
+                let expected = 
+                #if NEWTONSOFT
+                    "2000-03-01T16:23:34.000+03:00"
+                #else
+                    "\"2000-03-01T16:23:34.000+03:00\""
+                #endif
+                Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
             }
 
             test "DateTimeOffset with milliseconds" {
-                Assert.JSON("\"2000-03-01T16:23:34.078+03:00\"", DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
+                let expected = 
+                #if NEWTONSOFT
+                    "2000-03-01T16:23:34.078+03:00"
+                #else
+                    "\"2000-03-01T16:23:34.078+03:00\""
+                #endif
+                Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
             }
 
             test "Person" {
@@ -231,7 +265,13 @@ let tests =
                           Age = 7
                           Children = [] }
                       ] }
-                Assert.JSON("""{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}""", p)
+                let expected = 
+                #if NEWTONSOFT
+                    """{"name":"John","age":44.0,"children":[{"name":"Katy","age":5.0,"children":[]},{"name":"Johnny","age":7.0,"children":[]}]}"""
+                #else
+                    """{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}"""
+                #endif
+                Assert.JSON(expected, p)
             }
 
             test "Map with null key" {
