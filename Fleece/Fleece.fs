@@ -276,15 +276,15 @@ module Fleece =
 
     let (|Success|Failure|) =
         function
-        | Choice1Of2 x -> Success x
-        | Choice2Of2 x -> Failure x
+        | Ok    x -> Success x
+        | Error x -> Failure x
 
-    let inline Success x = Choice1Of2 x
-    let inline Failure x = Choice2Of2 x
+    let inline Success x = Ok    x
+    let inline Failure x = Error x
 
     // Deserializing:
 
-    type 'a ParseResult = Choice<'a, string>
+    type 'a ParseResult = Result<'a, string>
 
     module Helpers =
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
