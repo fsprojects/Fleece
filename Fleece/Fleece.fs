@@ -1,8 +1,14 @@
 ﻿namespace Fleece
-
+#if NEWTONSOFT
+module Newtonsoft =
+#endif
+#if FSHARPDATA
+module FSharpData =
+#endif
+#if SYSTEMJSON
 [<AutoOpen>]
 module Fleece =
-
+#endif
     open System
     open System.Globalization    
     open System.Collections.Generic
@@ -99,7 +105,12 @@ module Fleece =
         x |> Seq.map (|KeyValue|) |> Array.ofSeq 
 
     let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
-    let inline JObject (x: IReadOnlyDictionary<string, JToken>) = JObject (dictAsProps x) :> JToken
+    let inline JObject (x: IReadOnlyDictionary<string, JToken>) 
+        =
+        let o = JObject()
+        for kv in x do
+            o.Add(kv.Key, kv.Value)
+        o :> JToken
     let inline JBool (x: bool) = JValue x :> JToken
     let JNull = JValue.CreateNull() :> JToken
     let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
@@ -267,15 +278,15 @@ module Fleece =
 
     let (|Success|Failure|) =
         function
-        | Choice1Of2 x -> Success x
-        | Choice2Of2 x -> Failure x
+        | Ok    x -> Success x
+        | Error x -> Failure x
 
-    let inline Success x = Choice1Of2 x
-    let inline Failure x = Choice2Of2 x
+    let inline Success x = Ok    x
+    let inline Failure x = Error x
 
     // Deserializing:
 
-    type 'a ParseResult = Choice<'a, string>
+    type 'a ParseResult = Result<'a, string>
 
     module Helpers =
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
@@ -800,7 +811,7 @@ module Fleece =
 
     let inline deriveFieldCodec prop =
         (
-            (function JObject j -> jget j prop | _ -> Choice2Of2 "Not a Json Object"),
+            (function JObject j -> jget j prop | _ -> Error "Not a Json Object"),
             (fun (str: 't) -> toJson (Map.ofSeq [prop, str]))
         )
 
@@ -814,10 +825,10 @@ module Fleece =
 
     let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
    
-   module Operators =
+    module Operators =
 
         open FSharpPlus
-      
+
         /// Creates a new Json key,value pair for a Json object
         let inline (.=) key value = jpair key value
 
