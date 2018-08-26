@@ -1,36 +1,78 @@
 namespace IntegrationCompilationTests
-open FSharp.Data
+open FSharpPlus
+
+type Person (name:string, age:int, children:Person list)= 
+    member __.Name = name
+    member __.Age = age
+    member __.Children = children
+
 open Fleece
 open Fleece.Operators
 open System.Json
-open Newtonsoft.Json
-open FSharpPlus
+type PersonSystemJson(name:string, age:int, children:PersonSystemJson list) = 
+    inherit Person(name, age, children |> map (fun p->p :> Person))
+    member __.Children = children
 
-type Person = {
-    Name: string
-    Age: int
-    Children: Person list
-}
+with
 
-type Person with
-    static member Create name age children = { Person.Name = name; Age = age; Children = children }
-
-    static member OfJson json = 
+    static member OfJson json =
         match json with
-        | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | JObject o -> PersonSystemJson <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
-    static member ToJson (x: Person) =
+    static member ToJson (x: PersonSystemJson) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
             "children" .= x.Children
         ] 
 
-type Attribute = {
-    Name: string
-    Value: string
-}
+open FSharp.Data
+open Fleece.FSharpData
+open Fleece.FSharpData.Operators
+
+type PersonFSharpData(name:string, age:int, children:PersonFSharpData list) = 
+    inherit Person(name, age, children |> map (fun p->p:>Person))
+    member __.Children = children
+
+with
+
+    static member OfJson json =
+        match json with
+        | JObject o -> PersonFSharpData <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | x -> Failure (sprintf "Expected person, found %A" x)
+
+    static member ToJson (x:PersonFSharpData) =
+        jobj [ 
+            "name" .= x.Name
+            "age" .= x.Age
+            "children" .= x.Children
+        ] 
+
+open Newtonsoft.Json
+open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
+
+type PersonNewtonsoft(name:string, age:int, children:PersonNewtonsoft list) = 
+    inherit Person(name, age, children |> map (fun p->p:>Person))
+    member __.Children = children
+
+with
+
+    static member OfJson json =
+        match json with
+        | JObject o -> PersonNewtonsoft <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | x -> Failure (sprintf "Expected person, found %A" x)
+
+    static member ToJson (x:PersonNewtonsoft) =
+        jobj [ 
+            "name" .= x.Name
+            "age" .= x.Age
+            "children" .= x.Children
+        ] 
+
+
+
 
 
 module Say =
