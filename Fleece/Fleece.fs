@@ -811,8 +811,8 @@ module Fleece =
 
     let inline deriveFieldCodec prop =
         (
-            (function JObject j -> jget j prop | _ -> Error "Not a Json Object"),
-            (fun (str: 't) -> toJson (Map.ofSeq [prop, str]))
+            (function JObject o -> jget o prop | _ -> Error "Not a Json Object"),
+            (fun (x: 't) -> toJson (Map.ofSeq [prop, x]))
         )
 
     let diPure f = (fun _ -> Success f), (fun _ -> JNull)
