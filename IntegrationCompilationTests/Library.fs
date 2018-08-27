@@ -14,10 +14,11 @@ type PersonSystemJson(name:string, age:int, children:PersonSystemJson list) =
     member __.Children = children
 
 with
+    static member Create name age children = PersonSystemJson(name,age,children)
 
     static member OfJson json =
         match json with
-        | JObject o -> PersonSystemJson <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | JObject o -> PersonSystemJson.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
     static member ToJson (x: PersonSystemJson) =
@@ -36,10 +37,11 @@ type PersonFSharpData(name:string, age:int, children:PersonFSharpData list) =
     member __.Children = children
 
 with
+    static member Create name age children = PersonFSharpData(name,age,children)
 
     static member OfJson json =
         match json with
-        | JObject o -> PersonFSharpData <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | JObject o -> PersonFSharpData.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
     static member ToJson (x:PersonFSharpData) =
@@ -58,10 +60,11 @@ type PersonNewtonsoft(name:string, age:int, children:PersonNewtonsoft list) =
     member __.Children = children
 
 with
+    static member Create name age children = PersonNewtonsoft(name,age,children)
 
     static member OfJson json =
         match json with
-        | JObject o -> PersonNewtonsoft <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | JObject o -> PersonNewtonsoft.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
         | x -> Failure (sprintf "Expected person, found %A" x)
 
     static member ToJson (x:PersonNewtonsoft) =
