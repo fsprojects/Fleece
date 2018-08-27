@@ -129,7 +129,7 @@ type Person =
     age : int
     children: Person list
   } with
-    static member JsonCodec =
+    static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
         <!.> "firstName" ^= fun x -> fst x.name
         <*/> "lastName"  ^= fun x -> snd x.name

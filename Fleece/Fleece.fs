@@ -678,9 +678,11 @@ module Fleece =
 
     // Default, for external classes.
     type OfJsonClass with 
-        static member inline OfJson (_: 'R, _:Default4) = fun js -> 
-            let codec = (^R : (static member JsonCodec: Codec<JsonValue,'R>) ())
-            decode (fst codec) js : ^R ParseResult
+        static member inline OfJson (_: 'R, _:Default4) =
+            let codec = (^R : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
+            function
+            | JObject o -> decode (fst codec) o : ^R ParseResult
+            | a         -> failparse "Map" a
 
         static member inline OfJson (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _:Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
@@ -796,26 +798,20 @@ module Fleece =
     // Default, for external classes.
     type ToJsonClass with
         static member inline ToJson (t: 'T, _:Default4) = 
-            let codec = (^T : (static member JsonCodec: Codec<JsonValue,'T>) ())
-            encode (snd codec) t
+            let codec = (^T : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
+            JObject (encode (snd codec) t)
 
         static member inline ToJson (t: 'T, _:Default3) = (^T : (static member ToJSON: ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
 
    
-    let mergeJson = function
-        | JNull, x | x, JNull                   -> x
-        | JObject dct1, JObject dct2            -> IReadOnlyDictionary.union dct1 dct2 |> JObject
-        | JObject dct, json | json, JObject dct -> dct |> IReadOnlyDictionary.add (sprintf "%d" dct.Count) json |> JObject
-        | json1      , json2                    -> Map [("1", json1); ("2", json2)] |> JObject
-
     let inline deriveFieldCodec prop =
         (
-            (function JObject o -> jget o prop | _ -> Error "Not a Json Object"),
-            (fun (x: 't) -> toJson (Map.ofSeq [prop, x]))
+            (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
+            (fun (x: 't) -> dict [prop, toJson x])
         )
 
-    let diPure f = (fun _ -> Success f), (fun _ -> JNull)
+    let diPure f = (fun _ -> Success f), (fun _ -> dict [])
 
     let diApply combiner toBC (remainderFields: Codec'<'S, 'f ->'r, 'T>) (currentField: Codec'<'S, 'f, 'f>) =
         ( 
@@ -840,6 +836,6 @@ module Fleece =
         let inline (.@?) o key = jgetopt o key
 
 
-        let inline (<*/>) r (n, g) = diApply mergeJson (fanout g id) r (deriveFieldCodec n)
+        let inline (<*/>) r (n, g) = diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodec n)
         let inline (<!.>) f x      = diPure f <*/> x
         let inline (^=) a b = (a, b)
