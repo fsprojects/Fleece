@@ -723,6 +723,9 @@ module Fleece =
 
     /// Creates a new Json key,value pair for a Json object
     let inline jpair (key: string) value = key, toJson value
+    
+    /// Creates a new Json key,value pair for a Json object if the value option is present
+    let inline jpairopt (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
 
     type ToJsonClass with
         static member inline ToJson (x: Choice<'a, 'b>, _:ToJsonClass) =
@@ -827,6 +830,9 @@ module Fleece =
 
         /// Creates a new Json key,value pair for a Json object
         let inline (.=) key value = jpair key value
+        
+        /// Creates a new Json key,value pair for a Json object if the value is present in the option
+        let inline (.=?) (key: string) value = jpairopt key value
 
         /// Gets a value from a Json object
         let inline (.@) o key = jget o key
