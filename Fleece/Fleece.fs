@@ -814,6 +814,12 @@ module Fleece =
             (fun (x: 't) -> dict [prop, toJson x])
         )
 
+    let inline deriveFieldCodecOpt prop =
+        (
+            (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
+            (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
+        )
+
     let diPure f = (fun _ -> Success f), (fun _ -> dict [])
 
     let diApply combiner toBC (remainderFields: Codec'<'S, 'f ->'r, 'T>) (currentField: Codec'<'S, 'f, 'f>) =
@@ -841,7 +847,11 @@ module Fleece =
         /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetopt o key
 
-
+        
         let inline (<*/>) r (n, g) = diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodec n)
         let inline (<!.>) f x      = diPure f <*/> x
+
+        let inline (<*/?>) r (n, g) = diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodecOpt n)
+        let inline (<!.?>) f x      = diPure f <*/?> x
+
         let inline (^=) a b = (a, b)

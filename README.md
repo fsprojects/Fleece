@@ -142,3 +142,28 @@ let person = {name = ("John", "Doe"); age = 42; children = [{name = ("Johnny", "
 let personJson = toJson person
 let personResult = ofJson<Person> personJson
 ```
+
+For optional fields you can use the same operators but ending with '?' :
+
+```fsharp
+// Example
+
+type Person =
+  { 
+    name : string * string
+    age : int option
+    children: Person list
+  } with
+    static member JsonObjCodec =
+        fun f l a c -> { name = (f, l); age = a; children = c }
+        <!.> "firstName" ^= fun x -> fst x.name
+        <*/> "lastName"  ^= fun x -> snd x.name
+        <*/?> "age"      ^= fun x -> x.age
+        <*/> "children"  ^= fun x -> x.children
+
+// Test
+
+let person = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
+let personJson = toJson person
+let personResult = ofJson<Person> personJson
+```
