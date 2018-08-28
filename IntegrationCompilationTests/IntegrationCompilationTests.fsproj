@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Library.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fleece\Fleece.fsproj" />
+    <ProjectReference Include="..\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
+    <ProjectReference Include="..\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
+  </ItemGroup>
+
+</Project>
