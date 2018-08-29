@@ -131,7 +131,7 @@ type Person =
   } with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
-        <!.> "firstName" ^= fun x -> fst x.name
+        <!/> "firstName" ^= fun x -> fst x.name
         <*/> "lastName"  ^= fun x -> snd x.name
         <*/> "age"       ^= fun x -> x.age
         <*/> "children"  ^= fun x -> x.children
@@ -156,7 +156,7 @@ type Person =
   } with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
-        <!.> "firstName" ^= fun x -> fst x.name
+        <!/> "firstName" ^= fun x -> fst x.name
         <*/> "lastName"  ^= fun x -> snd x.name
         <*/?> "age"      ^= fun x -> x.age
         <*/> "children"  ^= fun x -> x.children

@@ -854,9 +854,9 @@ module Fleece =
 
         
         let inline (<*/>) r (n, g) = jfield n g r
-        let inline (<!.>) f (n, g) = jfield n g (mapping f)
+        let inline (<!/>) f (n, g) = jfield n g (mapping f)
 
         let inline (<*/?>) r (n, g) = jfieldopt n g r
-        let inline (<!.?>) f (n, g) = jfieldopt n g (mapping f)
+        let inline (<!/?>) f (n, g) = jfieldopt n g (mapping f)
 
         let inline (^=) a b = (a, b)
