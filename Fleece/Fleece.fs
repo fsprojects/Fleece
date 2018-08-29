@@ -808,7 +808,9 @@ module Fleece =
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
 
    
-
+    /// <summary>Initialize the field mappings.</summary>
+    /// <param name="f">An object initializer as a curried function.</param>
+    /// <returns>The resulting object codec.</returns>
     let mapping f = (fun _ -> Success f), (fun _ -> dict [])
 
     let diApply combiner toBC (remainderFields: Codec'<'S, 'f ->'r, 'T>) (currentField: Codec'<'S, 'f, 'f>) =
@@ -817,21 +819,31 @@ module Fleece =
             toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
         )
 
-    let inline jfield n g r =
+    /// <summary>Appends a field mapping to the codec.</summary>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfield fieldName (getter: 'T -> 'Value) (rest: Codec'<_, _->'Rest, _>) =
         let inline deriveFieldCodec prop =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
                 (fun (x: 't) -> dict [prop, toJson x])
             )
-        diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodec n)
+        diApply (uncurry IReadOnlyDictionary.union) (fanout getter id) rest (deriveFieldCodec fieldName)
 
-    let inline jfieldopt n g r =
+    /// <summary>Appends an optional field mapping to the codec.</summary>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfieldopt fieldName (getter: 'T -> 'Value option) (rest: Codec'<_, _->'Rest, _>) =
         let inline deriveFieldCodecOpt prop =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
                 (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
             )
-        diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodecOpt n)
+        diApply (uncurry IReadOnlyDictionary.union) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
 
     let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
    
@@ -853,10 +865,33 @@ module Fleece =
         let inline (.@?) o key = jgetopt o key
 
         
-        let inline (<*/>) r (n, g) = jfield n g r
-        let inline (<!/>) f (n, g) = jfield n g (mapping f)
+        /// <summary>Appends a field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<*/>) (rest: Codec'<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
 
-        let inline (<*/?>) r (n, g) = jfieldopt n g r
-        let inline (<!/?>) f (n, g) = jfieldopt n g (mapping f)
+        /// <summary>Appends the first field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="f">An object initializer as a curried function.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<!/>) f (fieldName, getter: 'T -> 'Value) = jfield fieldName getter (mapping f)
 
+        /// <summary>Appends an optional field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<*/?>) (rest: Codec'<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter rest
+
+        /// <summary>Appends the first field (optional) mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="f">An object initializer as a curried function.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter (mapping f)
+
+        /// Tuple two values.
         let inline (^=) a b = (a, b)
