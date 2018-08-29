@@ -117,8 +117,7 @@ Or you can use the Choice monad/applicative in [FSharpx.Extras](https://github.c
 You can see more examples in the [EdmundsNet](https://github.com/mausch/EdmundsNet) project.
 
 
-CODEC
-=====
+### CODEC
 
 For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values. 
 
