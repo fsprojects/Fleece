@@ -808,25 +808,30 @@ module Fleece =
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
 
    
-    let inline deriveFieldCodec prop =
-        (
-            (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
-            (fun (x: 't) -> dict [prop, toJson x])
-        )
 
-    let inline deriveFieldCodecOpt prop =
-        (
-            (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
-            (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
-        )
-
-    let diPure f = (fun _ -> Success f), (fun _ -> dict [])
+    let mapping f = (fun _ -> Success f), (fun _ -> dict [])
 
     let diApply combiner toBC (remainderFields: Codec'<'S, 'f ->'r, 'T>) (currentField: Codec'<'S, 'f, 'f>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
             toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
         )
+
+    let inline jfield n g r =
+        let inline deriveFieldCodec prop =
+            (
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
+                (fun (x: 't) -> dict [prop, toJson x])
+            )
+        diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodec n)
+
+    let inline jfieldopt n g r =
+        let inline deriveFieldCodecOpt prop =
+            (
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
+                (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
+            )
+        diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodecOpt n)
 
     let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
    
@@ -848,10 +853,10 @@ module Fleece =
         let inline (.@?) o key = jgetopt o key
 
         
-        let inline (<*/>) r (n, g) = diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodec n)
-        let inline (<!.>) f x      = diPure f <*/> x
+        let inline (<*/>) r (n, g) = jfield n g r
+        let inline (<!.>) f (n, g) = jfield n g (mapping f)
 
-        let inline (<*/?>) r (n, g) = diApply (uncurry IReadOnlyDictionary.union) (fanout g id) r (deriveFieldCodecOpt n)
-        let inline (<!.?>) f x      = diPure f <*/?> x
+        let inline (<*/?>) r (n, g) = jfieldopt n g r
+        let inline (<!.?>) f (n, g) = jfieldopt n g (mapping f)
 
         let inline (^=) a b = (a, b)
