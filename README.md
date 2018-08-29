@@ -117,33 +117,11 @@ Or you can use the Choice monad/applicative in [FSharpx.Extras](https://github.c
 You can see more examples in the [EdmundsNet](https://github.com/mausch/EdmundsNet) project.
 
 
-CODEC (WIP)
-===========
+CODEC
+=====
 
-```fsharp
-// Example
+For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values. 
 
-type Person =
-  { 
-    name : string * string
-    age : int
-    children: Person list
-  } with
-    static member JsonObjCodec =
-        fun f l a c -> { name = (f, l); age = a; children = c }
-        <!/> "firstName" ^= fun x -> fst x.name
-        <*/> "lastName"  ^= fun x -> snd x.name
-        <*/> "age"       ^= fun x -> x.age
-        <*/> "children"  ^= fun x -> x.children
-
-// Test
-
-let person = {name = ("John", "Doe"); age = 42; children = [{name = ("Johnny", "Doe"); age = 21; children = []}]}
-let personJson = toJson person
-let personResult = ofJson<Person> personJson
-```
-
-For optional fields you can use the same operators but ending with '?' :
 
 ```fsharp
 // Example
@@ -158,12 +136,33 @@ type Person =
         fun f l a c -> { name = (f, l); age = a; children = c }
         <!/> "firstName" ^= fun x -> fst x.name
         <*/> "lastName"  ^= fun x -> snd x.name
-        <*/?> "age"      ^= fun x -> x.age
+        <*/?> "age"      ^= fun x -> x.age   // For optional fields you can use the same operators but ending with '?' :
         <*/> "children"  ^= fun x -> x.children
 
-// Test
 
-let person = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
-let personJson = toJson person
-let personResult = ofJson<Person> personJson
+let p = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
+printfn "%s" (string (toJson p))
+
+let john = parseJson<Person> """{"children": [{"children": [],"age": 21,"lastName": "Doe","firstName": "Johnny"}],"lastName": "Doe","firstName": "John"}"""
+```
+
+If you prefer you can write the same with functions:
+
+```fsharp
+// Example
+
+type Person =
+  { 
+    name : string * string
+    age : int option
+    children: Person list
+  } with
+    static member JsonObjCodec =
+        fun f l a c -> { name = (f, l); age = a; children = c }
+		|> mapping
+        |> jfield    "firstName" (fun x -> fst x.name)
+        |> jfield    "lastName"  (fun x -> snd x.name)
+        |> jfieldopt "age"       (fun x -> x.age)
+        |> jfield    "children"  (fun x -> x.children)
+
 ```
