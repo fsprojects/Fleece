@@ -123,7 +123,6 @@ For types that deserialize to Json Objets, typically (but not limited to) record
 
 
 ```fsharp
-// Example
 
 type Person =
   { 
@@ -135,7 +134,7 @@ type Person =
         fun f l a c -> { name = (f, l); age = a; children = c }
         <!/> "firstName" ^= fun x -> fst x.name
         <*/> "lastName"  ^= fun x -> snd x.name
-        <*/?> "age"      ^= fun x -> x.age   // For optional fields you can use the same operators but ending with '?' :
+        <*/?> "age"      ^= fun x -> x.age // Optional fields: same operators but ending with '?'
         <*/> "children"  ^= fun x -> x.children
 
 
@@ -148,7 +147,6 @@ let john = parseJson<Person> """{"children": [{"children": [],"age": 21,"lastNam
 If you prefer you can write the same with functions:
 
 ```fsharp
-// Example
 
 type Person =
   { 
@@ -158,7 +156,7 @@ type Person =
   } with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
-		|> mapping
+        |> mapping
         |> jfield    "firstName" (fun x -> fst x.name)
         |> jfield    "lastName"  (fun x -> snd x.name)
         |> jfieldopt "age"       (fun x -> x.age)
