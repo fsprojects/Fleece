@@ -797,7 +797,7 @@ module Fleece =
     type ToJsonClass with
         static member inline ToJson ((a, b, c, d, e, f, g), _:ToJsonClass) =
             JArray ([|toJson a; toJson b; toJson c; toJson d; toJson e; toJson f; toJson g|].AsReadOnlyList())
-   
+
     // Default, for external classes.
     type ToJsonClass with
         static member inline ToJson (t: 'T, _:Default4) = 
@@ -848,8 +848,6 @@ module Fleece =
     let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
    
     module Operators =
-
-        open FSharpPlus
 
         /// Creates a new Json key,value pair for a Json object
         let inline (.=) key value = jpair key value
