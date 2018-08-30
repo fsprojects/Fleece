@@ -196,7 +196,7 @@ let tests =
                     |> string
                 let expected = """{"id": 1, "brand": "Sony"}"""
                     
-                Assert.Equal("item", expected, actual)
+                Assert.Equal("item", strCleanUp expected, strCleanUp actual)
             }
 
             test "int" {
