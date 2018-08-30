@@ -194,7 +194,11 @@ let tests =
                     { Item.Id = 1; Brand = "Sony"; Availability = None }
                     |> toJson
                     |> string
-                let expected = """{"id": 1, "brand": "Sony"}"""
+            #if NEWTONSOFT
+                    let expected = """{"id": 1.0, "brand": "Sony"}"""
+            #else
+                    let expected = """{"id": 1, "brand": "Sony"}"""
+            #endif              
                     
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
             }
