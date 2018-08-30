@@ -830,7 +830,7 @@ module Fleece =
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
                 (fun (x: 't) -> dict [prop, toJson x])
             )
-        diApply (uncurry IReadOnlyDictionary.union) (fanout getter id) rest (deriveFieldCodec fieldName)
+        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodec fieldName)
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -843,7 +843,7 @@ module Fleece =
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
                 (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
             )
-        diApply (uncurry IReadOnlyDictionary.union) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
+        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
 
     let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
    
