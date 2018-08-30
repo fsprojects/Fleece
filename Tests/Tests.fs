@@ -195,9 +195,9 @@ let tests =
                     |> toJson
                     |> string
             #if NEWTONSOFT
-                    let expected = """{"id": 1.0, "brand": "Sony"}"""
+                let expected = """{"id": 1.0, "brand": "Sony"}"""
             #else
-                    let expected = """{"id": 1, "brand": "Sony"}"""
+                let expected = """{"id": 1, "brand": "Sony"}"""
             #endif              
                     
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
