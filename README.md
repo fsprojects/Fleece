@@ -124,12 +124,11 @@ For types that deserialize to Json Objets, typically (but not limited to) record
 
 ```fsharp
 
-type Person =
-  { 
+type Person = { 
     name : string * string
     age : int option
-    children: Person list
-  } with
+    children: Person list } 
+    with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
         <!/> "firstName" ^= fun x -> fst x.name
@@ -148,12 +147,11 @@ If you prefer you can write the same with functions:
 
 ```fsharp
 
-type Person =
-  { 
+type Person = { 
     name : string * string
     age : int option
-    children: Person list
-  } with
+    children: Person list }
+    with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
         |> mapping
