@@ -655,21 +655,22 @@ module Fleece =
 
 
 
-    /// Encodes a value of type 't into a value of type 'S.
+    /// Encodes a value of a generic type 't into a value of raw type 'S.
     type Encoder<'S, 't> = 't -> 'S
 
-    /// Decodes a value of type 'S into a value of type 't, possibly returning an error.
+    /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
     type Decoder<'S, 't> = 'S -> ParseResult<'t>
 
-    /// A decoder from type 'S1 and encoder to type 'S2 for types 't1 and 't2.
+    /// A decoder from raw type 'S1 and encoder to raw type 'S2 for string types 't1 and 't2.
     type Codec<'S1, 'S2, 't1, 't2> = Decoder<'S1, 't1> * Encoder<'S2, 't2>
 
-    /// A decoder from type 'S1 and encoder to type 'S2 for type 't.
+    /// A decoder from raw type 'S1 and encoder to raw type 'S2 for type 't.
     type Codec<'S1, 'S2, 't> = Codec<'S1, 'S2, 't, 't>
 
-    type Codec'<'S, 't1, 't2> = Codec<'S, 'S, 't1, 't2>
+    /// A codec for raw type 'S decoding to strong type 't1 and encoding to strong type 't2.
+    type SplitCodec<'S, 't1, 't2> = Codec<'S, 'S, 't1, 't2>
 
-    /// A codec for raw type 'S to type 't.
+    /// A codec for raw type 'S to strong type 't.
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
     let decode (d: Decoder<'i, 'a>) (i: 'i) : ParseResult<'a> = d i
@@ -813,7 +814,7 @@ module Fleece =
     /// <returns>The resulting object codec.</returns>
     let mapping f = (fun _ -> Success f), (fun _ -> dict [])
 
-    let diApply combiner toBC (remainderFields: Codec'<'S, 'f ->'r, 'T>) (currentField: Codec'<'S, 'f, 'f>) =
+    let diApply combiner toBC (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
             toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
@@ -824,7 +825,7 @@ module Fleece =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfield fieldName (getter: 'T -> 'Value) (rest: Codec'<_, _->'Rest, _>) =
+    let inline jfield fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _->'Rest, _>) =
         let inline deriveFieldCodec prop =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
@@ -837,7 +838,7 @@ module Fleece =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldopt fieldName (getter: 'T -> 'Value option) (rest: Codec'<_, _->'Rest, _>) =
+    let inline jfieldopt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
         let inline deriveFieldCodecOpt prop =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
@@ -868,7 +869,7 @@ module Fleece =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<*/>) (rest: Codec'<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
+        let inline (<*/>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
 
         /// <summary>Appends the first field mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -882,7 +883,7 @@ module Fleece =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<*/?>) (rest: Codec'<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter rest
+        let inline (<*/?>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter rest
 
         /// <summary>Appends the first field (optional) mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
