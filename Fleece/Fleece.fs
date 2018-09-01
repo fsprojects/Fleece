@@ -504,7 +504,8 @@ module Fleece =
 
     [<Obsolete("Use 'parseJson'")>]
     let inline parseJSON (x: string) : 'a ParseResult = parseJson (x: string)
-    ///
+
+    [<RequireQualifiedAccess>]
     module OfJson=
         /// <summary>Gets a value from a Json object</summary>
         /// <param name="ofJson">Maps Json to a type</param>
@@ -735,6 +736,7 @@ module Fleece =
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
 
+    [<RequireQualifiedAccess>]
     module ToJson=
         /// <summary>Creates a new Json key,value pair for a Json object.</summary>
         /// <param name="toJson">Maps a value to Json</param>
@@ -841,6 +843,7 @@ module Fleece =
             toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
         )
 
+    [<RequireQualifiedAccess>]
     module JCodec =
         /// <summary>Appends a field mapping to the codec with custom ofJson and toJson.</summary>
         /// <param name="ofJson">Maps Json to a type</param>
