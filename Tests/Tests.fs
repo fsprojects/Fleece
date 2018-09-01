@@ -101,7 +101,48 @@ type NestedItem with
                 }
             }
         | x -> Failure (sprintf "Expected Item, found %A" x)
-        
+open System.ComponentModel
+type ItemType = 
+  |[<Description("ena")>] One=1
+  |[<Description("dio")>] Two=2
+  |[<Description("tria")>] Three=3
+
+module ItemType=
+  let enumTypeT = typeof<ItemType>
+  let enumTMap = 
+    let fieldInfoToDescription (fi:System.Reflection.FieldInfo)=
+        let attr= fi.GetCustomAttributes(typeof<DescriptionAttribute>,false) |> Array.head :?> DescriptionAttribute
+        attr.Description
+    let values =Enum.GetValues(enumTypeT)
+    seq {
+      for t in values do
+        yield (fieldInfoToDescription (enumTypeT.GetField(string t)) , t:?>ItemType)
+    }
+  let mapFromString =enumTMap |> Map
+  let mapToString = enumTMap |> Seq.map ( fun (s,t)->(t,s) ) |> Map
+  
+  let toJson (v:ItemType) = toJson <| Map.find v mapToString
+  let ofJson (v: JsonValue):ParseResult<ItemType> =
+    (ofJson v) >>= (fun parsed ->
+      match Map.tryFind parsed mapFromString with 
+      | Some t-> Ok t
+      | None -> Error (sprintf "Could not find %s" parsed) )
+  // sample usage of OfJson module:
+  let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = OfJson.jget ofJson o key
+  // Usage of JCodec module:
+  let inline jfield fieldName (getter: 'T -> ItemType) (rest: SplitCodec<_, _->'Rest, _>) = 
+    JCodec.jfield ofJson toJson fieldName getter rest
+type ItemWithType = {
+    Id: int
+    Typ: ItemType
+}
+type ItemWithType with
+    static member JsonObjCodec =
+        fun id typ -> { ItemWithType.Id = id; Typ = typ }
+        |> mapping
+        |> jfield "id" (fun x -> x.Id)
+        |> ItemType.jfield "type" (fun x -> x.Typ)
+
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
@@ -131,6 +172,14 @@ let tests =
                         Brand = "Sony"
                         Availability = Some "1 week"
                     }
+                Assert.Equal("item", Success expected, actual)
+            }
+
+            test "custom ofJson, toJson property on item" {
+                let actual: ItemWithType ParseResult = parseJson """{"id": 1, "type": "ena"}"""
+                let expected =
+                    { ItemWithType.Id = 1
+                      Typ = ItemType.One}
                 Assert.Equal("item", Success expected, actual)
             }
 

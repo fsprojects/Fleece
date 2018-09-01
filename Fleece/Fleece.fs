@@ -504,20 +504,33 @@ module Fleece =
 
     [<Obsolete("Use 'parseJson'")>]
     let inline parseJSON (x: string) : 'a ParseResult = parseJson (x: string)
+    ///
+    module OfJson=
+        /// <summary>Gets a value from a Json object</summary>
+        /// <param name="ofJson">Maps Json to a type</param>
+        let inline jget ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
+            match o.TryGetValue key with
+            | true, value -> ofJson value
+            | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
+        /// <summary>Tries to get a value from a Json object.
+        /// Returns None if key is not present in the object.</summary>
+        /// <param name="ofJson">Maps Json to a type</param>
+        let inline jgetopt ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
+            match o.TryGetValue key with
+            | true, value -> ofJson value |> map Some
+            | _ -> Success None
 
     /// Gets a value from a Json object
-    let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key =
+    let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = // = OfJson.jget ofJson o key
         match o.TryGetValue key with
         | true, value -> ofJson value
         | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
-
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key =
+    let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key = // = OfJson.jgetopt ofJson o key
         match o.TryGetValue key with
         | true, value -> ofJson value |> map Some
         | _ -> Success None
-
     type OfJsonClass with
         static member inline OfJson (_: Choice<'a, 'b>, _:OfJsonClass) : JsonValue -> ParseResult<Choice<'a, 'b>> =
             function
@@ -722,6 +735,14 @@ module Fleece =
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
 
+    module ToJson=
+        /// <summary>Creates a new Json key,value pair for a Json object.</summary>
+        /// <param name="toJson">Maps a value to Json</param>
+        let inline jpair toJson (key: string) value = key, toJson value
+        /// <summary>Creates a new Json key,value pair for a Json object if the value option is present.</summary>
+        /// <param name="toJson">Maps a value to Json</param>
+        let inline jpairopt toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
+
     /// Creates a new Json key,value pair for a Json object
     let inline jpair (key: string) value = key, toJson value
     
@@ -819,6 +840,36 @@ module Fleece =
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
             toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
         )
+
+    module JCodec =
+        /// <summary>Appends a field mapping to the codec with custom ofJson and toJson.</summary>
+        /// <param name="ofJson">Maps Json to a type</param>
+        /// <param name="toJson">Maps a value to Json</param>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline jfield ofJson toJson fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _->'Rest, _>) =
+            let inline deriveFieldCodec prop =
+                (
+                    (fun (o: IReadOnlyDictionary<string,JsonValue>) -> OfJson.jget ofJson o prop),
+                    (fun (x: 't) -> dict [prop, toJson x])
+                )
+            diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodec fieldName)
+        /// <summary>Appends an optional field mapping to the codec with custom ofJson and toJson.</summary>
+        /// <param name="ofJson">Maps Json to a type</param>
+        /// <param name="toJson">Maps a value to Json</param>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline jfieldopt ofJson toJson fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
+            let inline deriveFieldCodecOpt prop =
+                (
+                    (fun (o: IReadOnlyDictionary<string,JsonValue>) -> OfJson.jgetopt ofJson o prop),
+                    (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
+                )
+            diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
 
     /// <summary>Appends a field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
