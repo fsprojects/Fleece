@@ -1,22 +1,33 @@
 image: Visual Studio 2017
+
+before_build:
+  - ps: >-
+      $buildId = $env:APPVEYOR_BUILD_NUMBER.PadLeft(5, '0');
+      $versionSuffixPR = "-PR$($env:APPVEYOR_PULL_REQUEST_NUMBER)-$buildId";
+      $branchName = "$env:APPVEYOR_REPO_BRANCH".Replace("_","");
+      $versionSuffixBRANCH = "-$branchName-$buildId";
+      $env:VersionSuffix = if ("$env:APPVEYOR_REPO_TAG" -eq "true") { "" } else { if ("$env:APPVEYOR_PULL_REQUEST_NUMBER") { $versionSuffixPR } else { $versionSuffixBRANCH } };
+
 init:
   - git config --global core.autocrlf input
 build_script:
-  - msbuild /m /t:restore Fleece.sln
-  - msbuild /m  Fleece.sln
-  - dotnet pack Fleece /p:VersionSuffix=alpha-%APPVEYOR_BUILD_NUMBER%
-  - dotnet pack Fleece.FSharpData /p:VersionSuffix=alpha-%APPVEYOR_BUILD_NUMBER%
-  - dotnet pack Fleece.NewtonsoftJson /p:VersionSuffix=alpha-%APPVEYOR_BUILD_NUMBER%
+  - cmd: echo vs %VersionSuffix%"
+  - cmd: msbuild /m /t:restore Fleece.sln
+  - cmd: msbuild /m  Fleece.sln
+  - cmd: dotnet pack Fleece /p:VersionSuffix=%VersionSuffix%
+  - cmd: dotnet pack Fleece.FSharpData /p:VersionSuffix=%VersionSuffix%
+  - cmd: dotnet pack Fleece.NewtonsoftJson /p:VersionSuffix=%VersionSuffix%
 test_script:
-  - dotnet run --project .\Tests\Tests.fsproj --framework net461
-  - dotnet run --project .\Tests.FSharpData\Tests.FSharpData.fsproj --framework net461
-  - dotnet run --project .\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj --framework net461
+  - cmd: dotnet run --project .\Tests\Tests.fsproj --framework net461
+  - cmd: dotnet run --project .\Tests.FSharpData\Tests.FSharpData.fsproj --framework net461
+  - cmd: dotnet run --project .\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj --framework net461
 
 artifacts:
   # pushing all *.nupkg files in build directory recursively
   - path: '**\*.nupkg'
-
+    name: nupkgs
+    type: NuGetPackage
 nuget:
   account_feed: true
   project_feed: true
-  disable_publish_on_pr: false
+#  disable_publish_on_pr: false
