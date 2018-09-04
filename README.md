@@ -115,3 +115,49 @@ type Person with
 Or you can use the Choice monad/applicative in [FSharpx.Extras](https://github.com/fsprojects/FSharpx.Extras) instead, if you prefer.
 
 You can see more examples in the [EdmundsNet](https://github.com/mausch/EdmundsNet) project.
+
+
+### CODEC
+
+For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values. 
+
+
+```fsharp
+
+type Person = { 
+    name : string * string
+    age : int option
+    children: Person list } 
+    with
+    static member JsonObjCodec =
+        fun f l a c -> { name = (f, l); age = a; children = c }
+        <!/> "firstName" ^= fun x -> fst x.name
+        <*/> "lastName"  ^= fun x -> snd x.name
+        <*/?> "age"      ^= fun x -> x.age // Optional fields: same operators but ending with '?'
+        <*/> "children"  ^= fun x -> x.children
+
+
+let p = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
+printfn "%s" (string (toJson p))
+
+let john = parseJson<Person> """{"children": [{"children": [],"age": 21,"lastName": "Doe","firstName": "Johnny"}],"lastName": "Doe","firstName": "John"}"""
+```
+
+If you prefer you can write the same with functions:
+
+```fsharp
+
+type Person = { 
+    name : string * string
+    age : int option
+    children: Person list }
+    with
+    static member JsonObjCodec =
+        fun f l a c -> { name = (f, l); age = a; children = c }
+        |> mapping
+        |> jfield    "firstName" (fun x -> fst x.name)
+        |> jfield    "lastName"  (fun x -> snd x.name)
+        |> jfieldopt "age"       (fun x -> x.age)
+        |> jfield    "children"  (fun x -> x.children)
+
+```

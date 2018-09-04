@@ -15,6 +15,7 @@ module Fleece =
     open System.Globalization    
     open System.Collections.Generic
     open FSharpPlus
+    open FSharpPlus.Data
     module ReadOnlyCollections=
         open System.Collections.ObjectModel
         type IDictionary<'key, 'value> with
@@ -49,7 +50,8 @@ module Fleece =
         let value = v
         member __.getValue = value
 
-    type Default3 = class end
+    type Default4 = class end
+    type Default3 = class inherit Default4 end
     type Default2 = class inherit Default3 end
     type Default1 = class inherit Default2 end
 
@@ -672,8 +674,38 @@ module Fleece =
                     tuple7 <!> ofJson a.[0] <*> ofJson a.[1] <*> ofJson a.[2] <*> ofJson a.[3] <*> ofJson a.[4] <*> ofJson a.[5] <*> ofJson a.[6]
             | a -> Failure (sprintf "Expected array, found %A" a)
 
+
+
+    /// Encodes a value of a generic type 't into a value of raw type 'S.
+    type Encoder<'S, 't> = 't -> 'S
+
+    /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
+    type Decoder<'S, 't> = 'S -> ParseResult<'t>
+
+    /// A decoder from raw type 'S1 and encoder to raw type 'S2 for string types 't1 and 't2.
+    type Codec<'S1, 'S2, 't1, 't2> = Decoder<'S1, 't1> * Encoder<'S2, 't2>
+
+    /// A decoder from raw type 'S1 and encoder to raw type 'S2 for type 't.
+    type Codec<'S1, 'S2, 't> = Codec<'S1, 'S2, 't, 't>
+
+    /// A codec for raw type 'S decoding to strong type 't1 and encoding to strong type 't2.
+    type SplitCodec<'S, 't1, 't2> = Codec<'S, 'S, 't1, 't2>
+
+    /// A codec for raw type 'S to strong type 't.
+    type Codec<'S, 't> = Codec<'S, 'S, 't>
+
+    let decode (d: Decoder<'i, 'a>) (i: 'i) : ParseResult<'a> = d i
+    let encode (e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
+
+
     // Default, for external classes.
     type OfJsonClass with 
+        static member inline OfJson (_: 'R, _:Default4) =
+            let codec = (^R : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
+            function
+            | JObject o -> decode (fst codec) o : ^R ParseResult
+            | a         -> failparse "Map" a
+
         static member inline OfJson (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _:Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
@@ -789,11 +821,56 @@ module Fleece =
             JArray ([|toJson a; toJson b; toJson c; toJson d; toJson e; toJson f; toJson g|].AsReadOnlyList())
 
     // Default, for external classes.
-    type ToJsonClass with 
+    type ToJsonClass with
+        static member inline ToJson (t: 'T, _:Default4) = 
+            let codec = (^T : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
+            JObject (encode (snd codec) t)
+
         static member inline ToJson (t: 'T, _:Default3) = (^T : (static member ToJSON: ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
 
+   
+    /// <summary>Initialize the field mappings.</summary>
+    /// <param name="f">An object initializer as a curried function.</param>
+    /// <returns>The resulting object codec.</returns>
+    let mapping f = (fun _ -> Success f), (fun _ -> dict [])
+
+    let diApply combiner toBC (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
+        ( 
+            Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
+            toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
+        )
+
+    /// <summary>Appends a field mapping to the codec.</summary>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfield fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _->'Rest, _>) =
+        let inline deriveFieldCodec prop =
+            (
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jget o prop),
+                (fun (x: 't) -> dict [prop, toJson x])
+            )
+        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodec fieldName)
+
+    /// <summary>Appends an optional field mapping to the codec.</summary>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfieldopt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
+        let inline deriveFieldCodecOpt prop =
+            (
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
+                (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
+            )
+        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
+
+    let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
+   
     module Operators =
+
         /// Creates a new Json key,value pair for a Json object
         let inline (.=) key value = jpair key value
         
@@ -806,6 +883,37 @@ module Fleece =
         /// Tries to get a value from a Json object.
         /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetopt o key
+        
+        /// <summary>Appends a field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<*/>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
+
+        /// <summary>Appends the first field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="f">An object initializer as a curried function.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<!/>) f (fieldName, getter: 'T -> 'Value) = jfield fieldName getter (mapping f)
+
+        /// <summary>Appends an optional field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<*/?>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter rest
+
+        /// <summary>Appends the first field (optional) mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="f">An object initializer as a curried function.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter (mapping f)
+
+        /// Tuple two values.
+        let inline (^=) a b = (a, b)
 
     module Lens =
         open FSharpPlus.Lens

@@ -31,7 +31,7 @@
     <Compile Include="../Fleece/Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharpPlus" Version="1.1.0-CI00208" />
+    <PackageReference Include="FSharpPlus" Version="1.1.0-CI00230" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 </Project>

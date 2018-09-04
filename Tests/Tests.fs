@@ -78,20 +78,11 @@ type Item = {
 }
 
 type Item with
-    static member OfJson json =
-        match json with
-        | JObject o ->
-            monad {
-                let! id = o .@ "id"
-                let! brand = o .@ "brand"
-                let! availability = o .@? "availability"
-                return {
-                    Item.Id = id
-                    Brand = brand
-                    Availability = availability
-                }
-            }
-        | x -> Failure (sprintf "Expected Item, found %A" x)
+    static member JsonObjCodec =
+        fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
+        <!/>  "id"           ^= fun x -> x.Id
+        <*/>  "brand"        ^= fun x -> x.Brand
+        <*/?> "availability" ^= fun x -> x.Availability
 
 type NestedItem = NestedItem of Item
 
@@ -198,6 +189,20 @@ let tests = [
         ]
 
         testList "To JSON" [
+            test "item with missing key" {
+                let actual = 
+                    { Item.Id = 1; Brand = "Sony"; Availability = None }
+                    |> toJson
+                    |> string
+            #if NEWTONSOFT
+                let expected = """{"id": 1.0, "brand": "Sony"}"""
+            #else
+                let expected = """{"id": 1, "brand": "Sony"}"""
+            #endif              
+                    
+                Assert.Equal("item", strCleanUp expected, strCleanUp actual)
+            }
+
             test "int" {
                 Assert.JSON("2", 2)
             }

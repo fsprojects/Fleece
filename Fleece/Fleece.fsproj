@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net461</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
     <Name>Fleece</Name>
@@ -31,7 +31,7 @@
     <Compile Include="Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharpPlus" Version="1.1.0-CI00208" />
+    <PackageReference Include="FSharpPlus" Version="1.1.0-CI00230" />
     <PackageReference Include="System.Json" Version="[4.0.20126.16343]" />
   </ItemGroup>
 </Project>
