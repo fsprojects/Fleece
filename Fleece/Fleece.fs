@@ -289,7 +289,25 @@ module Fleece =
     type 'a ParseResult = Result<'a, string>
 
     module Helpers =
+
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
+
+        let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
+        let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
+
+        let listAsReadOnly (l: _ list) =
+            { new IReadOnlyList<_> with
+                member __.Count = l.Length
+                member __.Item with get index = l.[index]
+                member __.GetEnumerator() = (l :> _ seq).GetEnumerator()
+                member __.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
+
+        let dict x = (dict x).AsReadOnlyDictionary()
+
+        let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k,_)) -> k) x
+        let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_,v)) -> v) x
+
+
         #if NEWTONSOFT
 
         let inline tryRead<'a> s = 
@@ -377,21 +395,6 @@ module Fleece =
 
         #endif
 
-
-        let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
-        let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
-
-        let listAsReadOnly (l: _ list) =
-            { new IReadOnlyList<_> with
-                member __.Count = l.Length
-                member __.Item with get index = l.[index]
-                member __.GetEnumerator() = (l :> _ seq).GetEnumerator()
-                member __.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
-
-        let dict x = (dict x).AsReadOnlyDictionary()
-
-        let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k,_)) -> k) x
-        let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_,v)) -> v) x
 
     open Helpers
 
