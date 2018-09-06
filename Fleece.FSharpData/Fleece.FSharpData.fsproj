@@ -5,7 +5,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
     <Name>Fleece</Name>
-    <WarningLevel>3</WarningLevel>
     <NoWarn>0686</NoWarn>
     <VersionPrefix>0.6.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
