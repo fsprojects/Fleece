@@ -2,9 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Fleece</RootNamespace>
-    <Name>Fleece</Name>
     <WarningLevel>3</WarningLevel>
     <NoWarn>0686</NoWarn>
     <VersionPrefix>0.6.1</VersionPrefix>
@@ -15,7 +12,6 @@
     <FileVersion>$(VersionPrefix).0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for System.Json</Description>
-    <AssemblyName>Fleece</AssemblyName>
     <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
      <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
