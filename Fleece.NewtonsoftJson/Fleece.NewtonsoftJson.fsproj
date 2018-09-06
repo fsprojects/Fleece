@@ -5,8 +5,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
     <Name>Fleece</Name>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
     <NoWarn>0686</NoWarn>
     <VersionPrefix>0.6.1</VersionPrefix>

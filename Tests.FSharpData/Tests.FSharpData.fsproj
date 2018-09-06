@@ -6,8 +6,6 @@
     <AssemblyName>Tests</AssemblyName>
     <Name>Tests</Name>
     <RestorePackages>true</RestorePackages>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
     <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
     <DefineConstants>TRACE;FSHARPDATA;$(DefineConstants)</DefineConstants>
