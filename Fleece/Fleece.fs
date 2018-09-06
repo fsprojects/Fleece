@@ -664,25 +664,44 @@ module Fleece =
         
     // Serializing:
 
+    type Boolean        with static member ToJson (x: bool          ) = JBool x
+    type String         with static member ToJson (x: string        ) = JString x
+    type DateTime       with static member ToJson (x: DateTime      ) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
+    type DateTimeOffset with static member ToJson (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+    type Decimal        with static member ToJson (x: decimal       ) = JsonHelpers.create x
+    type Double         with static member ToJson (x: Double        ) = JsonHelpers.create x
+    type Single         with static member ToJson (x: Single        ) = JsonHelpers.create x
+    type Int32          with static member ToJson (x: int           ) = JsonHelpers.create x
+    type UInt32         with static member ToJson (x: uint32        ) = JsonHelpers.create x
+    type Int64          with static member ToJson (x: int64         ) = JsonHelpers.create x
+    type UInt64         with static member ToJson (x: uint64        ) = JsonHelpers.create x
+    type Int16          with static member ToJson (x: int16         ) = JsonHelpers.create x
+    type UInt16         with static member ToJson (x: uint16        ) = JsonHelpers.create x
+    type Byte           with static member ToJson (x: byte          ) = JsonHelpers.create x
+    type SByte          with static member ToJson (x: sbyte         ) = JsonHelpers.create x
+    type Char           with static member ToJson (x: char          ) = JsonHelpers.create x
+    type Guid           with static member ToJson (x: Guid          ) = JsonHelpers.create x
+
+
     type ToJsonClass =
         inherit Default1
-        static member ToJson (x: bool          , _:ToJsonClass) = JBool x
-        static member ToJson (x: string        , _:ToJsonClass) = JString x
-        static member ToJson (x: DateTime      , _:ToJsonClass) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
-        static member ToJson (x: DateTimeOffset, _:ToJsonClass) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
-        static member ToJson (x: decimal       , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: Double        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: Single        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: int           , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: uint32        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: int64         , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: uint64        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: int16         , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: uint16        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: byte          , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: sbyte         , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: char          , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: Guid          , _:ToJsonClass) = JsonHelpers.create x
+        static member ToJson (x: bool          , _:ToJsonClass) = Boolean       .ToJson x
+        static member ToJson (x: string        , _:ToJsonClass) = String        .ToJson x
+        static member ToJson (x: DateTime      , _:ToJsonClass) = DateTime      .ToJson x
+        static member ToJson (x: DateTimeOffset, _:ToJsonClass) = DateTimeOffset.ToJson x
+        static member ToJson (x: decimal       , _:ToJsonClass) = Decimal       .ToJson x
+        static member ToJson (x: Double        , _:ToJsonClass) = Double        .ToJson x
+        static member ToJson (x: Single        , _:ToJsonClass) = Single        .ToJson x
+        static member ToJson (x: int           , _:ToJsonClass) = Int32         .ToJson x
+        static member ToJson (x: uint32        , _:ToJsonClass) = UInt32        .ToJson x
+        static member ToJson (x: int64         , _:ToJsonClass) = Int64         .ToJson x
+        static member ToJson (x: uint64        , _:ToJsonClass) = UInt64        .ToJson x
+        static member ToJson (x: int16         , _:ToJsonClass) = Int16         .ToJson x
+        static member ToJson (x: uint16        , _:ToJsonClass) = UInt16        .ToJson x
+        static member ToJson (x: byte          , _:ToJsonClass) = Byte          .ToJson x
+        static member ToJson (x: sbyte         , _:ToJsonClass) = SByte         .ToJson x
+        static member ToJson (x: char          , _:ToJsonClass) = Char          .ToJson x
+        static member ToJson (x: Guid          , _:ToJsonClass) = Guid          .ToJson x
 
 
     /// Maps a value to Json
