@@ -292,9 +292,6 @@ module Fleece =
 
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
 
-        let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
-        let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
-
         let listAsReadOnly (l: _ list) =
             { new IReadOnlyList<_> with
                 member __.Count = l.Length
@@ -461,11 +458,16 @@ module Fleece =
         static member OfJson (_: DateTime      , _: OfJsonClass) = DateTime      .OfJson
         static member OfJson (_: DateTimeOffset, _: OfJsonClass) = DateTimeOffset.OfJson
 
+    type OfJsonClass with
+        static member inline Invoke (x: JsonValue) : 't ParseResult =
+            let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
+            iOfJson (Unchecked.defaultof<OfJsonClass>, Unchecked.defaultof<'t>) x
+
     /// Maps Json to a type
-    let inline ofJson (x: JsonValue) : 'a ParseResult = iOfJson (Unchecked.defaultof<OfJsonClass>, Unchecked.defaultof<'a>) x
+    let inline ofJson (x: JsonValue) : 't ParseResult = OfJsonClass.Invoke x
 
     [<Obsolete("Use 'ofJson'")>]
-    let inline fromJSON (x: JsonValue) : 'a ParseResult = iOfJson (Unchecked.defaultof<OfJsonClass>, Unchecked.defaultof<'a>) x
+    let inline fromJSON (x: JsonValue) : 't ParseResult = OfJsonClass.Invoke x
 
     /// Parses Json and maps to a type
     let inline parseJson (x: string) : 'a ParseResult =
@@ -704,11 +706,16 @@ module Fleece =
         static member ToJson (x: Guid          , _:ToJsonClass) = Guid          .ToJson x
 
 
+    type ToJsonClass with
+        static member inline Invoke (x: 't) : JsonValue =
+            let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
+            iToJson (Unchecked.defaultof<ToJsonClass>, x)
+
     /// Maps a value to Json
-    let inline toJson (x: 'a) : JsonValue = iToJson (Unchecked.defaultof<ToJsonClass>, x)
+    let inline toJson (x: 't) : JsonValue = ToJsonClass.Invoke x
 
     [<Obsolete("Use 'toJson'")>]
-    let inline toJSON (x: 'a) : JsonValue = iToJson (Unchecked.defaultof<ToJsonClass>, x)
+    let inline toJSON (x: 't) : JsonValue = ToJsonClass.Invoke x
 
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
