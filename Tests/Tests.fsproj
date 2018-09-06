@@ -10,7 +10,7 @@
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
     <TargetFrameworks>net461</TargetFrameworks>    
-    <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
+    <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Tests.fs" />

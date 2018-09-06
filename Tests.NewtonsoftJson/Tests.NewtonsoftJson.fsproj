@@ -10,7 +10,7 @@
     <Tailcalls>true</Tailcalls>
     <WarningLevel>3</WarningLevel>
     <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
-    <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
+    <DefineConstants>TRACE;NEWTONSOFT;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Tests/Tests.fs" />
