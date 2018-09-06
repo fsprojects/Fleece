@@ -11,7 +11,7 @@
     <FileVersion>$(VersionPrefix).0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for System.Json</Description>
-    <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
+    <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
   <ItemGroup>
