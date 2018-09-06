@@ -1,12 +1,7 @@
 @echo off
 
 cls
-msbuild /m /t:restore Fleece.sln
-if ERRORLEVEL 1 (
-	echo Error restoring packages
-	exit /b 1
-) 
-msbuild /m  Fleece.sln
+dotnet build Fleece.sln -c Release
 if ERRORLEVEL 1 (
 	echo Error building Fleece
 	exit /b 1
