@@ -9,7 +9,6 @@
     <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
