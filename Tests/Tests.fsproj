@@ -2,9 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Tests</RootNamespace>
-    <AssemblyName>Tests</AssemblyName>
-    <Name>Tests</Name>
     <TargetFrameworks>net461</TargetFrameworks>    
     <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
