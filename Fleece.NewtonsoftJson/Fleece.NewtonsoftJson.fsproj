@@ -2,9 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Fleece</RootNamespace>
-    <Name>Fleece</Name>
     <NoWarn>0686</NoWarn>
     <VersionPrefix>0.6.1</VersionPrefix>
     <VersionSuffix></VersionSuffix>
@@ -14,7 +11,6 @@
     <FileVersion>$(VersionPrefix).0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
-    <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
     <DefineConstants>TRACE;NEWTONSOFT;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
