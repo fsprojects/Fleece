@@ -6,7 +6,6 @@
     <AssemblyName>Tests</AssemblyName>
     <Name>Tests</Name>
     <RestorePackages>true</RestorePackages>
-    <WarningLevel>3</WarningLevel>
     <TargetFrameworks>net461</TargetFrameworks>    
     <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>

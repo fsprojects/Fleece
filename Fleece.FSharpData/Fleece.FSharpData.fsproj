@@ -5,22 +5,10 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Fleece</RootNamespace>
     <Name>Fleece</Name>
-    <WarningLevel>3</WarningLevel>
     <NoWarn>0686</NoWarn>
-    <VersionPrefix>0.6.1</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
-    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
-    <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
-    <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
-    <FileVersion>$(VersionPrefix).0</FileVersion>
-    <RepositoryUrl>https://github.com/mausch/Fleece</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/mausch/Fleece</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</PackageLicenseUrl>
-    <PackageTags>json fsharp</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for FSharp.Data</Description>
     <AssemblyName>Fleece.FSharpData</AssemblyName>
-    <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;FSHARPDATA;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>    
   </PropertyGroup>
