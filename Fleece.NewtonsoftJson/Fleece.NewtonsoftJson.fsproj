@@ -5,7 +5,7 @@
     <NoWarn>0686</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
-    <DefineConstants>TRACE;NEWTONSOFT;$(DefineConstants)</DefineConstants>
+    <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>

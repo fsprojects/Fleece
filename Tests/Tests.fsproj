@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461</TargetFrameworks>    
-    <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
+    <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Tests.fs" />

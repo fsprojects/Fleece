@@ -5,7 +5,7 @@
     <NoWarn>0686</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for FSharp.Data</Description>
-    <DefineConstants>TRACE;FSHARPDATA;$(DefineConstants)</DefineConstants>
+    <DefineConstants>FSHARPDATA;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>    
   </PropertyGroup>
   <ItemGroup>
