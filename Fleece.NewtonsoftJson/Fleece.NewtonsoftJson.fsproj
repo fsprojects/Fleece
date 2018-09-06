@@ -15,14 +15,9 @@
     <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).0</FileVersion>
-    <RepositoryUrl>https://github.com/mausch/Fleece</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/mausch/Fleece</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</PackageLicenseUrl>
-    <PackageTags>json fsharp</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
     <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
-    <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
     <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
