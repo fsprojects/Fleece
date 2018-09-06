@@ -18,7 +18,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for System.Json</Description>
     <AssemblyName>Fleece</AssemblyName>
-    <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
+    <DefineConstants>TRACE;SYSTEMJSON;$(DefineConstants)</DefineConstants>
      <OtherFlags>--warnon:1182</OtherFlags>  
   </PropertyGroup>
   <ItemGroup>

@@ -18,7 +18,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
     <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
-    <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
+    <DefineConstants>TRACE;NEWTONSOFT;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>

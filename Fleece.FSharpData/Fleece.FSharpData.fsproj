@@ -18,7 +18,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for FSharp.Data</Description>
     <AssemblyName>Fleece.FSharpData</AssemblyName>
-    <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
+    <DefineConstants>TRACE;FSHARPDATA;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>    
   </PropertyGroup>
   <ItemGroup>
