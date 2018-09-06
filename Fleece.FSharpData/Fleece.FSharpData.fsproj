@@ -23,7 +23,7 @@
     <Description>JSON mapper for FSharp.Data</Description>
     <AssemblyName>Fleece.FSharpData</AssemblyName>
     <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
-    <DefineConstants>TRACE;FSHARPDATA</DefineConstants>
+    <DefineConstants>TRACE;FSHARPDATA;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>    
   </PropertyGroup>
   <ItemGroup>
