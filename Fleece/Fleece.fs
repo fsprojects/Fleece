@@ -919,7 +919,7 @@ module Fleece =
         let inline _Object x= (prism JObject <| fun v -> match v with JObject s -> Ok s| _ -> Error v) x
         let inline _Array x= (prism JArray <| fun v -> match v with JArray s -> Ok s| _ -> Error v) x
         let inline _Bool x= (prism JBool <| fun v -> match v with JBool s -> Ok s| _ -> Error v) x
-        let inline _Number x= (prism JNumber <| fun v -> match JsonHelpers.tryReadDecimal v with Success s -> Ok s| _ -> Error v) x
+        let inline _Number x= (prism JNumber <| fun v -> (ofJson v : decimal ParseResult) |> Result.mapError (konst v)) x
         let inline _Null x = prism (konst null) (fun v -> match v with JNull -> Ok ()| _ -> Error null) x
         /// Like '_nth', but for 'Object' with Text indices.
         let inline _key i =
