@@ -2,15 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Tests</RootNamespace>
-    <AssemblyName>Tests</AssemblyName>
-    <Name>Tests</Name>
-    <RestorePackages>true</RestorePackages>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <WarningLevel>3</WarningLevel>
     <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
-    <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
+    <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Tests/Lenses.fs" />

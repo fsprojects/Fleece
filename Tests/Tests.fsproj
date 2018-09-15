@@ -2,15 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Tests</RootNamespace>
-    <AssemblyName>Tests</AssemblyName>
-    <Name>Tests</Name>
-    <RestorePackages>true</RestorePackages>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <WarningLevel>3</WarningLevel>
-    <TargetFrameworks>net461</TargetFrameworks>
-    <DefineConstants>TRACE;SYSTEMJSON</DefineConstants>
+    <TargetFrameworks>net461</TargetFrameworks>    
+    <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Lenses.fs" />

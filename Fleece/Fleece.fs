@@ -77,48 +77,48 @@ module Fleece =
             | JTokenType.Float -> f (x.ToObject())
             | j -> failwith (sprintf "Expected numeric but was %A" j)
 
-        member private x.ToDecimal() = x.FoldNumeric(id,decimal)
-        member private x.ToDouble() = x.FoldNumeric(double,double)
-        member private x.ToSingle() = x.FoldNumeric(single,single)
-        member private x.ToInt16() = x.FoldNumeric(int16,int16)
-        member private x.ToInt32() = x.FoldNumeric(int,int)
-        member private x.ToInt64() = x.FoldNumeric(int64,int64)
-        member private x.ToUInt16() = x.FoldNumeric(uint16,uint16)
-        member private x.ToUInt32() = x.FoldNumeric(uint32,uint32)
-        member private x.ToUInt64() = x.FoldNumeric(uint64,uint64)
-        member private x.ToByte() = x.FoldNumeric(byte,byte)
-        member private x.ToSByte() = x.FoldNumeric(sbyte,sbyte)
+        member private x.ToDecimal () = x.FoldNumeric (id    , decimal)
+        member private x.ToDouble ()  = x.FoldNumeric (double, double)
+        member private x.ToSingle ()  = x.FoldNumeric (single, single)
+        member private x.ToInt16 ()   = x.FoldNumeric (int16 , int16)
+        member private x.ToInt32 ()   = x.FoldNumeric (int   , int)
+        member private x.ToInt64 ()   = x.FoldNumeric (int64 , int64)
+        member private x.ToUInt16 ()  = x.FoldNumeric (uint16, uint16)
+        member private x.ToUInt32 ()  = x.FoldNumeric (uint32, uint32)
+        member private x.ToUInt64 ()  = x.FoldNumeric (uint64, uint64)
+        member private x.ToByte ()    = x.FoldNumeric (byte  , byte)
+        member private x.ToSByte ()   = x.FoldNumeric (sbyte , sbyte)
             
     
     type private JsonHelpers() =
-        static member create (x : decimal) = JValue x :> JToken
-        static member create (x : Double) = JValue x :> JToken
-        static member create (x : Single) = JValue (float x) :> JToken
-        static member create (x : int) = JValue (decimal x) :> JToken
-        static member create (x : bool) = JValue x :> JToken
-        static member create (x : uint32) = JValue (decimal x) :> JToken
-        static member create (x : int64) = JValue (decimal x) :> JToken
-        static member create (x : uint64) = JValue (decimal x) :> JToken
-        static member create (x : int16) = JValue (decimal x) :> JToken
-        static member create (x : uint16) = JValue (decimal x) :> JToken
-        static member create (x : byte) = JValue (decimal x) :> JToken
-        static member create (x : sbyte) = JValue (decimal x)  :> JToken
-        static member create (x : char) = JValue (string x) :> JToken
-        static member create (x : Guid) = JValue (string x) :> JToken
+        static member create (x: decimal) = JValue          x  :> JToken
+        static member create (x: Double ) = JValue          x  :> JToken
+        static member create (x: Single ) = JValue (float   x) :> JToken
+        static member create (x: int    ) = JValue (decimal x) :> JToken
+        static member create (x: bool   ) = JValue          x  :> JToken
+        static member create (x: uint32 ) = JValue (decimal x) :> JToken
+        static member create (x: int64  ) = JValue (decimal x) :> JToken
+        static member create (x: uint64 ) = JValue (decimal x) :> JToken
+        static member create (x: int16  ) = JValue (decimal x) :> JToken
+        static member create (x: uint16 ) = JValue (decimal x) :> JToken
+        static member create (x: byte   ) = JValue (decimal x) :> JToken
+        static member create (x: sbyte  ) = JValue (decimal x) :> JToken
+        static member create (x: char   ) = JValue (string  x) :> JToken
+        static member create (x: Guid   ) = JValue (string  x) :> JToken
 
 
     // FSharp.Newtonsoft.Json AST adapter
 
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JToken) =
         match o.Type with
-        | JTokenType.Null -> JNull
-        | JTokenType.Array -> JArray ( (o :?> JArray).AsReadOnlyList())
-        | JTokenType.Object -> JObject (jsonObjectGetValues (o :?> JObject))
-        | JTokenType.Integer  -> JNumber o
-        | JTokenType.Float -> JNumber o
-        | JTokenType.Boolean -> JBool (o.ToObject() :bool)
-        | JTokenType.String -> JString (o.ToObject() :string)
-        | t -> failwithf "Invalid JTokenType %A" t
+        | JTokenType.Null    -> JNull
+        | JTokenType.Array   -> JArray ((o :?> JArray).AsReadOnlyList ())
+        | JTokenType.Object  -> JObject (jsonObjectGetValues (o :?> JObject))
+        | JTokenType.Integer -> JNumber  o
+        | JTokenType.Float   -> JNumber  o
+        | JTokenType.Boolean -> JBool   (o.ToObject () : bool)
+        | JTokenType.String  -> JString (o.ToObject () : string)
+        | t                  -> failwithf "Invalid JTokenType %A" t
     
     let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = 
         x |> Seq.map (|KeyValue|) |> Array.ofSeq 
@@ -151,34 +151,34 @@ module Fleece =
             | JsonValue.Float n -> f n 
             | j -> failwith (sprintf "Expected numeric but was %A" j)
 
-        member private x.ToDecimal() = x.FoldNumeric(id,decimal)
-        member private x.ToDouble() = x.FoldNumeric(double,double)
-        member private x.ToSingle() = x.FoldNumeric(single,single)
-        member private x.ToInt16() = x.FoldNumeric(int16,int16)
-        member private x.ToInt32() = x.FoldNumeric(int,int)
-        member private x.ToInt64() = x.FoldNumeric(int64,int64)
-        member private x.ToUInt16() = x.FoldNumeric(uint16,uint16)
-        member private x.ToUInt32() = x.FoldNumeric(uint32,uint32)
-        member private x.ToUInt64() = x.FoldNumeric(uint64,uint64)
-        member private x.ToByte() = x.FoldNumeric(byte,byte)
-        member private x.ToSByte() = x.FoldNumeric(sbyte,sbyte)
+        member private x.ToDecimal () = x.FoldNumeric (id    , decimal)
+        member private x.ToDouble ()  = x.FoldNumeric (double, double)
+        member private x.ToSingle ()  = x.FoldNumeric (single, single)
+        member private x.ToInt16 ()   = x.FoldNumeric (int16 , int16)
+        member private x.ToInt32 ()   = x.FoldNumeric (int   , int)
+        member private x.ToInt64 ()   = x.FoldNumeric (int64 , int64)
+        member private x.ToUInt16 ()  = x.FoldNumeric (uint16, uint16)
+        member private x.ToUInt32 ()  = x.FoldNumeric (uint32, uint32)
+        member private x.ToUInt64 ()  = x.FoldNumeric (uint64, uint64)
+        member private x.ToByte ()    = x.FoldNumeric (byte  , byte)
+        member private x.ToSByte ()   = x.FoldNumeric (sbyte , sbyte)
             
     
     type private JsonHelpers() =
-        static member create (x : decimal) : JsonValue = JsonValue.Number x
-        static member create (x : Double) : JsonValue = JsonValue.Float x
-        static member create (x : Single) : JsonValue = JsonValue.Float (float x)
-        static member create (x : int) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : bool) : JsonValue = JsonValue.Boolean x
-        static member create (x : uint32) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : int64) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : uint64) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : int16) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : uint16) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : byte) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : sbyte) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x : char) : JsonValue = JsonValue.String (string x)
-        static member create (x : Guid) : JsonValue = JsonValue.String (string x)
+        static member create (x: decimal) : JsonValue = JsonValue.Number          x
+        static member create (x: Double ) : JsonValue = JsonValue.Float           x
+        static member create (x: Single ) : JsonValue = JsonValue.Float  (float   x)
+        static member create (x: int    ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: bool   ) : JsonValue = JsonValue.Boolean         x
+        static member create (x: uint32 ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: int64  ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: uint64 ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: int16  ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: uint16 ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: byte   ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: sbyte  ) : JsonValue = JsonValue.Number (decimal x)
+        static member create (x: char   ) : JsonValue = JsonValue.String (string  x)
+        static member create (x: Guid   ) : JsonValue = JsonValue.String (string  x)
 
 
     type private ReadOnlyJsonPropertiesDictionary(properties:(string * JsonValue)[]) =                
@@ -217,13 +217,13 @@ module Fleece =
 
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JsonValue) =
         match o with
-        | JsonValue.Null -> JNull
-        | JsonValue.Array els -> JArray (els.AsReadOnlyList())
-        | JsonValue.Record props -> JObject (jsonObjectGetValues props)
+        | JsonValue.Null          -> JNull
+        | JsonValue.Array els     -> JArray (els.AsReadOnlyList ())
+        | JsonValue.Record props  -> JObject (jsonObjectGetValues props)
         | JsonValue.Number _ as x -> JNumber x
-        | JsonValue.Float _ as x -> JNumber x
-        | JsonValue.Boolean x -> JBool x
-        | JsonValue.String x -> JString x
+        | JsonValue.Float _ as x  -> JNumber x
+        | JsonValue.Boolean x     -> JBool x
+        | JsonValue.String x      -> JString x
     
     let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = 
         match x with
@@ -251,20 +251,20 @@ module Fleece =
     let jsonObjectGetValues (x : JsonObject) = JsonObject.GetValues x
 
 
-    type private JsonHelpers() =
+    type private JsonHelpers () =
         static member create (x: decimal) = JsonPrimitive x :> JsonValue
-        static member create (x: Double) = JsonPrimitive x :> JsonValue
-        static member create (x: Single) = JsonPrimitive x :> JsonValue
-        static member create (x: int) = JsonPrimitive x :> JsonValue
-        static member create (x: uint32) = JsonPrimitive x :> JsonValue
-        static member create (x: int64) = JsonPrimitive x :> JsonValue
-        static member create (x: uint64) = JsonPrimitive x :> JsonValue
-        static member create (x: int16) = JsonPrimitive x :> JsonValue
-        static member create (x: uint16) = JsonPrimitive x :> JsonValue
-        static member create (x: byte) = JsonPrimitive x :> JsonValue
-        static member create (x: sbyte) = JsonPrimitive x :> JsonValue
-        static member create (x: char) = JsonPrimitive x :> JsonValue
-        static member create (x: Guid) = JsonPrimitive x :> JsonValue
+        static member create (x: Double ) = JsonPrimitive x :> JsonValue
+        static member create (x: Single ) = JsonPrimitive x :> JsonValue
+        static member create (x: int    ) = JsonPrimitive x :> JsonValue
+        static member create (x: uint32 ) = JsonPrimitive x :> JsonValue
+        static member create (x: int64  ) = JsonPrimitive x :> JsonValue
+        static member create (x: uint64 ) = JsonPrimitive x :> JsonValue
+        static member create (x: int16  ) = JsonPrimitive x :> JsonValue
+        static member create (x: uint16 ) = JsonPrimitive x :> JsonValue
+        static member create (x: byte   ) = JsonPrimitive x :> JsonValue
+        static member create (x: sbyte  ) = JsonPrimitive x :> JsonValue
+        static member create (x: char   ) = JsonPrimitive x :> JsonValue
+        static member create (x: Guid   ) = JsonPrimitive x :> JsonValue
 
 
     // pseudo-AST, wrapping JsonValue subtypes:
@@ -279,9 +279,9 @@ module Fleece =
             JObject (x.AsReadOnlyDictionary())
         | :? JsonPrimitive as x ->
             match x.JsonType with
-            | JsonType.Number -> JNumber x
-            | JsonType.Boolean -> JBool (x.ReadAs<bool>())
-            | JsonType.String -> JString (x.ReadAs<string>())
+            | JsonType.Number  -> JNumber x
+            | JsonType.Boolean -> JBool (x.ReadAs<bool> ())
+            | JsonType.String  -> JString (x.ReadAs<string> ())
             | JsonType.Default -> JNull
             | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
         | _ -> failwithf "Invalid JsonValue %A" o
@@ -310,7 +310,22 @@ module Fleece =
     type 'a ParseResult = Result<'a, string>
 
     module Helpers =
+
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
+
+        let listAsReadOnly (l: _ list) =
+            { new IReadOnlyList<_> with
+                member __.Count = l.Length
+                member __.Item with get index = l.[index]
+                member __.GetEnumerator() = (l :> _ seq).GetEnumerator()
+                member __.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
+
+        let dict x = (dict x).AsReadOnlyDictionary()
+
+        let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k,_)) -> k) x
+        let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_,v)) -> v) x
+
+
         #if NEWTONSOFT
 
         let inline tryRead<'a> s = 
@@ -323,79 +338,47 @@ module Fleece =
             | a -> failparse s a
 
         type JsonHelpers with        
-            
-            static member inline tryReadDecimal = tryRead<decimal> "decimal"  
-            static member inline tryReadInt16 = tryRead<int16> "int16"
-            static member inline tryReadInt = tryRead<int> "int"
-            static member inline tryReadInt64 = tryRead<int64> "int64"
-            static member inline tryReadUInt16 = tryRead<uint16> "uint16"
-            static member inline tryReadUInt32 = tryRead<uint32> "uint32"
-            static member inline tryReadUInt64 = tryRead<uint64> "uint64"
-            static member inline tryReadByte = tryRead<byte> "byte"
-            static member inline tryReadSByte = tryRead<sbyte> "sbyte"
-            static member inline tryReadDouble = tryRead<double> "double"
-            static member inline tryReadSingle = tryRead<single> "single"
-                
             static member jsonObjectOfJson =
                 fun (o: JToken) ->
                     match o.Type with
                     | JTokenType.Object -> Success ( o :?> JObject )
-                    | a -> failparse "JsonObject" a     
+                    | a -> failparse "JsonObject" a
+
+    type Decimal with static member OfJson x = Helpers.tryRead<decimal> "decimal" x
+    type Int16   with static member OfJson x = Helpers.tryRead<int16>   "int16"   x
+    type Int32   with static member OfJson x = Helpers.tryRead<int>     "int"     x
+    type Int64   with static member OfJson x = Helpers.tryRead<int64>   "int64"   x
+    type UInt16  with static member OfJson x = Helpers.tryRead<uint16>  "uint16"  x
+    type UInt32  with static member OfJson x = Helpers.tryRead<uint32>  "uint32"  x
+    type UInt64  with static member OfJson x = Helpers.tryRead<uint64>  "uint64"  x
+    type Byte    with static member OfJson x = Helpers.tryRead<byte>    "byte"    x
+    type SByte   with static member OfJson x = Helpers.tryRead<sbyte>   "sbyte"   x
+    type Double  with static member OfJson x = Helpers.tryRead<double>  "double"  x
+    type Single  with static member OfJson x = Helpers.tryRead<single>  "single"  x
+ 
 
         #endif
         #if FSHARPDATA
 
         type JsonHelpers with
-        
-            static member tryReadDecimal = function
-                | JNumber n -> n.ToDecimal() |> Success
-                | a -> failparse "decimal" a   
-
-            static member tryReadInt16 = function
-                | JNumber n -> n.ToInt16() |> Success
-                | a -> failparse "int16" a
-            
-            static member tryReadInt = function
-                | JNumber n -> n.ToInt32() |> Success
-                | a -> failparse "int" a    
-
-            static member tryReadInt64 = function
-                | JNumber n -> n.ToInt64() |> Success
-                | a -> failparse "int64" a
-
-            static member tryReadUInt16 = function
-                | JNumber n -> n.ToUInt16() |> Success
-                | a -> failparse "unint16" a
-
-            static member tryReadUInt32 = function
-                | JNumber n -> n.ToUInt32() |> Success
-                | a -> failparse "unint32" a
-
-            static member tryReadUInt64 = function
-                | JNumber n -> n.ToUInt64() |> Success
-                | a -> failparse "unint64" a
-
-            static member tryReadByte = function
-                | JNumber n -> n.ToByte() |> Success
-                | a -> failparse "byte" a
-
-            static member tryReadSByte = function
-                | JNumber n -> n.ToSByte() |> Success
-                | a -> failparse "sbyte" a
-
-            static member tryReadDouble = function
-                | JNumber n -> n.ToDouble() |> Success
-                | a -> failparse "double" a
-
-            static member tryReadSingle = function
-                | JNumber n -> n.ToSingle() |> Success
-                | a -> failparse "single" a      
-                
             static member jsonObjectOfJson =
                 fun (o: JsonValue) ->
                     match o with
                     | JObject x -> Success (dictAsProps x)
-                    | a -> failparse "JsonObject" a     
+                    | a -> failparse "JsonObject" a
+
+    type Decimal with static member OfJson x = match x with JNumber n -> n.ToDecimal () |> Success | a -> Helpers.failparse "decimal" a
+    type Int16   with static member OfJson x = match x with JNumber n -> n.ToInt16 ()   |> Success | a -> Helpers.failparse "int16"   a
+    type Int32   with static member OfJson x = match x with JNumber n -> n.ToInt32 ()   |> Success | a -> Helpers.failparse "int"     a
+    type Int64   with static member OfJson x = match x with JNumber n -> n.ToInt64 ()   |> Success | a -> Helpers.failparse "int64"   a
+    type UInt16  with static member OfJson x = match x with JNumber n -> n.ToUInt16 ()  |> Success | a -> Helpers.failparse "unint16" a
+    type UInt32  with static member OfJson x = match x with JNumber n -> n.ToUInt32 ()  |> Success | a -> Helpers.failparse "unint32" a
+    type UInt64  with static member OfJson x = match x with JNumber n -> n.ToUInt64 ()  |> Success | a -> Helpers.failparse "unint64" a
+    type Byte    with static member OfJson x = match x with JNumber n -> n.ToByte ()    |> Success | a -> Helpers.failparse "byte"    a
+    type SByte   with static member OfJson x = match x with JNumber n -> n.ToSByte ()   |> Success | a -> Helpers.failparse "sbyte"   a
+    type Double  with static member OfJson x = match x with JNumber n -> n.ToDouble ()  |> Success | a -> Helpers.failparse "double"  a
+    type Single  with static member OfJson x = match x with JNumber n -> n.ToSingle ()  |> Success | a -> Helpers.failparse "single"  a
+
 
         #endif
         #if SYSTEMJSON
@@ -408,113 +391,104 @@ module Fleece =
                 | _ -> failparse s j
             | a -> failparse s a
 
-        type JsonHelpers with        
-            
-            static member inline tryReadDecimal = tryRead<decimal> "decimal"  
-            static member inline tryReadInt16 = tryRead<int16> "int16"
-            static member inline tryReadInt = tryRead<int> "int"
-            static member inline tryReadInt64 = tryRead<int64> "int64"
-            static member inline tryReadUInt16 = tryRead<uint16> "uint16"
-            static member inline tryReadUInt32 = tryRead<uint32> "uint32"
-            static member inline tryReadUInt64 = tryRead<uint64> "uint64"
-            static member inline tryReadByte = tryRead<byte> "byte"
-            static member inline tryReadSByte = tryRead<sbyte> "sbyte"
-            static member inline tryReadDouble = tryRead<double> "double"
-            static member inline tryReadSingle = tryRead<single> "single"
-
+        type JsonHelpers with
             static member inline jsonObjectOfJson =
                 fun (o: JsonValue) ->
                     match box o with
                     | :? JsonObject as x -> Success x
                     | a -> failparse "JsonObject" a
 
+    type Decimal with static member OfJson x = Helpers.tryRead<decimal> "decimal" x
+    type Int16   with static member OfJson x = Helpers.tryRead<int16>   "int16"   x
+    type Int32   with static member OfJson x = Helpers.tryRead<int>     "int"     x
+    type Int64   with static member OfJson x = Helpers.tryRead<int64>   "int64"   x
+    type UInt16  with static member OfJson x = Helpers.tryRead<uint16>  "uint16"  x
+    type UInt32  with static member OfJson x = Helpers.tryRead<uint32>  "uint32"  x
+    type UInt64  with static member OfJson x = Helpers.tryRead<uint64>  "uint64"  x
+    type Byte    with static member OfJson x = Helpers.tryRead<byte>    "byte"    x
+    type SByte   with static member OfJson x = Helpers.tryRead<sbyte>   "sbyte"   x
+    type Double  with static member OfJson x = Helpers.tryRead<double>  "double"  x
+    type Single  with static member OfJson x = Helpers.tryRead<single>  "single"  x
+
+
         #endif
 
 
-        let inline iOfJson (a: ^a, b: ^b) =
-            ((^a or ^b) : (static member OfJson: ^b*_ -> (JsonValue -> ^b ParseResult)) b, a)
-
-        let inline iToJson (a: ^a, b: ^b) =
-            ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
-
-        let listAsReadOnly (l: _ list) =
-            { new IReadOnlyList<_> with
-                member __.Count = l.Length
-                member __.Item with get index = l.[index]
-                member __.GetEnumerator() = (l :> _ seq).GetEnumerator()
-                member __.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
-
-        let dict x = (dict x).AsReadOnlyDictionary()
-
-        let keys (x: IReadOnlyDictionary<_,_>) =
-            Seq.map (fun (KeyValue(k,_)) -> k) x
-
-        let values (x: IReadOnlyDictionary<_,_>) =
-            Seq.map (fun (KeyValue(_,v)) -> v) x
-
     open Helpers
+
+    type Boolean with static member OfJson x =
+                                match x with
+                                | JBool b -> Success b
+                                | a -> failparse "bool" a
+
+    type String with static member OfJson x =
+                                match x with
+                                | JString b -> Success b
+                                | JNull -> Success null
+                                | a -> failparse "string" a
+
+    type Char with static member OfJson x =
+                                match x with
+                                | JString null -> Failure "Expected char, got null"
+                                | JString s    -> Success s.[0]
+                                | a -> failparse "char" a
+
+    type Guid with static member OfJson x =
+                                match x with
+                                | JString null -> Failure "Expected Guid, got null"
+                                | JString s    -> tryParse<Guid> s |> option Success (Failure ("Invalid Guid " + s))
+                                | a -> failparse "Guid" a
+
+    type DateTime with static member OfJson x =
+                                match x with
+                                | JString null -> Failure "Expected DateTime, got null"
+                                | JString s    ->
+                                    match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                                    | true, t -> Success t
+                                    | _       -> Failure (sprintf "Invalid DateTime %s" s)
+                                | a -> failparse "DateTime" a
+
+    type DateTimeOffset with static member OfJson x =
+                                match x with
+                                | JString null -> Failure "Expected DateTimeOffset, got null"
+                                | JString s    ->
+                                    match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+                                    | true, t -> Success t
+                                    | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
+                                | a -> failparse "DateTimeOffset" a
 
     type OfJsonClass =
         inherit Default1
         
-        static member OfJson (_: bool, _:OfJsonClass) = 
-            function
-            | JBool b -> Success b
-            | a -> failparse "bool" a
+        static member OfJson (_: decimal, _: OfJsonClass) = Decimal.OfJson
+        static member OfJson (_: int16  , _: OfJsonClass) = Int16  .OfJson
+        static member OfJson (_: int    , _: OfJsonClass) = Int32  .OfJson
+        static member OfJson (_: int64  , _: OfJsonClass) = Int64  .OfJson
+        static member OfJson (_: uint16 , _: OfJsonClass) = UInt16 .OfJson
+        static member OfJson (_: uint32 , _: OfJsonClass) = UInt32 .OfJson
+        static member OfJson (_: uint64 , _: OfJsonClass) = UInt64 .OfJson
+        static member OfJson (_: byte   , _: OfJsonClass) = Byte   .OfJson
+        static member OfJson (_: sbyte  , _: OfJsonClass) = SByte  .OfJson
+        static member OfJson (_: double , _: OfJsonClass) = Double .OfJson
+        static member OfJson (_: single , _: OfJsonClass) = Single .OfJson
 
-        static member OfJson (_: string, _:OfJsonClass) =
-            function
-            | JString b -> Success b
-            | JNull -> Success null
-            | a -> failparse "string" a
+        static member OfJson (_: bool          , _: OfJsonClass) = Boolean       .OfJson
+        static member OfJson (_: string        , _: OfJsonClass) = String        .OfJson
+        static member OfJson (_: char          , _: OfJsonClass) = Char          .OfJson
+        static member OfJson (_: Guid          , _: OfJsonClass) = Guid          .OfJson
+        static member OfJson (_: DateTime      , _: OfJsonClass) = DateTime      .OfJson
+        static member OfJson (_: DateTimeOffset, _: OfJsonClass) = DateTimeOffset.OfJson
 
-        static member OfJson (_:decimal, _:OfJsonClass) = JsonHelpers.tryReadDecimal        
-        static member OfJson (_:int16, _:OfJsonClass) = JsonHelpers.tryReadInt16
-        static member OfJson (_:int, _:OfJsonClass) = JsonHelpers.tryReadInt        
-        static member OfJson (_:int64, _:OfJsonClass) = JsonHelpers.tryReadInt64                
-        static member OfJson (_:uint16, _:OfJsonClass) = JsonHelpers.tryReadUInt16
-        static member OfJson (_:uint32, _:OfJsonClass) = JsonHelpers.tryReadUInt32
-        static member OfJson (_:uint64, _:OfJsonClass) = JsonHelpers.tryReadUInt64
-        static member OfJson (_:byte, _:OfJsonClass) = JsonHelpers.tryReadByte
-        static member OfJson (_:sbyte, _:OfJsonClass) = JsonHelpers.tryReadSByte
-        static member OfJson (_:double, _:OfJsonClass) = JsonHelpers.tryReadDouble
-        static member OfJson (_:single, _:OfJsonClass) = JsonHelpers.tryReadSingle
-
-        static member OfJson (_: char, _:OfJsonClass) =
-            function
-            | JString null -> Failure "Expected char, got null"
-            | JString s    -> Success s.[0]
-            | a -> failparse "char" a
-
-        static member OfJson (_: Guid, _:OfJsonClass) =
-            function
-            | JString null -> Failure "Expected Guid, got null"
-            | JString s    -> tryParse<Guid> s |> option Success (Failure ("Invalid Guid " + s))
-            | a -> failparse "Guid" a
-
-        static member OfJson (_: DateTime, _:OfJsonClass) =
-            function
-            | JString null -> Failure "Expected DateTime, got null"
-            | JString s    ->
-                match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
-                | true, t -> Success t
-                | _       -> Failure (sprintf "Invalid DateTime %s" s)
-            | a -> failparse "DateTime" a
-
-        static member OfJson (_: DateTimeOffset, _:OfJsonClass) =
-            function
-            | JString null -> Failure "Expected DateTimeOffset, got null"
-            | JString s    ->
-                match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
-                | true, t -> Success t
-                | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
-            | a -> failparse "DateTimeOffset" a
+    type OfJsonClass with
+        static member inline Invoke (x: JsonValue) : 't ParseResult =
+            let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
+            iOfJson (Unchecked.defaultof<OfJsonClass>, Unchecked.defaultof<'t>) x
 
     /// Maps Json to a type
-    let inline ofJson (x: JsonValue) : 'a ParseResult = iOfJson (Unchecked.defaultof<OfJsonClass>, Unchecked.defaultof<'a>) x
+    let inline ofJson (x: JsonValue) : 't ParseResult = OfJsonClass.Invoke x
 
     [<Obsolete("Use 'ofJson'")>]
-    let inline fromJSON (x: JsonValue) : 'a ParseResult = iOfJson (Unchecked.defaultof<OfJsonClass>, Unchecked.defaultof<'a>) x
+    let inline fromJSON (x: JsonValue) : 't ParseResult = OfJsonClass.Invoke x
 
     /// Parses Json and maps to a type
     let inline parseJson (x: string) : 'a ParseResult =
@@ -713,32 +687,56 @@ module Fleece =
         
     // Serializing:
 
+    type Boolean        with static member ToJson (x: bool          ) = JBool x
+    type String         with static member ToJson (x: string        ) = JString x
+    type DateTime       with static member ToJson (x: DateTime      ) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
+    type DateTimeOffset with static member ToJson (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+    type Decimal        with static member ToJson (x: decimal       ) = JsonHelpers.create x
+    type Double         with static member ToJson (x: Double        ) = JsonHelpers.create x
+    type Single         with static member ToJson (x: Single        ) = JsonHelpers.create x
+    type Int32          with static member ToJson (x: int           ) = JsonHelpers.create x
+    type UInt32         with static member ToJson (x: uint32        ) = JsonHelpers.create x
+    type Int64          with static member ToJson (x: int64         ) = JsonHelpers.create x
+    type UInt64         with static member ToJson (x: uint64        ) = JsonHelpers.create x
+    type Int16          with static member ToJson (x: int16         ) = JsonHelpers.create x
+    type UInt16         with static member ToJson (x: uint16        ) = JsonHelpers.create x
+    type Byte           with static member ToJson (x: byte          ) = JsonHelpers.create x
+    type SByte          with static member ToJson (x: sbyte         ) = JsonHelpers.create x
+    type Char           with static member ToJson (x: char          ) = JsonHelpers.create x
+    type Guid           with static member ToJson (x: Guid          ) = JsonHelpers.create x
+
+
     type ToJsonClass =
         inherit Default1
-        static member ToJson (x: bool          , _:ToJsonClass) = JBool x
-        static member ToJson (x: string        , _:ToJsonClass) = JString x
-        static member ToJson (x: DateTime      , _:ToJsonClass) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
-        static member ToJson (x: DateTimeOffset, _:ToJsonClass) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
-        static member ToJson (x: decimal       , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: Double        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: Single        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: int           , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: uint32        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: int64         , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: uint64        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: int16         , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: uint16        , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: byte          , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: sbyte         , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: char          , _:ToJsonClass) = JsonHelpers.create x
-        static member ToJson (x: Guid          , _:ToJsonClass) = JsonHelpers.create x
+        static member ToJson (x: bool          , _:ToJsonClass) = Boolean       .ToJson x
+        static member ToJson (x: string        , _:ToJsonClass) = String        .ToJson x
+        static member ToJson (x: DateTime      , _:ToJsonClass) = DateTime      .ToJson x
+        static member ToJson (x: DateTimeOffset, _:ToJsonClass) = DateTimeOffset.ToJson x
+        static member ToJson (x: decimal       , _:ToJsonClass) = Decimal       .ToJson x
+        static member ToJson (x: Double        , _:ToJsonClass) = Double        .ToJson x
+        static member ToJson (x: Single        , _:ToJsonClass) = Single        .ToJson x
+        static member ToJson (x: int           , _:ToJsonClass) = Int32         .ToJson x
+        static member ToJson (x: uint32        , _:ToJsonClass) = UInt32        .ToJson x
+        static member ToJson (x: int64         , _:ToJsonClass) = Int64         .ToJson x
+        static member ToJson (x: uint64        , _:ToJsonClass) = UInt64        .ToJson x
+        static member ToJson (x: int16         , _:ToJsonClass) = Int16         .ToJson x
+        static member ToJson (x: uint16        , _:ToJsonClass) = UInt16        .ToJson x
+        static member ToJson (x: byte          , _:ToJsonClass) = Byte          .ToJson x
+        static member ToJson (x: sbyte         , _:ToJsonClass) = SByte         .ToJson x
+        static member ToJson (x: char          , _:ToJsonClass) = Char          .ToJson x
+        static member ToJson (x: Guid          , _:ToJsonClass) = Guid          .ToJson x
 
+
+    type ToJsonClass with
+        static member inline Invoke (x: 't) : JsonValue =
+            let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
+            iToJson (Unchecked.defaultof<ToJsonClass>, x)
 
     /// Maps a value to Json
-    let inline toJson (x: 'a) : JsonValue = iToJson (Unchecked.defaultof<ToJsonClass>, x)
+    let inline toJson (x: 't) : JsonValue = ToJsonClass.Invoke x
 
     [<Obsolete("Use 'toJson'")>]
-    let inline toJSON (x: 'a) : JsonValue = iToJson (Unchecked.defaultof<ToJsonClass>, x)
+    let inline toJSON (x: 't) : JsonValue = ToJsonClass.Invoke x
 
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)

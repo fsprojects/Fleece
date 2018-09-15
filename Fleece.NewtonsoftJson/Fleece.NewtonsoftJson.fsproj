@@ -2,32 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-    <OutputType>Library</OutputType>
-    <RootNamespace>Fleece</RootNamespace>
-    <Name>Fleece</Name>
-    <Optimize>true</Optimize>
-    <Tailcalls>true</Tailcalls>
-    <WarningLevel>3</WarningLevel>
     <NoWarn>0686</NoWarn>
-    <VersionPrefix>0.6.0</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
-    <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
-    <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
-    <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
-    <FileVersion>$(VersionPrefix).0</FileVersion>
-    <RepositoryUrl>https://github.com/mausch/Fleece</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/mausch/Fleece</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.github.com/mausch/Fleece/master/LICENSE</PackageLicenseUrl>
-    <PackageTags>json fsharp</PackageTags>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>JSON mapper for Newtonsoft Json</Description>
-    <AssemblyName>Fleece.NewtonsoftJson</AssemblyName>
-    <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli</Authors>
-    <DefineConstants>TRACE;NEWTONSOFT</DefineConstants>
+    <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../Fleece/AssemblyInfo.fs" />
     <Compile Include="../Fleece/Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
