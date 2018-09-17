@@ -41,7 +41,12 @@ let tests = [
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "c" << _JNumber)
                 Assert.Equal("item", None, actual)
             }
-            test "example 4: write with missing key" { //TODO: Fix
+            test "example 4.1: write with missing key" {
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" ) .-> JString "a"
+                let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
+                Assert.Equal("item", string expected, string actual)
+            }
+            test "example 4.2: write with missing key" { //TODO: Fix
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" << _JString) .-> "a"
                 let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
                 //Assert.Equal("item", string expected, string actual)
