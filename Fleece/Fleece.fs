@@ -915,12 +915,12 @@ module Fleece =
 
     module Lens =
         open FSharpPlus.Lens
-        let inline _JString x = (prism JString <| fun v -> match v with JString s -> Ok s | _ -> Error v) x
-        let inline _JObject x = (prism JObject <| fun v -> match v with JObject s -> Ok s | _ -> Error v) x
-        let inline _JArray  x = (prism JArray  <| fun v -> match v with JArray  s -> Ok s | _ -> Error v) x
-        let inline _JBool   x = (prism JBool   <| fun v -> match v with JBool   s -> Ok s | _ -> Error v) x
-        let inline _JNumber x = (prism JNumber <| fun v -> (ofJson v : decimal ParseResult) |> Result.mapError (konst v)) x
-        let inline _JNull   x = prism (konst null) (fun v -> match v with JNull -> Ok () | _ -> Error null) x
+        let inline _JString x = (prism' JString <| fun v -> match v with JString s -> Some s | _ -> None) x
+        let inline _JObject x = (prism' JObject <| fun v -> match v with JObject s -> Some s | _ -> None) x
+        let inline _JArray  x = (prism' JArray  <| fun v -> match v with JArray  s -> Some s | _ -> None) x
+        let inline _JBool   x = (prism' JBool   <| fun v -> match v with JBool   s -> Some s | _ -> None) x
+        let inline _JNumber x = (prism' JNumber <| fun v -> match ofJson v : decimal ParseResult with Ok s->Some s | _ -> None) x
+        let inline _JNull   x = prism' (konst null) (fun v -> match v with JNull -> Some () | _ -> None) x
         /// Like '_jnth', but for 'Object' with Text indices.
         let inline _jkey i =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
