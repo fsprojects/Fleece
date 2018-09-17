@@ -44,7 +44,7 @@ let tests = [
             test "example 4: write with missing key" { //TODO: Fix
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" << _JString) .-> "a"
                 let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
-                //Assert.Equal("item", expected.ToString(), actual.ToString())
+                //Assert.Equal("item", string expected, string actual)
                 printfn "todo: %A ~ %A" expected actual
             }
             test "example 5: write existing key" {
@@ -71,7 +71,7 @@ let tests = [
             test "example 3" {
                 let actual = JString "a" |>  _JString .-> "b"
                 let expected = JString "b" 
-                Assert.Equal("item", expected.ToString(), actual.ToString())
+                Assert.Equal("item", string expected, string actual)
             }
         ]
         testList "_Number" [
@@ -109,12 +109,12 @@ let tests = [
             test "example 4: write" {
                 let actual = JsonValue.Parse ("[1,2,3]") |> (_jnth 1  << _JNumber) .-> 2.5m
                 let expected = JsonValue.Parse ("[1,2.5,3]")
-                Assert.Equal("item", expected.ToString(), actual.ToString())
+                Assert.Equal("item", string expected, string actual)
             }
             test "example 5: write for missing index" {
                 let actual = JsonValue.Parse ("[1]") |> (_jnth 1 << _JString) .-> "a"
                 let expected = JsonValue.Parse ("[1]")
-                Assert.Equal("item", expected.ToString(), actual.ToString())
+                Assert.Equal("item", string expected, string actual)
             }
         ]
     ]
