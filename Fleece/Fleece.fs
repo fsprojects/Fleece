@@ -915,16 +915,16 @@ module Fleece =
 
     module Lens =
         open FSharpPlus.Lens
-        let inline _String x= (prism JString <| fun v -> match v with JString s -> Ok s| _ -> Error v) x
-        let inline _Object x= (prism JObject <| fun v -> match v with JObject s -> Ok s| _ -> Error v) x
-        let inline _Array x= (prism JArray <| fun v -> match v with JArray s -> Ok s| _ -> Error v) x
-        let inline _Bool x= (prism JBool <| fun v -> match v with JBool s -> Ok s| _ -> Error v) x
-        let inline _Number x= (prism JNumber <| fun v -> (ofJson v : decimal ParseResult) |> Result.mapError (konst v)) x
-        let inline _Null x = prism (konst null) (fun v -> match v with JNull -> Ok ()| _ -> Error null) x
-        /// Like '_nth', but for 'Object' with Text indices.
-        let inline _key i =
+        let inline _JString x = (prism JString <| fun v -> match v with JString s -> Ok s | _ -> Error v) x
+        let inline _JObject x = (prism JObject <| fun v -> match v with JObject s -> Ok s | _ -> Error v) x
+        let inline _JArray  x = (prism JArray  <| fun v -> match v with JArray  s -> Ok s | _ -> Error v) x
+        let inline _JBool   x = (prism JBool   <| fun v -> match v with JBool   s -> Ok s | _ -> Error v) x
+        let inline _JNumber x = (prism JNumber <| fun v -> (ofJson v : decimal ParseResult) |> Result.mapError (konst v)) x
+        let inline _JNull   x = prism (konst null) (fun v -> match v with JNull -> Ok () | _ -> Error null) x
+        /// Like '_jnth', but for 'Object' with Text indices.
+        let inline _jkey i =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
-            _Object << dkey i
-        let inline _nth i =
+            _JObject << dkey i
+        let inline _jnth i =
             let inline dnth i f t = map (fun x -> t |> ReadOnlyList.add i x |> Option.defaultValue t) (f (ReadOnlyList.tryNth i t |> Option.defaultValue JNull))
-            _Array << dnth i
+            _JArray << dnth i

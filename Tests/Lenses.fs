@@ -28,91 +28,91 @@ open Newtonsoft.Json.Linq
 let tests = [
         testList "key" [
             test "example 1: read first key" {
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_key "a" << _Bool)
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "a" << _JBool)
                 let expected = true
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 2: read second key" {
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_key "b" << _Number)
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "b" << _JNumber)
                 let expected = 200m
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 3: read with missing key" {
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_key "c" << _Number)
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "c" << _JNumber)
                 Assert.Equal("item", None, actual)
             }
             test "example 4: write with missing key" { //TODO: Fix
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_key "c" << _String) .-> "a"
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" << _JString) .-> "a"
                 let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
                 //Assert.Equal("item", expected.ToString(), actual.ToString())
                 printfn "todo: %A ~ %A" expected actual
             }
             test "example 5: write existing key" {
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_key "a" << _Bool) .-> false
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "a" << _JBool) .-> false
                 let expected = JsonValue.Parse ("{\"a\": false, \"b\": 200}")
-                Assert.Equal("item", expected.ToString(), actual.ToString())
+                Assert.Equal("item", string expected, string actual)
             }
             test "example 6: read key from a different type" {
-                let actual = JsonValue.Parse( "[1,2,3]" ) ^? _key "a"
+                let actual = JsonValue.Parse( "[1,2,3]" ) ^? _jkey "a"
                 Assert.Equal("item", None, actual)
             }
 
         ]
         testList "_String" [
             test "example 1" {
-                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (_key "a" << _String)
+                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (_jkey "a" << _JString)
                 let expected = "xyz"
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 2" {
-                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (_key "b" << _String)
+                let actual = JsonValue.Parse ("{\"a\": \"xyz\", \"b\": true}") ^? (_jkey "b" << _JString)
                 Assert.Equal("item", None, actual)
             }
             test "example 3" {
-                let actual = JString "a" |>  _String .-> "b"
+                let actual = JString "a" |>  _JString .-> "b"
                 let expected = JString "b" 
                 Assert.Equal("item", expected.ToString(), actual.ToString())
             }
         ]
         testList "_Number" [
             test "example 1" {
-                let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") ^? (_key "a" << _Number)
+                let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") ^? (_jkey "a" << _JNumber)
                 let expected = 100m
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 2: write" {
-                let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") |> (_key "a" << _Number) .-> 200m
+                let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") |> (_jkey "a" << _JNumber) .-> 200m
                 let expected =
                                 #if NEWTONSOFT
                                 "{\"a\": 200.0, \"b\": true}"
                                 #else
                                 "{\"a\": 200, \"b\": true}"
                                 #endif
-                Assert.Equal("item", ((JsonValue.Parse expected).ToString()), actual.ToString())
+                Assert.Equal("item", (string (JsonValue.Parse expected)), string actual)
             }
         ]
         testList "array" [
             test "example 1" {
-                let actual = JsonValue.Parse ("[\"a\"]") ^? (_nth 0 << _String)
+                let actual = JsonValue.Parse ("[\"a\"]") ^? (_jnth 0 << _JString)
                 let expected = "a"
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 2" {
-                let actual = JsonValue.Parse ("[123]") ^? (_nth 0 << _Number)
+                let actual = JsonValue.Parse ("[123]") ^? (_jnth 0 << _JNumber)
                 let expected = 123m
                 Assert.Equal("item", Some expected, actual)
             }
             test "example 3: read for missing index" {
-                let actual = JsonValue.Parse ("[1,2,3]") ^? (_nth 4 << _Number)
+                let actual = JsonValue.Parse ("[1,2,3]") ^? (_jnth 4 << _JNumber)
                 Assert.Equal("item", None, actual)
             }
             test "example 4: write" {
-                let actual = JsonValue.Parse ("[1,2,3]") |> (_nth 1  << _Number) .-> 2.5m
+                let actual = JsonValue.Parse ("[1,2,3]") |> (_jnth 1  << _JNumber) .-> 2.5m
                 let expected = JsonValue.Parse ("[1,2.5,3]")
                 Assert.Equal("item", expected.ToString(), actual.ToString())
             }
             test "example 5: write for missing index" {
-                let actual = JsonValue.Parse ("[1]") |> (_nth 1 << _String) .-> "a"
+                let actual = JsonValue.Parse ("[1]") |> (_jnth 1 << _JString) .-> "a"
                 let expected = JsonValue.Parse ("[1]")
                 Assert.Equal("item", expected.ToString(), actual.ToString())
             }
