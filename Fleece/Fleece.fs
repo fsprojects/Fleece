@@ -1,4 +1,6 @@
 ﻿namespace Fleece
+
+open FSharpPlus
 #if NEWTONSOFT
 module Newtonsoft =
 #endif
@@ -23,6 +25,23 @@ module Fleece =
         type IEnumerable<'value> with
             member self.ToReadOnlyList() = ResizeArray(self).AsReadOnlyList()
     open ReadOnlyCollections
+    module ReadOnlyList=
+        let ofArray (a:_ array) = a.AsReadOnlyList()
+        let toArray (a:IReadOnlyList<_>) = a |> Array.ofSeq
+        // add has same shape as add for Map.add
+        /// Returns a new IReadOnlyList from a given IReadOnlyList, with replaced binding for index.
+        let add i value (a:IReadOnlyList<_>)=
+            let setNth i v (a:_ array) = a.[i] <- v; a
+            if 0<=i && i<a.Count then
+                a |> Array.ofSeq |> setNth i value |> ofArray |> Some
+            else
+                None
+        let tryNth i (a:IReadOnlyList<_>)=
+            if 0<=i && i<a.Count then
+                Some a.[i]
+            else
+                None
+
     type Id1<'t>(v:'t) =
         let value = v
         member __.getValue = value
@@ -112,6 +131,7 @@ module Fleece =
             o.Add(kv.Key, kv.Value)
         o :> JToken
     let inline JBool (x: bool) = JValue x :> JToken
+    let inline JNumber (x: decimal) = JValue x :> JToken
     let JNull = JValue.CreateNull() :> JToken
     let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
     
@@ -213,6 +233,7 @@ module Fleece =
     let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
     let inline JBool (x: bool) = JsonValue.Boolean x
+    let inline JNumber (x: decimal) = JsonValue.Number x
     let JNull : JsonValue = JsonValue.Null
     let inline JString (x: string) = if isNull x then JsonValue.Null else JsonValue.String x
     
@@ -270,7 +291,7 @@ module Fleece =
     let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
     let JNull : JsonValue = null
     let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
-
+    let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
     #endif
 
 
@@ -860,7 +881,6 @@ module Fleece =
         /// Tries to get a value from a Json object.
         /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetopt o key
-
         
         /// <summary>Appends a field mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -892,3 +912,19 @@ module Fleece =
 
         /// Tuple two values.
         let inline (^=) a b = (a, b)
+
+    module Lens =
+        open FSharpPlus.Lens
+        let inline _JString x = (prism' JString <| fun v -> match v with JString s -> Some s | _ -> None) x
+        let inline _JObject x = (prism' JObject <| fun v -> match v with JObject s -> Some s | _ -> None) x
+        let inline _JArray  x = (prism' JArray  <| fun v -> match v with JArray  s -> Some s | _ -> None) x
+        let inline _JBool   x = (prism' JBool   <| fun v -> match v with JBool   s -> Some s | _ -> None) x
+        let inline _JNumber x = (prism' JNumber <| fun v -> match ofJson v : decimal ParseResult with Ok s->Some s | _ -> None) x
+        let inline _JNull   x = prism' (konst JNull) (fun v -> match v with JNull -> Some () | _ -> None) x
+        /// Like '_jnth', but for 'Object' with Text indices.
+        let inline _jkey i =
+            let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
+            _JObject << dkey i
+        let inline _jnth i =
+            let inline dnth i f t = map (fun x -> t |> ReadOnlyList.add i x |> Option.defaultValue t) (f (ReadOnlyList.tryNth i t |> Option.defaultValue JNull))
+            _JArray << dnth i

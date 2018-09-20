@@ -6,6 +6,7 @@
     <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Lenses.fs" />
     <Compile Include="Tests.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -16,5 +17,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Fleece\Fleece.fsproj" />
   </ItemGroup>
-  
 </Project>
