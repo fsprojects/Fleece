@@ -494,13 +494,13 @@ module Fleece =
         static member inline OfJson (_: list<'a>, _:OfJson) : JsonValue -> ParseResult<list<'a>> =
             function
             | JArray a -> traverse OfJson.Invoke a |> map Seq.toList
-            | a -> failparse "array" a
+            | a -> failparse "list" a
 
     type OfJson with
         static member inline OfJson (_: 'a Set, _:OfJson) : JsonValue -> ParseResult<'a Set> =
             function
             | JArray a -> traverse OfJson.Invoke a |> map set
-            | a -> failparse "array" a
+            | a -> failparse "set" a
 
     type OfJson with
         static member inline OfJson (_: Map<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Map<string, 'a>> =
