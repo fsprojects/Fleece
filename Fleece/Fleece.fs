@@ -131,7 +131,7 @@ module Fleece =
             | JsonValue.Float n -> f n 
             | j -> failwith (sprintf "Expected numeric but was %A" j)
 
-        member private x.ToDecimal () = x.FoldNumeric (id    , decimal)
+        member private x.ToDecimal () = x.FoldNumeric (decimal, decimal)
         member private x.ToDouble ()  = x.FoldNumeric (double, double)
         member private x.ToSingle ()  = x.FoldNumeric (single, single)
         member private x.ToInt16 ()   = x.FoldNumeric (int16 , int16)
