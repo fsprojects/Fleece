@@ -121,27 +121,6 @@ module Fleece =
     open FSharp.Data
         
     type JsonObject = (string * JsonValue)[]
-
-    // unify JsonValue.Number and JsonValue.Float
-    type JsonValue with
-        
-        member private x.FoldNumeric (e:decimal -> 'a, f:float -> 'a) : 'a =
-            match x with
-            | JsonValue.Number n -> e n
-            | JsonValue.Float n -> f n 
-            | j -> failwith (sprintf "Expected numeric but was %A" j)
-
-        member private x.ToDecimal () = x.FoldNumeric (decimal, decimal)
-        member private x.ToDouble ()  = x.FoldNumeric (double, double)
-        member private x.ToSingle ()  = x.FoldNumeric (single, single)
-        member private x.ToInt16 ()   = x.FoldNumeric (int16 , int16)
-        member private x.ToInt32 ()   = x.FoldNumeric (int   , int)
-        member private x.ToInt64 ()   = x.FoldNumeric (int64 , int64)
-        member private x.ToUInt16 ()  = x.FoldNumeric (uint16, uint16)
-        member private x.ToUInt32 ()  = x.FoldNumeric (uint32, uint32)
-        member private x.ToUInt64 ()  = x.FoldNumeric (uint64, uint64)
-        member private x.ToByte ()    = x.FoldNumeric (byte  , byte)
-        member private x.ToSByte ()   = x.FoldNumeric (sbyte , sbyte)
             
     
     type private JsonHelpers() =
@@ -323,22 +302,16 @@ module Fleece =
                     match o.Type with
                     | JTokenType.Object -> Success ( o :?> JObject )
                     | a -> failparse "JsonObject" a
-
-    type Decimal with static member OfJson x = Helpers.tryRead<decimal> "decimal" x
-    type Int16   with static member OfJson x = Helpers.tryRead<int16>   "int16"   x
-    type Int32   with static member OfJson x = Helpers.tryRead<int>     "int"     x
-    type Int64   with static member OfJson x = Helpers.tryRead<int64>   "int64"   x
-    type UInt16  with static member OfJson x = Helpers.tryRead<uint16>  "uint16"  x
-    type UInt32  with static member OfJson x = Helpers.tryRead<uint32>  "uint32"  x
-    type UInt64  with static member OfJson x = Helpers.tryRead<uint64>  "uint64"  x
-    type Byte    with static member OfJson x = Helpers.tryRead<byte>    "byte"    x
-    type SByte   with static member OfJson x = Helpers.tryRead<sbyte>   "sbyte"   x
-    type Double  with static member OfJson x = Helpers.tryRead<double>  "double"  x
-    type Single  with static member OfJson x = Helpers.tryRead<single>  "single"  x
  
 
         #endif
         #if FSHARPDATA
+
+        let inline tryRead s = 
+            function
+            | JsonValue.Number n -> Success (explicit n)
+            | JsonValue.Float  n -> Success (explicit n)
+            | js                 -> failparse s (sprintf "Expected numeric but was %A" js)
 
         type JsonHelpers with
             static member jsonObjectOfJson =
@@ -346,18 +319,6 @@ module Fleece =
                     match o with
                     | JObject x -> Success (dictAsProps x)
                     | a -> failparse "JsonObject" a
-
-    type Decimal with static member OfJson x = match x with JNumber n -> n.ToDecimal () |> Success | a -> Helpers.failparse "decimal" a
-    type Int16   with static member OfJson x = match x with JNumber n -> n.ToInt16 ()   |> Success | a -> Helpers.failparse "int16"   a
-    type Int32   with static member OfJson x = match x with JNumber n -> n.ToInt32 ()   |> Success | a -> Helpers.failparse "int"     a
-    type Int64   with static member OfJson x = match x with JNumber n -> n.ToInt64 ()   |> Success | a -> Helpers.failparse "int64"   a
-    type UInt16  with static member OfJson x = match x with JNumber n -> n.ToUInt16 ()  |> Success | a -> Helpers.failparse "unint16" a
-    type UInt32  with static member OfJson x = match x with JNumber n -> n.ToUInt32 ()  |> Success | a -> Helpers.failparse "unint32" a
-    type UInt64  with static member OfJson x = match x with JNumber n -> n.ToUInt64 ()  |> Success | a -> Helpers.failparse "unint64" a
-    type Byte    with static member OfJson x = match x with JNumber n -> n.ToByte ()    |> Success | a -> Helpers.failparse "byte"    a
-    type SByte   with static member OfJson x = match x with JNumber n -> n.ToSByte ()   |> Success | a -> Helpers.failparse "sbyte"   a
-    type Double  with static member OfJson x = match x with JNumber n -> n.ToDouble ()  |> Success | a -> Helpers.failparse "double"  a
-    type Single  with static member OfJson x = match x with JNumber n -> n.ToSingle ()  |> Success | a -> Helpers.failparse "single"  a
 
 
         #endif
@@ -378,23 +339,22 @@ module Fleece =
                     | :? JsonObject as x -> Success x
                     | a -> failparse "JsonObject" a
 
-    type Decimal with static member OfJson x = Helpers.tryRead<decimal> "decimal" x
-    type Int16   with static member OfJson x = Helpers.tryRead<int16>   "int16"   x
-    type Int32   with static member OfJson x = Helpers.tryRead<int>     "int"     x
-    type Int64   with static member OfJson x = Helpers.tryRead<int64>   "int64"   x
-    type UInt16  with static member OfJson x = Helpers.tryRead<uint16>  "uint16"  x
-    type UInt32  with static member OfJson x = Helpers.tryRead<uint32>  "uint32"  x
-    type UInt64  with static member OfJson x = Helpers.tryRead<uint64>  "uint64"  x
-    type Byte    with static member OfJson x = Helpers.tryRead<byte>    "byte"    x
-    type SByte   with static member OfJson x = Helpers.tryRead<sbyte>   "sbyte"   x
-    type Double  with static member OfJson x = Helpers.tryRead<double>  "double"  x
-    type Single  with static member OfJson x = Helpers.tryRead<single>  "single"  x
-
-
         #endif
 
 
     open Helpers
+
+    type Decimal with static member OfJson x = tryRead<decimal> "decimal" x
+    type Int16   with static member OfJson x = tryRead<int16>   "int16"   x
+    type Int32   with static member OfJson x = tryRead<int>     "int"     x
+    type Int64   with static member OfJson x = tryRead<int64>   "int64"   x
+    type UInt16  with static member OfJson x = tryRead<uint16>  "uint16"  x
+    type UInt32  with static member OfJson x = tryRead<uint32>  "uint32"  x
+    type UInt64  with static member OfJson x = tryRead<uint64>  "uint64"  x
+    type Byte    with static member OfJson x = tryRead<byte>    "byte"    x
+    type SByte   with static member OfJson x = tryRead<sbyte>   "sbyte"   x
+    type Double  with static member OfJson x = tryRead<double>  "double"  x
+    type Single  with static member OfJson x = tryRead<single>  "single"  x    
 
     type Boolean with static member OfJson x =
                                 match x with
