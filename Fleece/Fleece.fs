@@ -340,6 +340,8 @@ module SystemJson =
 
         #endif
 
+    open Helpers
+
     /// Encodes a value of a generic type 't into a value of raw type 'S.
     type Encoder<'S, 't> = 't -> 'S
 
@@ -361,225 +363,302 @@ module SystemJson =
     let decode (d: Decoder<'i, 'a>) (i: 'i) : ParseResult<'a> = d i
     let encode (e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
+    /// Creates a new Json object for serialization
+    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
+
+
+    [<RequireQualifiedAccess>]
+    module JsonDecode =
+        let choice (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> = function
+            | JObject o as jobj ->
+                match Seq.toList o with
+                | [KeyValue("Choice1Of2", a)] -> a |> decoder1 |> map Choice1Of2
+                | [KeyValue("Choice2Of2", a)] -> a |> decoder2 |> map Choice2Of2
+                | _ -> failparse "Choice" jobj
+            | a -> failparse "Choice" a
+
+        let choice3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
+            | JObject o as jobj ->
+                match Seq.toList o with
+                | [KeyValue("Choice1Of3", a)] -> a |> decoder1 |> map Choice1Of3
+                | [KeyValue("Choice2Of3", a)] -> a |> decoder2 |> map Choice2Of3
+                | [KeyValue("Choice3Of3", a)] -> a |> decoder3 |> map Choice3Of3
+                | _ -> failparse "Choice" jobj
+            | a -> failparse "Choice" a
+
+        let option (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
+            | JNull _ -> Success None
+            | x       -> map Some (decoder x)
+
+        let nullable (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Nullable<'a>> = function
+            | JNull _ -> Success (Nullable ())
+            | x       -> map Nullable (decoder x)
+
+        let array (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
+            | JArray a -> traverse decoder a |> map Seq.toArray
+            | a        -> failparse "array" a
+
+        let list (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a list> = function
+            | JArray a -> traverse decoder a |> map Seq.toList
+            | a        -> failparse "list" a
+
+        let set (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a Set> = function
+            | JArray a -> traverse decoder a |> map set
+            | a        -> failparse "set" a
+
+        let resizeArray (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ResizeArray> = function
+            | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (x: 'a seq))
+            | a        -> failparse "ResizeArray" a
+
+        let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
+            | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> ofSeq)
+            | a -> failparse "Dictionary" a
+
+        let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
+            | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
+            | a -> failparse "Map" a
+
+        let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> = function
+            | JArray a as x ->
+                if a.Count <> 2 then Failure ("Expected array with 2 items, was: " + string x)
+                else tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1]
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        let tuple3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> = function
+            | JArray a as x ->
+                if a.Count <> 3 then Failure ("Expected array with 3 items, was: " + string x)
+                else tuple3 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2]
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        let tuple4 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = function
+            | JArray a as x ->
+                if a.Count <> 4 then Failure ("Expected array with 4 items, was: " + string x)
+                else tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3]
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        let tuple5 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = function
+            | JArray a as x ->
+                if a.Count <> 5 then Failure ("Expected array with 5 items, was: " + string x)
+                else tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4]
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        let tuple6 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = function
+            | JArray a as x ->
+                if a.Count <> 6 then Failure ("Expected array with 6 items, was: " + string x)
+                else tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5]
+            | a -> Failure (sprintf "Expected array, found %A" a)
+
+        let tuple7 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = function
+            | JArray a as x ->
+                if a.Count <> 7 then Failure ("Expected array with 7 items, was: " + string x)
+                else tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6]
+            | a -> Failure (sprintf "Expected array, found %A" a)
+        
+        let decimal x = tryRead<decimal> "decimal" x
+        let int16   x = tryRead<int16>   "int16"   x
+        let int     x = tryRead<int>     "int"     x
+        let int64   x = tryRead<int64>   "int64"   x
+        let uint16  x = tryRead<uint16>  "uint16"  x
+        let uint32  x = tryRead<uint32>  "uint32"  x
+        let uint64  x = tryRead<uint64>  "uint64"  x
+        let byte    x = tryRead<byte>    "byte"    x
+        let sbyte   x = tryRead<sbyte>   "sbyte"   x
+        let float   x = tryRead<double>  "double"  x
+        let float32 x = tryRead<single>  "single"  x
+
+        let boolean x =
+            match x with
+            | JBool b -> Success b
+            | a -> failparse "bool" a
+
+        let string x =
+            match x with
+            | JString b -> Success b
+            | JNull -> Success null
+            | a -> failparse "string" a
+
+        let char x =
+            match x with
+            | JString null -> Failure "Expected char, got null"
+            | JString s    -> Success s.[0]
+            | a -> failparse "char" a
+
+        let guid x =
+            match x with
+            | JString null -> Failure "Expected Guid, got null"
+            | JString s    -> tryParse<Guid> s |> Operators.option Success (Failure ("Invalid Guid " + s))
+            | a -> failparse "Guid" a
+
+        let dateTime x =
+            match x with
+            | JString null -> Failure "Expected DateTime, got null"
+            | JString s    ->
+                match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                | true, t -> Success t
+                | _       -> Failure (sprintf "Invalid DateTime %s" s)
+            | a -> failparse "DateTime" a
+
+        let dateTimeOffset x =
+            match x with
+            | JString null -> Failure "Expected DateTimeOffset, got null"
+            | JString s    ->
+                match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+                | true, t -> Success t
+                | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
+            | a -> failparse "DateTimeOffset" a
+
+    [<RequireQualifiedAccess>]
+    module JsonEncode =
+        let choice (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
+            | Choice1Of2 a -> jobj [ "Choice1Of2", encoder1 a ]
+            | Choice2Of2 a -> jobj [ "Choice2Of2", encoder2 a ]
+
+        let choice3 (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) (encoder3: _ -> JsonValue) = function
+            | Choice1Of3 a -> jobj [ "Choice1Of3", encoder1 a ]
+            | Choice2Of3 a -> jobj [ "Choice2Of3", encoder2 a ]
+            | Choice3Of3 a -> jobj [ "Choice3Of3", encoder3 a ]
+
+        let option (encoder: _ -> JsonValue) = function
+            | None   -> JNull
+            | Some a -> encoder a
+
+        let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
+        let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x).AsReadOnlyList ())
+        let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
+        let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray ((Seq.map encoder x).ToReadOnlyList ())
+        let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray ((Seq.map encoder x).ToReadOnlyList ())
+        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, encoder v) |> dict |> JObject
+        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, encoder v) |> dict |> JObject
+        
+        let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|].AsReadOnlyList ())
+        let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|].AsReadOnlyList ())
+        let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|].AsReadOnlyList ())
+        let tuple5 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|].AsReadOnlyList ())
+        let tuple6 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|].AsReadOnlyList ())
+        let tuple7 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|].AsReadOnlyList ())
+
+        let boolean        (x: bool          ) = JBool x
+        let string         (x: string        ) = JString x
+        let dateTime       (x: DateTime      ) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
+        let dateTimeOffset (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+        let decimal        (x: decimal       ) = JsonHelpers.create x
+        let float          (x: Double        ) = JsonHelpers.create x
+        let float32        (x: Single        ) = JsonHelpers.create x
+        let int            (x: int           ) = JsonHelpers.create x
+        let uint32         (x: uint32        ) = JsonHelpers.create x
+        let int64          (x: int64         ) = JsonHelpers.create x
+        let uint64         (x: uint64        ) = JsonHelpers.create x
+        let int16          (x: int16         ) = JsonHelpers.create x
+        let uint16         (x: uint16        ) = JsonHelpers.create x
+        let byte           (x: byte          ) = JsonHelpers.create x
+        let sbyte          (x: sbyte         ) = JsonHelpers.create x
+        let char           (x: char          ) = JsonHelpers.create x
+        let guid           (x: Guid          ) = JsonHelpers.create x
+
+    [<RequireQualifiedAccess>]
+    module JsonCodec =
+     
+        let choice  codec1 codec2 = JsonDecode.choice (fst codec1) (fst codec2), JsonEncode.choice (snd codec1) (snd codec2)
+        let choice3 codec1 codec2 codec3 = JsonDecode.choice3 (fst codec1) (fst codec2) (fst codec3), JsonEncode.choice3 (snd codec1) (snd codec2) (snd codec3)
+        let option codec = JsonDecode.option (fst codec), JsonEncode.option (snd codec)
+        let nullable codec = JsonDecode.nullable (fst codec), JsonEncode.nullable (snd codec)
+        let array codec = JsonDecode.array (fst codec), JsonEncode.array (snd codec)
+        let list  codec = JsonDecode.list  (fst codec), JsonEncode.list  (snd codec)
+        let set         codec = JsonDecode.set         (fst codec), JsonEncode.set         (snd codec)
+        let resizeArray codec = JsonDecode.resizeArray (fst codec), JsonEncode.resizeArray (snd codec)
+        let map         codec = JsonDecode.map         (fst codec), JsonEncode.map         (snd codec)
+        let dictionary  codec = JsonDecode.dictionary  (fst codec), JsonEncode.dictionary  (snd codec)
+
+        let tuple2 codec1 codec2                                    = JsonDecode.tuple2 (fst codec1) (fst codec2)                                                                 , JsonEncode.tuple2 (snd codec1) (snd codec2)
+        let tuple3 codec1 codec2 codec3                             = JsonDecode.tuple3 (fst codec1) (fst codec2) (fst codec3)                                                    , JsonEncode.tuple3 (snd codec1) (snd codec2) (snd codec3)
+        let tuple4 codec1 codec2 codec3 codec4                      = JsonDecode.tuple4 (fst codec1) (fst codec2) (fst codec3) (fst codec4)                                       , JsonEncode.tuple4 (snd codec1) (snd codec2) (snd codec3) (snd codec4)
+        let tuple5 codec1 codec2 codec3 codec4 codec5               = JsonDecode.tuple5 (fst codec1) (fst codec2) (fst codec3) (fst codec4) (fst codec5)                          , JsonEncode.tuple5 (snd codec1) (snd codec2) (snd codec3) (snd codec4) (snd codec5)
+        let tuple6 codec1 codec2 codec3 codec4 codec5 codec6        = JsonDecode.tuple6 (fst codec1) (fst codec2) (fst codec3) (fst codec4) (fst codec5) (fst codec6)             , JsonEncode.tuple6 (snd codec1) (snd codec2) (snd codec3) (snd codec4) (snd codec5) (snd codec6)
+        let tuple7 codec1 codec2 codec3 codec4 codec5 codec6 codec7 = JsonDecode.tuple7 (fst codec1) (fst codec2) (fst codec3) (fst codec4) (fst codec5) (fst codec6) (fst codec7), JsonEncode.tuple7 (snd codec1) (snd codec2) (snd codec3) (snd codec4) (snd codec5) (snd codec6) (snd codec7)
+
+        let boolean        = JsonDecode.boolean       , JsonEncode.boolean
+        let string         = JsonDecode.string        , JsonEncode.string
+        let dateTime       = JsonDecode.dateTime      , JsonEncode.dateTime
+        let dateTimeOffset = JsonDecode.dateTimeOffset, JsonEncode.dateTimeOffset
+        let decimal        = JsonDecode.decimal       , JsonEncode.decimal
+        let float          = JsonDecode.float         , JsonEncode.float
+        let float32        = JsonDecode.float32       , JsonEncode.float32
+        let int            = JsonDecode.int           , JsonEncode.int
+        let uint32         = JsonDecode.uint32        , JsonEncode.uint32
+        let int64          = JsonDecode.int64         , JsonEncode.int64
+        let uint64         = JsonDecode.uint64        , JsonEncode.uint64
+        let int16          = JsonDecode.int16         , JsonEncode.int16
+        let uint16         = JsonDecode.uint16        , JsonEncode.uint16
+        let byte           = JsonDecode.byte          , JsonEncode.byte
+        let sbyte          = JsonDecode.sbyte         , JsonEncode.sbyte
+        let char           = JsonDecode.char          , JsonEncode.char
+        let guid           = JsonDecode.guid          , JsonEncode.guid
+
 
     // Deserializing:
-
-    open Helpers
-
-    type Decimal with static member OfJson x = tryRead<decimal> "decimal" x
-    type Int16   with static member OfJson x = tryRead<int16>   "int16"   x
-    type Int32   with static member OfJson x = tryRead<int>     "int"     x
-    type Int64   with static member OfJson x = tryRead<int64>   "int64"   x
-    type UInt16  with static member OfJson x = tryRead<uint16>  "uint16"  x
-    type UInt32  with static member OfJson x = tryRead<uint32>  "uint32"  x
-    type UInt64  with static member OfJson x = tryRead<uint64>  "uint64"  x
-    type Byte    with static member OfJson x = tryRead<byte>    "byte"    x
-    type SByte   with static member OfJson x = tryRead<sbyte>   "sbyte"   x
-    type Double  with static member OfJson x = tryRead<double>  "double"  x
-    type Single  with static member OfJson x = tryRead<single>  "single"  x    
-
-    type Boolean with static member OfJson x =
-                                match x with
-                                | JBool b -> Success b
-                                | a -> failparse "bool" a
-
-    type String with static member OfJson x =
-                                match x with
-                                | JString b -> Success b
-                                | JNull -> Success null
-                                | a -> failparse "string" a
-
-    type Char with static member OfJson x =
-                                match x with
-                                | JString null -> Failure "Expected char, got null"
-                                | JString s    -> Success s.[0]
-                                | a -> failparse "char" a
-
-    type Guid with static member OfJson x =
-                                match x with
-                                | JString null -> Failure "Expected Guid, got null"
-                                | JString s    -> tryParse<Guid> s |> option Success (Failure ("Invalid Guid " + s))
-                                | a -> failparse "Guid" a
-
-    type DateTime with static member OfJson x =
-                                match x with
-                                | JString null -> Failure "Expected DateTime, got null"
-                                | JString s    ->
-                                    match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
-                                    | true, t -> Success t
-                                    | _       -> Failure (sprintf "Invalid DateTime %s" s)
-                                | a -> failparse "DateTime" a
-
-    type DateTimeOffset with static member OfJson x =
-                                match x with
-                                | JString null -> Failure "Expected DateTimeOffset, got null"
-                                | JString s    ->
-                                    match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
-                                    | true, t -> Success t
-                                    | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
-                                | a -> failparse "DateTimeOffset" a
 
     type OfJson =
         inherit Default1
         
-        static member OfJson (_: decimal, _: OfJson) = Decimal.OfJson
-        static member OfJson (_: int16  , _: OfJson) = Int16  .OfJson
-        static member OfJson (_: int    , _: OfJson) = Int32  .OfJson
-        static member OfJson (_: int64  , _: OfJson) = Int64  .OfJson
-        static member OfJson (_: uint16 , _: OfJson) = UInt16 .OfJson
-        static member OfJson (_: uint32 , _: OfJson) = UInt32 .OfJson
-        static member OfJson (_: uint64 , _: OfJson) = UInt64 .OfJson
-        static member OfJson (_: byte   , _: OfJson) = Byte   .OfJson
-        static member OfJson (_: sbyte  , _: OfJson) = SByte  .OfJson
-        static member OfJson (_: double , _: OfJson) = Double .OfJson
-        static member OfJson (_: single , _: OfJson) = Single .OfJson
+        static member OfJson (_: decimal, _: OfJson) = JsonDecode.decimal
+        static member OfJson (_: int16  , _: OfJson) = JsonDecode.int16
+        static member OfJson (_: int    , _: OfJson) = JsonDecode.int
+        static member OfJson (_: int64  , _: OfJson) = JsonDecode.int64
+        static member OfJson (_: uint16 , _: OfJson) = JsonDecode.uint16
+        static member OfJson (_: uint32 , _: OfJson) = JsonDecode.uint32
+        static member OfJson (_: uint64 , _: OfJson) = JsonDecode.uint64
+        static member OfJson (_: byte   , _: OfJson) = JsonDecode.byte
+        static member OfJson (_: sbyte  , _: OfJson) = JsonDecode.sbyte
+        static member OfJson (_: double , _: OfJson) = JsonDecode.float
+        static member OfJson (_: single , _: OfJson) = JsonDecode.float32
 
-        static member OfJson (_: bool          , _: OfJson) = Boolean       .OfJson
-        static member OfJson (_: string        , _: OfJson) = String        .OfJson
-        static member OfJson (_: char          , _: OfJson) = Char          .OfJson
-        static member OfJson (_: Guid          , _: OfJson) = Guid          .OfJson
-        static member OfJson (_: DateTime      , _: OfJson) = DateTime      .OfJson
-        static member OfJson (_: DateTimeOffset, _: OfJson) = DateTimeOffset.OfJson
+        static member OfJson (_: bool          , _: OfJson) = JsonDecode.boolean
+        static member OfJson (_: string        , _: OfJson) = JsonDecode.string
+        static member OfJson (_: char          , _: OfJson) = JsonDecode.char
+        static member OfJson (_: Guid          , _: OfJson) = JsonDecode.guid
+        static member OfJson (_: DateTime      , _: OfJson) = JsonDecode.dateTime
+        static member OfJson (_: DateTimeOffset, _: OfJson) = JsonDecode.dateTimeOffset
 
     type OfJson with
         static member inline Invoke (x: JsonValue) : 't ParseResult =
             let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
             iOfJson (Unchecked.defaultof<OfJson>, Unchecked.defaultof<'t>) x
 
-    type OfJson with
-        static member inline OfJson (_: Choice<'a, 'b>, _:OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>> =
-            function
-            | JObject o as jobj ->
-                match Seq.toList o with
-                | [KeyValue("Choice1Of2", a)] -> a |> OfJson.Invoke |> map Choice1Of2
-                | [KeyValue("Choice2Of2", a)] -> a |> OfJson.Invoke |> map Choice2Of2
-                | _ -> failparse "Choice" jobj
-            | a -> failparse "Choice" a
+    type OfJson with static member inline OfJson (_: Choice<'a, 'b>    , _:OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>>     = JsonDecode.choice  OfJson.Invoke OfJson.Invoke
+    type OfJson with static member inline OfJson (_: Choice<'a, 'b, 'c>, _:OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = JsonDecode.choice3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
+
+    type OfJson with static member inline OfJson (_: 'a option  , _:OfJson) : JsonValue -> ParseResult<'a option>   = JsonDecode.option   OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a Nullable, _:OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
+
+    type OfJson with static member inline OfJson (_: 'a array, _:OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
+    type OfJson with static member inline OfJson (_: list<'a>, _:OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a Set  , _:OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
+
+    type OfJson with static member inline OfJson (_: Map<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Map<string, 'a>> = JsonDecode.map OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: Choice<'a, 'b, 'c>, _:OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> =
-            function
-            | JObject o as jobj ->
-                match Seq.toList o with
-                | [KeyValue("Choice1Of3", a)] -> a |> OfJson.Invoke |> map Choice1Of3
-                | [KeyValue("Choice2Of3", a)] -> a |> OfJson.Invoke |> map Choice2Of3
-                | [KeyValue("Choice3Of3", a)] -> a |> OfJson.Invoke |> map Choice3Of3
-                | _ -> failparse "Choice" jobj
-            | a -> failparse "Choice" a
+        static member inline OfJson (_: Dictionary<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
+        static member inline OfJson (_: ResizeArray<'a>       , _:OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
+        static member inline OfJson (_: 'a Id1, _:OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
+        static member inline OfJson (_: 'a Id2, _:OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
 
     type OfJson with
-        static member inline OfJson (_: 'a option, _:OfJson) : JsonValue -> ParseResult<'a option> =
-            function
-            | JNull _ -> Success None
-            | x -> 
-                let a: 'a ParseResult = OfJson.Invoke x
-                map Some a
+        static member inline OfJson (_: 'a * 'b, _:OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a Nullable, _:OfJson) : JsonValue -> ParseResult<'a Nullable> =
-            function
-            | JNull _ -> Success (Nullable())
-            | x -> 
-                let a: 'a ParseResult = OfJson.Invoke x
-                map (fun x -> Nullable x) a
+        static member inline OfJson (_: 'a * 'b * 'c, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c> = JsonDecode.tuple3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a array, _:OfJson) : JsonValue -> ParseResult<'a array> =
-            function
-            | JArray a -> traverse OfJson.Invoke a |> map Seq.toArray
-            | a -> failparse "array" a
+        static member inline OfJson (_: 'a * 'b * 'c * 'd, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = JsonDecode.tuple4 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: list<'a>, _:OfJson) : JsonValue -> ParseResult<list<'a>> =
-            function
-            | JArray a -> traverse OfJson.Invoke a |> map Seq.toList
-            | a -> failparse "list" a
+        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = JsonDecode.tuple5 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a Set, _:OfJson) : JsonValue -> ParseResult<'a Set> =
-            function
-            | JArray a -> traverse OfJson.Invoke a |> map set
-            | a -> failparse "set" a
+        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = JsonDecode.tuple6 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: Map<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Map<string, 'a>> =
-            function
-            | JObject o -> traverse OfJson.Invoke (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
-            | a -> failparse "Map" a
-
-    type OfJson with
-        static member inline OfJson (_: Dictionary<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> =
-            function
-            | JObject o -> traverse OfJson.Invoke (values o) |> map (fun values -> Seq.zip (keys o) values |> ofSeq)
-            | a -> failparse "Dictionary" a
-
-        static member inline OfJson (_: 'a ResizeArray, _:OfJson) : JsonValue -> ParseResult<'a ResizeArray> =
-            function
-            | JArray a -> traverse OfJson.Invoke a |> map (fun x -> ResizeArray<_>(x: 'a seq))
-            | a -> failparse "ResizeArray" a
-
-        static member inline OfJson (_: 'a Id1, _:OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a>(Unchecked.defaultof<'a>))
-        static member inline OfJson (_: 'a Id2, _:OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a>(Unchecked.defaultof<'a>))
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b, _:OfJson) : JsonValue -> ParseResult<'a * 'b> =
-            function
-            | JArray a as x ->
-                if a.Count <> 2 then
-                    Failure ("Expected array with 2 items, was: " + string x)
-                else
-                    tuple2 <!> OfJson.Invoke a.[0] <*> OfJson.Invoke a.[1]
-            | a -> Failure (sprintf "Expected array, found %A" a)
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c> =
-            function
-            | JArray a as x ->
-                if a.Count <> 3 then
-                    Failure ("Expected array with 3 items, was: " + string x)
-                else
-                    tuple3 <!> OfJson.Invoke a.[0] <*> OfJson.Invoke a.[1] <*> OfJson.Invoke a.[2]
-            | a -> Failure (sprintf "Expected array, found %A" a)
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
-            function
-            | JArray a as x ->
-                if a.Count <> 4 then
-                    Failure ("Expected array with 4 items, was: " + string x)
-                else
-                    tuple4 <!> OfJson.Invoke a.[0] <*> OfJson.Invoke a.[1] <*> OfJson.Invoke a.[2] <*> OfJson.Invoke a.[3]
-            | a -> Failure (sprintf "Expected array, found %A" a)
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
-            function
-            | JArray a as x ->
-                if a.Count <> 5 then
-                    Failure ("Expected array with 5 items, was: " + string x)
-                else
-                    tuple5 <!> OfJson.Invoke a.[0] <*> OfJson.Invoke a.[1] <*> OfJson.Invoke a.[2] <*> OfJson.Invoke a.[3] <*> OfJson.Invoke a.[4]
-            | a -> Failure (sprintf "Expected array, found %A" a)
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
-            function
-            | JArray a as x ->
-                if a.Count <> 6 then
-                    Failure ("Expected array with 6 items, was: " + string x)
-                else
-                    tuple6 <!> OfJson.Invoke a.[0] <*> OfJson.Invoke a.[1] <*> OfJson.Invoke a.[2] <*> OfJson.Invoke a.[3] <*> OfJson.Invoke a.[4] <*> OfJson.Invoke a.[5]
-            | a -> Failure (sprintf "Expected array, found %A" a)
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
-            function
-            | JArray a as x ->
-                if a.Count <> 7 then
-                    Failure ("Expected array with 7 items, was: " + string x)
-                else
-                    tuple7 <!> OfJson.Invoke a.[0] <*> OfJson.Invoke a.[1] <*> OfJson.Invoke a.[2] <*> OfJson.Invoke a.[3] <*> OfJson.Invoke a.[4] <*> OfJson.Invoke a.[5] <*> OfJson.Invoke a.[6]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     // Default, for external classes.
     type OfJson with 
@@ -627,47 +706,25 @@ module SystemJson =
 
     // Serializing:
 
-    /// Creates a new Json object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
-
-    type Boolean        with static member ToJson (x: bool          ) = JBool x
-    type String         with static member ToJson (x: string        ) = JString x
-    type DateTime       with static member ToJson (x: DateTime      ) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
-    type DateTimeOffset with static member ToJson (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
-    type Decimal        with static member ToJson (x: decimal       ) = JsonHelpers.create x
-    type Double         with static member ToJson (x: Double        ) = JsonHelpers.create x
-    type Single         with static member ToJson (x: Single        ) = JsonHelpers.create x
-    type Int32          with static member ToJson (x: int           ) = JsonHelpers.create x
-    type UInt32         with static member ToJson (x: uint32        ) = JsonHelpers.create x
-    type Int64          with static member ToJson (x: int64         ) = JsonHelpers.create x
-    type UInt64         with static member ToJson (x: uint64        ) = JsonHelpers.create x
-    type Int16          with static member ToJson (x: int16         ) = JsonHelpers.create x
-    type UInt16         with static member ToJson (x: uint16        ) = JsonHelpers.create x
-    type Byte           with static member ToJson (x: byte          ) = JsonHelpers.create x
-    type SByte          with static member ToJson (x: sbyte         ) = JsonHelpers.create x
-    type Char           with static member ToJson (x: char          ) = JsonHelpers.create x
-    type Guid           with static member ToJson (x: Guid          ) = JsonHelpers.create x
-
-
     type ToJson =
         inherit Default1
-        static member ToJson (x: bool          , _:ToJson) = Boolean       .ToJson x
-        static member ToJson (x: string        , _:ToJson) = String        .ToJson x
-        static member ToJson (x: DateTime      , _:ToJson) = DateTime      .ToJson x
-        static member ToJson (x: DateTimeOffset, _:ToJson) = DateTimeOffset.ToJson x
-        static member ToJson (x: decimal       , _:ToJson) = Decimal       .ToJson x
-        static member ToJson (x: Double        , _:ToJson) = Double        .ToJson x
-        static member ToJson (x: Single        , _:ToJson) = Single        .ToJson x
-        static member ToJson (x: int           , _:ToJson) = Int32         .ToJson x
-        static member ToJson (x: uint32        , _:ToJson) = UInt32        .ToJson x
-        static member ToJson (x: int64         , _:ToJson) = Int64         .ToJson x
-        static member ToJson (x: uint64        , _:ToJson) = UInt64        .ToJson x
-        static member ToJson (x: int16         , _:ToJson) = Int16         .ToJson x
-        static member ToJson (x: uint16        , _:ToJson) = UInt16        .ToJson x
-        static member ToJson (x: byte          , _:ToJson) = Byte          .ToJson x
-        static member ToJson (x: sbyte         , _:ToJson) = SByte         .ToJson x
-        static member ToJson (x: char          , _:ToJson) = Char          .ToJson x
-        static member ToJson (x: Guid          , _:ToJson) = Guid          .ToJson x
+        static member ToJson (x: bool          , _:ToJson) = JsonEncode.boolean        x
+        static member ToJson (x: string        , _:ToJson) = JsonEncode.string         x
+        static member ToJson (x: DateTime      , _:ToJson) = JsonEncode.dateTime       x
+        static member ToJson (x: DateTimeOffset, _:ToJson) = JsonEncode.dateTimeOffset x
+        static member ToJson (x: decimal       , _:ToJson) = JsonEncode.decimal        x
+        static member ToJson (x: Double        , _:ToJson) = JsonEncode.float          x
+        static member ToJson (x: Single        , _:ToJson) = JsonEncode.float32        x
+        static member ToJson (x: int           , _:ToJson) = JsonEncode.int            x
+        static member ToJson (x: uint32        , _:ToJson) = JsonEncode.uint32         x
+        static member ToJson (x: int64         , _:ToJson) = JsonEncode.int64          x
+        static member ToJson (x: uint64        , _:ToJson) = JsonEncode.uint64         x
+        static member ToJson (x: int16         , _:ToJson) = JsonEncode.int16          x
+        static member ToJson (x: uint16        , _:ToJson) = JsonEncode.uint16         x
+        static member ToJson (x: byte          , _:ToJson) = JsonEncode.byte           x
+        static member ToJson (x: sbyte         , _:ToJson) = JsonEncode.sbyte          x
+        static member ToJson (x: char          , _:ToJson) = JsonEncode.char           x
+        static member ToJson (x: Guid          , _:ToJson) = JsonEncode.guid           x
 
     type ToJson with
         static member inline Invoke (x: 't) : JsonValue =
@@ -675,75 +732,48 @@ module SystemJson =
             iToJson (Unchecked.defaultof<ToJson>, x)
 
     type ToJson with
-        static member inline ToJson (x: Choice<'a, 'b>, _:ToJson) =
-            match x with
-            | Choice1Of2 a -> jobj [ "Choice1Of2", ToJson.Invoke a ]
-            | Choice2Of2 a -> jobj [ "Choice2Of2", ToJson.Invoke a ]
+        static member inline ToJson (x: Choice<'a, 'b>, _:ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: Choice<'a, 'b, 'c>, _:ToJson) =
-            match x with
-            | Choice1Of3 a -> jobj [ "Choice1Of3", ToJson.Invoke a]
-            | Choice2Of3 a -> jobj [ "Choice2Of3", ToJson.Invoke a]
-            | Choice3Of3 a -> jobj [ "Choice3Of3", ToJson.Invoke a]
+        static member inline ToJson (x: Choice<'a, 'b, 'c>, _:ToJson) = JsonEncode.choice3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a option, _:ToJson) =
-            match x with
-            | None -> JNull
-            | Some a -> ToJson.Invoke a
+        static member inline ToJson (x: 'a option, _:ToJson) = JsonEncode.option ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a Nullable, _:ToJson) =
-            if x.HasValue 
-                then ToJson.Invoke x.Value
-                else JNull
+        static member inline ToJson (x: 'a Nullable, _:ToJson) = JsonEncode.nullable ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: list<'a>, _:ToJson) =
-            JArray (listAsReadOnly (List.map ToJson.Invoke x))
+        static member inline ToJson (x: list<'a>, _:ToJson) = JsonEncode.list ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a Set, _:ToJson) =
-            JArray ((Seq.map ToJson.Invoke x).ToReadOnlyList())
+        static member inline ToJson (x: 'a Set, _:ToJson) = JsonEncode.set ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a array, _:ToJson) =
-            JArray ((Array.map ToJson.Invoke x).AsReadOnlyList())
+        static member inline ToJson (x: 'a array, _:ToJson) = JsonEncode.array ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: Map<string, 'a>, _:ToJson) =
-            x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, ToJson.Invoke v) |> dict |> JObject
+        static member inline ToJson (x: Map<string, 'a>, _:ToJson) = JsonEncode.map ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: Dictionary<string, 'a>, _:ToJson) =
-            x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, ToJson.Invoke v) |> dict |> JObject
-
-        static member inline ToJson (x: 'a ResizeArray, _:ToJson) =
-            JArray ((Seq.map ToJson.Invoke x).ToReadOnlyList())
-
-        static member inline ToJson ((a, b), _:ToJson) =
-            JArray ([|ToJson.Invoke a; ToJson.Invoke b|].AsReadOnlyList())
+        static member inline ToJson (x: Dictionary<string, 'a>, _:ToJson) = JsonEncode.dictionary  ToJson.Invoke x
+        static member inline ToJson (x: 'a ResizeArray        , _:ToJson) = JsonEncode.resizeArray ToJson.Invoke x
+        static member inline ToJson (x                        , _:ToJson) = JsonEncode.tuple2      ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson ((a, b, c), _:ToJson) =
-            JArray ([|ToJson.Invoke a; ToJson.Invoke b; ToJson.Invoke c|].AsReadOnlyList())
+        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson ((a, b, c, d), _:ToJson) =
-            JArray ([|ToJson.Invoke a; ToJson.Invoke b; ToJson.Invoke c; ToJson.Invoke d|].AsReadOnlyList())
+        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple4 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson ((a, b, c, d, e), _:ToJson) =
-            JArray ([|ToJson.Invoke a; ToJson.Invoke b; ToJson.Invoke c; ToJson.Invoke d; ToJson.Invoke e|].AsReadOnlyList())
+        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple5 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson ((a, b, c, d, e, f), _:ToJson) =
-            JArray ([|ToJson.Invoke a; ToJson.Invoke b; ToJson.Invoke c; ToJson.Invoke d; ToJson.Invoke e; ToJson.Invoke f|].AsReadOnlyList())
+        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple6 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson ((a, b, c, d, e, f, g), _:ToJson) =
-            JArray ([|ToJson.Invoke a; ToJson.Invoke b; ToJson.Invoke c; ToJson.Invoke d; ToJson.Invoke e; ToJson.Invoke f; ToJson.Invoke g|].AsReadOnlyList())
+        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple7 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     // Default, for external classes.
     type ToJson with
