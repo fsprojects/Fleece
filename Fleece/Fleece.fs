@@ -68,26 +68,6 @@ module Fleece =
     let jsonObjectGetValues (x : JObject) = JObject.GetValues x
 
     type JsonObject = JObject
-    // unify JsonValue.Number and JsonValue.Float
-    type JValue with
-        
-        member private x.FoldNumeric (e:decimal -> 'a, f:float -> 'a) : 'a =
-            match x.Type with
-            | JTokenType.Integer -> e (x.ToObject())
-            | JTokenType.Float -> f (x.ToObject())
-            | j -> failwith (sprintf "Expected numeric but was %A" j)
-
-        member private x.ToDecimal () = x.FoldNumeric (id    , decimal)
-        member private x.ToDouble ()  = x.FoldNumeric (double, double)
-        member private x.ToSingle ()  = x.FoldNumeric (single, single)
-        member private x.ToInt16 ()   = x.FoldNumeric (int16 , int16)
-        member private x.ToInt32 ()   = x.FoldNumeric (int   , int)
-        member private x.ToInt64 ()   = x.FoldNumeric (int64 , int64)
-        member private x.ToUInt16 ()  = x.FoldNumeric (uint16, uint16)
-        member private x.ToUInt32 ()  = x.FoldNumeric (uint32, uint32)
-        member private x.ToUInt64 ()  = x.FoldNumeric (uint64, uint64)
-        member private x.ToByte ()    = x.FoldNumeric (byte  , byte)
-        member private x.ToSByte ()   = x.FoldNumeric (sbyte , sbyte)
             
     
     type private JsonHelpers() =
