@@ -7,7 +7,8 @@ type Person (name:string, age:int, children:Person list)=
     member __.Children = children
 
 open Fleece
-open Fleece.Operators
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
 open System.Json
 type PersonSystemJson(name:string, age:int, children:PersonSystemJson list) = 
     inherit Person(name, age, children |> map (fun p->p :> Person))
