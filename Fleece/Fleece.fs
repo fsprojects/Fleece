@@ -8,8 +8,7 @@ module Newtonsoft =
 module FSharpData =
 #endif
 #if SYSTEMJSON
-[<AutoOpen>]
-module Fleece =
+module SystemJson =
 #endif
     open System
     open System.Globalization    

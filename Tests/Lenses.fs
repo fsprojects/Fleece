@@ -15,8 +15,9 @@ open Fleece.FSharpData.Lens
 #endif
 #if SYSTEMJSON
 open System.Json
-open Fleece.Operators
-open Fleece.Lens
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+open Fleece.SystemJson.Lens
 #endif
 #if NEWTONSOFT
 open Fleece.Newtonsoft

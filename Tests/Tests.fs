@@ -11,8 +11,8 @@ open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
-open Fleece
-open Fleece.Operators
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
 open System.Json
 #endif
 #if NEWTONSOFT
