@@ -696,9 +696,22 @@ module SystemJson =
         | true, value -> ofJson value
         | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
 
+    /// Gets a value from a Json object
+    let inline jgetWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
+        match o.TryGetValue key with
+        | true, value -> ofJson value
+        | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
+
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
     let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key =
+        match o.TryGetValue key with
+        | true, value -> ofJson value |> map Some
+        | _ -> Success None
+
+    /// Tries to get a value from a Json object.
+    /// Returns None if key is not present in the object.
+    let inline jgetoptWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> ofJson value |> map Some
         | _ -> Success None
@@ -793,10 +806,15 @@ module SystemJson =
 
     /// Creates a new Json key,value pair for a Json object
     let inline jpair (key: string) value = key, toJson value
+
+    /// Creates a new Json key,value pair for a Json object
+    let inline jpairWith toJson (key: string) value = key, toJson value
     
     /// Creates a new Json key,value pair for a Json object if the value option is present
     let inline jpairopt (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
 
+    /// Creates a new Json key,value pair for a Json object if the value option is present
+    let inline jpairoptWith toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
 
     /// <summary>Initialize the field mappings.</summary>
     /// <param name="f">An object initializer as a curried function.</param>
@@ -822,6 +840,20 @@ module SystemJson =
             )
         diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodec fieldName)
 
+    /// <summary>Appends a field mapping to the codec.</summary>
+    /// <param name="codec">The codec to be used.</param>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _->'Rest, _>)  =
+        let inline deriveFieldCodec prop =
+            (
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
+                (fun (x: 't) -> dict [prop, (snd codec) x])
+            )
+        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodec fieldName)
+
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
     /// <param name="getter">The field getter function.</param>
@@ -832,6 +864,20 @@ module SystemJson =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetopt o prop),
                 (function Some (x: 't) -> dict [prop, toJson x] | _ -> dict [])
+            )
+        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
+
+    /// <summary>Appends an optional field mapping to the codec.</summary>
+    /// <param name="codec">The codec to be used.</param>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfieldoptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
+        let inline deriveFieldCodecOpt prop =
+            (
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetoptWith (fst codec) o prop),
+                (function Some (x: 't) -> dict [prop, (snd codec) x] | _ -> dict [])
             )
         diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
 
