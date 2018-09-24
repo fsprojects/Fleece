@@ -6,8 +6,8 @@
     <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Lenses.fs" />
-    <Compile Include="Tests.fs" />
+    <Compile Include="../Tests/Lenses.fs" />
+    <Compile Include="../Tests/Tests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsCheck" Version="0.9.4.0" />

@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fleece.FSharpData", "Fleece.FSharpData\Fleece.FSharpData.fsproj", "{972BE606-278E-4789-B789-044EE68A3EED}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "Tests\Tests.fsproj", "{20FDBC9C-1D0C-441A-9A8A-64D16158DBAD}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.SystemJson", "Tests.SystemJson\Tests.SystemJson.fsproj", "{20FDBC9C-1D0C-441A-9A8A-64D16158DBAD}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests.FSharpData", "Tests.FSharpData\Tests.FSharpData.fsproj", "{FE7182BB-793C-491B-9F41-73919FC990DA}"
 EndProject
