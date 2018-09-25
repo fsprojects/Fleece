@@ -360,8 +360,21 @@ module SystemJson =
     /// A codec for raw type 'S to strong type 't.
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
+    module Codec =
+
+        /// Turns a Codec into another Codec, by mapping it over an isomorphism.
+        let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) (r, w) = (contramap f r, map g w)
+
+        let inline compose codec1 codec2 = 
+            let (dec1, enc1) = codec1
+            let (dec2, enc2) = codec2
+            (dec1 >> (=<<) dec2, enc1 << enc2)
+
     let decode (d: Decoder<'i, 'a>) (i: 'i) : ParseResult<'a> = d i
     let encode (e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
+
+    let jsonObjToValueCodec = ((function JObject (o : System.Collections.Generic.IReadOnlyDictionary<_,_>) -> Ok o | a  -> failparse "Map" a) , JObject)
+    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Failure (string e)), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
@@ -664,9 +677,7 @@ module SystemJson =
     type OfJson with 
         static member inline OfJson (_: 'R, _:Default4) =
             let codec = (^R : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
-            function
-            | JObject o -> decode (fst codec) o : ^R ParseResult
-            | a         -> failparse "Map" a
+            codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
         static member inline OfJson (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _:Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
@@ -679,16 +690,6 @@ module SystemJson =
 
     [<Obsolete("Use 'ofJson'")>]
     let inline fromJSON (x: JsonValue) : 't ParseResult = OfJson.Invoke x
-
-    /// Parses Json and maps to a type
-    let inline parseJson (x: string) : 'a ParseResult =
-        try
-            let json = JsonValue.Parse x
-            ofJson json
-        with e -> Failure (e.ToString())
-
-    [<Obsolete("Use 'parseJson'")>]
-    let inline parseJSON (x: string) : 'a ParseResult = parseJson (x: string)
 
     /// Gets a value from a Json object
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key =
@@ -790,9 +791,9 @@ module SystemJson =
 
     // Default, for external classes.
     type ToJson with
-        static member inline ToJson (t: 'T, _:Default4) = 
+        static member inline ToJson (t: 'T, _:Default4) =
             let codec = (^T : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
-            JObject (encode (snd codec) t)
+            (codec |> Codec.compose jsonObjToValueCodec |> snd) t
 
         static member inline ToJson (t: 'T, _:Default3) = (^T : (static member ToJSON: ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
@@ -881,7 +882,18 @@ module SystemJson =
             )
         diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
 
-    let inline getCodec () : Codec<JsonValue, 't> = ofJson, toJson
+    
+    /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
+    let inline getJsonValueCodec () : Codec<JsonValue, 't> = ofJson, toJson
+
+    /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
+    let inline jsonValueCodec< ^t when (OfJson or ^t) : (static member OfJson : ^t * OfJson -> (JsonValue -> ^t ParseResult)) and (ToJson or ^t) : (static member ToJson : ^t * ToJson -> JsonValue)> : Codec<JsonValue,'t> = ofJson, toJson
+
+    /// Parses a Json Text and maps to a type
+    let inline parseJson (x: string) : 'a ParseResult = fst jsonValueToTextCodec x >>= ofJson
+
+    [<Obsolete("Use 'parseJson'")>]
+    let inline parseJSON (x: string) : 'a ParseResult = parseJson (x: string)
    
     module Operators =
 

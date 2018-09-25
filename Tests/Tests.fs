@@ -1,5 +1,6 @@
 ﻿module Tests.Tests
 open System
+open System.Text
 open System.Collections.Generic
 open System.Linq
 open Fuchu
@@ -297,6 +298,25 @@ let tests = [
             test "JObj with null key" {
                 let j = jobj [null, JString "a"]
                 Assert.Equal("json", expected = "{}", actual = strCleanUp(j.ToString()))
+            }
+        ]
+
+        testList "Codec" [
+            test "binary" {
+                let itemBinaryCodec =
+                    Item.JsonObjCodec
+                    |> Codec.compose jsonObjToValueCodec
+                    |> Codec.compose jsonValueToTextCodec
+                    |> Codec.invmap Encoding.UTF8.GetString Encoding.UTF8.GetBytes
+                
+                let actual = 
+                    { Item.Id = 1; Brand = "Sony"; Availability = None }
+                    |> snd itemBinaryCodec  // go to bytes
+                    |> fst itemBinaryCodec  // and come back to Item
+
+                let expected = Ok { Item.Id = 1; Brand = "Sony"; Availability = None }
+                    
+                Assert.Equal("item", expected, actual)
             }
         ]
 
