@@ -7,20 +7,26 @@ open FSharpPlus
 
 #if FSHARPDATA
 open FSharp.Data
+open Fleece.FSharpData.Helpers
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
+open Fleece.SystemJson.Helpers
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 open System.Json
 #endif
 #if NEWTONSOFT
 open Newtonsoft.Json
+open Fleece.Newtonsoft.Helpers
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 #endif
-
+let (|Success|Failure|) =
+    function
+    | Ok    x -> Success x
+    | Error x -> Failure x
 #nowarn "0686"
 
 type Person = {

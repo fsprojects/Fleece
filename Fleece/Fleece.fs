@@ -251,22 +251,14 @@ module SystemJson =
     let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
     #endif
 
-
-    // results:
-
-    let (|Success|Failure|) =
-        function
-        | Ok    x -> Success x
-        | Error x -> Failure x
-
-    let inline Success x = Ok    x
-    let inline Failure x = Error x
-
     // Deserializing:
 
     type 'a ParseResult = Result<'a, string>
 
     module Helpers =
+        // results:
+        let inline Success x = Ok    x
+        let inline Failure x = Error x
 
         let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
 
