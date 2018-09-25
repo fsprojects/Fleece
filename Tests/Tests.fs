@@ -211,6 +211,16 @@ let tests = [
                 Assert.JSON("2", 2)
             }
 
+            test "decimal" {
+            #if FSHARPDATA
+                let actual : int ParseResult = parseJson "2.1"
+                Assert.Equal("decimal", Failure (), Result.mapError (fun _-> ()) actual)
+            #else
+                let actual : int ParseResult = parseJson "2.1"
+                Assert.Equal("decimal", Success 2, actual)
+            #endif
+            }
+
             test "tuple 2" {
                 let expected = 
                 #if NEWTONSOFT
