@@ -157,7 +157,7 @@ type Person = {
         |> mapping
         |> jfield    "firstName" (fun x -> fst x.name)
         |> jfield    "lastName"  (fun x -> snd x.name)
-        |> jfieldopt "age"       (fun x -> x.age)
+        |> jfieldOpt "age"       (fun x -> x.age)
         |> jfield    "children"  (fun x -> x.children)
 
 ```

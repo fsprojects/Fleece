@@ -694,14 +694,17 @@ module SystemJson =
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let inline jgetoptWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
+    let inline jgetOptWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> ofJson value |> map Some
         | _ -> Success None
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetoptWith ofJson o key
+    let inline jgetOpt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
+
+    [<Obsolete("Use 'jgetOpt'")>]
+    let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
 
 
     // Serializing:
@@ -812,10 +815,10 @@ module SystemJson =
     let inline jpair (key: string) value = jpairWith toJson key value
     
     /// Creates a new Json key,value pair for a Json object if the value option is present
-    let inline jpairoptWith toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
+    let inline jpairOptWith toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
 
     /// Creates a new Json key,value pair for a Json object if the value option is present
-    let inline jpairopt (key: string) value = jpairoptWith toJson key value
+    let inline jpairOpt (key: string) value = jpairOptWith toJson key value
 
     /// <summary>Initialize the field mappings.</summary>
     /// <param name="f">An object initializer as a curried function.</param>
@@ -855,10 +858,10 @@ module SystemJson =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldoptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
+    let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
         let inline deriveFieldCodecOpt prop =
             (
-                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetoptWith (fst codec) o prop),
+                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
                 (function Some (x: 'Value) -> dict [prop, (snd codec) x] | _ -> dict [])
             )
         diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
@@ -868,7 +871,7 @@ module SystemJson =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldopt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) = jfieldoptWith jsonValueCodec fieldName getter rest
+    let inline jfieldOpt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) = jfieldOptWith jsonValueCodec fieldName getter rest
     
   
     module Operators =
@@ -877,14 +880,14 @@ module SystemJson =
         let inline (.=) key value = jpair key value
         
         /// Creates a new Json key,value pair for a Json object if the value is present in the option
-        let inline (.=?) (key: string) value = jpairopt key value
+        let inline (.=?) (key: string) value = jpairOpt key value
 
         /// Gets a value from a Json object
         let inline (.@) o key = jget o key
 
         /// Tries to get a value from a Json object.
         /// Returns None if key is not present in the object.
-        let inline (.@?) o key = jgetopt o key
+        let inline (.@?) o key = jgetOpt o key
         
         /// <summary>Appends a field mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -905,14 +908,14 @@ module SystemJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<*/?>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter rest
+        let inline (<*/?>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter rest
 
         /// <summary>Appends the first field (optional) mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
         /// <param name="getter">The field getter function.</param>
         /// <param name="f">An object initializer as a curried function.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldopt fieldName getter (mapping f)
+        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter (mapping f)
 
         /// Tuple two values.
         let inline (^=) a b = (a, b)
