@@ -161,3 +161,64 @@ type Person = {
         |> jfield    "children"  (fun x -> x.children)
 
 ```
+
+What's happening here is that we're getting a Codec to/from a Json Object (not neccesarily a JsonValue) which Fleece is able to take it and fill the gap by composing it with a codec from JsonObject to/from JsonValue.
+
+We can also do that by hand, we can manipulate codecs by using functions in the Codec module. Here's an example:
+
+```fsharp
+open System.Text
+
+let personBytesCodec =
+    Person.JsonObjCodec
+    |> Codec.compose jsonObjToValueCodec    // this is the codec that fills the gap to/from JsonValue
+    |> Codec.compose jsonValueToTextCodec   // this is a codec between JsonValue and JsonText
+    |> Codec.invmap Encoding.UTF8.GetString Encoding.UTF8.GetBytes    // This is a pair of of isomorphic functions
+
+let bytePerson = Codec.encode personBytesCodec p
+// val bytePerson : byte [] = [|123uy; 13uy; 10uy; 32uy; 32uy; ... |]
+let p' = Codec.decode personBytesCodec bytePerson
+```
+
+### Combinators
+
+So far we've seen how Fleece is capable of encoding/decoding by deriving automatically a codec from static members in the type.
+
+But for those cases where we don't have control over the types (extension members won't be taken into account) we can explicitly specify combinators.
+
+To do so, a set of the available functions exists, ending with the `With` suffix, which accepts a combinator as first parameter:
+
+```fsharp
+type Color = Red | Blue | White
+
+type Car = {
+    Id : string
+    Color : Color
+    Kms : int }
+
+let colorDecoder = function
+    | JsonValue.String "red"   -> Ok Red  
+    | JsonValue.String "blue"  -> Ok Blue 
+    | JsonValue.String "white" -> Ok White
+    | x -> Error ("Wrong color: " + (string x))
+
+let colorEncoder = function
+    | Red   -> JsonValue.String "red"
+    | Blue  -> JsonValue.String "blue"
+    | White -> JsonValue.String "white"
+
+let colorCodec = colorDecoder, colorEncoder
+    
+let carCodec = 
+    fun i c k -> { Id = i; Color = c; Kms = k }
+    |> mapping
+    |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
+    |> jfieldWith colorCodec       "color" (fun x -> x.Color)
+    |> jfieldWith JsonCodec.int    "kms"   (fun x -> x.Kms)
+    |> Codec.compose jsonObjToValueCodec
+
+let car = { Id = "xyz"; Color = Red; Kms = 0 }
+
+let jsonCar = Codec.encode carCodec car
+// val jsonCar : JsonValue = {"id": "xyz", "color": "red", "kms": 0}
+```
