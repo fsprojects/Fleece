@@ -26,8 +26,8 @@ You can map it to JSON like this:
 
 ```fsharp
 open System.Json
-open Fleece
-open Fleece.Operators
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
 
 type Person with
     static member ToJson (x: Person) =
