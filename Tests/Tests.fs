@@ -196,7 +196,7 @@ let tests = [
                     |> toJson
                     |> string
             #if NEWTONSOFT
-                let expected = """{"id": 1.0, "brand": "Sony"}"""
+                let expected = """{"id": 1, "brand": "Sony"}"""
             #endif
             #if FSHARPDATA
                 let expected = """{"id": 1, "brand": "Sony"}"""
@@ -214,11 +214,7 @@ let tests = [
 
             test "tuple 2" {
                 let expected = 
-                #if NEWTONSOFT
-                    "[1.0,2.0]"
-                #else
                     "[1,2]"
-                #endif
                 Assert.JSON(expected, (1,2))
             }
 
@@ -276,7 +272,7 @@ let tests = [
                           Children = [] }
                       ] }
                 #if NEWTONSOFT
-                let expected = """{"name":"John","age":44.0,"children":[{"name":"Katy","age":5.0,"children":[]},{"name":"Johnny","age":7.0,"children":[]}]}"""
+                let expected = """{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
