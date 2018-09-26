@@ -370,8 +370,8 @@ module SystemJson =
             let (dec2, enc2) = codec2
             (dec1 >> (=<<) dec2, enc1 << enc2)
 
-    let decode (d: Decoder<'i, 'a>) (i: 'i) : ParseResult<'a> = d i
-    let encode (e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
+        let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
+        let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
     let jsonObjToValueCodec = ((function JObject (o : System.Collections.Generic.IReadOnlyDictionary<_,_>) -> Ok o | a  -> failparse "Map" a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Failure (string e)), (fun (x: JsonValue) -> string x)
@@ -833,7 +833,7 @@ module SystemJson =
     let diApply combiner toBC (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
-            toBC >> (encode (snd currentField) *** encode (snd remainderFields)) >> combiner
+            toBC >> ((snd currentField) *** (snd remainderFields)) >> combiner
         )
 
     /// <summary>Appends a field mapping to the codec.</summary>
