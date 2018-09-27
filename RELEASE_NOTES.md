@@ -1,3 +1,12 @@
+#### 0.7.0  - September 27 2018
+* Json Lens
+* Codecs
+* Combinators
+* Upgrade to System.Json 4.5
+* Fix somes issue with Newtonsoft serialization
+* Breaking changes: Success and Failure functions moved to Helpers namespace
+* Breaking changes from 0.6.1 : encode, decode, mapping, jgetopt, jpairopt, jfieldopt functions
+
 #### 0.6.1  - September 5 2018
 * Codec support for Json Objects
 
@@ -5,11 +14,9 @@
 * Breaking change for Newtonsoft and FSharp.Data: use a specific module
 * Binary Breaking Change: use Result<_,_> instead of Choice<_,_>
 
-
 #### 0.5.1  - December 31 2017
 * Lock System.Json
 * Bug fixes in Newtonsoft implementation
-
 
 #### 0.5.0  - May 27 2018
 * Added FSharp.Data implementation
