@@ -7,10 +7,9 @@ type Person (name: string, age: int, children: Person list) =
     member __.Age = age
     member __.Children = children
 
-open Fleece
+
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
-open System.Json
 
 type PersonSystemJson (name: string, age: int, children: PersonSystemJson list) =
     inherit Person (name, age, children |> map (fun p -> p :> Person))
@@ -30,7 +29,7 @@ with
             "children" .= x.Children
         ]
 
-open FSharp.Data
+
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 
@@ -52,7 +51,7 @@ with
             "children" .= x.Children
         ]
 
-open Newtonsoft.Json
+
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 
@@ -72,12 +71,4 @@ with
             "name" .= x.Name
             "age" .= x.Age
             "children" .= x.Children
-        ] 
-
-
-
-
-
-module Say =
-    let hello name =
-        printfn "Hello %s" name
+        ]
