@@ -11,41 +11,39 @@ module FSharpData =
 module SystemJson =
 #endif
     open System
-    open System.Globalization    
+    open System.Globalization
     open System.Collections.Generic
     open FSharpPlus
     open FSharpPlus.Data
-    module ReadOnlyCollections=
+    module ReadOnlyCollections =
         open System.Collections.ObjectModel
         type IDictionary<'key, 'value> with
-            member self.AsReadOnlyDictionary() = ReadOnlyDictionary(self) :> IReadOnlyDictionary<_,_>
+            member self.AsReadOnlyDictionary () = ReadOnlyDictionary self :> IReadOnlyDictionary<_,_>
         type IList<'value> with
-            member self.AsReadOnlyList() = ReadOnlyCollection(self) :> IReadOnlyList<_>
+            member self.AsReadOnlyList () = ReadOnlyCollection self :> IReadOnlyList<_>
         type IEnumerable<'value> with
-            member self.ToReadOnlyList() = ResizeArray(self).AsReadOnlyList()
+            member self.ToReadOnlyList () = (ResizeArray self).AsReadOnlyList ()
     open ReadOnlyCollections
-    module ReadOnlyList=
-        let ofArray (a:_ array) = a.AsReadOnlyList()
-        let toArray (a:IReadOnlyList<_>) = a |> Array.ofSeq
+    module ReadOnlyList =
+        let ofArray (a: _ array) = a.AsReadOnlyList ()
+        let toArray (a: IReadOnlyList<_>) = a |> Array.ofSeq
         // add has same shape as add for Map.add
         /// Returns a new IReadOnlyList from a given IReadOnlyList, with replaced binding for index.
-        let add i value (a:IReadOnlyList<_>)=
-            let setNth i v (a:_ array) = a.[i] <- v; a
-            if 0<=i && i<a.Count then
+        let add i value (a: IReadOnlyList<_>) =
+            let setNth i v (a: _ array) = a.[i] <- v; a
+            if 0 <= i && i < a.Count then
                 a |> Array.ofSeq |> setNth i value |> ofArray |> Some
-            else
-                None
-        let tryNth i (a:IReadOnlyList<_>)=
-            if 0<=i && i<a.Count then
-                Some a.[i]
-            else
-                None
+            else None
 
-    type Id1<'t>(v:'t) =
+        let tryNth i (a: IReadOnlyList<_>) =
+            if 0 <= i && i < a.Count then Some a.[i]
+            else None
+
+    type Id1<'t> (v: 't) =
         let value = v
         member __.getValue = value
 
-    type Id2<'t>(v:'t) =
+    type Id2<'t> (v: 't) =
         let value = v
         member __.getValue = value
 
@@ -59,36 +57,33 @@ module SystemJson =
     open Newtonsoft.Json.Linq
     type JsonValue = JToken
     type JObject with
-        member x.AsReadOnlyDictionary() =
-            (x.Properties() |> Seq.map ( fun p-> (p.Name,p.Value) ) |> dict).AsReadOnlyDictionary()
-
-        static member GetValues (x: JObject) = x.AsReadOnlyDictionary()
+        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict).AsReadOnlyDictionary ()
+        static member GetValues (x: JObject) = x.AsReadOnlyDictionary ()
 
     let jsonObjectGetValues (x : JObject) = JObject.GetValues x
 
     type JsonObject = JObject
-            
     
-    type private JsonHelpers() =
+    type private JsonHelpers () =
         static member create (x: decimal) = JValue          x  :> JToken
         static member create (x: Double ) = JValue          x  :> JToken
-        static member create (x: Single ) = JValue (        x) :> JToken
-        static member create (x: int    ) = JValue (        x) :> JToken
+        static member create (x: Single ) = JValue          x  :> JToken
+        static member create (x: int    ) = JValue          x  :> JToken
         static member create (x: bool   ) = JValue          x  :> JToken
-        static member create (x: uint32 ) = JValue (        x) :> JToken
-        static member create (x: int64  ) = JValue (        x) :> JToken
-        static member create (x: uint64 ) = JValue (        x) :> JToken
-        static member create (x: int16  ) = JValue (        x) :> JToken
-        static member create (x: uint16 ) = JValue (        x) :> JToken
-        static member create (x: byte   ) = JValue (        x) :> JToken
-        static member create (x: sbyte  ) = JValue (        x) :> JToken
+        static member create (x: uint32 ) = JValue          x  :> JToken
+        static member create (x: int64  ) = JValue          x  :> JToken
+        static member create (x: uint64 ) = JValue          x  :> JToken
+        static member create (x: int16  ) = JValue          x  :> JToken
+        static member create (x: uint16 ) = JValue          x  :> JToken
+        static member create (x: byte   ) = JValue          x  :> JToken
+        static member create (x: sbyte  ) = JValue          x  :> JToken
         static member create (x: char   ) = JValue (string  x) :> JToken
         static member create (x: Guid   ) = JValue (string  x) :> JToken
 
 
     // FSharp.Newtonsoft.Json AST adapter
 
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JToken) =
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JToken) =
         match o.Type with
         | JTokenType.Null    -> JNull
         | JTokenType.Array   -> JArray ((o :?> JArray).AsReadOnlyList ())
@@ -99,30 +94,28 @@ module SystemJson =
         | JTokenType.String  -> JString (o.ToObject () : string)
         | t                  -> failwithf "Invalid JTokenType %A" t
     
-    let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = 
-        x |> Seq.map (|KeyValue|) |> Array.ofSeq 
+    let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
 
     let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
-    let inline JObject (x: IReadOnlyDictionary<string, JToken>) 
-        =
-        let o = JObject()
+    let inline JObject (x: IReadOnlyDictionary<string, JToken>) =
+        let o = JObject ()
         for kv in x do
-            o.Add(kv.Key, kv.Value)
+            o.Add (kv.Key, kv.Value)
         o :> JToken
     let inline JBool (x: bool) = JValue x :> JToken
     let inline JNumber (x: decimal) = JValue x :> JToken
-    let JNull = JValue.CreateNull() :> JToken
+    let JNull = JValue.CreateNull () :> JToken
     let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
     
     #endif
+
     #if FSHARPDATA
     
     open FSharp.Data
         
-    type JsonObject = (string * JsonValue)[]
-            
+    type JsonObject = (string * JsonValue) []
     
-    type private JsonHelpers() =
+    type private JsonHelpers () =
         static member create (x: decimal) : JsonValue = JsonValue.Number          x
         static member create (x: Double ) : JsonValue = JsonValue.Float           x
         static member create (x: Single ) : JsonValue = JsonValue.Float  (float   x)
@@ -139,41 +132,38 @@ module SystemJson =
         static member create (x: Guid   ) : JsonValue = JsonValue.String (string  x)
 
 
-    type private ReadOnlyJsonPropertiesDictionary(properties:(string * JsonValue)[]) =                
-        
+    type private ReadOnlyJsonPropertiesDictionary (properties: (string * JsonValue) []) =
         let properties = properties
-
         member __.Properties = properties
-
         with
             interface System.Collections.IEnumerable with
-                member __.GetEnumerator() = (properties |> Seq.map KeyValuePair).GetEnumerator() :> System.Collections.IEnumerator
+                member __.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator () :> System.Collections.IEnumerator
 
             interface IEnumerable<KeyValuePair<string, JsonValue>> with
-                member __.GetEnumerator() = (properties |> Seq.map KeyValuePair).GetEnumerator()
+                member __.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator ()
 
             interface IReadOnlyCollection<KeyValuePair<string,JsonValue>> with
                 member __.Count = properties.Length
         
             interface IReadOnlyDictionary<string, JsonValue> with
-                member __.Keys = properties |> Seq.map fst                
-                member __.Values = properties |> Seq.map snd                
-                member __.Item with get(key:string) = properties |> Array.find (fun (k,_) -> k = key) |> snd                
-                member __.ContainsKey(key:string) = properties |> Array.exists (fun (k,_) -> k = key)                
-                member __.TryGetValue(key:string, value:byref<JsonValue>) =
-                    match properties |> Array.tryFindIndex (fun (k,_) -> k = key) with
-                    | Some i -> 
+                member __.Keys = properties |> Seq.map fst
+                member __.Values = properties |> Seq.map snd
+                member __.Item with get (key: string) = properties |> Array.find (fun (k, _) -> k = key) |> snd
+                member __.ContainsKey (key: string) = properties |> Array.exists (fun (k, _) -> k = key)
+                member __.TryGetValue (key: string, value:byref<JsonValue>) =
+                    match properties |> Array.tryFindIndex (fun (k, _) -> k = key) with
+                    | Some i ->
                         value <- snd properties.[i]
                         true
-                    | None -> false                                
+                    | None -> false
 
 
-    let jsonObjectGetValues (x : JsonObject) = ReadOnlyJsonPropertiesDictionary(x) :> IReadOnlyDictionary<string, JsonValue>
+    let jsonObjectGetValues (x: JsonObject) = ReadOnlyJsonPropertiesDictionary x :> IReadOnlyDictionary<string, JsonValue>
 
 
     // FSharp.Data.JsonValue AST adapter
 
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o:JsonValue) =
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         match o with
         | JsonValue.Null          -> JNull
         | JsonValue.Array els     -> JArray (els.AsReadOnlyList ())
@@ -183,7 +173,7 @@ module SystemJson =
         | JsonValue.Boolean x     -> JBool x
         | JsonValue.String x      -> JString x
     
-    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = 
+    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) =
         match x with
         | :? ReadOnlyJsonPropertiesDictionary as x' -> x'.Properties
         | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq
@@ -196,18 +186,16 @@ module SystemJson =
     let inline JString (x: string) = if isNull x then JsonValue.Null else JsonValue.String x
     
     #endif
+
     #if SYSTEMJSON
     
     open System.Json
 
     type JsonObject with
-        member x.AsReadOnlyDictionary() =
-            (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary()
+        member x.AsReadOnlyDictionary () = (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary ()
+        static member GetValues (x: JsonObject) = x.AsReadOnlyDictionary ()
 
-        static member GetValues (x: JsonObject) = x.AsReadOnlyDictionary()
-
-    let jsonObjectGetValues (x : JsonObject) = JsonObject.GetValues x
-
+    let jsonObjectGetValues (x: JsonObject) = JsonObject.GetValues x
 
     type private JsonHelpers () =
         static member create (x: decimal) = JsonPrimitive x :> JsonValue
@@ -230,16 +218,13 @@ module SystemJson =
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         match o with
         | null -> JNull
-        | :? JsonArray as x ->
-            let values = (x :> JsonValue IList).AsReadOnlyList()
-            JArray values
-        | :? JsonObject as x ->
-            JObject (x.AsReadOnlyDictionary())
+        | :? JsonArray  as x -> JArray ((x :> JsonValue IList).AsReadOnlyList ())
+        | :? JsonObject as x -> JObject (x.AsReadOnlyDictionary ())
         | :? JsonPrimitive as x ->
             match x.JsonType with
-            | JsonType.Number -> JNumber x
-            | JsonType.Boolean -> JBool (implicit x:bool)
-            | JsonType.String -> JString (implicit x:string)
+            | JsonType.Number  -> JNumber x
+            | JsonType.Boolean -> JBool   (implicit x: bool)
+            | JsonType.String  -> JString (implicit x: string)
             | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
         | _ -> failwithf "Invalid JsonValue %A" o
 
@@ -249,6 +234,7 @@ module SystemJson =
     let JNull : JsonValue = null
     let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
     let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
+
     #endif
 
     // Deserializing:
@@ -266,35 +252,35 @@ module SystemJson =
             { new IReadOnlyList<_> with
                 member __.Count = l.Length
                 member __.Item with get index = l.[index]
-                member __.GetEnumerator() = (l :> _ seq).GetEnumerator()
-                member __.GetEnumerator() = (l :> System.Collections.IEnumerable).GetEnumerator() }
+                member __.GetEnumerator () = (l :> _ seq).GetEnumerator ()
+                member __.GetEnumerator () = (l :> System.Collections.IEnumerable).GetEnumerator () }
 
-        let dict x = (dict x).AsReadOnlyDictionary()
+        let dict x = (dict x).AsReadOnlyDictionary ()
 
-        let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k,_)) -> k) x
-        let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_,v)) -> v) x
+        let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
+        let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
 
 
         #if NEWTONSOFT
 
-        let inline tryRead<'a> s = 
+        let inline tryRead<'a> s =
             function
             | JNumber j -> 
                 try
-                  Success (j.ToObject<'a>())
-                with 
+                  Success (j.ToObject<'a> ())
+                with
                 | _ -> failparse s j
             | a -> failparse s a
 
-        type JsonHelpers with        
+        type JsonHelpers with 
             static member jsonObjectOfJson =
                 fun (o: JToken) ->
                     match o.Type with
-                    | JTokenType.Object -> Success ( o :?> JObject )
-                    | a -> failparse "JsonObject" a
- 
+                    | JTokenType.Object -> Success (o :?> JObject)
+                    | a -> failparse "JsonObject" a 
 
         #endif
+
         #if FSHARPDATA
 
         let inline tryRead s = 
@@ -304,23 +290,19 @@ module SystemJson =
             | js                 -> failparse s (sprintf "Expected numeric but was %A" js)
 
         type JsonHelpers with
-            static member jsonObjectOfJson =
-                fun (o: JsonValue) ->
-                    match o with
-                    | JObject x -> Success (dictAsProps x)
-                    | a -> failparse "JsonObject" a
-
+            static member jsonObjectOfJson = function
+                | JObject x -> Success (dictAsProps x)
+                | a -> failparse "JsonObject" a
 
         #endif
+
         #if SYSTEMJSON
 
-        let inline tryRead s = 
-            function
-            | JNumber j -> 
+        let inline tryRead s = function
+            | JNumber j ->
                 try
                     Success (implicit j)
-                with e->
-                    failparse s j
+                with e -> failparse s j
             | a -> failparse s a
 
         type JsonHelpers with
@@ -365,7 +347,7 @@ module SystemJson =
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
-    let jsonObjToValueCodec = ((function JObject (o : System.Collections.Generic.IReadOnlyDictionary<_,_>) -> Ok o | a  -> failparse "Map" a) , JObject)
+    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> failparse "Map" a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Failure (string e)), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
@@ -498,7 +480,7 @@ module SystemJson =
             match x with
             | JString null -> Failure "Expected DateTime, got null"
             | JString s    ->
-                match DateTime.TryParseExact(s, [|"yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
                 | _       -> Failure (sprintf "Invalid DateTime %s" s)
             | a -> failparse "DateTime" a
@@ -507,7 +489,7 @@ module SystemJson =
             match x with
             | JString null -> Failure "Expected DateTimeOffset, got null"
             | JString s    ->
-                match DateTimeOffset.TryParseExact(s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+                match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
                 | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
             | a -> failparse "DateTimeOffset" a
@@ -532,8 +514,8 @@ module SystemJson =
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
         let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray ((Seq.map encoder x).ToReadOnlyList ())
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray ((Seq.map encoder x).ToReadOnlyList ())
-        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, encoder v) |> dict |> JObject
-        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k,v)) -> k, encoder v) |> dict |> JObject
+        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
+        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
         
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|].AsReadOnlyList ())
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|].AsReadOnlyList ())
@@ -544,8 +526,8 @@ module SystemJson =
 
         let boolean        (x: bool          ) = JBool x
         let string         (x: string        ) = JString x
-        let dateTime       (x: DateTime      ) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
-        let dateTimeOffset (x: DateTimeOffset) = JString (x.ToString("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
+        let dateTime       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
+        let dateTimeOffset (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
         let decimal        (x: decimal       ) = JsonHelpers.create x
         let float          (x: Double        ) = JsonHelpers.create x
         let float32        (x: Single        ) = JsonHelpers.create x
@@ -626,55 +608,55 @@ module SystemJson =
 
     type OfJson with
         static member inline Invoke (x: JsonValue) : 't ParseResult =
-            let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson: ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
+            let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson : ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
             iOfJson (Unchecked.defaultof<OfJson>, Unchecked.defaultof<'t>) x
 
-    type OfJson with static member inline OfJson (_: Choice<'a, 'b>    , _:OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>>     = JsonDecode.choice  OfJson.Invoke OfJson.Invoke
-    type OfJson with static member inline OfJson (_: Choice<'a, 'b, 'c>, _:OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = JsonDecode.choice3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
+    type OfJson with static member inline OfJson (_: Choice<'a, 'b>    , _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>>     = JsonDecode.choice  OfJson.Invoke OfJson.Invoke
+    type OfJson with static member inline OfJson (_: Choice<'a, 'b, 'c>, _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = JsonDecode.choice3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
-    type OfJson with static member inline OfJson (_: 'a option  , _:OfJson) : JsonValue -> ParseResult<'a option>   = JsonDecode.option   OfJson.Invoke
-    type OfJson with static member inline OfJson (_: 'a Nullable, _:OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a option  , _: OfJson) : JsonValue -> ParseResult<'a option>   = JsonDecode.option   OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a Nullable, _: OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
 
-    type OfJson with static member inline OfJson (_: 'a array, _:OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
-    type OfJson with static member inline OfJson (_: list<'a>, _:OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
-    type OfJson with static member inline OfJson (_: 'a Set  , _:OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a array, _: OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
+    type OfJson with static member inline OfJson (_: list<'a>, _: OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a Set  , _: OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
 
-    type OfJson with static member inline OfJson (_: Map<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Map<string, 'a>> = JsonDecode.map OfJson.Invoke
-
-    type OfJson with
-        static member inline OfJson (_: Dictionary<string, 'a>, _:OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
-        static member inline OfJson (_: ResizeArray<'a>       , _:OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
-        static member inline OfJson (_: 'a Id1, _:OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
-        static member inline OfJson (_: 'a Id2, _:OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
+    type OfJson with static member inline OfJson (_: Map<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Map<string, 'a>> = JsonDecode.map OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a * 'b, _:OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
+        static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
+        static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
+        static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
+        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
 
     type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c> = JsonDecode.tuple3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
+        static member inline OfJson (_: 'a * 'b, _: OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = JsonDecode.tuple4 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
+        static member inline OfJson (_: 'a * 'b * 'c, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c> = JsonDecode.tuple3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = JsonDecode.tuple5 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
+        static member inline OfJson (_: 'a * 'b * 'c * 'd, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = JsonDecode.tuple4 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = JsonDecode.tuple6 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
+        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = JsonDecode.tuple5 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _:OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
+        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = JsonDecode.tuple6 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
+
+    type OfJson with
+        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     // Default, for external classes.
     type OfJson with 
-        static member inline OfJson (_: 'R, _:Default4) =
-            let codec = (^R : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
+        static member inline OfJson (_: 'R, _: Default4) =
+            let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
-        static member inline OfJson (r: 'R, _:Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
-        static member inline OfJson (_: 'R, _:Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
+        static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
+        static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
-        static member OfJson (_:JsonObject, _:Default1) = JsonHelpers.jsonObjectOfJson        
+        static member OfJson (_: JsonObject, _: Default1) = JsonHelpers.jsonObjectOfJson
 
 
     /// Maps Json to a type
@@ -687,7 +669,7 @@ module SystemJson =
     let inline jgetWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> ofJson value
-        | _ -> Failure ("Key '" + key + "' not found in " + JObject(o).ToString())
+        | _ -> Failure ("Key '" + key + "' not found in " + string (JObject o))
 
     /// Gets a value from a Json object
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = jgetWith ofJson o key
@@ -711,81 +693,81 @@ module SystemJson =
 
     type ToJson =
         inherit Default1
-        static member ToJson (x: bool          , _:ToJson) = JsonEncode.boolean        x
-        static member ToJson (x: string        , _:ToJson) = JsonEncode.string         x
-        static member ToJson (x: DateTime      , _:ToJson) = JsonEncode.dateTime       x
-        static member ToJson (x: DateTimeOffset, _:ToJson) = JsonEncode.dateTimeOffset x
-        static member ToJson (x: decimal       , _:ToJson) = JsonEncode.decimal        x
-        static member ToJson (x: Double        , _:ToJson) = JsonEncode.float          x
-        static member ToJson (x: Single        , _:ToJson) = JsonEncode.float32        x
-        static member ToJson (x: int           , _:ToJson) = JsonEncode.int            x
-        static member ToJson (x: uint32        , _:ToJson) = JsonEncode.uint32         x
-        static member ToJson (x: int64         , _:ToJson) = JsonEncode.int64          x
-        static member ToJson (x: uint64        , _:ToJson) = JsonEncode.uint64         x
-        static member ToJson (x: int16         , _:ToJson) = JsonEncode.int16          x
-        static member ToJson (x: uint16        , _:ToJson) = JsonEncode.uint16         x
-        static member ToJson (x: byte          , _:ToJson) = JsonEncode.byte           x
-        static member ToJson (x: sbyte         , _:ToJson) = JsonEncode.sbyte          x
-        static member ToJson (x: char          , _:ToJson) = JsonEncode.char           x
-        static member ToJson (x: Guid          , _:ToJson) = JsonEncode.guid           x
+        static member ToJson (x: bool          , _: ToJson) = JsonEncode.boolean        x
+        static member ToJson (x: string        , _: ToJson) = JsonEncode.string         x
+        static member ToJson (x: DateTime      , _: ToJson) = JsonEncode.dateTime       x
+        static member ToJson (x: DateTimeOffset, _: ToJson) = JsonEncode.dateTimeOffset x
+        static member ToJson (x: decimal       , _: ToJson) = JsonEncode.decimal        x
+        static member ToJson (x: Double        , _: ToJson) = JsonEncode.float          x
+        static member ToJson (x: Single        , _: ToJson) = JsonEncode.float32        x
+        static member ToJson (x: int           , _: ToJson) = JsonEncode.int            x
+        static member ToJson (x: uint32        , _: ToJson) = JsonEncode.uint32         x
+        static member ToJson (x: int64         , _: ToJson) = JsonEncode.int64          x
+        static member ToJson (x: uint64        , _: ToJson) = JsonEncode.uint64         x
+        static member ToJson (x: int16         , _: ToJson) = JsonEncode.int16          x
+        static member ToJson (x: uint16        , _: ToJson) = JsonEncode.uint16         x
+        static member ToJson (x: byte          , _: ToJson) = JsonEncode.byte           x
+        static member ToJson (x: sbyte         , _: ToJson) = JsonEncode.sbyte          x
+        static member ToJson (x: char          , _: ToJson) = JsonEncode.char           x
+        static member ToJson (x: Guid          , _: ToJson) = JsonEncode.guid           x
 
     type ToJson with
         static member inline Invoke (x: 't) : JsonValue =
-            let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson: ^b * _ -> JsonValue) b, a)
+            let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson : ^b * _ -> JsonValue) b, a)
             iToJson (Unchecked.defaultof<ToJson>, x)
 
     type ToJson with
-        static member inline ToJson (x: Choice<'a, 'b>, _:ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x: Choice<'a, 'b>, _: ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: Choice<'a, 'b, 'c>, _:ToJson) = JsonEncode.choice3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x: Choice<'a, 'b, 'c>, _: ToJson) = JsonEncode.choice3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a option, _:ToJson) = JsonEncode.option ToJson.Invoke x
+        static member inline ToJson (x: 'a option, _: ToJson) = JsonEncode.option ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a Nullable, _:ToJson) = JsonEncode.nullable ToJson.Invoke x
+        static member inline ToJson (x: 'a Nullable, _: ToJson) = JsonEncode.nullable ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: list<'a>, _:ToJson) = JsonEncode.list ToJson.Invoke x
+        static member inline ToJson (x: list<'a>, _: ToJson) = JsonEncode.list ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a Set, _:ToJson) = JsonEncode.set ToJson.Invoke x
+        static member inline ToJson (x: 'a Set, _: ToJson) = JsonEncode.set ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: 'a array, _:ToJson) = JsonEncode.array ToJson.Invoke x
+        static member inline ToJson (x: 'a array, _: ToJson) = JsonEncode.array ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: Map<string, 'a>, _:ToJson) = JsonEncode.map ToJson.Invoke x
+        static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x: Dictionary<string, 'a>, _:ToJson) = JsonEncode.dictionary  ToJson.Invoke x
-        static member inline ToJson (x: 'a ResizeArray        , _:ToJson) = JsonEncode.resizeArray ToJson.Invoke x
-        static member inline ToJson (x                        , _:ToJson) = JsonEncode.tuple2      ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x: Dictionary<string, 'a>, _: ToJson) = JsonEncode.dictionary  ToJson.Invoke x
+        static member inline ToJson (x: 'a ResizeArray        , _: ToJson) = JsonEncode.resizeArray ToJson.Invoke x
+        static member inline ToJson (x                        , _: ToJson) = JsonEncode.tuple2      ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple4 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple4 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple5 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple5 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple6 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple6 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
-        static member inline ToJson (x, _:ToJson) = JsonEncode.tuple7 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple7 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
 
     // Default, for external classes.
     type ToJson with
-        static member inline ToJson (t: 'T, _:Default4) =
-            let codec = (^T : (static member JsonObjCodec: Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
+        static member inline ToJson (t: 'T, _: Default4) =
+            let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
             (codec |> Codec.compose jsonObjToValueCodec |> snd) t
 
-        static member inline ToJson (t: 'T, _:Default3) = (^T : (static member ToJSON: ^T -> JsonValue) t)
-        static member inline ToJson (t: 'T, _:Default2) = (^T : (static member ToJson: ^T -> JsonValue) t)
+        static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
+        static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
 
    
     /// Maps a value to Json
@@ -828,7 +810,7 @@ module SystemJson =
     let diApply combiner getter (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
-            fun p -> combiner ((snd remainderFields) p) ((snd currentField) (getter p))
+            fun p -> combiner (snd remainderFields p) ((snd currentField) (getter p))
         )
 
     /// <summary>Appends a field mapping to the codec.</summary>
@@ -837,7 +819,7 @@ module SystemJson =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _->'Rest, _>) =
+    let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) =
         let inline deriveFieldCodec prop =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
@@ -850,7 +832,7 @@ module SystemJson =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfield fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _->'Rest, _>) = jfieldWith jsonValueCodec fieldName getter rest
+    let inline jfield fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) = jfieldWith jsonValueCodec fieldName getter rest
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="codec">The codec to be used.</param>
@@ -858,7 +840,7 @@ module SystemJson =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) =
+    let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) =
         let inline deriveFieldCodecOpt prop =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
@@ -871,7 +853,7 @@ module SystemJson =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldOpt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _->'Rest, _>) = jfieldOptWith jsonValueCodec fieldName getter rest
+    let inline jfieldOpt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) = jfieldOptWith jsonValueCodec fieldName getter rest
     
   
     module Operators =
@@ -908,7 +890,7 @@ module SystemJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<*/?>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter rest
+        let inline (<*/?>) (rest: SplitCodec<_, _ -> 'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter rest
 
         /// <summary>Appends the first field (optional) mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -926,7 +908,7 @@ module SystemJson =
         let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
         let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
         let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
-        let inline _JNumber x = (prism' JNumber <| fun v -> match ofJson v : decimal ParseResult with Ok s->Some s | _ -> None) x
+        let inline _JNumber x = (prism' JNumber <| fun v -> match ofJson v : decimal ParseResult with Ok s -> Some s | _ -> None) x
         let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
         /// Like '_jnth', but for 'Object' with Text indices.
         let inline _jkey i =
@@ -936,7 +918,7 @@ module SystemJson =
             let inline dnth i f t = map (fun x -> t |> ReadOnlyList.add i x |> Option.defaultValue t) (f (ReadOnlyList.tryNth i t |> Option.defaultValue JNull))
             _JArray << dnth i
 
-        // Reimport some basic Lens operations for F#+
+        // Reimport some basic Lens operations from F#+
 
         let setl optic value   (source: 's) : 't = setl optic value source
         let over optic updater (source: 's) : 't = over optic updater source
