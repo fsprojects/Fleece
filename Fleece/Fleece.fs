@@ -821,9 +821,9 @@ module SystemJson =
     let inline jpairOpt (key: string) value = jpairOptWith toJson key value
 
     /// <summary>Initialize the field mappings.</summary>
-    /// <param name="f">An object initializer as a curried function.</param>
+    /// <param name="f">An object constructor as a curried function.</param>
     /// <returns>The resulting object codec.</returns>
-    let mapping f = (fun _ -> Success f), (fun _ -> dict [])
+    let withFields f = (fun _ -> Success f), (fun _ -> dict [])
 
     let diApply combiner toBC (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
         ( 
@@ -901,7 +901,7 @@ module SystemJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="f">An object initializer as a curried function.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<!/>) f (fieldName, getter: 'T -> 'Value) = jfield fieldName getter (mapping f)
+        let inline (<!/>) f (fieldName, getter: 'T -> 'Value) = jfield fieldName getter (withFields f)
 
         /// <summary>Appends an optional field mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -915,7 +915,7 @@ module SystemJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="f">An object initializer as a curried function.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter (mapping f)
+        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter (withFields f)
 
         /// Tuple two values.
         let inline (^=) a b = (a, b)

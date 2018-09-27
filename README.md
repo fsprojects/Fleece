@@ -154,7 +154,7 @@ type Person = {
     with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
-        |> mapping
+        |> withFields
         |> jfield    "firstName" (fun x -> fst x.name)
         |> jfield    "lastName"  (fun x -> snd x.name)
         |> jfieldOpt "age"       (fun x -> x.age)
@@ -209,9 +209,9 @@ let colorEncoder = function
 
 let colorCodec = colorDecoder, colorEncoder
     
-let carCodec = 
+let carCodec =
     fun i c k -> { Id = i; Color = c; Kms = k }
-    |> mapping
+    |> withFields
     |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
     |> jfieldWith colorCodec       "color" (fun x -> x.Color)
     |> jfieldWith JsonCodec.int    "kms"   (fun x -> x.Kms)
