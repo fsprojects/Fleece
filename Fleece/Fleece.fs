@@ -935,3 +935,9 @@ module SystemJson =
         let inline _jnth i =
             let inline dnth i f t = map (fun x -> t |> ReadOnlyList.add i x |> Option.defaultValue t) (f (ReadOnlyList.tryNth i t |> Option.defaultValue JNull))
             _JArray << dnth i
+
+        // Reimport some basic Lens operations for F#+
+
+        let setl optic value   (source: 's) : 't = setl optic value source
+        let over optic updater (source: 's) : 't = over optic updater source
+        let preview (optic: ('a -> Const<_,'b>) -> _ -> Const<_,'t>) (source: 's) : 'a option = preview optic source
