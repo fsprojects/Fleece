@@ -825,10 +825,10 @@ module SystemJson =
     /// <returns>The resulting object codec.</returns>
     let withFields f = (fun _ -> Success f), (fun _ -> dict [])
 
-    let diApply combiner toBC (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
+    let diApply combiner getter (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
-            toBC >> ((snd currentField) *** (snd remainderFields)) >> combiner
+            fun p -> combiner ((snd remainderFields) p) ((snd currentField) (getter p))
         )
 
     /// <summary>Appends a field mapping to the codec.</summary>
@@ -843,7 +843,7 @@ module SystemJson =
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
                 (fun (x: 'Value) -> dict [prop, (snd codec) x])
             )
-        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodec fieldName)
+        diApply IReadOnlyDictionary.union getter rest (deriveFieldCodec fieldName)
 
     /// <summary>Appends a field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -864,7 +864,7 @@ module SystemJson =
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
                 (function Some (x: 'Value) -> dict [prop, (snd codec) x] | _ -> dict [])
             )
-        diApply (IReadOnlyDictionary.union |> flip |> uncurry) (fanout getter id) rest (deriveFieldCodecOpt fieldName)
+        diApply IReadOnlyDictionary.union getter rest (deriveFieldCodecOpt fieldName)
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
