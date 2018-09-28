@@ -1,11 +1,11 @@
 ﻿namespace Fleece
 
 open FSharpPlus
-#if NEWTONSOFT
-module Newtonsoft =
-#endif
 #if FSHARPDATA
 module FSharpData =
+#endif
+#if NEWTONSOFT
+module Newtonsoft =
 #endif
 #if SYSTEMJSON
 module SystemJson =
@@ -51,63 +51,6 @@ module SystemJson =
     type Default3 = class inherit Default4 end
     type Default2 = class inherit Default3 end
     type Default1 = class inherit Default2 end
-
-    #if NEWTONSOFT
-    
-    open Newtonsoft.Json.Linq
-    type JsonValue = JToken
-    type JObject with
-        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict).AsReadOnlyDictionary ()
-        static member GetValues (x: JObject) = x.AsReadOnlyDictionary ()
-
-    let jsonObjectGetValues (x : JObject) = JObject.GetValues x
-
-    type JsonObject = JObject
-    
-    type private JsonHelpers () =
-        static member create (x: decimal) = JValue          x  :> JToken
-        static member create (x: Double ) = JValue          x  :> JToken
-        static member create (x: Single ) = JValue          x  :> JToken
-        static member create (x: int    ) = JValue          x  :> JToken
-        static member create (x: bool   ) = JValue          x  :> JToken
-        static member create (x: uint32 ) = JValue          x  :> JToken
-        static member create (x: int64  ) = JValue          x  :> JToken
-        static member create (x: uint64 ) = JValue          x  :> JToken
-        static member create (x: int16  ) = JValue          x  :> JToken
-        static member create (x: uint16 ) = JValue          x  :> JToken
-        static member create (x: byte   ) = JValue          x  :> JToken
-        static member create (x: sbyte  ) = JValue          x  :> JToken
-        static member create (x: char   ) = JValue (string  x) :> JToken
-        static member create (x: Guid   ) = JValue (string  x) :> JToken
-
-
-    // FSharp.Newtonsoft.Json AST adapter
-
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JToken) =
-        match o.Type with
-        | JTokenType.Null    -> JNull
-        | JTokenType.Array   -> JArray ((o :?> JArray).AsReadOnlyList ())
-        | JTokenType.Object  -> JObject (jsonObjectGetValues (o :?> JObject))
-        | JTokenType.Integer -> JNumber  o
-        | JTokenType.Float   -> JNumber  o
-        | JTokenType.Boolean -> JBool   (o.ToObject () : bool)
-        | JTokenType.String  -> JString (o.ToObject () : string)
-        | t                  -> failwithf "Invalid JTokenType %A" t
-    
-    let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
-
-    let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
-    let inline JObject (x: IReadOnlyDictionary<string, JToken>) =
-        let o = JObject ()
-        for kv in x do
-            o.Add (kv.Key, kv.Value)
-        o :> JToken
-    let inline JBool (x: bool) = JValue x :> JToken
-    let inline JNumber (x: decimal) = JValue x :> JToken
-    let JNull = JValue.CreateNull () :> JToken
-    let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
-    
-    #endif
 
     #if FSHARPDATA
     
@@ -187,6 +130,63 @@ module SystemJson =
     
     #endif
 
+    #if NEWTONSOFT
+    
+    open Newtonsoft.Json.Linq
+    type JsonValue = JToken
+    type JObject with
+        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict).AsReadOnlyDictionary ()
+        static member GetValues (x: JObject) = x.AsReadOnlyDictionary ()
+
+    let jsonObjectGetValues (x : JObject) = JObject.GetValues x
+
+    type JsonObject = JObject
+    
+    type private JsonHelpers () =
+        static member create (x: decimal) = JValue          x  :> JToken
+        static member create (x: Double ) = JValue          x  :> JToken
+        static member create (x: Single ) = JValue          x  :> JToken
+        static member create (x: int    ) = JValue          x  :> JToken
+        static member create (x: bool   ) = JValue          x  :> JToken
+        static member create (x: uint32 ) = JValue          x  :> JToken
+        static member create (x: int64  ) = JValue          x  :> JToken
+        static member create (x: uint64 ) = JValue          x  :> JToken
+        static member create (x: int16  ) = JValue          x  :> JToken
+        static member create (x: uint16 ) = JValue          x  :> JToken
+        static member create (x: byte   ) = JValue          x  :> JToken
+        static member create (x: sbyte  ) = JValue          x  :> JToken
+        static member create (x: char   ) = JValue (string  x) :> JToken
+        static member create (x: Guid   ) = JValue (string  x) :> JToken
+
+
+    // FSharp.Newtonsoft.Json AST adapter
+
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JToken) =
+        match o.Type with
+        | JTokenType.Null    -> JNull
+        | JTokenType.Array   -> JArray ((o :?> JArray).AsReadOnlyList ())
+        | JTokenType.Object  -> JObject (jsonObjectGetValues (o :?> JObject))
+        | JTokenType.Integer -> JNumber  o
+        | JTokenType.Float   -> JNumber  o
+        | JTokenType.Boolean -> JBool   (o.ToObject () : bool)
+        | JTokenType.String  -> JString (o.ToObject () : string)
+        | t                  -> failwithf "Invalid JTokenType %A" t
+    
+    let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
+
+    let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
+    let inline JObject (x: IReadOnlyDictionary<string, JToken>) =
+        let o = JObject ()
+        for kv in x do
+            o.Add (kv.Key, kv.Value)
+        o :> JToken
+    let inline JBool (x: bool) = JValue x :> JToken
+    let inline JNumber (x: decimal) = JValue x :> JToken
+    let JNull = JValue.CreateNull () :> JToken
+    let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
+    
+    #endif
+
     #if SYSTEMJSON
     
     open System.Json
@@ -261,6 +261,21 @@ module SystemJson =
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
 
 
+        #if FSHARPDATA
+
+        let inline tryRead s = 
+            function
+            | JsonValue.Number n -> Success (explicit n)
+            | JsonValue.Float  n -> Success (explicit n)
+            | js                 -> failparse s (sprintf "Expected numeric but was %A" js)
+
+        type JsonHelpers with
+            static member jsonObjectOfJson = function
+                | JObject x -> Success (dictAsProps x)
+                | a -> failparse "JsonObject" a
+
+        #endif
+
         #if NEWTONSOFT
 
         let inline tryRead<'a> s =
@@ -278,21 +293,6 @@ module SystemJson =
                     match o.Type with
                     | JTokenType.Object -> Success (o :?> JObject)
                     | a -> failparse "JsonObject" a 
-
-        #endif
-
-        #if FSHARPDATA
-
-        let inline tryRead s = 
-            function
-            | JsonValue.Number n -> Success (explicit n)
-            | JsonValue.Float  n -> Success (explicit n)
-            | js                 -> failparse s (sprintf "Expected numeric but was %A" js)
-
-        type JsonHelpers with
-            static member jsonObjectOfJson = function
-                | JObject x -> Success (dictAsProps x)
-                | a -> failparse "JsonObject" a
 
         #endif
 

@@ -8,28 +8,6 @@ type Person (name: string, age: int, children: Person list) =
     member __.Children = children
 
 
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
-
-type PersonSystemJson (name: string, age: int, children: PersonSystemJson list) =
-    inherit Person (name, age, children |> map (fun p -> p :> Person))
-    member __.Children = children
-with
-    static member Create name age children = PersonSystemJson (name, age, children)
-
-    static member OfJson json =
-        match json with
-        | JObject o -> PersonSystemJson.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Error (sprintf "Expected person, found %A" x)
-
-    static member ToJson (x: PersonSystemJson) =
-        jobj [ 
-            "name" .= x.Name
-            "age" .= x.Age
-            "children" .= x.Children
-        ]
-
-
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 
@@ -67,6 +45,28 @@ with
         | x -> Error (sprintf "Expected person, found %A" x)
 
     static member ToJson (x: PersonNewtonsoft) =
+        jobj [ 
+            "name" .= x.Name
+            "age" .= x.Age
+            "children" .= x.Children
+        ]
+
+
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+
+type PersonSystemJson (name: string, age: int, children: PersonSystemJson list) =
+    inherit Person (name, age, children |> map (fun p -> p :> Person))
+    member __.Children = children
+with
+    static member Create name age children = PersonSystemJson (name, age, children)
+
+    static member OfJson json =
+        match json with
+        | JObject o -> PersonSystemJson.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | x -> Error (sprintf "Expected person, found %A" x)
+
+    static member ToJson (x: PersonSystemJson) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
