@@ -87,9 +87,10 @@ type Item = {
 type Item with
     static member JsonObjCodec =
         fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
-        <!!>  "id"          ^=@  fun x -> x.Id
-        <**>  "brand"       ^=@  fun x -> x.Brand
-        <**> "availability" ^=@? fun x -> x.Availability
+        <!> req  "id"          (fun x -> x.Id          )
+        <*> req  "brand"       (fun x -> x.Brand       )
+        <*> opt "availability" (fun x -> x.Availability)
+        |> Codec.ofConcrete
 
 type NestedItem = NestedItem of Item
 

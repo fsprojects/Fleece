@@ -367,6 +367,15 @@ module SystemJson =
     /// A codec for raw type 'S to strong type 't.
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
+        static member Return f = { Decoder = (fun _ -> Success f); Encoder = (fun _ -> dict []) }
+        static member (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = Compose.run (Compose (remainderFields.Decoder : Decoder<'S, 'f -> 'r>) <*> Compose (currentField.Decoder))
+                Encoder = fun p -> IReadOnlyDictionary.union (remainderFields.Encoder p) (currentField.Encoder p)
+            }
+
+
     module Codec =
 
         /// Turns a Codec into another Codec, by mapping it over an isomorphism.
@@ -379,6 +388,9 @@ module SystemJson =
 
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
+
+        let ofConcrete {Decoder = d; Encoder = e} = d, e
+        let toConcrete (d, e) = {Decoder = d; Encoder = e}
 
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
@@ -956,6 +968,12 @@ module SystemJson =
 
         /// Derives a field codec for an optional field
         let inline (^=@?) a b = deriveFieldCodecOpt jsonValueCodec a b
+
+        /// Derives a concrete field codec for a required field
+        let inline req a b = deriveFieldCodec jsonValueCodec a b |> Codec.toConcrete
+
+        /// Derives a concrete field codec for an optional field
+        let inline opt a b = deriveFieldCodecOpt jsonValueCodec a b |> Codec.toConcrete
 
     module Lens =
         open FSharpPlus.Lens
