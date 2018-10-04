@@ -87,9 +87,9 @@ type Item = {
 type Item with
     static member JsonObjCodec =
         fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
-        <!/>  "id"           ^= fun x -> x.Id
-        <*/>  "brand"        ^= fun x -> x.Brand
-        <*/?> "availability" ^= fun x -> x.Availability
+        <!!>  "id"          ^=@  fun x -> x.Id
+        <**>  "brand"       ^=@  fun x -> x.Brand
+        <**> "availability" ^=@? fun x -> x.Availability
 
 type NestedItem = NestedItem of Item
 
