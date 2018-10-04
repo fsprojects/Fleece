@@ -842,10 +842,10 @@ module SystemJson =
     /// <returns>The resulting object codec.</returns>
     let withFields f = (fun _ -> Success f), (fun _ -> dict [])
 
-    let diApply combiner getter (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
+    let diApply combiner (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: SplitCodec<'S, 'f, 'T>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
-            fun p -> combiner (snd remainderFields p) ((snd currentField) (getter p))
+            fun p -> combiner (snd remainderFields p) ((snd currentField) p)
         )
 
     /// <summary>Appends a field mapping to the codec.</summary>
@@ -855,12 +855,12 @@ module SystemJson =
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
     let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) =
-        let inline deriveFieldCodec prop =
+        let inline deriveFieldCodec prop getter =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
-                (fun (x: 'Value) -> dict [prop, (snd codec) x])
+                (getter >> fun (x: 'Value) -> dict [prop, (snd codec) x])
             )
-        diApply IReadOnlyDictionary.union getter rest (deriveFieldCodec fieldName)
+        diApply IReadOnlyDictionary.union rest (deriveFieldCodec fieldName getter)
 
     /// <summary>Appends a field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -876,12 +876,12 @@ module SystemJson =
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
     let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) =
-        let inline deriveFieldCodecOpt prop =
+        let inline deriveFieldCodecOpt prop getter =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
-                (function Some (x: 'Value) -> dict [prop, (snd codec) x] | _ -> dict [])
+                (getter >> function Some (x: 'Value) -> dict [prop, (snd codec) x] | _ -> dict [])
             )
-        diApply IReadOnlyDictionary.union getter rest (deriveFieldCodecOpt fieldName)
+        diApply IReadOnlyDictionary.union rest (deriveFieldCodecOpt fieldName getter)
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
