@@ -91,6 +91,7 @@ type Item with
         <*> req  "brand"       (fun x -> x.Brand       )
         <*> opt "availability" (fun x -> x.Availability)
         |> Codec.ofConcrete
+        |> Codec.invmap FstDict FstDict.run
 
 type NestedItem = NestedItem of Item
 

@@ -368,11 +368,11 @@ module SystemJson =
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
     type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
-        static member Return f = { Decoder = (fun _ -> Success f); Encoder = (fun _ -> dict []) }
-        static member (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
+        static member inline Return f = { Decoder = (fun _ -> Success f); Encoder = (fun _ -> getZero()) }
+        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = Compose.run (Compose (remainderFields.Decoder : Decoder<'S, 'f -> 'r>) <*> Compose (currentField.Decoder))
-                Encoder = fun p -> IReadOnlyDictionary.union (remainderFields.Encoder p) (currentField.Encoder p)
+                Encoder = fun p -> remainderFields.Encoder p ++ currentField.Encoder p
             }
 
 
@@ -905,6 +905,12 @@ module SystemJson =
     let inline jfieldOpt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) = jfieldOptWith jsonValueCodec fieldName getter rest
     
   
+    type FstDict<'k,'v> = FstDict of System.Collections.Generic.IReadOnlyDictionary<'k,'v> with
+        static member get_Zero () = FstDict (dict [])
+        static member (+) (FstDict a, FstDict b) = FstDict (IReadOnlyDictionary.union a b)
+    module FstDict = let run (FstDict x) = x
+
+
     module Operators =
 
         /// Creates a new Json key,value pair for a Json object
@@ -970,10 +976,10 @@ module SystemJson =
         let inline (^=@?) a b = deriveFieldCodecOpt jsonValueCodec a b
 
         /// Derives a concrete field codec for a required field
-        let inline req a b = deriveFieldCodec jsonValueCodec a b |> Codec.toConcrete
+        let inline req a b = deriveFieldCodec jsonValueCodec a b |> Codec.invmap FstDict.run FstDict |> Codec.toConcrete
 
         /// Derives a concrete field codec for an optional field
-        let inline opt a b = deriveFieldCodecOpt jsonValueCodec a b |> Codec.toConcrete
+        let inline opt a b = deriveFieldCodecOpt jsonValueCodec a b |> Codec.invmap FstDict.run FstDict |> Codec.toConcrete
 
     module Lens =
         open FSharpPlus.Lens
