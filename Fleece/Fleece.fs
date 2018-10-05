@@ -368,11 +368,11 @@ module SystemJson =
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
     type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
-        static member inline Return f = { Decoder = (fun _ -> Success f); Encoder = (fun _ -> getZero()) }
+        static member inline Return f = { Decoder = (fun _ -> Success f); Encoder = zero }
         static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = Compose.run (Compose (remainderFields.Decoder : Decoder<'S, 'f -> 'r>) <*> Compose (currentField.Decoder))
-                Encoder = fun p -> remainderFields.Encoder p ++ currentField.Encoder p
+                Encoder = remainderFields.Encoder ++ currentField.Encoder
             }
 
 
