@@ -367,12 +367,12 @@ module SystemJson =
     /// A codec for raw type 'S to strong type 't.
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
-    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : Encoder<'S2, 't2> } with
-        static member inline Return f = { Decoder = result f; Encoder = zero }
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
+        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
         static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
-                Encoder = remainderFields.Encoder ++ currentField.Encoder
+                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
             }
 
 
@@ -394,8 +394,8 @@ module SystemJson =
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
-        let ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap FstDict d, map FstDict.run e
-        let toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap FstDict.run d); Encoder = map FstDict e }
+        let ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap FstDict d, map FstDict.run (e >> Const.run)
+        let toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap FstDict.run d); Encoder = Const << map FstDict e }
 
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
