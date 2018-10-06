@@ -378,11 +378,6 @@ module SystemJson =
 
     module Codec =
 
-        type FstDict<'k,'v> = FstDict of System.Collections.Generic.IReadOnlyDictionary<'k,'v> with
-            static member get_Zero () = FstDict (dict [])
-            static member (+) (FstDict a, FstDict b) = FstDict (IReadOnlyDictionary.union a b)
-        module FstDict = let run (FstDict x) = x
-
         /// Turns a Codec into another Codec, by mapping it over an isomorphism.
         let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) (r, w) = (contramap f r, map g w)
 
@@ -394,8 +389,11 @@ module SystemJson =
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
-        let ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap FstDict d, map FstDict.run (e >> Const.run)
-        let toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap FstDict.run d); Encoder = Const << map FstDict e }
+        let private toMonoid = toList
+        let private ofMonoid = List.map (|KeyValue|) >> dict
+
+        let ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
+        let toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
 
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
