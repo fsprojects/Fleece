@@ -1,58 +1,27 @@
 ﻿namespace Fleece
 
+open System
+open System.Globalization
+open System.Collections.Generic
 open FSharpPlus
+open FSharpPlus.Data
+
+type Id1<'t> (v: 't) =
+    let value = v
+    member __.getValue = value
+
+type Id2<'t> (v: 't) =
+    let value = v
+    member __.getValue = value
+
+type Default4 = class end
+type Default3 = class inherit Default4 end
+type Default2 = class inherit Default3 end
+type Default1 = class inherit Default2 end
+
 #if FSHARPDATA
+
 module FSharpData =
-#endif
-#if NEWTONSOFT
-module Newtonsoft =
-#endif
-#if SYSTEMJSON
-module SystemJson =
-#endif
-    open System
-    open System.Globalization
-    open System.Collections.Generic
-    open FSharpPlus
-    open FSharpPlus.Data
-    module ReadOnlyCollections =
-        open System.Collections.ObjectModel
-        type IDictionary<'key, 'value> with
-            member self.AsReadOnlyDictionary () = ReadOnlyDictionary self :> IReadOnlyDictionary<_,_>
-        type IList<'value> with
-            member self.AsReadOnlyList () = ReadOnlyCollection self :> IReadOnlyList<_>
-        type IEnumerable<'value> with
-            member self.ToReadOnlyList () = (ResizeArray self).AsReadOnlyList ()
-    open ReadOnlyCollections
-    module ReadOnlyList =
-        let ofArray (a: _ array) = a.AsReadOnlyList ()
-        let toArray (a: IReadOnlyList<_>) = a |> Array.ofSeq
-        // add has same shape as add for Map.add
-        /// Returns a new IReadOnlyList from a given IReadOnlyList, with replaced binding for index.
-        let add i value (a: IReadOnlyList<_>) =
-            let setNth i v (a: _ array) = a.[i] <- v; a
-            if 0 <= i && i < a.Count then
-                a |> Array.ofSeq |> setNth i value |> ofArray |> Some
-            else None
-
-        let tryNth i (a: IReadOnlyList<_>) =
-            if 0 <= i && i < a.Count then Some a.[i]
-            else None
-
-    type Id1<'t> (v: 't) =
-        let value = v
-        member __.getValue = value
-
-    type Id2<'t> (v: 't) =
-        let value = v
-        member __.getValue = value
-
-    type Default4 = class end
-    type Default3 = class inherit Default4 end
-    type Default2 = class inherit Default3 end
-    type Default1 = class inherit Default2 end
-
-    #if FSHARPDATA
     
     open FSharp.Data
         
@@ -109,7 +78,7 @@ module SystemJson =
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         match o with
         | JsonValue.Null          -> JNull
-        | JsonValue.Array els     -> JArray (els.AsReadOnlyList ())
+        | JsonValue.Array els     -> JArray (IList.toIReadOnlyList els)
         | JsonValue.Record props  -> JObject (jsonObjectGetValues props)
         | JsonValue.Number _ as x -> JNumber x
         | JsonValue.Float _ as x  -> JNumber x
@@ -128,14 +97,16 @@ module SystemJson =
     let JNull : JsonValue = JsonValue.Null
     let inline JString (x: string) = if isNull x then JsonValue.Null else JsonValue.String x
     
-    #endif
+#endif
 
-    #if NEWTONSOFT
+#if NEWTONSOFT
+
+module Newtonsoft =
     
     open Newtonsoft.Json.Linq
     type JsonValue = JToken
     type JObject with
-        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict).AsReadOnlyDictionary ()
+        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict) |> Dict.toIReadOnlyDictionary
         static member GetValues (x: JObject) = x.AsReadOnlyDictionary ()
 
     let jsonObjectGetValues (x : JObject) = JObject.GetValues x
@@ -164,7 +135,7 @@ module SystemJson =
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JToken) =
         match o.Type with
         | JTokenType.Null    -> JNull
-        | JTokenType.Array   -> JArray ((o :?> JArray).AsReadOnlyList ())
+        | JTokenType.Array   -> JArray ((o :?> JArray) |> IList.toIReadOnlyList)
         | JTokenType.Object  -> JObject (jsonObjectGetValues (o :?> JObject))
         | JTokenType.Integer -> JNumber  o
         | JTokenType.Float   -> JNumber  o
@@ -185,14 +156,16 @@ module SystemJson =
     let JNull = JValue.CreateNull () :> JToken
     let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
     
-    #endif
+#endif
 
-    #if SYSTEMJSON
+#if SYSTEMJSON
+
+module SystemJson =
     
     open System.Json
 
     type JsonObject with
-        member x.AsReadOnlyDictionary () = (x :> IDictionary<string, JsonValue>).AsReadOnlyDictionary ()
+        member x.AsReadOnlyDictionary () = (x :> IDictionary<string, JsonValue>) |> Dict.toIReadOnlyDictionary
         static member GetValues (x: JsonObject) = x.AsReadOnlyDictionary ()
 
     let jsonObjectGetValues (x: JsonObject) = JsonObject.GetValues x
@@ -218,7 +191,7 @@ module SystemJson =
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         match o with
         | null -> JNull
-        | :? JsonArray  as x -> JArray ((x :> JsonValue IList).AsReadOnlyList ())
+        | :? JsonArray  as x -> JArray ((x :> JsonValue IList) |> IList.toIReadOnlyList)
         | :? JsonObject as x -> JObject (x.AsReadOnlyDictionary ())
         | :? JsonPrimitive as x ->
             match x.JsonType with
@@ -255,7 +228,7 @@ module SystemJson =
                 member __.GetEnumerator () = (l :> _ seq).GetEnumerator ()
                 member __.GetEnumerator () = (l :> System.Collections.IEnumerable).GetEnumerator () }
 
-        let dict x = (dict x).AsReadOnlyDictionary ()
+        let dict x = x |> dict |> Dict.toIReadOnlyDictionary
 
         let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
@@ -287,7 +260,7 @@ module SystemJson =
                 | _ -> failparse s j
             | a -> failparse s a
 
-        type JsonHelpers with 
+        type JsonHelpers with
             static member jsonObjectOfJson =
                 fun (o: JToken) ->
                     match o.Type with
@@ -510,19 +483,19 @@ module SystemJson =
             | Some a -> encoder a
 
         let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
-        let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x).AsReadOnlyList ())
+        let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> IList.toIReadOnlyList)
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
-        let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray ((Seq.map encoder x).ToReadOnlyList ())
-        let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray ((Seq.map encoder x).ToReadOnlyList ())
+        let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
+        let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
         let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
         let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
         
-        let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|].AsReadOnlyList ())
-        let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|].AsReadOnlyList ())
-        let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|].AsReadOnlyList ())
-        let tuple5 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|].AsReadOnlyList ())
-        let tuple6 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|].AsReadOnlyList ())
-        let tuple7 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|].AsReadOnlyList ())
+        let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
+        let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
+        let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> IList.toIReadOnlyList)
+        let tuple5 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|] |> IList.toIReadOnlyList)
+        let tuple6 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|] |> IList.toIReadOnlyList)
+        let tuple7 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> IList.toIReadOnlyList)
 
         let boolean        (x: bool          ) = JBool x
         let string         (x: string        ) = JString x
@@ -915,7 +888,7 @@ module SystemJson =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
             _JObject << dkey i
         let inline _jnth i =
-            let inline dnth i f t = map (fun x -> t |> ReadOnlyList.add i x |> Option.defaultValue t) (f (ReadOnlyList.tryNth i t |> Option.defaultValue JNull))
+            let inline dnth i f t = map (fun x -> t |> IReadOnlyList.add i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
             _JArray << dnth i
 
         // Reimport some basic Lens operations from F#+
