@@ -236,6 +236,7 @@ module SystemJson =
         | InvalidValue of System.Type * JsonValue * option<string>
         | PropertyNotFound of string * IReadOnlyDictionary<string, JsonValue>
         | ParseError of System.Type * exn * string
+        | Uncategorized of string
         | Multiple of DecodeError list
 
     with
@@ -251,6 +252,7 @@ module SystemJson =
             | InvalidValue (t, v, s) -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (s |> Option.map (fun x -> " " + x) |> Option.defaultValue "")
             | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
             | ParseError (t, s, v) -> sprintf "Error decoding %s from  %s: %s" (string v) (string t) (string s)
+            | Uncategorized str -> str
             | Multiple lst -> List.map string lst |> String.concat "\r\n"
 
     type 'a ParseResult = Result<'a, DecodeError>
