@@ -14,7 +14,9 @@ type Id2<'t> (v: 't) =
     let value = v
     member __.getValue = value
 
-type Default4 = class end
+type Default6 = class end
+type Default5 = class inherit Default6 end
+type Default4 = class inherit Default5 end
 type Default3 = class inherit Default4 end
 type Default2 = class inherit Default3 end
 type Default1 = class inherit Default2 end
@@ -674,12 +676,12 @@ module SystemJson =
 
     // Default, for external classes.
     type OfJson with 
-        static member inline OfJson (_: 'R, _: Default4) =
+        static member inline OfJson (_: 'R, _: Default6) =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
-        // static member inline OfJson (r: 'R, _:Default3) = Result.catch FailDecode.string << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
-        // static member inline OfJson (_: 'R, _:Default2) = fun js -> Result.catch FailDecode.string (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
+        static member inline OfJson (r: 'R, _:Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
+        static member inline OfJson (_: 'R, _:Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
         static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
