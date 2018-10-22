@@ -109,6 +109,14 @@ type NestedItem with
                 }
             }
         | x -> FailDecode.objExpected typeof<Item> x
+
+type Name = {FirstName: string; LastName: string} with
+    static member ToJson x = toJson (x.LastName + ", " + x.FirstName)
+    static member OfJson x =
+        match x with
+        | JString x when String.contains ',' x -> Ok { FirstName = (split [|","|] x).[0]; LastName = (split [|","|] x).[1] }
+        | JString _ -> Error "Expected a ',' separator"
+        | _ -> Error "Invalid Json Type"
         
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 type Assert with
@@ -331,6 +339,37 @@ let tests = [
                 Assert.Equal("item", expected, actual)
             }
         ]
+
+        testList "Errors" [
+            test "ParseError" {
+                let js = """{age: 42, "children": [], "name": "John"}"""
+                let x = parseJson<Person> js
+                let actual =
+                    match x with
+                    | Error (ParseError _) -> "ParseError"
+                    | s -> string s
+                Assert.Equal ("Expecting a ParseError (since age is missing quotes)", "ParseError", actual)
+            }
+            test "PropertyNotFound" {
+                let js = """{"ageeee": 42, "children": [], "name": "John"}"""
+                let x = parseJson<Person> js
+                let actual =
+                    match x with
+                    | Error (PropertyNotFound (s, _)) -> s
+                    | s -> string s
+                Assert.Equal ("Expecting a PropertyNotFound (age)", "age", actual)
+            }
+            test "Uncategorized" {                
+                let x = ofJson<Name> (JString "aaa")
+                let actual =
+                    match x with
+                    | Error (Uncategorized s) -> "Uncategorized:" + s
+                    | s -> string s
+                Assert.Equal ("Expecting an Uncategorized error (Expected a ',' separator)", "Uncategorized:Expected a ',' separator", actual)
+            }
+        ]
+
+
 
         testList "Roundtrip" [
             let inline roundtripEq (isEq: 'a -> 'a -> bool) p =
