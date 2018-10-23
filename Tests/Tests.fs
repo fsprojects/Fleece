@@ -347,7 +347,8 @@ let tests = [
                 let actual =
                     match x with
                     | Error (ParseError _) -> "ParseError"
-                    | s -> string s
+                    | Error s -> string s
+                    | Ok s -> string s 
                 Assert.Equal ("Expecting a ParseError (since age is missing quotes)", "ParseError", actual)
             }
             test "PropertyNotFound" {
