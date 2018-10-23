@@ -342,14 +342,14 @@ let tests = [
 
         testList "Errors" [
             test "ParseError" {
-                let js = """{age: 42, "children": [], "name": "John"}"""
+                let js = """{"age" 42, "children": [], "name": "John"}"""
                 let x = parseJson<Person> js
                 let actual =
                     match x with
                     | Error (ParseError _) -> "ParseError"
                     | Error s -> string s
                     | Ok s -> string s 
-                Assert.Equal ("Expecting a ParseError (since age is missing quotes)", "ParseError", actual)
+                Assert.Equal ("Expecting a ParseError (since age is missing :)", "ParseError", actual)
             }
             test "PropertyNotFound" {
                 let js = """{"ageeee": 42, "children": [], "name": "John"}"""
