@@ -73,8 +73,8 @@ type Person with
                     Age = age
                     Children = children
                 }
-            | x -> Failure (sprintf "Error parsing person: %A" x)
-        | x -> Failure (sprintf "Expected person, found %A" x)
+            | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
+        | x -> FailDecode.objExpected typeof<Person> x
         
 let john : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
 ```
@@ -90,7 +90,7 @@ type Person with
     static member OfJson json =
         match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Failure (sprintf "Expected person, found %A" x)
+        | x -> FailDecode.objExpected typeof<Person> x
 
 ```
 
