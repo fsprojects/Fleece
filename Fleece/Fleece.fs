@@ -376,7 +376,7 @@ module SystemJson =
         let inline compose codec1 codec2 = 
             let (dec1, enc1) = codec1
             let (dec2, enc2) = codec2
-            (dec1 >> Result.bind dec2, enc1 << enc2)
+            (dec1 >> (=<<) dec2, enc1 << enc2)
 
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
