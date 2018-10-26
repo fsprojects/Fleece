@@ -42,7 +42,7 @@ type Person with
     static member OfJson json = 
         match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> FailDecode.objExpected x
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: Person) =
         jobj [ 
@@ -65,7 +65,7 @@ type Attribute with
             monad {
                 let! name = o .@ "name"
                 if name = null then 
-                    return! FailDecode.nullString
+                    return! Decode.Fail.nullString
                 else
                     let! value = o .@ "value"
                     return {
@@ -73,7 +73,7 @@ type Attribute with
                         Value = value
                     }
             }
-        | x -> FailDecode.objExpected x
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: Attribute) =
         jobj [ "name" .= x.Name; "value" .= x.Value ]
@@ -108,7 +108,7 @@ type NestedItem with
                     Availability = availability
                 }
             }
-        | x -> FailDecode.objExpected x
+        | x -> Decode.Fail.objExpected x
 
 type Name = {FirstName: string; LastName: string} with
     static member ToJson x = toJson (x.LastName + ", " + x.FirstName)
