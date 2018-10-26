@@ -260,6 +260,11 @@ module SystemJson =
     type 'a ParseResult = Result<'a, DecodeError>
 
     module Decode =
+        let inline Success x = Ok x
+        let (|Success|Failure|) = function
+            | Ok    x -> Success x
+            | Error x -> Failure x
+
         module Fail =
             let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Object, a))
             let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Array , a))
