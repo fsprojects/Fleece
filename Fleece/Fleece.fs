@@ -268,7 +268,7 @@ module SystemJson =
             let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
             let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.String, a))
             let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Bool  , a))
-            let nullString () : Result<'t, _> = Error (NullString typeof<'t>)
+            let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
             let inline count e a = Error (IndexOutOfRange (e, a))
             let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
             let propertyNotFound p o = Error (PropertyNotFound (p, o))
@@ -493,19 +493,19 @@ module SystemJson =
 
         let char x =
             match x with
-            | JString null -> FailDecode.nullString ()
+            | JString null -> FailDecode.nullString
             | JString s    -> Success s.[0]
             | a -> FailDecode.strExpected a
 
         let guid x =
             match x with
-            | JString null -> FailDecode.nullString ()
+            | JString null -> FailDecode.nullString
             | JString s    -> tryParse<Guid> s |> Operators.option Success (FailDecode.invalidValue x None)
             | a -> FailDecode.strExpected a
 
         let dateTime x =
             match x with
-            | JString null -> FailDecode.nullString ()
+            | JString null -> FailDecode.nullString
             | JString s    ->
                 match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
@@ -514,7 +514,7 @@ module SystemJson =
 
         let dateTimeOffset x =
             match x with
-            | JString null -> FailDecode.nullString ()
+            | JString null -> FailDecode.nullString
             | JString s    ->
                 match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
