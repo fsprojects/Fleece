@@ -289,11 +289,11 @@ module SystemJson =
 
         #if FSHARPDATA
 
-        let inline tryRead s = 
-            function
+        let inline tryRead x =
+            match x with
             | JsonValue.Number n -> Success (explicit n)
             | JsonValue.Float  n -> Success (explicit n)
-            | js                 -> Error (JsonTypeMismatch (s, js, JType.Number, getJType js))
+            | js                 -> FailDecode.numExpected js
 
         type JsonHelpers with
             static member jsonObjectOfJson = function
@@ -304,14 +304,14 @@ module SystemJson =
 
         #if NEWTONSOFT
 
-        let inline tryRead<'a> s =
-            function
+        let inline tryRead<'a> x =
+            match x with
             | JNumber j -> 
                 try
                   Success (j.ToObject<'a> ())
                 with
-                | e -> Error (InvalidValue (s, j, Some (string e)))
-            | js -> Error (JsonTypeMismatch (s, js, JType.Number, getJType js))
+                | e -> FailDecode.invalidValue j (Some (string e))
+            | js -> FailDecode.numExpected js
 
         type JsonHelpers with
             static member jsonObjectOfJson =
@@ -325,12 +325,13 @@ module SystemJson =
 
         #if SYSTEMJSON
 
-        let inline tryRead s = function
+        let inline tryRead x =
+            match x with
             | JNumber j ->
                 try
                     Success (implicit j)
-                with e -> Error (InvalidValue (s, j, Some (string e)))
-            | js -> Error (JsonTypeMismatch (s, js, JType.Number, getJType js))
+                with e -> FailDecode.invalidValue j (Some (string e))
+            | js -> FailDecode.numExpected js
 
         type JsonHelpers with
             static member inline jsonObjectOfJson =
@@ -468,17 +469,17 @@ module SystemJson =
                 else tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6]
             | a -> FailDecode.arrExpected a
         
-        let decimal x = tryRead<decimal> typeof<decimal> x
-        let int16   x = tryRead<int16>   typeof<int16>   x
-        let int     x = tryRead<int>     typeof<int>     x
-        let int64   x = tryRead<int64>   typeof<int64>   x
-        let uint16  x = tryRead<uint16>  typeof<uint16>  x
-        let uint32  x = tryRead<uint32>  typeof<uint32>  x
-        let uint64  x = tryRead<uint64>  typeof<uint64>  x
-        let byte    x = tryRead<byte>    typeof<byte>    x
-        let sbyte   x = tryRead<sbyte>   typeof<sbyte>   x
-        let float   x = tryRead<double>  typeof<double>  x
-        let float32 x = tryRead<single>  typeof<single>  x
+        let decimal x = tryRead<decimal> x
+        let int16   x = tryRead<int16>   x
+        let int     x = tryRead<int>     x
+        let int64   x = tryRead<int64>   x
+        let uint16  x = tryRead<uint16>  x
+        let uint32  x = tryRead<uint32>  x
+        let uint64  x = tryRead<uint64>  x
+        let byte    x = tryRead<byte>    x
+        let sbyte   x = tryRead<sbyte>   x
+        let float   x = tryRead<double>  x
+        let float32 x = tryRead<single>  x
 
         let boolean x =
             match x with
