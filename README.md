@@ -67,14 +67,14 @@ type Person with
             let age = o .@ "age"
             let children = o .@ "children"
             match name, age, children with
-            | Ok name, Ok age, Ok children -> 
-                Ok {
+            | Decode.Success name, Decode.Success age, Decode.Success children ->
+                Decode.Success {
                     Person.Name = name
                     Age = age
                     Children = children
                 }
             | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
-        | x -> FailDecode.objExpected typeof<Person> x
+        | x -> Decode.Fail.objExpected x
         
 let john : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
 ```
@@ -90,7 +90,7 @@ type Person with
     static member OfJson json =
         match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> FailDecode.objExpected typeof<Person> x
+        | x -> Decode.Fail.objExpected x
 
 ```
 
@@ -112,7 +112,7 @@ type Person with
                     Children = children
                 }
             }
-        | x -> Failure (sprintf "Expected person, found %A" x)
+        | x -> Decode.Fail.objExpected x
 ```
 
 Or you can use the Choice monad/applicative in [FSharpx.Extras](https://github.com/fsprojects/FSharpx.Extras) instead, if you prefer.
@@ -200,19 +200,20 @@ type Car = {
     Kms : int }
 
 let colorDecoder = function
-    | JsonValue.String "red"   -> Ok Red  
-    | JsonValue.String "blue"  -> Ok Blue 
-    | JsonValue.String "white" -> Ok White
-    | x -> Error ("Wrong color: " + (string x))
+    | JString "red"   -> Decode.Success Red  
+    | JString "blue"  -> Decode.Success Blue 
+    | JString "white" -> Decode.Success White
+    | JString  x as v -> Decode.Fail.invalidValue v (Some ("Wrong color: " + x))
+    | x               -> Decode.Fail.strExpected  x
 
 let colorEncoder = function
-    | Red   -> JsonValue.String "red"
-    | Blue  -> JsonValue.String "blue"
-    | White -> JsonValue.String "white"
+    | Red   -> JString "red"
+    | Blue  -> JString "blue"
+    | White -> JString "white"
 
 let colorCodec = colorDecoder, colorEncoder
     
-let carCodec =
+let [<GeneralizableValue>]carCodec<'t> =
     fun i c k -> { Id = i; Color = c; Kms = k }
     |> withFields
     |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
