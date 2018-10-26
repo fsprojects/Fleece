@@ -65,7 +65,7 @@ type Attribute with
             monad {
                 let! name = o .@ "name"
                 if name = null then 
-                    return! FailDecode.nullString typeof<Attribute>
+                    return! FailDecode.nullString ()
                 else
                     let! value = o .@ "value"
                     return {

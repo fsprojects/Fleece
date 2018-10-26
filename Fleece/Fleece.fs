@@ -268,11 +268,11 @@ module SystemJson =
             let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
             let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.String, a))
             let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Bool  , a))
-            let nullString s = Error (NullString s)
+            let nullString () : Result<'t, _> = Error (NullString typeof<'t>)
             let inline count e a = Error (IndexOutOfRange (e, a))
-            let invalidValue t v o = Error (InvalidValue (t, v, o))
+            let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
             let propertyNotFound p o = Error (PropertyNotFound (p, o))
-            let parseError t s v = Error (ParseError (t, s, v))
+            let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
 
         let listAsReadOnly (l: _ list) =
             { new IReadOnlyList<_> with
@@ -310,7 +310,7 @@ module SystemJson =
                 try
                   Success (j.ToObject<'a> ())
                 with
-                | e -> FailDecode.invalidValue s j (Some (string e))
+                | e -> Error (InvalidValue (s, j, Some (string e)))
             | js -> Error (JsonTypeMismatch (s, js, JType.Number, getJType js))
 
         type JsonHelpers with
@@ -329,7 +329,7 @@ module SystemJson =
             | JNumber j ->
                 try
                     Success (implicit j)
-                with e -> FailDecode.invalidValue s j (Some (string e))
+                with e -> Error (InvalidValue (s, j, Some (string e)))
             | js -> Error (JsonTypeMismatch (s, js, JType.Number, getJType js))
 
         type JsonHelpers with
@@ -375,7 +375,7 @@ module SystemJson =
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> FailDecode.objExpected a) , JObject)
-    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> FailDecode.parseError typeof<JsonValue> e x), (fun (x: JsonValue) -> string x)
+    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> FailDecode.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
@@ -388,7 +388,7 @@ module SystemJson =
                 match Seq.toList o with
                 | [KeyValue("Choice1Of2", a)] -> a |> decoder1 |> map Choice1Of2
                 | [KeyValue("Choice2Of2", a)] -> a |> decoder2 |> map Choice2Of2
-                | _ -> FailDecode.invalidValue typeof<Choice<'a, 'b>> jobj None
+                | _ -> FailDecode.invalidValue jobj None
             | a -> FailDecode.objExpected a
 
         let choice3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
@@ -397,7 +397,7 @@ module SystemJson =
                 | [KeyValue("Choice1Of3", a)] -> a |> decoder1 |> map Choice1Of3
                 | [KeyValue("Choice2Of3", a)] -> a |> decoder2 |> map Choice2Of3
                 | [KeyValue("Choice3Of3", a)] -> a |> decoder3 |> map Choice3Of3
-                | _ -> FailDecode.invalidValue typeof<Choice<'a, 'b, 'c>> jobj None
+                | _ -> FailDecode.invalidValue jobj None
             | a -> FailDecode.objExpected a
 
         let option (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
@@ -493,32 +493,32 @@ module SystemJson =
 
         let char x =
             match x with
-            | JString null -> FailDecode.nullString typeof<char>
+            | JString null -> FailDecode.nullString ()
             | JString s    -> Success s.[0]
             | a -> FailDecode.strExpected a
 
         let guid x =
             match x with
-            | JString null -> FailDecode.nullString typeof<Guid>
-            | JString s    -> tryParse<Guid> s |> Operators.option Success (FailDecode.invalidValue typeof<Guid> x None)
+            | JString null -> FailDecode.nullString ()
+            | JString s    -> tryParse<Guid> s |> Operators.option Success (FailDecode.invalidValue x None)
             | a -> FailDecode.strExpected a
 
         let dateTime x =
             match x with
-            | JString null -> FailDecode.nullString typeof<DateTime>
+            | JString null -> FailDecode.nullString ()
             | JString s    ->
                 match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
-                | _       -> FailDecode.invalidValue typeof<DateTime> x None
+                | _       -> FailDecode.invalidValue x None
             | a -> FailDecode.strExpected a
 
         let dateTimeOffset x =
             match x with
-            | JString null -> FailDecode.nullString typeof<DateTimeOffset>
+            | JString null -> FailDecode.nullString ()
             | JString s    ->
                 match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
-                | _       -> FailDecode.invalidValue typeof<DateTimeOffset> x None
+                | _       -> FailDecode.invalidValue x None
             | a -> FailDecode.strExpected a
 
     [<RequireQualifiedAccess>]
