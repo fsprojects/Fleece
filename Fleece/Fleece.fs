@@ -14,7 +14,9 @@ type Id2<'t> (v: 't) =
     let value = v
     member __.getValue = value
 
-type Default4 = class end
+type Default6 = class end
+type Default5 = class inherit Default6 end
+type Default4 = class inherit Default5 end
 type Default3 = class inherit Default4 end
 type Default2 = class inherit Default3 end
 type Default1 = class inherit Default2 end
@@ -212,15 +214,72 @@ module SystemJson =
 
     // Deserializing:
 
-    type 'a ParseResult = Result<'a, string>
+    type JType =
+        | Object = 1
+        | Array  = 2
+        | Number = 3
+        | String = 4
+        | Bool   = 5
+        | Null   = 6
 
+    let getJType (o: JsonValue) =
+        match o with
+        | JNull     -> JType.Null
+        | JArray _  -> JType.Array
+        | JObject _ -> JType.Object
+        | JNumber _ -> JType.Number
+        | JBool _   -> JType.Bool
+        | JString _ -> JType.String
+
+    type DecodeError =
+        | JsonTypeMismatch of System.Type * JsonValue * JType * JType
+        | NullString of System.Type
+        | IndexOutOfRange of int * JsonValue
+        | InvalidValue of System.Type * JsonValue * option<string>
+        | PropertyNotFound of string * IReadOnlyDictionary<string, JsonValue>
+        | ParseError of System.Type * exn * string
+        | Uncategorized of string
+        | Multiple of DecodeError list
+
+    with
+        static member (+) (x, y) = 
+            match x, y with
+            | Multiple x, Multiple y -> Multiple (x @ y)
+            | _                      -> Multiple [x; y]
+        override x.ToString () =
+            match x with
+            | JsonTypeMismatch (t, v: JsonValue, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
+            | NullString t -> sprintf "Expected %s, got null" (string t)
+            | IndexOutOfRange (e, a) -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
+            | InvalidValue (t, v, s) -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (s |> Option.map (fun x -> " " + x) |> Option.defaultValue "")
+            | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
+            | ParseError (t, s, v) -> sprintf "Error decoding %s from  %s: %s" (string v) (string t) (string s)
+            | Uncategorized str -> str
+            | Multiple lst -> List.map string lst |> String.concat "\r\n"
+
+    type 'a ParseResult = Result<'a, DecodeError>
+
+    module Decode =
+        let inline Success x = Ok x
+        let (|Success|Failure|) = function
+            | Ok    x -> Success x
+            | Error x -> Failure x
+
+        module Fail =
+            let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Object, a))
+            let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Array , a))
+            let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
+            let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.String, a))
+            let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Bool  , a))
+            let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
+            let inline count e a = Error (IndexOutOfRange (e, a))
+            let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
+            let propertyNotFound p o = Error (PropertyNotFound (p, o))
+            let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+    
     module Helpers =
         // results:
-        let inline Success x = Ok    x
-        let inline Failure x = Error x
-
-        let inline failparse s v = Failure (sprintf "Expected %s, actual %A" s v)
-
+        let inline Success x = Ok x
         let listAsReadOnly (l: _ list) =
             { new IReadOnlyList<_> with
                 member __.Count = l.Length
@@ -236,54 +295,56 @@ module SystemJson =
 
         #if FSHARPDATA
 
-        let inline tryRead s = 
-            function
+        let inline tryRead x =
+            match x with
             | JsonValue.Number n -> Success (explicit n)
             | JsonValue.Float  n -> Success (explicit n)
-            | js                 -> failparse s (sprintf "Expected numeric but was %A" js)
+            | js                 -> Decode.Fail.numExpected js
 
         type JsonHelpers with
             static member jsonObjectOfJson = function
                 | JObject x -> Success (dictAsProps x)
-                | a -> failparse "JsonObject" a
+                | a -> Decode.Fail.objExpected a
 
         #endif
 
         #if NEWTONSOFT
 
-        let inline tryRead<'a> s =
-            function
+        let inline tryRead<'a> x =
+            match x with
             | JNumber j -> 
                 try
                   Success (j.ToObject<'a> ())
                 with
-                | _ -> failparse s j
-            | a -> failparse s a
+                | e -> Decode.Fail.invalidValue j (Some (string e))
+            | js -> Decode.Fail.numExpected js
 
         type JsonHelpers with
             static member jsonObjectOfJson =
                 fun (o: JToken) ->
                     match o.Type with
                     | JTokenType.Object -> Success (o :?> JObject)
-                    | a -> failparse "JsonObject" a 
+                    | _ -> Decode.Fail.objExpected o
+ 
 
         #endif
 
         #if SYSTEMJSON
 
-        let inline tryRead s = function
+        let inline tryRead x =
+            match x with
             | JNumber j ->
                 try
                     Success (implicit j)
-                with e -> failparse s j
-            | a -> failparse s a
+                with e -> Decode.Fail.invalidValue j (Some (string e))
+            | js -> Decode.Fail.numExpected js
 
         type JsonHelpers with
             static member inline jsonObjectOfJson =
                 fun (o: JsonValue) ->
                     match box o with
                     | :? JsonObject as x -> Success x
-                    | a -> failparse "JsonObject" a
+                    | _ -> Decode.Fail.objExpected o
 
         #endif
 
@@ -320,8 +381,8 @@ module SystemJson =
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
-    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> failparse "Map" a) , JObject)
-    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Failure (string e)), (fun (x: JsonValue) -> string x)
+    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
+    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
@@ -334,8 +395,8 @@ module SystemJson =
                 match Seq.toList o with
                 | [KeyValue("Choice1Of2", a)] -> a |> decoder1 |> map Choice1Of2
                 | [KeyValue("Choice2Of2", a)] -> a |> decoder2 |> map Choice2Of2
-                | _ -> failparse "Choice" jobj
-            | a -> failparse "Choice" a
+                | _ -> Decode.Fail.invalidValue jobj None
+            | a -> Decode.Fail.objExpected a
 
         let choice3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
             | JObject o as jobj ->
@@ -343,8 +404,8 @@ module SystemJson =
                 | [KeyValue("Choice1Of3", a)] -> a |> decoder1 |> map Choice1Of3
                 | [KeyValue("Choice2Of3", a)] -> a |> decoder2 |> map Choice2Of3
                 | [KeyValue("Choice3Of3", a)] -> a |> decoder3 |> map Choice3Of3
-                | _ -> failparse "Choice" jobj
-            | a -> failparse "Choice" a
+                | _ -> Decode.Fail.invalidValue jobj None
+            | a -> Decode.Fail.objExpected a
 
         let option (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
             | JNull _ -> Success None
@@ -356,116 +417,116 @@ module SystemJson =
 
         let array (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
             | JArray a -> traverse decoder a |> map Seq.toArray
-            | a        -> failparse "array" a
+            | a        -> Decode.Fail.arrExpected a
 
         let list (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a list> = function
             | JArray a -> traverse decoder a |> map Seq.toList
-            | a        -> failparse "list" a
+            | a        -> Decode.Fail.arrExpected a
 
         let set (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a Set> = function
             | JArray a -> traverse decoder a |> map set
-            | a        -> failparse "set" a
+            | a        -> Decode.Fail.arrExpected a
 
         let resizeArray (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ResizeArray> = function
             | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (x: 'a seq))
-            | a        -> failparse "ResizeArray" a
+            | a        -> Decode.Fail.arrExpected a
 
         let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
             | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> ofSeq)
-            | a -> failparse "Dictionary" a
+            | a -> Decode.Fail.objExpected a
 
         let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
             | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
-            | a -> failparse "Map" a
+            | a -> Decode.Fail.objExpected a
 
         let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> = function
             | JArray a as x ->
-                if a.Count <> 2 then Failure ("Expected array with 2 items, was: " + string x)
+                if a.Count <> 2 then Decode.Fail.count 2 x
                 else tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+            | a -> Decode.Fail.arrExpected a
 
         let tuple3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> = function
             | JArray a as x ->
-                if a.Count <> 3 then Failure ("Expected array with 3 items, was: " + string x)
+                if a.Count <> 3 then Decode.Fail.count 3 x
                 else tuple3 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+            | a -> Decode.Fail.arrExpected a
 
         let tuple4 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = function
             | JArray a as x ->
-                if a.Count <> 4 then Failure ("Expected array with 4 items, was: " + string x)
+                if a.Count <> 4 then Decode.Fail.count 4 x
                 else tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+            | a -> Decode.Fail.arrExpected a
 
         let tuple5 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = function
             | JArray a as x ->
-                if a.Count <> 5 then Failure ("Expected array with 5 items, was: " + string x)
+                if a.Count <> 5 then Decode.Fail.count 5 x
                 else tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+            | a -> Decode.Fail.arrExpected a
 
         let tuple6 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = function
             | JArray a as x ->
-                if a.Count <> 6 then Failure ("Expected array with 6 items, was: " + string x)
+                if a.Count <> 6 then Decode.Fail.count 6 x
                 else tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+            | a -> Decode.Fail.arrExpected a
 
         let tuple7 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = function
             | JArray a as x ->
-                if a.Count <> 7 then Failure ("Expected array with 7 items, was: " + string x)
+                if a.Count <> 7 then Decode.Fail.count 3 x
                 else tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6]
-            | a -> Failure (sprintf "Expected array, found %A" a)
+            | a -> Decode.Fail.arrExpected a
         
-        let decimal x = tryRead<decimal> "decimal" x
-        let int16   x = tryRead<int16>   "int16"   x
-        let int     x = tryRead<int>     "int"     x
-        let int64   x = tryRead<int64>   "int64"   x
-        let uint16  x = tryRead<uint16>  "uint16"  x
-        let uint32  x = tryRead<uint32>  "uint32"  x
-        let uint64  x = tryRead<uint64>  "uint64"  x
-        let byte    x = tryRead<byte>    "byte"    x
-        let sbyte   x = tryRead<sbyte>   "sbyte"   x
-        let float   x = tryRead<double>  "double"  x
-        let float32 x = tryRead<single>  "single"  x
+        let decimal x = tryRead<decimal> x
+        let int16   x = tryRead<int16>   x
+        let int     x = tryRead<int>     x
+        let int64   x = tryRead<int64>   x
+        let uint16  x = tryRead<uint16>  x
+        let uint32  x = tryRead<uint32>  x
+        let uint64  x = tryRead<uint64>  x
+        let byte    x = tryRead<byte>    x
+        let sbyte   x = tryRead<sbyte>   x
+        let float   x = tryRead<double>  x
+        let float32 x = tryRead<single>  x
 
         let boolean x =
             match x with
             | JBool b -> Success b
-            | a -> failparse "bool" a
+            | a -> Decode.Fail.boolExpected a
 
         let string x =
             match x with
             | JString b -> Success b
             | JNull -> Success null
-            | a -> failparse "string" a
+            | a -> Decode.Fail.strExpected a
 
         let char x =
             match x with
-            | JString null -> Failure "Expected char, got null"
+            | JString null -> Decode.Fail.nullString
             | JString s    -> Success s.[0]
-            | a -> failparse "char" a
+            | a -> Decode.Fail.strExpected a
 
         let guid x =
             match x with
-            | JString null -> Failure "Expected Guid, got null"
-            | JString s    -> tryParse<Guid> s |> Operators.option Success (Failure ("Invalid Guid " + s))
-            | a -> failparse "Guid" a
+            | JString null -> Decode.Fail.nullString
+            | JString s    -> tryParse<Guid> s |> Operators.option Success (Decode.Fail.invalidValue x None)
+            | a -> Decode.Fail.strExpected a
 
         let dateTime x =
             match x with
-            | JString null -> Failure "Expected DateTime, got null"
+            | JString null -> Decode.Fail.nullString
             | JString s    ->
                 match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
-                | _       -> Failure (sprintf "Invalid DateTime %s" s)
-            | a -> failparse "DateTime" a
+                | _       -> Decode.Fail.invalidValue x None
+            | a -> Decode.Fail.strExpected a
 
         let dateTimeOffset x =
             match x with
-            | JString null -> Failure "Expected DateTimeOffset, got null"
+            | JString null -> Decode.Fail.nullString
             | JString s    ->
                 match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
-                | _       -> Failure (sprintf "Invalid DateTimeOffset %s" s)
-            | a -> failparse "DateTimeOffset" a
+                | _       -> Decode.Fail.invalidValue x None
+            | a -> Decode.Fail.strExpected a
 
     [<RequireQualifiedAccess>]
     module JsonEncode =
@@ -622,10 +683,12 @@ module SystemJson =
 
     // Default, for external classes.
     type OfJson with 
-        static member inline OfJson (_: 'R, _: Default4) =
+        static member inline OfJson (_: 'R, _: Default6) =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
+        static member inline OfJson (r: 'R, _:Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
+        static member inline OfJson (_: 'R, _:Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
         static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
@@ -642,7 +705,7 @@ module SystemJson =
     let inline jgetWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> ofJson value
-        | _ -> Failure ("Key '" + key + "' not found in " + string (JObject o))
+        | _ -> Decode.Fail.propertyNotFound key o
 
     /// Gets a value from a Json object
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = jgetWith ofJson o key

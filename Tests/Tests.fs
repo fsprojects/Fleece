@@ -42,7 +42,7 @@ type Person with
     static member OfJson json = 
         match json with
         | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Failure (sprintf "Expected person, found %A" x)
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: Person) =
         jobj [ 
@@ -65,7 +65,7 @@ type Attribute with
             monad {
                 let! name = o .@ "name"
                 if name = null then 
-                    return! Failure "Attribute name was null"
+                    return! Decode.Fail.nullString
                 else
                     let! value = o .@ "value"
                     return {
@@ -73,7 +73,7 @@ type Attribute with
                         Value = value
                     }
             }
-        | x -> Failure (sprintf "Expected Attribute, found %A" x)
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: Attribute) =
         jobj [ "name" .= x.Name; "value" .= x.Value ]
@@ -108,7 +108,15 @@ type NestedItem with
                     Availability = availability
                 }
             }
-        | x -> Failure (sprintf "Expected Item, found %A" x)
+        | x -> Decode.Fail.objExpected x
+
+type Name = {FirstName: string; LastName: string} with
+    static member ToJson x = toJson (x.LastName + ", " + x.FirstName)
+    static member OfJson x =
+        match x with
+        | JString x when String.contains ',' x -> Ok { FirstName = (split [|","|] x).[0]; LastName = (split [|","|] x).[1] }
+        | JString _ -> Error "Expected a ',' separator"
+        | _ -> Error "Invalid Json Type"
         
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 type Assert with
@@ -221,7 +229,7 @@ let tests = [
             test "decimal" {
             #if FSHARPDATA
                 let actual : int ParseResult = parseJson "2.1"
-                Assert.Equal("decimal", Failure (), Result.mapError (fun _-> ()) actual)
+                Assert.Equal("decimal", Error (), Result.mapError (fun _-> ()) actual)
             #else
                 let actual : int ParseResult = parseJson "2.1"
                 Assert.Equal("decimal", Success 2, actual)
@@ -331,6 +339,38 @@ let tests = [
                 Assert.Equal("item", expected, actual)
             }
         ]
+
+        testList "Errors" [
+            test "ParseError" {
+                let js = """{"age" 42, "children": [], "name": "John"}"""
+                let x = parseJson<Person> js
+                let actual =
+                    match x with
+                    | Error (ParseError _) -> "ParseError"
+                    | Error s -> string s
+                    | Ok s -> string s 
+                Assert.Equal ("Expecting a ParseError (since age is missing :)", "ParseError", actual)
+            }
+            test "PropertyNotFound" {
+                let js = """{"ageeee": 42, "children": [], "name": "John"}"""
+                let x = parseJson<Person> js
+                let actual =
+                    match x with
+                    | Error (PropertyNotFound (s, _)) -> s
+                    | s -> string s
+                Assert.Equal ("Expecting a PropertyNotFound (age)", "age", actual)
+            }
+            test "Uncategorized" {                
+                let x = ofJson<Name> (JString "aaa")
+                let actual =
+                    match x with
+                    | Error (Uncategorized s) -> "Uncategorized:" + s
+                    | s -> string s
+                Assert.Equal ("Expecting an Uncategorized error (Expected a ',' separator)", "Uncategorized:Expected a ',' separator", actual)
+            }
+        ]
+
+
 
         testList "Roundtrip" [
             let inline roundtripEq (isEq: 'a -> 'a -> bool) p =

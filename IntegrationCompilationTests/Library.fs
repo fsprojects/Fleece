@@ -20,7 +20,7 @@ with
     static member OfJson json =
         match json with
         | JObject o -> PersonFSharpData.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Error (sprintf "Expected person, found %A" x)
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x:PersonFSharpData) =
         jobj [ 
@@ -42,7 +42,7 @@ with
     static member OfJson json =
         match json with
         | JObject o -> PersonNewtonsoft.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Error (sprintf "Expected person, found %A" x)
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: PersonNewtonsoft) =
         jobj [ 
@@ -64,7 +64,7 @@ with
     static member OfJson json =
         match json with
         | JObject o -> PersonSystemJson.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Error (sprintf "Expected person, found %A" x)
+        | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: PersonSystemJson) =
         jobj [ 
