@@ -203,7 +203,7 @@ let colorDecoder = function
     | JString "red"   -> Decode.Success Red  
     | JString "blue"  -> Decode.Success Blue 
     | JString "white" -> Decode.Success White
-    | JString  x as v -> Decode.Fail.invalidValue v (Some ("Wrong color: " + x))
+    | JString  x as v -> Decode.Fail.invalidValue v ("Wrong color: " + x)
     | x               -> Decode.Fail.strExpected  x
 
 let colorEncoder = function

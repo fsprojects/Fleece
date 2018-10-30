@@ -234,7 +234,7 @@ module SystemJson =
         | JsonTypeMismatch of System.Type * JsonValue * JType * JType
         | NullString of System.Type
         | IndexOutOfRange of int * JsonValue
-        | InvalidValue of System.Type * JsonValue * option<string>
+        | InvalidValue of System.Type * JsonValue * string
         | PropertyNotFound of string * IReadOnlyDictionary<string, JsonValue>
         | ParseError of System.Type * exn * string
         | Uncategorized of string
@@ -250,7 +250,7 @@ module SystemJson =
             | JsonTypeMismatch (t, v: JsonValue, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
             | NullString t -> sprintf "Expected %s, got null" (string t)
             | IndexOutOfRange (e, a) -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
-            | InvalidValue (t, v, s) -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (s |> Option.map (fun x -> " " + x) |> Option.defaultValue "")
+            | InvalidValue (t, v, s) -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
             | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
             | ParseError (t, s, v) -> sprintf "Error decoding %s from  %s: %s" (string v) (string t) (string s)
             | Uncategorized str -> str
@@ -315,7 +315,7 @@ module SystemJson =
                 try
                   Success (j.ToObject<'a> ())
                 with
-                | e -> Decode.Fail.invalidValue j (Some (string e))
+                | e -> Decode.Fail.invalidValue j (string e)
             | js -> Decode.Fail.numExpected js
 
         type JsonHelpers with
@@ -335,7 +335,7 @@ module SystemJson =
             | JNumber j ->
                 try
                     Success (implicit j)
-                with e -> Decode.Fail.invalidValue j (Some (string e))
+                with e -> Decode.Fail.invalidValue j (string e)
             | js -> Decode.Fail.numExpected js
 
         type JsonHelpers with
@@ -394,7 +394,7 @@ module SystemJson =
                 match Seq.toList o with
                 | [KeyValue("Choice1Of2", a)] -> a |> decoder1 |> map Choice1Of2
                 | [KeyValue("Choice2Of2", a)] -> a |> decoder2 |> map Choice2Of2
-                | _ -> Decode.Fail.invalidValue jobj None
+                | _ -> Decode.Fail.invalidValue jobj ""
             | a -> Decode.Fail.objExpected a
 
         let choice3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
@@ -403,7 +403,7 @@ module SystemJson =
                 | [KeyValue("Choice1Of3", a)] -> a |> decoder1 |> map Choice1Of3
                 | [KeyValue("Choice2Of3", a)] -> a |> decoder2 |> map Choice2Of3
                 | [KeyValue("Choice3Of3", a)] -> a |> decoder3 |> map Choice3Of3
-                | _ -> Decode.Fail.invalidValue jobj None
+                | _ -> Decode.Fail.invalidValue jobj ""
             | a -> Decode.Fail.objExpected a
 
         let option (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
@@ -506,7 +506,7 @@ module SystemJson =
         let guid x =
             match x with
             | JString null -> Decode.Fail.nullString
-            | JString s    -> tryParse<Guid> s |> Operators.option Success (Decode.Fail.invalidValue x None)
+            | JString s    -> tryParse<Guid> s |> Operators.option Success (Decode.Fail.invalidValue x "")
             | a -> Decode.Fail.strExpected a
 
         let dateTime x =
@@ -515,7 +515,7 @@ module SystemJson =
             | JString s    ->
                 match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
-                | _       -> Decode.Fail.invalidValue x None
+                | _       -> Decode.Fail.invalidValue x ""
             | a -> Decode.Fail.strExpected a
 
         let dateTimeOffset x =
@@ -524,7 +524,7 @@ module SystemJson =
             | JString s    ->
                 match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Success t
-                | _       -> Decode.Fail.invalidValue x None
+                | _       -> Decode.Fail.invalidValue x ""
             | a -> Decode.Fail.strExpected a
 
     [<RequireQualifiedAccess>]
