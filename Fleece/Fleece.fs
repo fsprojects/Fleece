@@ -120,7 +120,6 @@ module Newtonsoft =
         static member create (x: Double ) = JValue          x  :> JToken
         static member create (x: Single ) = JValue          x  :> JToken
         static member create (x: int    ) = JValue          x  :> JToken
-        static member create (x: bool   ) = JValue          x  :> JToken
         static member create (x: uint32 ) = JValue          x  :> JToken
         static member create (x: int64  ) = JValue          x  :> JToken
         static member create (x: uint64 ) = JValue          x  :> JToken
@@ -687,8 +686,8 @@ module SystemJson =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
-        static member inline OfJson (r: 'R, _:Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
-        static member inline OfJson (_: 'R, _:Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
+        static member inline OfJson (r: 'R, _: Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
+        static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
         static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
