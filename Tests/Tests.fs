@@ -111,6 +111,19 @@ type NestedItem with
             }
         | x -> Decode.Fail.objExpected x
 
+type Vehicle =
+   | Bike
+   | MotorBike of unit
+   | Car of make : string
+   | Van of make : string * capacity : float
+with
+    static member JsonObjCodec =
+        tag     "car"       Car              (function (Car  x      ) -> Some  x     | _ -> None)
+        <|> tag "van"       Van              (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
+        <|> tag "motorBike" MotorBike        (function (MotorBike ()) -> Some ()     | _ -> None)
+        <|> tag "bike"      (fun () -> Bike) (function  Bike          -> Some ()     | _ -> None)
+        |> Codec.ofConcrete
+
 type Name = {FirstName: string; LastName: string} with
     static member ToJson x = toJson (x.LastName + ", " + x.FirstName)
     static member OfJson x =
@@ -309,6 +322,24 @@ let tests = [
                 Assert.JSON(expected, p)
                 #endif
 
+            }
+
+            test "Vehicle" {
+                let w = [ MotorBike ()      ] |> toJson |> string
+                let x = [ Car "Renault"     ] |> toJson |> string
+                let y = [ Van ("Fiat", 5.8) ] |> toJson |> string
+                let z = [ Bike              ] |> toJson |> string
+            
+                let expectedW = """[{"motorBike":[]}]"""
+                let expectedX = """[{"car":"Renault"}]"""
+                let expectedY = """[{"van":["Fiat",5.8]}]"""
+                let expectedZ = """[{"bike":[]}]"""
+            
+                Assert.JSON(expectedW, w)
+                Assert.JSON(expectedX, x)
+                Assert.JSON(expectedY, y)
+                Assert.JSON(expectedZ, z)
+            
             }
 
             test "Map with null key" {

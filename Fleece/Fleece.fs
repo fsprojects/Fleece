@@ -374,6 +374,11 @@ module SystemJson =
                 Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
                 Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
             }
+        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
+                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
+            }
 
 
     module Codec =
@@ -981,6 +986,21 @@ module SystemJson =
 
         /// Derives a field codec for an optional field
         let inline (^=@?) a b = deriveFieldCodecOpt jsonValueCodec a b
+
+        /// Gets a value from a Json object
+        let inline jgetFromListWith ofJson (o: list<KeyValuePair<string, JsonValue>>) key =
+            match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
+            | Some (KeyValue(_, value)) -> ofJson value
+            | _                         -> Decode.Fail.propertyNotFound key (ofList o)
+
+        /// Gets a value from a Json object
+        let inline jgetFromList (o: list<KeyValuePair<string, JsonValue>>) key = jgetFromListWith ofJson o key
+
+        let inline tag    (name: string) (cons: 'param -> 'T) (getter: 'T -> 'param option) =
+            {
+                Decoder = (ReaderT (fun (json: KeyValuePair<string,JsonValue> list) -> (cons <!> jgetFromList json name)))
+                Encoder = fun x -> Const (match getter x with Some v -> [KeyValuePair (name, toJson v)] | _ -> [])
+            }
 
         /// Derives a concrete field codec for a required field
         let inline req a b = deriveFieldCodec jsonValueCodec a b |> Codec.toConcrete
