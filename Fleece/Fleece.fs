@@ -453,6 +453,12 @@ module SystemJson =
             | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
             | a -> Decode.Fail.objExpected a
 
+        let unit : JsonValue -> ParseResult<unit> = function
+            | JArray a as x ->
+                if a.Count <> 0 then Decode.Fail.count 0 x
+                else Success ()
+            | a -> Decode.Fail.arrExpected a
+
         let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> = function
             | JArray a as x ->
                 if a.Count <> 2 then Decode.Fail.count 2 x
@@ -565,6 +571,7 @@ module SystemJson =
         let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
         let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
         
+        let unit () = JArray ([||] |> IList.toIReadOnlyList)
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
         let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> IList.toIReadOnlyList)
@@ -604,6 +611,7 @@ module SystemJson =
         let map         codec = JsonDecode.map         (fst codec), JsonEncode.map         (snd codec)
         let dictionary  codec = JsonDecode.dictionary  (fst codec), JsonEncode.dictionary  (snd codec)
 
+        let unit  ()                                                = JsonDecode.unit                                                                                             , JsonEncode.unit ()
         let tuple2 codec1 codec2                                    = JsonDecode.tuple2 (fst codec1) (fst codec2)                                                                 , JsonEncode.tuple2 (snd codec1) (snd codec2)
         let tuple3 codec1 codec2 codec3                             = JsonDecode.tuple3 (fst codec1) (fst codec2) (fst codec3)                                                    , JsonEncode.tuple3 (snd codec1) (snd codec2) (snd codec3)
         let tuple4 codec1 codec2 codec3 codec4                      = JsonDecode.tuple4 (fst codec1) (fst codec2) (fst codec3) (fst codec4)                                       , JsonEncode.tuple4 (snd codec1) (snd codec2) (snd codec3) (snd codec4)
@@ -653,6 +661,7 @@ module SystemJson =
         static member OfJson (_: Guid          , _: OfJson) = JsonDecode.guid
         static member OfJson (_: DateTime      , _: OfJson) = JsonDecode.dateTime
         static member OfJson (_: DateTimeOffset, _: OfJson) = JsonDecode.dateTimeOffset
+        static member OfJson (_: unit          , _: OfJson) = JsonDecode.unit
 
     type OfJson with
         static member inline Invoke (x: JsonValue) : 't ParseResult =
@@ -675,7 +684,7 @@ module SystemJson =
         static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
         static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
         static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
-        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
+        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)    
 
     type OfJson with
         static member inline OfJson (_: 'a * 'b, _: OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
@@ -760,6 +769,7 @@ module SystemJson =
         static member ToJson (x: sbyte         , _: ToJson) = JsonEncode.sbyte          x
         static member ToJson (x: char          , _: ToJson) = JsonEncode.char           x
         static member ToJson (x: Guid          , _: ToJson) = JsonEncode.guid           x
+        static member ToJson (()               , _: ToJson) = JsonEncode.unit ()
 
     type ToJson with
         static member inline Invoke (x: 't) : JsonValue =
@@ -790,7 +800,7 @@ module SystemJson =
     type ToJson with
         static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
 
-    type ToJson with
+    type ToJson with        
         static member inline ToJson (x: Dictionary<string, 'a>, _: ToJson) = JsonEncode.dictionary  ToJson.Invoke x
         static member inline ToJson (x: 'a ResizeArray        , _: ToJson) = JsonEncode.resizeArray ToJson.Invoke x
         static member inline ToJson (x                        , _: ToJson) = JsonEncode.tuple2      ToJson.Invoke ToJson.Invoke x
