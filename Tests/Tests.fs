@@ -118,10 +118,10 @@ type Vehicle =
    | Van of make : string * capacity : float
 with
     static member JsonObjCodec =
-        tag     "car"       Car              (function (Car  x      ) -> Some  x     | _ -> None)
-        <|> tag "van"       Van              (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
-        <|> tag "motorBike" MotorBike        (function (MotorBike ()) -> Some ()     | _ -> None)
-        <|> tag "bike"      (fun () -> Bike) (function  Bike          -> Some ()     | _ -> None)
+        tag     Car              "car"       (function (Car  x      ) -> Some  x     | _ -> None)
+        <|> tag Van              "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
+        <|> tag MotorBike        "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
+        <|> tag (fun () -> Bike) "bike"      (function  Bike          -> Some ()     | _ -> None)
         |> Codec.ofConcrete
 
 type Name = {FirstName: string; LastName: string} with
