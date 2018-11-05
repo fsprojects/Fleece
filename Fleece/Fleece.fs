@@ -241,7 +241,7 @@ module SystemJson =
         | Multiple of DecodeError list
 
     with
-        static member (+) (x, y) = 
+        static member (+) (x, y) =
             match x, y with
             | Multiple x, Multiple y -> Multiple (x @ y)
             | _                      -> Multiple [x; y]
@@ -374,6 +374,7 @@ module SystemJson =
                 Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
                 Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
             }
+        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
         static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
@@ -689,7 +690,7 @@ module SystemJson =
         static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
         static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
         static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
-        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)    
+        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
 
     type OfJson with
         static member inline OfJson (_: 'a * 'b, _: OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
