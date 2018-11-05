@@ -118,11 +118,12 @@ type Vehicle =
    | Van of make : string * capacity : float
 with
     static member JsonObjCodec =
-        (    Car              <!> reg "car"       (function (Car  x      ) -> Some  x     | _ -> None))
-        <|> (Van              <!> reg "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None))
-        <|> (MotorBike        <!> reg "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None))
-        <|> ((fun () -> Bike) <!> reg "bike"      (function  Bike          -> Some ()     | _ -> None))
-        |> Codec.ofConcrete
+        [
+            Car              <!> reg "car"       (function (Car  x      ) -> Some  x     | _ -> None)
+            Van              <!> reg "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
+            MotorBike        <!> reg "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
+            (fun () -> Bike) <!> reg "bike"      (function  Bike          -> Some ()     | _ -> None)
+        ] |> jchoice |> Codec.ofConcrete
 
 type Name = {FirstName: string; LastName: string} with
     static member ToJson x = toJson (x.LastName + ", " + x.FirstName)

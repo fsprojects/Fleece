@@ -1038,6 +1038,9 @@ module SystemJson =
 
         let inline tag (cons: 'param -> 'T) (name: string) (getter: 'T -> 'param option) = tagWith jsonValueCodec cons name getter
 
+        let inline jchoice (codecs: seq<ConcreteCodec<'S, 'S, 't1, 't2>>) =
+            let head, tail = Seq.head codecs, Seq.tail codecs
+            foldBack (<|>) tail head
 
 
         /// Derives a concrete field codec for a required field
