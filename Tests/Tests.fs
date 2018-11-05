@@ -87,8 +87,8 @@ type Item = {
 type Item with
     static member JsonObjCodec =
         fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
-        <!> req  "id"          (fun x -> x.Id          )
-        <*> req  "brand"       (fun x -> x.Brand       )
+        <!> reg  "id"          (fun x -> Some x.Id     )
+        <*> reg  "brand"       (fun x -> Some x.Brand  )
         <*> opt "availability" (fun x -> x.Availability)
         |> Codec.ofConcrete
 
@@ -118,10 +118,10 @@ type Vehicle =
    | Van of make : string * capacity : float
 with
     static member JsonObjCodec =
-        tag     Car              "car"       (function (Car  x      ) -> Some  x     | _ -> None)
-        <|> tag Van              "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
-        <|> tag MotorBike        "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
-        <|> tag (fun () -> Bike) "bike"      (function  Bike          -> Some ()     | _ -> None)
+        (    Car              <!> reg "car"       (function (Car  x      ) -> Some  x     | _ -> None))
+        <|> (Van              <!> reg "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None))
+        <|> (MotorBike        <!> reg "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None))
+        <|> ((fun () -> Bike) <!> reg "bike"      (function  Bike          -> Some ()     | _ -> None))
         |> Codec.ofConcrete
 
 type Name = {FirstName: string; LastName: string} with
@@ -330,7 +330,7 @@ let tests = [
                 let y = [ Van ("Fiat", 5.8) ] |> toJson |> string
                 let z = [ Bike              ] |> toJson |> string
             
-                let expectedW = """[{"motorBike":[]}]"""
+                let expectedW = """[{\"motorBike\":[]}]"""
                 let expectedX = """[{"car":"Renault"}]"""
                 let expectedY = """[{"van":["Fiat",5.8]}]"""
                 let expectedZ = """[{"bike":[]}]"""
