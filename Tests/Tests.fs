@@ -134,6 +134,7 @@ type Name = {FirstName: string; LastName: string} with
         | _ -> Error "Invalid Json Type"
         
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
+let strCleanUpAll x = System.Text.RegularExpressions.Regex.Replace(x, "\s|\r\n?|\n|\"|\\\\", "")
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
         Assert.Equal("", expected, strCleanUp ((toJson value).ToString()))
@@ -326,16 +327,22 @@ let tests = [
             }
 
             test "Vehicle" {
-                let w = [ MotorBike ()      ] |> toJson |> string
-                let x = [ Car "Renault"     ] |> toJson |> string
-                let y = [ Van ("Fiat", 5.8) ] |> toJson |> string
-                let z = [ Bike              ] |> toJson |> string
+                let w = [ MotorBike ()      ] |> toJson |> string |> strCleanUpAll
+                let x = [ Car "Renault"     ] |> toJson |> string |> strCleanUpAll
+                let y = [ Van ("Fiat", 5.8) ] |> toJson |> string |> strCleanUpAll
+                let z = [ Bike              ] |> toJson |> string |> strCleanUpAll
             
-                let expectedW = """[{\"motorBike\":[]}]"""
-                let expectedX = """[{"car":"Renault"}]"""
-                let expectedY = """[{"van":["Fiat",5.8]}]"""
-                let expectedZ = """[{"bike":[]}]"""
-            
+                #if NEWTONSOFT
+                let expectedW = "[{motorBike:[]}]"
+                let expectedX = "[{car:Renault}]"
+                let expectedY = "[{van:[Fiat,5.8]}]"
+                let expectedZ = "[{bike:[]}]"
+                #else
+                let expectedW = "\"[{motorBike:[]}]\""
+                let expectedX = "\"[{car:Renault}]\""
+                let expectedY = "\"[{van:[Fiat,5.8]}]\""
+                let expectedZ = "\"[{bike:[]}]\""
+                #endif
                 Assert.JSON(expectedW, w)
                 Assert.JSON(expectedX, x)
                 Assert.JSON(expectedY, y)
