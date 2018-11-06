@@ -395,11 +395,11 @@ module SystemJson =
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
-        let private toMonoid = toList
-        let private ofMonoid = List.map (|KeyValue|) >> dict
+        let inline toMonoid x = x |> toList
+        let inline ofMonoid x = x |> (List.map (|KeyValue|) >> dict)
 
-        let ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
-        let toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
+        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
+        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
 
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
@@ -1025,13 +1025,6 @@ module SystemJson =
         let inline jchoice (codecs: seq<ConcreteCodec<'S, 'S, 't1, 't2>>) =
             let head, tail = Seq.head codecs, Seq.tail codecs
             foldBack (<|>) tail head
-
-
-        /// Derives a concrete field codec for a required field
-        let inline _req a b = deriveFieldCodec jsonValueCodec a b |> Codec.toConcrete
-
-        /// Derives a concrete field codec for an optional field
-        let inline _opt a b = deriveFieldCodecOpt jsonValueCodec a b |> Codec.toConcrete
 
     module Lens =
         open FSharpPlus.Lens
