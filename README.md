@@ -134,10 +134,10 @@ type Person = {
     with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
-        <!/> "firstName" ^= fun x -> fst x.name
-        <*/> "lastName"  ^= fun x -> snd x.name
-        <*/?> "age"      ^= fun x -> x.age // Optional fields: same operators but ending with '?'
-        <*/> "children"  ^= fun x -> x.children
+        <!> jreq  "firstName" (Some << fun x -> fst x.name)
+        <*> jreq  "lastName"  (Some << fun x -> snd x.name)
+        <*> jopt  "age"       (fun x -> x.age) // Optional fields: use 'jopt'
+        <*> jreq  "children"  (fun x -> Some x.children)
 
 
 let p = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
@@ -162,6 +162,30 @@ type Person = {
         |> jfield    "lastName"  (fun x -> snd x.name)
         |> jfieldOpt "age"       (fun x -> x.age)
         |> jfield    "children"  (fun x -> x.children)
+```
+
+Discriminated unions can be modeled with alternatives:
+```fsharp
+type Shape =
+    | Rectangle of width : float * length : float
+    | Circle of radius : float
+    | Prism of width : float * float * height : float
+    with 
+        static member JsonObjCodec =
+            Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
+            <|> ( Circle <!> jreq "radius" (function Circle x -> Some x | _ -> None) )
+            <|> ( Prism <!> jreq "prism"   (function Prism (x, y, z) -> Some (x, y, z) | _ -> None) )
+```
+or using the jchoice combinator:
+```fsharp
+type Shape with
+        static member JsonObjCodec =
+            jchoice
+                [
+                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
+                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
+                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
+                ]
 
 ```
 
