@@ -87,8 +87,8 @@ type Item = {
 type Item with
     static member JsonObjCodec =
         fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
-        <!> reg  "id"          (fun x -> Some x.Id     )
-        <*> reg  "brand"       (fun x -> Some x.Brand  )
+        <!> req  "id"          (fun x -> Some x.Id     )
+        <*> req  "brand"       (fun x -> Some x.Brand  )
         <*> opt "availability" (fun x -> x.Availability)
         |> Codec.ofConcrete
 
@@ -119,10 +119,10 @@ type Vehicle =
 with
     static member JsonObjCodec =
         [
-            Car              <!> reg "car"       (function (Car  x      ) -> Some  x     | _ -> None)
-            Van              <!> reg "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
-            MotorBike        <!> reg "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
-            (fun () -> Bike) <!> reg "bike"      (function  Bike          -> Some ()     | _ -> None)
+            Car              <!> req "car"       (function (Car  x      ) -> Some  x     | _ -> None)
+            Van              <!> req "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
+            MotorBike        <!> req "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
+            (fun () -> Bike) <!> req "bike"      (function  Bike          -> Some ()     | _ -> None)
         ] |> jchoice |> Codec.ofConcrete
 
 type Name = {FirstName: string; LastName: string} with
