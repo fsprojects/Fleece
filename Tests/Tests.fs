@@ -353,21 +353,29 @@ let tests = [
                 let y = [ Truck ("Ford", 20.0)       ] |> toJson |> string |> strCleanUpAll
                 let z = [ Aircraft ("Airbus", 200.0) ] |> toJson |> string |> strCleanUpAll
             
-                #if NEWTONSOFT
-                let expectedU = "[{bike:[]}]"
-                let expectedV = "[{motorBike:[]}]"
-                let expectedW = "[{car:Renault}]"
-                let expectedX = "[{van:[Fiat,5.8]}]"
-                let expectedY = "[{truck:{make:Ford,capacity:20}}]"
-                let expectedZ = "[{aircraft:{make:Airbus,capacity:200}}]"
-                
-                #else
+                #if FSHARPDATA
                 let expectedU = "\"[{bike:[]}]\""
                 let expectedV = "\"[{motorBike:[]}]\""
                 let expectedW = "\"[{car:Renault}]\""
                 let expectedX = "\"[{van:[Fiat,5.8]}]\""
                 let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
                 let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
+                #endif
+                #if NEWTONSOFT
+                let expectedU = "[{bike:[]}]"
+                let expectedV = "[{motorBike:[]}]"
+                let expectedW = "[{car:Renault}]"
+                let expectedX = "[{van:[Fiat,5.8]}]"
+                let expectedY = "[{truck:{make:Ford,capacity:20.0}}]"
+                let expectedZ = "[{aircraft:{make:Airbus,capacity:200.0}}]"
+                #endif
+                #if SYSTEMJSON
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
+                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
                 #endif
                 Assert.JSON(expectedU, u)
                 Assert.JSON(expectedV, v)
