@@ -14,7 +14,8 @@ type Id2<'t> (v: 't) =
     let value = v
     member __.getValue = value
 
-type Default6 = class end
+type Default7 = class end
+type Default6 = class inherit Default7 end
 type Default5 = class inherit Default6 end
 type Default4 = class inherit Default5 end
 type Default3 = class inherit Default4 end
@@ -241,7 +242,7 @@ module SystemJson =
         | Multiple of DecodeError list
 
     with
-        static member (+) (x, y) = 
+        static member (+) (x, y) =
             match x, y with
             | Multiple x, Multiple y -> Multiple (x @ y)
             | _                      -> Multiple [x; y]
@@ -286,7 +287,7 @@ module SystemJson =
                 member __.GetEnumerator () = (l :> _ seq).GetEnumerator ()
                 member __.GetEnumerator () = (l :> System.Collections.IEnumerable).GetEnumerator () }
 
-        let dict x = x |> dict |> Dict.toIReadOnlyDictionary
+        let rdict x = x |> dict |> Dict.toIReadOnlyDictionary
 
         let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
@@ -367,6 +368,21 @@ module SystemJson =
     /// A codec for raw type 'S to strong type 't.
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
+        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
+        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
+                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
+            }
+        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
+        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
+                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
+            }
+
+
     module Codec =
 
         /// Turns a Codec into another Codec, by mapping it over an isomorphism.
@@ -380,11 +396,17 @@ module SystemJson =
         let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
+        let inline toMonoid x = x |> toList
+        let inline ofMonoid x = x |> (List.map (|KeyValue|) >> rdict)
+
+        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
+        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
+
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> dict)
+    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> rdict)
 
 
     [<RequireQualifiedAccess>]
@@ -437,6 +459,12 @@ module SystemJson =
         let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
             | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
             | a -> Decode.Fail.objExpected a
+
+        let unit : JsonValue -> ParseResult<unit> = function
+            | JArray a as x ->
+                if a.Count <> 0 then Decode.Fail.count 0 x
+                else Success ()
+            | a -> Decode.Fail.arrExpected a
 
         let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> = function
             | JArray a as x ->
@@ -547,9 +575,10 @@ module SystemJson =
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
         let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
-        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
-        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> dict |> JObject
+        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> rdict |> JObject
+        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> rdict |> JObject
         
+        let unit () = JArray ([||] |> IList.toIReadOnlyList)
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
         let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> IList.toIReadOnlyList)
@@ -589,6 +618,7 @@ module SystemJson =
         let map         codec = JsonDecode.map         (fst codec), JsonEncode.map         (snd codec)
         let dictionary  codec = JsonDecode.dictionary  (fst codec), JsonEncode.dictionary  (snd codec)
 
+        let unit  ()                                                = JsonDecode.unit                                                                                             , JsonEncode.unit ()
         let tuple2 codec1 codec2                                    = JsonDecode.tuple2 (fst codec1) (fst codec2)                                                                 , JsonEncode.tuple2 (snd codec1) (snd codec2)
         let tuple3 codec1 codec2 codec3                             = JsonDecode.tuple3 (fst codec1) (fst codec2) (fst codec3)                                                    , JsonEncode.tuple3 (snd codec1) (snd codec2) (snd codec3)
         let tuple4 codec1 codec2 codec3 codec4                      = JsonDecode.tuple4 (fst codec1) (fst codec2) (fst codec3) (fst codec4)                                       , JsonEncode.tuple4 (snd codec1) (snd codec2) (snd codec3) (snd codec4)
@@ -638,6 +668,7 @@ module SystemJson =
         static member OfJson (_: Guid          , _: OfJson) = JsonDecode.guid
         static member OfJson (_: DateTime      , _: OfJson) = JsonDecode.dateTime
         static member OfJson (_: DateTimeOffset, _: OfJson) = JsonDecode.dateTimeOffset
+        static member OfJson (_: unit          , _: OfJson) = JsonDecode.unit
 
     type OfJson with
         static member inline Invoke (x: JsonValue) : 't ParseResult =
@@ -681,10 +712,14 @@ module SystemJson =
         static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     // Default, for external classes.
-    type OfJson with 
-        static member inline OfJson (_: 'R, _: Default6) =
+    type OfJson with
+        static member inline OfJson (_: 'R, _: Default7) =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
+
+        static member inline OfJson (_: 'R, _: Default6) =
+            let codec = (^R : (static member JsonObjCodec : ConcreteCodec<_,_,_,'R>) ())
+            codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
         static member inline OfJson (r: 'R, _: Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
@@ -745,6 +780,7 @@ module SystemJson =
         static member ToJson (x: sbyte         , _: ToJson) = JsonEncode.sbyte          x
         static member ToJson (x: char          , _: ToJson) = JsonEncode.char           x
         static member ToJson (x: Guid          , _: ToJson) = JsonEncode.guid           x
+        static member ToJson (()               , _: ToJson) = JsonEncode.unit ()
 
     type ToJson with
         static member inline Invoke (x: 't) : JsonValue =
@@ -775,7 +811,7 @@ module SystemJson =
     type ToJson with
         static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
 
-    type ToJson with
+    type ToJson with        
         static member inline ToJson (x: Dictionary<string, 'a>, _: ToJson) = JsonEncode.dictionary  ToJson.Invoke x
         static member inline ToJson (x: 'a ResizeArray        , _: ToJson) = JsonEncode.resizeArray ToJson.Invoke x
         static member inline ToJson (x                        , _: ToJson) = JsonEncode.tuple2      ToJson.Invoke ToJson.Invoke x
@@ -797,9 +833,13 @@ module SystemJson =
 
     // Default, for external classes.
     type ToJson with
-        static member inline ToJson (t: 'T, _: Default4) =
+        static member inline ToJson (t: 'T, _: Default5) =
             let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
             (codec |> Codec.compose jsonObjToValueCodec |> snd) t
+
+        static member inline ToJson (t: 'T, _: Default4) =
+            let codec = (^T : (static member JsonObjCodec : ConcreteCodec<_,_,_,'T>) ())
+            (codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> snd) t
 
         static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
@@ -840,12 +880,12 @@ module SystemJson =
     /// <summary>Initialize the field mappings.</summary>
     /// <param name="f">An object constructor as a curried function.</param>
     /// <returns>The resulting object codec.</returns>
-    let withFields f = (fun _ -> Success f), (fun _ -> dict [])
+    let withFields f = (fun _ -> Success f), (fun _ -> rdict [])
 
-    let diApply combiner getter (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: Codec<'S, 'f>) =
+    let diApply combiner (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: SplitCodec<'S, 'f, 'T>) =
         ( 
             Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
-            fun p -> combiner (snd remainderFields p) ((snd currentField) (getter p))
+            fun p -> combiner (snd remainderFields p) ((snd currentField) p)
         )
 
     /// <summary>Appends a field mapping to the codec.</summary>
@@ -855,12 +895,12 @@ module SystemJson =
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
     let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) =
-        let inline deriveFieldCodec prop =
+        let inline deriveFieldCodec codec prop getter =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
-                (fun (x: 'Value) -> dict [prop, (snd codec) x])
+                (getter >> fun (x: 'Value) -> rdict [prop, (snd codec) x])
             )
-        diApply IReadOnlyDictionary.union getter rest (deriveFieldCodec fieldName)
+        diApply IReadOnlyDictionary.union rest (deriveFieldCodec codec fieldName getter)
 
     /// <summary>Appends a field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -876,12 +916,12 @@ module SystemJson =
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
     let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) =
-        let inline deriveFieldCodecOpt prop =
+        let inline deriveFieldCodecOpt codec prop getter =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
-                (function Some (x: 'Value) -> dict [prop, (snd codec) x] | _ -> dict [])
+                (getter >> function Some (x: 'Value) -> rdict [prop, (snd codec) x] | _ -> rdict [])
             )
-        diApply IReadOnlyDictionary.union getter rest (deriveFieldCodecOpt fieldName)
+        diApply IReadOnlyDictionary.union rest (deriveFieldCodecOpt codec fieldName getter)
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -906,7 +946,7 @@ module SystemJson =
         /// Returns None if key is not present in the object.
         let inline (.@?) o key = jgetOpt o key
         
-        /// <summary>Appends a field mapping to the codec.</summary>
+        /// <summary>Applies a field mapping to the object codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
@@ -936,6 +976,44 @@ module SystemJson =
 
         /// Tuple two values.
         let inline (^=) a b = (a, b)
+
+        /// Gets a value from a Json object
+        let inline jgetFromListWith ofJson (o: list<KeyValuePair<string, JsonValue>>) key =
+            match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
+            | Some (KeyValue(_, value)) -> ofJson value
+            | _                         -> Decode.Fail.propertyNotFound key (ofList o)
+
+        // /// Gets a value from a Json object
+        // let inline jgetFromList (o: list<KeyValuePair<string, JsonValue>>) key = jgetFromListWith ofJson o key
+
+        /// Tries to get a value from a Json object.
+        /// Returns None if key is not present in the object.
+        let inline jgetFromListOptWith ofJson (o: list<KeyValuePair<string, JsonValue>>) key =
+            match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
+            | Some (KeyValue(_, value)) -> ofJson value |> map Some
+            | _ -> Success None
+
+        let inline joptWith codec prop getter =
+            {
+                Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListOptWith (fst codec) o prop)
+                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
+            }
+
+        /// Derives a concrete field codec for an optional field
+        let inline jopt prop getter = joptWith jsonValueCodec prop getter
+
+        let inline jreqWith codec (prop: string) (getter: 'T -> 'Value option) =
+            {
+                Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListWith (fst codec) o prop)
+                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
+            }
+
+        /// Derives a concrete field codec for a required field
+        let inline jreq (name: string) (getter: 'T -> 'param option) = jreqWith jsonValueCodec name getter
+
+        let inline jchoice (codecs: seq<ConcreteCodec<'S, 'S, 't1, 't2>>) =
+            let head, tail = Seq.head codecs, Seq.tail codecs
+            foldBack (<|>) tail head
 
     module Lens =
         open FSharpPlus.Lens

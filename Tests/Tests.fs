@@ -87,9 +87,10 @@ type Item = {
 type Item with
     static member JsonObjCodec =
         fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
-        <!/>  "id"           ^= fun x -> x.Id
-        <*/>  "brand"        ^= fun x -> x.Brand
-        <*/?> "availability" ^= fun x -> x.Availability
+        <!> jreq  "id"          (fun x -> Some x.Id     )
+        <*> jreq  "brand"       (fun x -> Some x.Brand  )
+        <*> jopt "availability" (fun x -> x.Availability)
+        |> Codec.ofConcrete
 
 type NestedItem = NestedItem of Item
 
@@ -110,6 +111,39 @@ type NestedItem with
             }
         | x -> Decode.Fail.objExpected x
 
+
+let tag prop codec =
+    Codec.ofConcrete codec
+    |> Codec.compose (
+                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o), 
+                        (fun x -> if Seq.isEmpty x then zero else Dict.toIReadOnlyDictionary (dict [prop, JObject x]))
+                     )
+    |> Codec.toConcrete
+
+type Vehicle =
+   | Bike
+   | MotorBike of unit
+   | Car       of make : string
+   | Van       of make : string * capacity : float
+   | Truck     of make : string * capacity : float
+   | Aircraft  of make : string * capacity : float
+with
+    static member JsonObjCodec =
+        [
+            (fun () -> Bike) <!> jreq "bike"      (function  Bike             -> Some ()     | _ -> None)
+            MotorBike        <!> jreq "motorBike" (function (MotorBike ()   ) -> Some ()     | _ -> None)
+            Car              <!> jreq "car"       (function (Car  x         ) -> Some  x     | _ -> None)
+            Van              <!> jreq "van"       (function (Van (x, y)     ) -> Some (x, y) | _ -> None)
+            tag "truck" (
+                (fun m c -> Truck (make = m, capacity = c))
+                    <!> jreq  "make"     (function (Truck (make     = x)) -> Some  x | _ -> None)
+                    <*> jreq  "capacity" (function (Truck (capacity = x)) -> Some  x | _ -> None))
+            tag "aircraft" (
+                (fun m c -> Aircraft (make = m, capacity = c))
+                    <!> jreq  "make"     (function (Aircraft (make     = x)) -> Some  x | _ -> None)
+                    <*> jreq  "capacity" (function (Aircraft (capacity = x)) -> Some  x | _ -> None))
+        ] |> jchoice
+
 type Name = {FirstName: string; LastName: string} with
     static member ToJson x = toJson (x.LastName + ", " + x.FirstName)
     static member OfJson x =
@@ -119,6 +153,7 @@ type Name = {FirstName: string; LastName: string} with
         | _ -> Error "Invalid Json Type"
         
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
+let strCleanUpAll x = System.Text.RegularExpressions.Regex.Replace(x, "\s|\r\n?|\n|\"|\\\\", "")
 type Assert with
     static member inline JSON(expected: string, value: 'a) =
         Assert.Equal("", expected, strCleanUp ((toJson value).ToString()))
@@ -308,6 +343,47 @@ let tests = [
                 Assert.JSON(expected, p)
                 #endif
 
+            }
+
+            test "Vehicle" {
+                let u = [ Bike                       ] |> toJson |> string |> strCleanUpAll
+                let v = [ MotorBike ()               ] |> toJson |> string |> strCleanUpAll
+                let w = [ Car "Renault"              ] |> toJson |> string |> strCleanUpAll
+                let x = [ Van ("Fiat", 5.8)          ] |> toJson |> string |> strCleanUpAll
+                let y = [ Truck ("Ford", 20.0)       ] |> toJson |> string |> strCleanUpAll
+                let z = [ Aircraft ("Airbus", 200.0) ] |> toJson |> string |> strCleanUpAll
+            
+                #if FSHARPDATA
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
+                let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
+                #endif
+                #if NEWTONSOFT
+                let expectedU = "[{bike:[]}]"
+                let expectedV = "[{motorBike:[]}]"
+                let expectedW = "[{car:Renault}]"
+                let expectedX = "[{van:[Fiat,5.8]}]"
+                let expectedY = "[{truck:{make:Ford,capacity:20.0}}]"
+                let expectedZ = "[{aircraft:{make:Airbus,capacity:200.0}}]"
+                #endif
+                #if SYSTEMJSON
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
+                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
+                #endif
+                Assert.JSON(expectedU, u)
+                Assert.JSON(expectedV, v)
+                Assert.JSON(expectedW, w)
+                Assert.JSON(expectedX, x)
+                Assert.JSON(expectedY, y)
+                Assert.JSON(expectedZ, z)
+            
             }
 
             test "Map with null key" {
