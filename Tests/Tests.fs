@@ -123,7 +123,7 @@ with
             Van              <!> req "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
             MotorBike        <!> req "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
             (fun () -> Bike) <!> req "bike"      (function  Bike          -> Some ()     | _ -> None)
-        ] |> jchoice |> Codec.ofConcrete
+        ] |> jchoice
 
 type Name = {FirstName: string; LastName: string} with
     static member ToJson x = toJson (x.LastName + ", " + x.FirstName)
