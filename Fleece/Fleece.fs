@@ -14,7 +14,8 @@ type Id2<'t> (v: 't) =
     let value = v
     member __.getValue = value
 
-type Default6 = class end
+type Default7 = class end
+type Default6 = class inherit Default7 end
 type Default5 = class inherit Default6 end
 type Default4 = class inherit Default5 end
 type Default3 = class inherit Default4 end
@@ -711,10 +712,14 @@ module SystemJson =
         static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
     // Default, for external classes.
-    type OfJson with 
-        static member inline OfJson (_: 'R, _: Default6) =
+    type OfJson with
+        static member inline OfJson (_: 'R, _: Default7) =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
+
+        static member inline OfJson (_: 'R, _: Default6) =
+            let codec = (^R : (static member JsonObjCodec : ConcreteCodec<_,_,_,'R>) ())
+            codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
         static member inline OfJson (r: 'R, _: Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
@@ -828,9 +833,13 @@ module SystemJson =
 
     // Default, for external classes.
     type ToJson with
-        static member inline ToJson (t: 'T, _: Default4) =
+        static member inline ToJson (t: 'T, _: Default5) =
             let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
             (codec |> Codec.compose jsonObjToValueCodec |> snd) t
+
+        static member inline ToJson (t: 'T, _: Default4) =
+            let codec = (^T : (static member JsonObjCodec : ConcreteCodec<_,_,_,'T>) ())
+            (codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> snd) t
 
         static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
