@@ -87,9 +87,9 @@ type Item = {
 type Item with
     static member JsonObjCodec =
         fun id brand availability -> { Item.Id = id; Brand = brand; Availability = availability }
-        <!> req  "id"          (fun x -> Some x.Id     )
-        <*> req  "brand"       (fun x -> Some x.Brand  )
-        <*> opt "availability" (fun x -> x.Availability)
+        <!> jreq  "id"          (fun x -> Some x.Id     )
+        <*> jreq  "brand"       (fun x -> Some x.Brand  )
+        <*> jopt "availability" (fun x -> x.Availability)
         |> Codec.ofConcrete
 
 type NestedItem = NestedItem of Item
@@ -130,18 +130,18 @@ type Vehicle =
 with
     static member JsonObjCodec =
         [
-            (fun () -> Bike) <!> req "bike"      (function  Bike             -> Some ()     | _ -> None)
-            MotorBike        <!> req "motorBike" (function (MotorBike ()   ) -> Some ()     | _ -> None)
-            Car              <!> req "car"       (function (Car  x         ) -> Some  x     | _ -> None)
-            Van              <!> req "van"       (function (Van (x, y)     ) -> Some (x, y) | _ -> None)
+            (fun () -> Bike) <!> jreq "bike"      (function  Bike             -> Some ()     | _ -> None)
+            MotorBike        <!> jreq "motorBike" (function (MotorBike ()   ) -> Some ()     | _ -> None)
+            Car              <!> jreq "car"       (function (Car  x         ) -> Some  x     | _ -> None)
+            Van              <!> jreq "van"       (function (Van (x, y)     ) -> Some (x, y) | _ -> None)
             tag "truck" (
                 (fun m c -> Truck (make = m, capacity = c))
-                    <!> req  "make"     (function (Truck (make     = x)) -> Some  x | _ -> None)
-                    <*> req  "capacity" (function (Truck (capacity = x)) -> Some  x | _ -> None))
+                    <!> jreq  "make"     (function (Truck (make     = x)) -> Some  x | _ -> None)
+                    <*> jreq  "capacity" (function (Truck (capacity = x)) -> Some  x | _ -> None))
             tag "aircraft" (
                 (fun m c -> Aircraft (make = m, capacity = c))
-                    <!> req  "make"     (function (Aircraft (make     = x)) -> Some  x | _ -> None)
-                    <*> req  "capacity" (function (Aircraft (capacity = x)) -> Some  x | _ -> None))
+                    <!> jreq  "make"     (function (Aircraft (make     = x)) -> Some  x | _ -> None)
+                    <*> jreq  "capacity" (function (Aircraft (capacity = x)) -> Some  x | _ -> None))
         ] |> jchoice
 
 type Name = {FirstName: string; LastName: string} with

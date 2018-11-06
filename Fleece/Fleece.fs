@@ -993,23 +993,23 @@ module SystemJson =
             | Some (KeyValue(_, value)) -> ofJson value |> map Some
             | _ -> Success None
 
-        let inline optWith codec prop getter =
+        let inline joptWith codec prop getter =
             {
                 Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListOptWith (fst codec) o prop)
                 Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
             }
 
         /// Derives a concrete field codec for an optional field
-        let inline opt prop getter = optWith jsonValueCodec prop getter
+        let inline jopt prop getter = joptWith jsonValueCodec prop getter
 
-        let inline reqWith codec (prop: string) (getter: 'T -> 'Value option) =
+        let inline jreqWith codec (prop: string) (getter: 'T -> 'Value option) =
             {
                 Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListWith (fst codec) o prop)
                 Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
             }
 
         /// Derives a concrete field codec for a required field
-        let inline req (name: string) (getter: 'T -> 'param option) = reqWith jsonValueCodec name getter
+        let inline jreq (name: string) (getter: 'T -> 'param option) = jreqWith jsonValueCodec name getter
 
         let inline jchoice (codecs: seq<ConcreteCodec<'S, 'S, 't1, 't2>>) =
             let head, tail = Seq.head codecs, Seq.tail codecs
