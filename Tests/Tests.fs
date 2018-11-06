@@ -111,18 +111,37 @@ type NestedItem with
             }
         | x -> Decode.Fail.objExpected x
 
+
+let tag prop codec =
+    Codec.ofConcrete codec
+    |> Codec.compose (
+                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o), 
+                        (fun x -> if Seq.isEmpty x then zero else Dict.toIReadOnlyDictionary (dict [prop, JObject x]))
+                     )
+    |> Codec.toConcrete
+
 type Vehicle =
    | Bike
    | MotorBike of unit
-   | Car of make : string
-   | Van of make : string * capacity : float
+   | Car       of make : string
+   | Van       of make : string * capacity : float
+   | Truck     of make : string * capacity : float
+   | Aircraft  of make : string * capacity : float
 with
     static member JsonObjCodec =
         [
-            Car              <!> req "car"       (function (Car  x      ) -> Some  x     | _ -> None)
-            Van              <!> req "van"       (function (Van (x, y)  ) -> Some (x, y) | _ -> None)
-            MotorBike        <!> req "motorBike" (function (MotorBike ()) -> Some ()     | _ -> None)
-            (fun () -> Bike) <!> req "bike"      (function  Bike          -> Some ()     | _ -> None)
+            (fun () -> Bike) <!> req "bike"      (function  Bike             -> Some ()     | _ -> None)
+            MotorBike        <!> req "motorBike" (function (MotorBike ()   ) -> Some ()     | _ -> None)
+            Car              <!> req "car"       (function (Car  x         ) -> Some  x     | _ -> None)
+            Van              <!> req "van"       (function (Van (x, y)     ) -> Some (x, y) | _ -> None)
+            tag "truck" (
+                (fun m c -> Truck (make = m, capacity = c))
+                    <!> req  "make"     (function (Truck (make     = x)) -> Some  x | _ -> None)
+                    <*> req  "capacity" (function (Truck (capacity = x)) -> Some  x | _ -> None))
+            tag "aircraft" (
+                (fun m c -> Aircraft (make = m, capacity = c))
+                    <!> req  "make"     (function (Aircraft (make     = x)) -> Some  x | _ -> None)
+                    <*> req  "capacity" (function (Aircraft (capacity = x)) -> Some  x | _ -> None))
         ] |> jchoice
 
 type Name = {FirstName: string; LastName: string} with
@@ -327,22 +346,31 @@ let tests = [
             }
 
             test "Vehicle" {
-                let w = [ MotorBike ()      ] |> toJson |> string |> strCleanUpAll
-                let x = [ Car "Renault"     ] |> toJson |> string |> strCleanUpAll
-                let y = [ Van ("Fiat", 5.8) ] |> toJson |> string |> strCleanUpAll
-                let z = [ Bike              ] |> toJson |> string |> strCleanUpAll
+                let u = [ Bike                       ] |> toJson |> string |> strCleanUpAll
+                let v = [ MotorBike ()               ] |> toJson |> string |> strCleanUpAll
+                let w = [ Car "Renault"              ] |> toJson |> string |> strCleanUpAll
+                let x = [ Van ("Fiat", 5.8)          ] |> toJson |> string |> strCleanUpAll
+                let y = [ Truck ("Ford", 20.0)       ] |> toJson |> string |> strCleanUpAll
+                let z = [ Aircraft ("Airbus", 200.0) ] |> toJson |> string |> strCleanUpAll
             
                 #if NEWTONSOFT
-                let expectedW = "[{motorBike:[]}]"
-                let expectedX = "[{car:Renault}]"
-                let expectedY = "[{van:[Fiat,5.8]}]"
-                let expectedZ = "[{bike:[]}]"
+                let expectedU = "[{bike:[]}]"
+                let expectedV = "[{motorBike:[]}]"
+                let expectedW = "[{car:Renault}]"
+                let expectedX = "[{van:[Fiat,5.8]}]"
+                let expectedY = "[{truck:{make:Ford,capacity:20}}]"
+                let expectedZ = "[{aircraft:{make:Airbus,capacity:200}}]"
+                
                 #else
-                let expectedW = "\"[{motorBike:[]}]\""
-                let expectedX = "\"[{car:Renault}]\""
-                let expectedY = "\"[{van:[Fiat,5.8]}]\""
-                let expectedZ = "\"[{bike:[]}]\""
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
+                let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
                 #endif
+                Assert.JSON(expectedU, u)
+                Assert.JSON(expectedV, v)
                 Assert.JSON(expectedW, w)
                 Assert.JSON(expectedX, x)
                 Assert.JSON(expectedY, y)
