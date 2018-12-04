@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
+    <NoWarn>0686</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>Redis mapper</Description>
+    <DefineConstants>REDIS;$(DefineConstants)</DefineConstants>
+    <OtherFlags>--warnon:1182</OtherFlags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Codecs.fs" />
+    <PackageReference Include="FSharpPlus" Version="1.1.0-CI00252" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.*" />
+  </ItemGroup>
+
+</Project>

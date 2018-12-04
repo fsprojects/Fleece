@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
+    <DefineConstants>REDIS;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Tests.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FsCheck" Version="0.9.4.0" />
+    <PackageReference Include="Fuchu" Version="0.4.0.0" />
+    <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fleece.Redis\Fleece.Redis.fsproj" />
+  </ItemGroup>
+
+</Project>

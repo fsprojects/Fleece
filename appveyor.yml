@@ -17,6 +17,7 @@ test_script:
   - cmd: dotnet run -p .\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
   - cmd: dotnet run -p .\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net461
   - cmd: dotnet run -p .\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net461
+  - cmd: dotnet run -p .\Tests.Redis\Tests.Redis.fsproj -c Release -f net461
 
 artifacts:
   # pushing all *.nupkg files in build directory recursively
