@@ -291,6 +291,13 @@ module SystemJson =
 
         let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
+#if NETSTANDARD        
+        type ArraySegment<'a> with
+            member x.ToArray() =
+                let array = Array.zeroCreate x.Count
+                Array.Copy(x.Array, x.Offset, array, 0, x.Count)
+                array
+#endif
 
 
         #if FSHARPDATA
@@ -439,6 +446,10 @@ module SystemJson =
         let array (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
             | JArray a -> traverse decoder a |> map Seq.toArray
             | a        -> Decode.Fail.arrExpected a
+            
+        let arraySegment (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ArraySegment> = function
+            | JArray a -> traverse decoder a |> map (Seq.toArray >> ArraySegment<_>)
+            | a        -> Decode.Fail.arrExpected a
 
         let list (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a list> = function
             | JArray a -> traverse decoder a |> map Seq.toList
@@ -572,6 +583,7 @@ module SystemJson =
 
         let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
         let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> IList.toIReadOnlyList)
+        let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray())) |> IList.toIReadOnlyList)
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
         let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
@@ -612,6 +624,7 @@ module SystemJson =
         let option codec = JsonDecode.option (fst codec), JsonEncode.option (snd codec)
         let nullable codec = JsonDecode.nullable (fst codec), JsonEncode.nullable (snd codec)
         let array codec = JsonDecode.array (fst codec), JsonEncode.array (snd codec)
+        let arraySegment codec = JsonDecode.array (fst codec), JsonEncode.arraySegment (snd codec)
         let list  codec = JsonDecode.list  (fst codec), JsonEncode.list  (snd codec)
         let set         codec = JsonDecode.set         (fst codec), JsonEncode.set         (snd codec)
         let resizeArray codec = JsonDecode.resizeArray (fst codec), JsonEncode.resizeArray (snd codec)
@@ -682,6 +695,8 @@ module SystemJson =
     type OfJson with static member inline OfJson (_: 'a Nullable, _: OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
 
     type OfJson with static member inline OfJson (_: 'a array, _: OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
+    type OfJson with static member inline OfJson (_: 'a ArraySegment, _: OfJson) : JsonValue -> ParseResult<'a ArraySegment> = JsonDecode.arraySegment OfJson.Invoke
+    
     type OfJson with static member inline OfJson (_: list<'a>, _: OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
     type OfJson with static member inline OfJson (_: 'a Set  , _: OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
 
