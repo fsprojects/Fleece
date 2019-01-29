@@ -291,7 +291,7 @@ module SystemJson =
 
         let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
-#if NETSTANDARD        
+#if NETSTANDARD2_0        
         type ArraySegment<'a> with
             member x.ToArray() =
                 let array = Array.zeroCreate x.Count
