@@ -403,7 +403,11 @@ let tests = [
                     Item.JsonObjCodec
                     |> Codec.compose jsonObjToValueCodec
                     |> Codec.compose jsonValueToTextCodec
-                    |> Codec.invmap Encoding.UTF8.GetString Encoding.UTF8.GetBytes
+                    //A unique overload for method 'GetString' could not be determined based on type information prior to this program point.
+                    //A type annotation may be needed. Candidates:
+                    //Encoding.GetString(bytes: ReadOnlySpan<byte>) : string
+                    //Encoding.GetString(bytes: byte []) : string
+                    |> Codec.invmap (Encoding.UTF8.GetString : byte [] -> string) Encoding.UTF8.GetBytes
                 
                 let actual = 
                     { Item.Id = 1; Brand = "Sony"; Availability = None }
@@ -494,6 +498,7 @@ let tests = [
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
+            yield testProperty "int ArraySegment" (roundtrip<int ArraySegment>)
             yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
             yield testProperty "Map<string, char>" (Prop.forAll mapArb.Value roundtrip<Map<string, char>>)
             yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
