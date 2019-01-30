@@ -294,7 +294,7 @@ module SystemJson =
 #if !NETCOREAPP        
         type ArraySegment<'a> with
             member x.ToArray() =
-                let array = Array.zeroCreate x.Count
+                let array = Array.zeroCreate<'a> x.Count
                 Array.Copy(x.Array, x.Offset, array, 0, x.Count)
                 array
 #endif
@@ -822,6 +822,7 @@ module SystemJson =
 
     type ToJson with
         static member inline ToJson (x: 'a array, _: ToJson) = JsonEncode.array ToJson.Invoke x
+        static member inline ToJson (x: 'a ArraySegment, _: ToJson) = JsonEncode.arraySegment ToJson.Invoke x
 
     type ToJson with
         static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
