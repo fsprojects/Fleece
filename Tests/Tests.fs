@@ -162,6 +162,18 @@ type Assert with
 open FsCheck
 open FsCheck.GenOperators
 
+type ArraySegmentGenerator =
+  static member ArraySegment() =
+      {new Arbitrary<ArraySegment<int>>() with
+          override x.Generator =
+              let generator =
+                gen {
+                    let! values = Arb.generate
+                    return values |> ArraySegment<int>
+                }
+              generator
+          override x.Shrinker t = Seq.empty }
+      
 let tests = [
         testList "From JSON" [
             test "item with missing key" {
@@ -464,7 +476,7 @@ let tests = [
 
             let inline roundtrip p = roundtripEq (=) p
 
-            let testProperty name = testPropertyWithConfig { Config.Default with MaxTest = 10000 } name
+            let testProperty name = testPropertyWithConfig { Config.Default with MaxTest = 10000; Arbitrary=[typeof<ArraySegmentGenerator>] } name
 
             let kvset = Seq.map (fun (KeyValue(k,v)) -> k,v) >> set
 
@@ -498,7 +510,7 @@ let tests = [
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
-            yield testProperty "int ArraySegment" (roundtrip<int ArraySegment>)
+            yield testProperty "int ArraySegment" (roundtrip<int ArraySegment> )
             yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
             yield testProperty "Map<string, char>" (Prop.forAll mapArb.Value roundtrip<Map<string, char>>)
             yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
