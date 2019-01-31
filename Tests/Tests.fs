@@ -164,15 +164,8 @@ open FsCheck.GenOperators
 
 type ArraySegmentGenerator =
   static member ArraySegment() =
-      {new Arbitrary<ArraySegment<int>>() with
-          override x.Generator =
-              let generator =
-                gen {
-                    let! values = Arb.generate
-                    return values |> ArraySegment<int>
-                }
-              generator
-          override x.Shrinker t = Seq.empty }
+      Arb.Default.Array()
+      |> Arb.convert ArraySegment<int> (fun (s:ArraySegment<int>) -> s.ToArray())
       
 let tests = [
         testList "From JSON" [
@@ -510,7 +503,7 @@ let tests = [
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
-            yield testProperty "int ArraySegment" (roundtrip<int ArraySegment> )
+            yield testProperty "int ArraySegment" (roundtripEq<int ArraySegment> (Seq.forall2 (=)))
             yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
             yield testProperty "Map<string, char>" (Prop.forAll mapArb.Value roundtrip<Map<string, char>>)
             yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
