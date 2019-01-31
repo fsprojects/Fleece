@@ -291,9 +291,11 @@ module SystemJson =
 
         let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
-#if !NETCOREAPP        
+#if !NETCOREAPP
         type ArraySegment<'a> with
             member x.ToArray() =
+                if isNull x.Array then invalidOp "Null Array" else
+                if x.Count = 0 then Array.empty else
                 let array = Array.zeroCreate<'a> x.Count
                 Array.Copy(x.Array, x.Offset, array, 0, x.Count)
                 array
