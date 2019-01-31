@@ -10,7 +10,7 @@
       <WarningLevel>3</WarningLevel>
 
       <VersionPrefix>0.8.0</VersionPrefix>
-      <VersionSuffix>alpha-2</VersionSuffix>
+      <VersionSuffix>alpha-3</VersionSuffix>
       <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
       <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
       <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
