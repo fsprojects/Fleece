@@ -162,6 +162,11 @@ type Assert with
 open FsCheck
 open FsCheck.GenOperators
 
+type ArraySegmentGenerator =
+  static member ArraySegment() =
+      Arb.Default.Array()
+      |> Arb.convert ArraySegment<int> (fun (s:ArraySegment<int>) -> s.ToArray())
+      
 let tests = [
         testList "From JSON" [
             test "item with missing key" {
@@ -403,7 +408,11 @@ let tests = [
                     Item.JsonObjCodec
                     |> Codec.compose jsonObjToValueCodec
                     |> Codec.compose jsonValueToTextCodec
-                    |> Codec.invmap Encoding.UTF8.GetString Encoding.UTF8.GetBytes
+                    //A unique overload for method 'GetString' could not be determined based on type information prior to this program point.
+                    //A type annotation may be needed. Candidates:
+                    //Encoding.GetString(bytes: ReadOnlySpan<byte>) : string
+                    //Encoding.GetString(bytes: byte []) : string
+                    |> Codec.invmap (Encoding.UTF8.GetString : byte [] -> string) Encoding.UTF8.GetBytes
                 
                 let actual = 
                     { Item.Id = 1; Brand = "Sony"; Availability = None }
@@ -460,7 +469,7 @@ let tests = [
 
             let inline roundtrip p = roundtripEq (=) p
 
-            let testProperty name = testPropertyWithConfig { Config.Default with MaxTest = 10000 } name
+            let testProperty name = testPropertyWithConfig { Config.Default with MaxTest = 10000; Arbitrary=[typeof<ArraySegmentGenerator>] } name
 
             let kvset = Seq.map (fun (KeyValue(k,v)) -> k,v) >> set
 
@@ -494,6 +503,7 @@ let tests = [
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
+            yield testProperty "int ArraySegment" (roundtripEq<int ArraySegment> (Seq.forall2 (=)))
             yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
             yield testProperty "Map<string, char>" (Prop.forAll mapArb.Value roundtrip<Map<string, char>>)
             yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
