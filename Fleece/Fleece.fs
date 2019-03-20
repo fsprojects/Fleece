@@ -390,6 +390,15 @@ module SystemJson =
                 Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
                 Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
             }
+            
+        static member inline map  (field: ConcreteCodec<'S, 'S, 'f, 'T>) (f) =
+            f <!> field
+                
+        static member inline apply  (currentField: ConcreteCodec<'S, 'S, 'f, 'T>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>) =
+            remainderFields <*> currentField
+            
+        static member inline alternative (alternative: ConcreteCodec<'S, 'S, 'f, 'T>) (source: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            source <|> alternative
 
 
     module Codec =
