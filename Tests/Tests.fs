@@ -335,16 +335,16 @@ let tests = [
                 let p = 
                     { Person.Name = "John"
                       Age = 44
-                      Gender = "Male"
+                      Gender = Gender.Male
                       Children = 
                       [
                         { Person.Name = "Katy"
                           Age = 5
-                          Gender = "Female"
+                          Gender = Gender.Female
                           Children = [] }
                         { Person.Name = "Johnny"
                           Age = 7
-                          Gender = "Male"
+                          Gender = Gender.Male
                           Children = [] }
                       ] }
                 #if NEWTONSOFT
