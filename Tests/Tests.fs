@@ -219,17 +219,20 @@ let tests = [
             }
 
             test "Person recursive" {
-                let actual : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
+                let actual : Person ParseResult = parseJson """{"name": "John", "age": 44, "gender": "Male", "children": [{"name": "Katy", "age": 5, "gender": "Female", "children": []}, {"name": "Johnny", "age": 7, "gender": "Male", "children": []}]}"""
                 let expectedPerson = 
                     { Person.Name = "John"
                       Age = 44
+                      Gender = Gender.Male
                       Children = 
                       [
                         { Person.Name = "Katy"
                           Age = 5
+                          Gender = Gender.Female
                           Children = [] }
                         { Person.Name = "Johnny"
                           Age = 7
+                          Gender = Gender.Male
                           Children = [] }
                       ] }
                 Assert.Equal("Person", Success expectedPerson, actual)
