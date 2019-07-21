@@ -526,6 +526,12 @@ module SystemJson =
         let sbyte   x = tryRead<sbyte>   x
         let float   x = tryRead<double>  x
         let float32 x = tryRead<single>  x
+        
+        let inline enum x =
+            match x with
+            | JString null -> Decode.Fail.nullString
+            | JString s    -> tryParse s |> Operators.option Success (Decode.Fail.invalidValue x "")
+            | a -> Decode.Fail.strExpected a
 
         let boolean x =
             match x with
@@ -592,6 +598,7 @@ module SystemJson =
         let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> rdict |> JObject
         let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> rdict |> JObject
         
+        let inline enum (x: 't when 't : enum<_>) = JString (string x)
         let unit () = JArray ([||] |> IList.toIReadOnlyList)
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
@@ -728,6 +735,8 @@ module SystemJson =
     type OfJson with
         static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
+    type OfJson with static member inline OfJson (_: 't when 't : enum<_>, _: OfJson) = JsonDecode.enum
+
     // Default, for external classes.
     type OfJson with
         static member inline OfJson (_: 'R, _: Default7) =
@@ -848,6 +857,8 @@ module SystemJson =
 
     type ToJson with
         static member inline ToJson (x, _: ToJson) = JsonEncode.tuple7 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
+
+    type ToJson with static member inline ToJson (x: 't when 't : enum<_>, _: ToJson) = JsonEncode.enum x
 
     // Default, for external classes.
     type ToJson with
