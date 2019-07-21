@@ -30,24 +30,30 @@ let (|Success|Failure|) =
     | Error x -> Failure x
 #nowarn "0686"
 
+type Gender =
+    | Male = 1
+    | Female = 2
+
 type Person = {
     Name: string
     Age: int
+    Gender: Gender
     Children: Person list
 }
 
 type Person with
-    static member Create name age children = { Person.Name = name; Age = age; Children = children }
+    static member Create name age gender children = { Person.Name = name; Age = age; Gender = gender; Children = children }
 
     static member OfJson json = 
         match json with
-        | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+        | JObject o -> Person.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "gender") <*> (o .@ "children")
         | x -> Decode.Fail.objExpected x
 
     static member ToJson (x: Person) =
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
+            "gender" .= x.Gender
             "children" .= x.Children
         ] 
 
@@ -213,17 +219,20 @@ let tests = [
             }
 
             test "Person recursive" {
-                let actual : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
+                let actual : Person ParseResult = parseJson """{"name": "John", "age": 44, "gender": "Male", "children": [{"name": "Katy", "age": 5, "gender": "Female", "children": []}, {"name": "Johnny", "age": 7, "gender": "Male", "children": []}]}"""
                 let expectedPerson = 
                     { Person.Name = "John"
                       Age = 44
+                      Gender = Gender.Male
                       Children = 
                       [
                         { Person.Name = "Katy"
                           Age = 5
+                          Gender = Gender.Female
                           Children = [] }
                         { Person.Name = "Johnny"
                           Age = 7
+                          Gender = Gender.Male
                           Children = [] }
                       ] }
                 Assert.Equal("Person", Success expectedPerson, actual)
@@ -326,25 +335,28 @@ let tests = [
                 let p = 
                     { Person.Name = "John"
                       Age = 44
+                      Gender = Gender.Male
                       Children = 
                       [
                         { Person.Name = "Katy"
                           Age = 5
+                          Gender = Gender.Female
                           Children = [] }
                         { Person.Name = "Johnny"
                           Age = 7
+                          Gender = Gender.Male
                           Children = [] }
                       ] }
                 #if NEWTONSOFT
-                let expected = """{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
-                let expected = """{"name":"John","age":44,"children":[{"name":"Katy","age":5,"children":[]},{"name":"Johnny","age":7,"children":[]}]}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMJSON
-                let expected = """{"age":44,"children":[{"age":5,"children":[],"name":"Katy"},{"age":7,"children":[],"name":"Johnny"}],"name":"John"}"""
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"gender":"Female","name":"Katy"},{"age":7,"children":[],"gender":"Male","name":"Johnny"}],"gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
 
