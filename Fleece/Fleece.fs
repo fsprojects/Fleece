@@ -1046,7 +1046,7 @@ module SystemJson =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
             _JObject << dkey i
         let inline _jnth i =
-            let inline dnth i f t = map (fun x -> t |> IReadOnlyList.add i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
+            let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
             _JArray << dnth i
 
         // Reimport some basic Lens operations from F#+
