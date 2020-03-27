@@ -315,6 +315,9 @@ module SystemJson =
                 | JObject x -> Success (dictAsProps x)
                 | a -> Decode.Fail.objExpected a
 
+            static member jsonOfJsonObject o =
+                Success (JObject o)
+
         #endif
 
         #if NEWTONSOFT
@@ -335,6 +338,8 @@ module SystemJson =
                     | JTokenType.Object -> Success (o :?> JObject)
                     | _ -> Decode.Fail.objExpected o
  
+            static member jsonOfJsonObject o =
+                Success (o :> JToken)
 
         #endif
 
@@ -354,6 +359,8 @@ module SystemJson =
                     match box o with
                     | :? JsonObject as x -> Success x
                     | _ -> Decode.Fail.objExpected o
+
+            static member jsonOfJsonObject (o: JsonObject) = o :> JsonValue
 
         #endif
 
@@ -753,6 +760,7 @@ module SystemJson =
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
         static member OfJson (_: JsonObject, _: Default1) = JsonHelpers.jsonObjectOfJson
+        static member OfJson (_: JsonValue, _: Default1) = Success
 
 
     /// Maps Json to a type
@@ -873,6 +881,8 @@ module SystemJson =
         static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
 
+        static member ToJson (_: JsonObject, _: Default1) = JsonHelpers.jsonOfJsonObject
+        static member ToJson (_: JsonValue, _: Default1) = Success
    
     /// Maps a value to Json
     let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
