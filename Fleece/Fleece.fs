@@ -760,8 +760,6 @@ module SystemJson =
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
         static member OfJson (_: JsonObject, _: Default1) = JsonHelpers.jsonObjectOfJson
-        static member OfJson (_: JsonValue, _: Default1) = Success
-
 
     /// Maps Json to a type
     let inline ofJson (x: JsonValue) : 't ParseResult = OfJson.Invoke x
@@ -882,7 +880,6 @@ module SystemJson =
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
 
         static member ToJson (_: JsonObject, _: Default1) = JsonHelpers.jsonOfJsonObject
-        static member ToJson (_: JsonValue, _: Default1) = Success
    
     /// Maps a value to Json
     let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
