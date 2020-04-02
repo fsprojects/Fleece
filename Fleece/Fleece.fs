@@ -747,8 +747,8 @@ module SystemJson =
             let codec = (^R : (static member JsonObjCodec : ConcreteCodec<_,_,_,'R>) ())
             codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
-        static member inline OfJson (r: 'R, _: Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
-        static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
+        static member inline OfJson (r: 'R, _: Default5) = Result.mapError DecodeError.Uncategorized << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
+        static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.mapError DecodeError.Uncategorized (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
         static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
@@ -1057,7 +1057,7 @@ module SystemJson =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
             _JObject << dkey i
         let inline _jnth i =
-            let inline dnth i f t = map (fun x -> t |> IReadOnlyList.add i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
+            let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
             _JArray << dnth i
 
         // Reimport some basic Lens operations from F#+
