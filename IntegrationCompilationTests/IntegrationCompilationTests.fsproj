@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.6.2" />
     <ProjectReference Include="..\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
     <ProjectReference Include="..\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
     <ProjectReference Include="..\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />

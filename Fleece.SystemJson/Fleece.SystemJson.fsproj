@@ -12,7 +12,8 @@
     <Compile Include="../Fleece/Fleece.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharpPlus" Version="1.1.0-CI00252" />
+    <PackageReference Update="FSharp.Core" Version="4.6.2" />
+    <PackageReference Include="FSharpPlus" Version="1.1.0" />
     <PackageReference Include="System.Json" Version="4.5.0" />
   </ItemGroup>
 </Project>
