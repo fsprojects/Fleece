@@ -217,10 +217,13 @@ module SystemJson =
 module SystemTextJson =
 
     open System.Text.Json
-    open System.Text.Json
 
-    type JsonValue=Utf8JsonWriter -> string option-> unit
-    type JsonObject=Map<string, JsonValue>
+    type JsonValueW=Utf8JsonWriter -> string option-> unit
+    type JsonObjectW=Map<string, JsonValueW>
+    type JsonValue=JsonElement
+    type JsonObject=JsonDocument
+    module JsonValue=
+        let Parse (x:string) =JsonDocument.Parse (x)
 
     //let jsonObjectGetValues (x: JsonElement) = JsonElement.GetValues x
 
@@ -241,27 +244,26 @@ module SystemTextJson =
             match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)
 
     // pseudo-AST, wrapping JsonValue subtypes:
-
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonElement) =
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
         match o.ValueKind with
         | JsonValueKind.Null -> JNull
         | JsonValueKind.Undefined -> JNull
-        | JsonValueKind.Array -> JArray ( [ for x in o.EnumerateArray () -> x ] )
-        | JsonValueKind.Object -> JObject ( [for x in o.EnumerateObject() -> x])
+        | JsonValueKind.Array -> JArray ( [ for x in o.EnumerateArray () -> x ] :> IReadOnlyList<_>)
+        | JsonValueKind.Object -> JObject ( Map.ofList [for x in o.EnumerateObject() -> (x.Name,x.Value)] :> IReadOnlyDictionary<_,_>)
         | JsonValueKind.Number -> JNumber o
         | JsonValueKind.False -> JBool false
         | JsonValueKind.True -> JBool true
         | JsonValueKind.String -> JString (o.GetString())
         | _ -> failwithf "Invalid JsonValue %A" o
 
-    let inline JArray (x: JsonValue IReadOnlyList) = 
+    let inline JArray (x: JsonValueW IReadOnlyList) = 
         fun (writer: Utf8JsonWriter) (name: string option) ->
           match name with | Some name->writer.WriteStartArray name | _ -> writer.WriteStartArray ()
           for v in x do
               v writer None
           writer.WriteEndArray ()
 
-    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) =
+    let inline JObject (x: IReadOnlyDictionary<string, JsonValueW>) =
         fun (writer: Utf8JsonWriter) (name: string option) ->
           match name with | Some name->writer.WriteStartObject name | _ -> writer.WriteStartObject ()
           for kv in x do
@@ -423,11 +425,15 @@ module SystemTextJson =
 
         #if SYSTEMTEXTJSON
 
-        let inline tryRead x =
+        let inline tryRead<'t> x =
             match x with
             | JNumber j ->
                 try
-                    Success (implicit j)
+                    match typeof<'t> with
+                    | decimal -> Success ( j.GetDecimal() |> box :?> 't)
+                    | int     -> Success ( j.GetInt32() |> box :?> 't)
+                    | int64   -> Success ( j.GetInt64() |> box :?> 't)
+                    | int16   -> Success ( j.GetInt16() |> box :?> 't)
                 with e -> Decode.Fail.invalidValue j (string e)
             | js -> Decode.Fail.numExpected js
 
