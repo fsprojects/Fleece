@@ -219,19 +219,26 @@ module SystemTextJson =
     open System.Text.Json
     open System.Text.Json
 
-    type JsonValue=Utf8JsonWriter -> string -> unit
+    type JsonValue=Utf8JsonWriter -> string option-> unit
     type JsonObject=Map<string, JsonValue>
 
     //let jsonObjectGetValues (x: JsonElement) = JsonElement.GetValues x
 
     type private JsonHelpers () =
-        static member create (x: decimal) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
-        static member create (x: Single ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
-        static member create (x: Double ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
-        static member create (x: int    ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
-        static member create (x: int64  ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
-        static member create (x: string ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteString(name, x)
-        static member create (x: Guid   ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteString(name, x)
+        static member create (x: decimal) = fun (writer: Utf8JsonWriter) (name: string option) ->
+            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)
+        static member create (x: Single ) = fun (writer: Utf8JsonWriter) (name: string option) ->
+            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)
+        static member create (x: Double ) = fun (writer: Utf8JsonWriter) (name: string option) ->
+            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)
+        static member create (x: int    ) = fun (writer: Utf8JsonWriter) (name: string option) ->
+            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)
+        static member create (x: int64  ) = fun (writer: Utf8JsonWriter) (name: string option) -> 
+            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)
+        static member create (x: string ) = fun (writer: Utf8JsonWriter) (name: string option) ->
+            match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)
+        static member create (x: Guid   ) = fun (writer: Utf8JsonWriter) (name: string option) ->
+            match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)
 
     // pseudo-AST, wrapping JsonValue subtypes:
 
@@ -247,14 +254,27 @@ module SystemTextJson =
         | JsonValueKind.String -> JString (o.GetString())
         | _ -> failwithf "Invalid JsonValue %A" o
 
-    (*
-    let inline JArray (x: JsonValue IReadOnlyList) = JsonArray x :> JsonValue
-    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :> JsonValue
-    let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
-    let JNull : JsonValue = null
-    let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
-    let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
-    *)
+    let inline JArray (x: JsonValue IReadOnlyList) = 
+        fun (writer: Utf8JsonWriter) (name: string option) ->
+          match name with | Some name->writer.WriteStartArray name | _ -> writer.WriteStartArray ()
+          for v in x do
+              v writer None
+          writer.WriteEndArray ()
+
+    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) =
+        fun (writer: Utf8JsonWriter) (name: string option) ->
+          match name with | Some name->writer.WriteStartObject name | _ -> writer.WriteStartObject ()
+          for kv in x do
+              kv.Value writer <| Some kv.Key
+          writer.WriteEndObject ()
+
+    let inline JBool (x: bool) = fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteBoolean(name, x) | _-> writer.WriteBooleanValue(x)
+    let JNull = fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteNull(name) | _-> writer.WriteNullValue()
+    let inline JString (x: string) = 
+      if isNull x then JNull 
+      else fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)
+    let inline JNumber (x: decimal) = fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)
+    
 #endif
     // Deserializing:
 
