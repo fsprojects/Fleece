@@ -210,8 +210,52 @@ module SystemJson =
     let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
     let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
 
-    #endif
+#endif
 
+#if SYSTEMTEXTJSON
+
+module SystemTextJson =
+
+    open System.Text.Json
+    open System.Text.Json
+
+    type JsonValue=Utf8JsonWriter -> string -> unit
+    type JsonObject=Map<string, JsonValue>
+
+    //let jsonObjectGetValues (x: JsonElement) = JsonElement.GetValues x
+
+    type private JsonHelpers () =
+        static member create (x: decimal) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
+        static member create (x: Single ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
+        static member create (x: Double ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
+        static member create (x: int    ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
+        static member create (x: int64  ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteNumber(name, x)
+        static member create (x: string ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteString(name, x)
+        static member create (x: Guid   ) = fun (writer: Utf8JsonWriter) (name: string) -> writer.WriteString(name, x)
+
+    // pseudo-AST, wrapping JsonValue subtypes:
+
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonElement) =
+        match o.ValueKind with
+        | JsonValueKind.Null -> JNull
+        | JsonValueKind.Undefined -> JNull
+        | JsonValueKind.Array -> JArray ( [ for x in o.EnumerateArray () -> x ] )
+        | JsonValueKind.Object -> JObject ( [for x in o.EnumerateObject() -> x])
+        | JsonValueKind.Number -> JNumber o
+        | JsonValueKind.False -> JBool false
+        | JsonValueKind.True -> JBool true
+        | JsonValueKind.String -> JString (o.GetString())
+        | _ -> failwithf "Invalid JsonValue %A" o
+
+    (*
+    let inline JArray (x: JsonValue IReadOnlyList) = JsonArray x :> JsonValue
+    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :> JsonValue
+    let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
+    let JNull : JsonValue = null
+    let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
+    let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
+    *)
+#endif
     // Deserializing:
 
     type JType =
@@ -347,6 +391,26 @@ module SystemJson =
                     Success (implicit j)
                 with e -> Decode.Fail.invalidValue j (string e)
             | js -> Decode.Fail.numExpected js
+
+        type JsonHelpers with
+            static member inline jsonObjectOfJson =
+                fun (o: JsonValue) ->
+                    match box o with
+                    | :? JsonObject as x -> Success x
+                    | _ -> Decode.Fail.objExpected o
+
+        #endif
+
+        #if SYSTEMTEXTJSON
+
+        let inline tryRead x =
+            match x with
+            | JNumber j ->
+                try
+                    Success (implicit j)
+                with e -> Decode.Fail.invalidValue j (string e)
+            | js -> Decode.Fail.numExpected js
+
 
         type JsonHelpers with
             static member inline jsonObjectOfJson =
