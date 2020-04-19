@@ -223,7 +223,7 @@ module SystemTextJson =
     type JsonValue=JsonElement
     type JsonObject=JsonDocument
     module JsonValue=
-        let Parse (x:string) =JsonDocument.Parse (x)
+        let Parse (x:string) = let doc =JsonDocument.Parse (x) in doc.RootElement
 
     //let jsonObjectGetValues (x: JsonElement) = JsonElement.GetValues x
 
@@ -509,8 +509,11 @@ module SystemTextJson =
         let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
 
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
+    #if SYSTEMTEXTJSON
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
-
+    #else
+    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
+    #endif
     /// Creates a new Json object for serialization
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> rdict)
 
@@ -880,10 +883,12 @@ module SystemTextJson =
 
     // Default, for external classes.
     type OfJson with
+        #if SYSTEMTEXTJSON
+        #else
         static member inline OfJson (_: 'R, _: Default7) =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
-
+        #endif
         static member inline OfJson (_: 'R, _: Default6) =
             let codec = (^R : (static member JsonObjCodec : ConcreteCodec<_,_,_,'R>) ())
             codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
@@ -950,10 +955,15 @@ module SystemTextJson =
         static member ToJson (()               , _: ToJson) = JsonEncode.unit ()
 
     type ToJson with
+    #if SYSTEMTEXTJSON
+        static member inline Invoke (x: 't) : JsonValueW =
+            let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson : ^b * _ -> JsonValueW) b, a)
+            iToJson (Unchecked.defaultof<ToJson>, x)
+    #else
         static member inline Invoke (x: 't) : JsonValue =
             let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson : ^b * _ -> JsonValue) b, a)
             iToJson (Unchecked.defaultof<ToJson>, x)
-
+    #endif
     type ToJson with
         static member inline ToJson (x: Choice<'a, 'b>, _: ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
 
@@ -1003,24 +1013,43 @@ module SystemTextJson =
 
     // Default, for external classes.
     type ToJson with
+        #if SYSTEMTEXTJSON
+        #else
         static member inline ToJson (t: 'T, _: Default5) =
             let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
             (codec |> Codec.compose jsonObjToValueCodec |> snd) t
-
+        #endif
         static member inline ToJson (t: 'T, _: Default4) =
             let codec = (^T : (static member JsonObjCodec : ConcreteCodec<_,_,_,'T>) ())
             (codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> snd) t
 
+    #if SYSTEMTEXTJSON
+        static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValueW) t)
+        static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValueW) t)
+    #else
         static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
+    #endif
 
-   
+    #if SYSTEMTEXTJSON
+    /// Maps a value to Json
+    let inline toJson (x: 't) : JsonValueW = ToJson.Invoke x
+
+    [<Obsolete("Use 'toJson'")>]
+    let inline toJSON (x: 't) : JsonValueW = ToJson.Invoke x
+
+    /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
+    let inline jsonValueCodec< ^t when (OfJson or ^t) : (static member OfJson : ^t * OfJson -> (JsonValue -> ^t ParseResult)) and (ToJson or ^t) : (static member ToJson : ^t * ToJson -> JsonValueW)> : Codec<JsonValueW,'t> = ofJson, toJson
+
+    /// Parses a Json Text and maps to a type
+    let inline parseJson (x: string) : 'a ParseResult = fst jsonValueToTextCodec x >>= ofJson
+
+    #else
     /// Maps a value to Json
     let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
 
     [<Obsolete("Use 'toJson'")>]
     let inline toJSON (x: 't) : JsonValue = ToJson.Invoke x
-
     /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
     let inline getJsonValueCodec () : Codec<JsonValue, 't> = ofJson, toJson
 
@@ -1029,6 +1058,8 @@ module SystemTextJson =
 
     /// Parses a Json Text and maps to a type
     let inline parseJson (x: string) : 'a ParseResult = fst jsonValueToTextCodec x >>= ofJson
+
+    #endif
 
     [<Obsolete("Use 'parseJson'")>]
     let inline parseJSON (x: string) : 'a ParseResult = parseJson (x: string)
