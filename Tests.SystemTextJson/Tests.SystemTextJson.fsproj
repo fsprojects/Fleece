@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
+    <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Tests/Tests.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.6.2" />
+    <PackageReference Include="FsCheck" Version="0.9.4.0" />
+    <PackageReference Include="Fuchu" Version="0.4.0.0" />
+    <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fleece.SystemTextJson\Fleece.SystemTextJson.fsproj" />
+  </ItemGroup>
+</Project>

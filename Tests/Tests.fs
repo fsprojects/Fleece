@@ -18,6 +18,12 @@ open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 open System.Json
 #endif
+#if SYSTEMTEXTJSON
+open Fleece.SystemTextJson.Helpers
+open Fleece.SystemTextJson
+open Fleece.SystemTextJson.Operators
+open System.Text.Json
+#endif
 #if NEWTONSOFT
 open Newtonsoft.Json
 open Fleece.Newtonsoft.Helpers
@@ -84,6 +90,8 @@ type Attribute with
     static member ToJson (x: Attribute) =
         jobj [ "name" .= x.Name; "value" .= x.Value ]
 
+#if SYSTEMTEXTJSON
+#else
 type Item = {
     Id: int
     Brand: string
@@ -116,7 +124,7 @@ type NestedItem with
                 }
             }
         | x -> Decode.Fail.objExpected x
-
+#endif
 
 let tag prop codec =
     Codec.ofConcrete codec
@@ -175,6 +183,8 @@ type ArraySegmentGenerator =
       
 let tests = [
         testList "From JSON" [
+            #if SYSTEMTEXTJSON
+            #else
             test "item with missing key" {
                 let actual : Item ParseResult = parseJson """{"id": 1, "brand": "Sony"}"""
                 let expected = 
@@ -194,7 +204,7 @@ let tests = [
                     }
                 Assert.Equal("item", Success expected, actual)
             }
-
+            #endif
             test "attribute ok" {
                 let actual : Attribute ParseResult = parseJson """{"name": "a name", "value": "a value"}"""
                 let expected = 
@@ -265,6 +275,9 @@ let tests = [
                 let expected = """{"id": 1, "brand": "Sony"}"""
             #endif
             #if SYSTEMJSON
+                let expected = """{"brand": "Sony", "id": 1}"""
+            #endif
+            #if SYSTEMTEXTJSON
                 let expected = """{"brand": "Sony", "id": 1}"""
             #endif
                     
@@ -359,7 +372,10 @@ let tests = [
                 let expected = """{"age":44,"children":[{"age":5,"children":[],"gender":"Female","name":"Katy"},{"age":7,"children":[],"gender":"Male","name":"Johnny"}],"gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
-
+                #if SYSTEMTEXTJSON
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"gender":"Female","name":"Katy"},{"age":7,"children":[],"gender":"Male","name":"Johnny"}],"gender":"Male","name":"John"}"""
+                Assert.JSON(expected, p)
+                #endif
             }
 
             test "Vehicle" {
@@ -387,6 +403,14 @@ let tests = [
                 let expectedZ = "[{aircraft:{make:Airbus,capacity:200.0}}]"
                 #endif
                 #if SYSTEMJSON
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
+                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
+                #endif
+                #if SYSTEMTEXTJSON
                 let expectedU = "\"[{bike:[]}]\""
                 let expectedV = "\"[{motorBike:[]}]\""
                 let expectedW = "\"[{car:Renault}]\""
