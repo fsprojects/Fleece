@@ -1039,7 +1039,8 @@ module SystemTextJson =
     let inline toJSON (x: 't) : JsonValueW = ToJson.Invoke x
 
     /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
-    let inline jsonValueCodec< ^t when (OfJson or ^t) : (static member OfJson : ^t * OfJson -> (JsonValue -> ^t ParseResult)) and (ToJson or ^t) : (static member ToJson : ^t * ToJson -> JsonValueW)> : Codec<JsonValueW,'t> = ofJson, toJson
+    let inline jsonValueCodec< ^t when (OfJson or ^t) : (static member OfJson : ^t * OfJson -> (JsonValue -> ^t ParseResult)) 
+                                   and (ToJson or ^t) : (static member ToJson : ^t * ToJson -> JsonValueW)> : Codec<JsonValue, JsonValueW,'t, 't> = ofJson, toJson
 
     /// Parses a Json Text and maps to a type
     let inline parseJson (x: string) : 'a ParseResult = fst jsonValueToTextCodec x >>= ofJson
