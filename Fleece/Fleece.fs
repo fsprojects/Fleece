@@ -508,10 +508,11 @@ module SystemTextJson =
         let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
         let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
 
-    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     #if SYSTEMTEXTJSON
+    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<string,JsonElement>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
     #else
+    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
     #endif
     /// Creates a new Json object for serialization
@@ -884,6 +885,9 @@ module SystemTextJson =
     // Default, for external classes.
     type OfJson with
         #if SYSTEMTEXTJSON
+        static member inline OfJson (_: 'R, _: Default7) =
+            let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonElement>,_,_,'R>) ())
+            codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
         #else
         static member inline OfJson (_: 'R, _: Default7) =
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
@@ -1014,6 +1018,9 @@ module SystemTextJson =
     // Default, for external classes.
     type ToJson with
         #if SYSTEMTEXTJSON
+        static member inline ToJson (t: 'T, _: Default5) =
+            let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonElement>,_,_,'T>) ())
+            (codec |> Codec.compose jsonObjToValueCodec |> snd) t
         #else
         static member inline ToJson (t: 'T, _: Default5) =
             let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
