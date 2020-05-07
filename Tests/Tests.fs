@@ -90,8 +90,6 @@ type Attribute with
     static member ToJson (x: Attribute) =
         jobj [ "name" .= x.Name; "value" .= x.Value ]
 
-#if SYSTEMTEXTJSON
-#else
 type Item = {
     Id: int
     Brand: string
@@ -124,7 +122,6 @@ type NestedItem with
                 }
             }
         | x -> Decode.Fail.objExpected x
-#endif
 
 let tag prop codec =
     Codec.ofConcrete codec
@@ -183,15 +180,14 @@ type ArraySegmentGenerator =
       
 let tests = [
         testList "From JSON" [
-            #if SYSTEMTEXTJSON
-            #else
+
             test "item with missing key" {
                 let actual : Item ParseResult = parseJson """{"id": 1, "brand": "Sony"}"""
                 let expected = 
                     { Item.Id = 1
                       Brand = "Sony"
                       Availability = None }
-                Assert.Equal("item", Success expected, actual)
+                Assert.Equal("item", Some expected, Option.ofResult actual)
             }
 
             test "nested item" {
@@ -202,15 +198,14 @@ let tests = [
                         Brand = "Sony"
                         Availability = Some "1 week"
                     }
-                Assert.Equal("item", Success expected, actual)
+                Assert.Equal("item", Some expected, Option.ofResult actual)
             }
-            #endif
             test "attribute ok" {
                 let actual : Attribute ParseResult = parseJson """{"name": "a name", "value": "a value"}"""
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = "a value" }
-                Assert.Equal("attribute", Success expected, actual)
+                Assert.Equal("attribute", Some expected, Option.ofResult actual)
             }
 
             test "attribute with null name" {
@@ -225,7 +220,7 @@ let tests = [
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = null }
-                Assert.Equal("attribute", Success expected, actual)           
+                Assert.Equal("attribute", Some expected, Option.ofResult actual)           
             }
 
             test "Person recursive" {
@@ -245,7 +240,7 @@ let tests = [
                           Gender = Gender.Male
                           Children = [] }
                       ] }
-                Assert.Equal("Person", Success expectedPerson, actual)
+                Assert.Equal("Person", Some expectedPerson, Option.ofResult actual)
             }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
@@ -278,7 +273,7 @@ let tests = [
                 let expected = """{"brand": "Sony", "id": 1}"""
             #endif
             #if SYSTEMTEXTJSON
-                let expected = """{"brand": "Sony", "id": 1}"""
+                let expected = """{"id": 1, "brand": "Sony"}"""
             #endif
                     
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
@@ -292,9 +287,18 @@ let tests = [
             #if FSHARPDATA
                 let actual : int ParseResult = parseJson "2.1"
                 Assert.Equal("decimal", Error (), Result.mapError (fun _-> ()) actual)
-            #else
+            #endif
+            #if SYSTEMTEXTJSON
                 let actual : int ParseResult = parseJson "2.1"
-                Assert.Equal("decimal", Success 2, actual)
+                Assert.Equal("decimal", None, Option.ofResult actual)
+            #endif
+            #if SYSTEMJSON
+                let actual : int ParseResult = parseJson "2.1"
+                Assert.Equal("decimal", Some 2, Option.ofResult actual)
+            #endif
+            #if NEWTONSOFT
+                let actual : int ParseResult = parseJson "2.1"
+                Assert.Equal("decimal", Some 2, Option.ofResult actual)
             #endif
             }
 
@@ -328,8 +332,15 @@ let tests = [
                 let expected = 
                 #if NEWTONSOFT
                     "2000-03-01T16:23:34.000+03:00"
-                #else
+                #endif
+                #if FSHARPDATA
                     "\"2000-03-01T16:23:34.000+03:00\""
+                #endif
+                #if SYSTEMJSON
+                    "\"2000-03-01T16:23:34.000+03:00\""
+                #endif
+                #if SYSTEMTEXTJSON
+                    "\"2000-03-01T16:23:34.000\u002B03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
             }
@@ -338,8 +349,15 @@ let tests = [
                 let expected = 
                 #if NEWTONSOFT
                     "2000-03-01T16:23:34.078+03:00"
-                #else
+                #endif
+                #if FSHARPDATA
                     "\"2000-03-01T16:23:34.078+03:00\""
+                #endif
+                #if SYSTEMJSON
+                    "\"2000-03-01T16:23:34.078+03:00\""
+                #endif
+                #if SYSTEMTEXTJSON
+                    "\"2000-03-01T16:23:34.078\u002B03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
             }
@@ -373,7 +391,7 @@ let tests = [
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
-                let expected = """{"age":44,"children":[{"age":5,"children":[],"gender":"Female","name":"Katy"},{"age":7,"children":[],"gender":"Male","name":"Johnny"}],"gender":"Male","name":"John"}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
             }
@@ -414,9 +432,9 @@ let tests = [
                 let expectedU = "\"[{bike:[]}]\""
                 let expectedV = "\"[{motorBike:[]}]\""
                 let expectedW = "\"[{car:Renault}]\""
-                let expectedX = "\"[{van:[Fiat,5.8]}]\""
-                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
-                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
+                let expectedX = "\"[{van:[Fiat,5.7999999999999998]}]\""
+                let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
+                let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
                 #endif
                 Assert.JSON(expectedU, u)
                 Assert.JSON(expectedV, v)
@@ -455,9 +473,9 @@ let tests = [
                     |> snd itemBinaryCodec  // go to bytes
                     |> fst itemBinaryCodec  // and come back to Item
 
-                let expected = Ok { Item.Id = 1; Brand = "Sony"; Availability = None }
+                let expected = { Item.Id = 1; Brand = "Sony"; Availability = None }
                     
-                Assert.Equal("item", expected, actual)
+                Assert.Equal("item", Some expected, Option.ofResult actual)
             }
         ]
 

@@ -6,6 +6,7 @@
     <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../Tests/Lenses.fs" />
     <Compile Include="../Tests/Tests.fs" />
   </ItemGroup>
   <ItemGroup>

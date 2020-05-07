@@ -19,6 +19,13 @@ open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 open Fleece.SystemJson.Lens
 #endif
+#if SYSTEMTEXTJSON
+open Fleece.SystemTextJson.Helpers
+open Fleece.SystemTextJson
+open Fleece.SystemTextJson.Operators
+open System.Text.Json
+open Fleece.SystemTextJson.Lens
+#endif
 #if NEWTONSOFT
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
@@ -60,7 +67,7 @@ let tests = [
             }
             test "example 6: read key from a different type" {
                 let actual = JsonValue.Parse( "[1,2,3]" ) ^? _jkey "a"
-                Assert.Equal("item", None, actual)
+                Assert.Equal("item", true, actual.IsNone)
             }
 
         ]
