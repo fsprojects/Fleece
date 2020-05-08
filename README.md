@@ -250,3 +250,9 @@ let car = { Id = "xyz"; Color = Red; Kms = 0 }
 let jsonCar = Codec.encode carCodec car
 // val jsonCar : JsonValue = {"id": "xyz", "color": "red", "kms": 0}
 ```
+
+## Maintainer(s)
+
+- [@mausch](https://github.com/mausch)
+- [@gusty](https://github.com/gusty)
+- [@wallymathieu](https://github.com/wallymathieu)
