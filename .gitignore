@@ -1,8 +1,8 @@
 *.ide
 *.suo
-*/bin/*
-bin/*
-*/obj/*
+docs/*
+**/bin/*
+**/obj/*
 packages/*
 .nuget/*.exe
 *.nupkg

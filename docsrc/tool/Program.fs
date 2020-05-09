@@ -64,7 +64,7 @@ let root = website
 
 let referenceBinaries = []
 open Tools.Path
-let bin  = rootDir 
+let bin  = rootDir @@ "src"
 let layoutRootsAll = new System.Collections.Generic.Dictionary<string, string list>()
 layoutRootsAll.Add("en",[   templates; 
                             formatting @@ "templates"
@@ -78,14 +78,12 @@ Target.create "ReferenceDocs" (fun _ ->
    
         let conventionBased = 
             DirectoryInfo.getSubDirectories <| System.IO.DirectoryInfo bin
-            |> Array.filter (fun x -> not ( x.FullName.EndsWith("tool") || x.FullName.EndsWith("docs")))
+            |> Array.filter (fun x -> not ( x.FullName.EndsWith("Fleece") ))
             |> Array.collect (fun d ->
                 let (name, d) =
-                    let net45Bin = DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath (d.FullName @@ "bin" @@ "Release")) |> Array.filter (fun x -> x.FullName.ToLower().Contains("net45"))
-                    let net47Bin = DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath (d.FullName @@ "bin" @@ "Release")) |> Array.filter (fun x -> x.FullName.ToLower().Contains("net47"))
-                    if net45Bin.Length = 0 && net47Bin.Length = 0 then failwithf "Failure: No binaries found for %s." d.FullName
-                    if net45Bin.Length > 0 then d.Name, net45Bin.[0]
-                    else d.Name, net47Bin.[0]
+                    let net46Bin = DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath (d.FullName @@ "bin" @@ "Release")) |> Array.filter (fun x -> x.FullName.ToLower().Contains("net461"))
+                    if net46Bin.Length = 0 then failwithf "Failure: No binaries found for %s." d.FullName
+                    else d.Name, net46Bin.[0]
                 d.GetFiles ()
                 |> Array.filter (fun x -> x.Name.ToLower() = (sprintf "%s.dll" name).ToLower())
                 |> Array.map (fun x -> x.FullName))

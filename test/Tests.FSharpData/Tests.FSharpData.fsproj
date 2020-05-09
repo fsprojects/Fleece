@@ -3,8 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
-    <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <DefineConstants>FSHARPDATA;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Tests/Lenses.fs" />
@@ -17,6 +16,7 @@
     <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
   </ItemGroup>
+  
 </Project>
