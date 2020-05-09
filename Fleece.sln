@@ -5,15 +5,15 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fleece.FSharpData", "src\Fleece.FSharpData\Fleece.FSharpData.fsproj", "{972BE606-278E-4789-B789-044EE68A3EED}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.SystemJson", "Tests.SystemJson\Tests.SystemJson.fsproj", "{20FDBC9C-1D0C-441A-9A8A-64D16158DBAD}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.SystemJson", "test\Tests.SystemJson\Tests.SystemJson.fsproj", "{20FDBC9C-1D0C-441A-9A8A-64D16158DBAD}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharpData", "Tests.FSharpData\Tests.FSharpData.fsproj", "{FE7182BB-793C-491B-9F41-73919FC990DA}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharpData", "test\Tests.FSharpData\Tests.FSharpData.fsproj", "{FE7182BB-793C-491B-9F41-73919FC990DA}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fleece.NewtonsoftJson", "src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj", "{739A5738-C3EF-43AB-BF4B-32BA27D748F8}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.NewtonsoftJson", "Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj", "{2EC2C684-1C70-4D7C-9CA4-9CF0531FC100}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.NewtonsoftJson", "test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj", "{2EC2C684-1C70-4D7C-9CA4-9CF0531FC100}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "IntegrationCompilationTests", "IntegrationCompilationTests\IntegrationCompilationTests.fsproj", "{39FA79C4-DD47-47FE-8D50-9C4E9B66DEB8}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "IntegrationCompilationTests", "test\IntegrationCompilationTests\IntegrationCompilationTests.fsproj", "{39FA79C4-DD47-47FE-8D50-9C4E9B66DEB8}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fleece.SystemJson", "src\Fleece.SystemJson\Fleece.SystemJson.fsproj", "{632614D7-05B6-4023-9D24-C1C084DB0233}"
 EndProject
