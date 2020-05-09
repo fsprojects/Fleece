@@ -10,3 +10,6 @@ packages/*
 .idea/
 
 .ionide
+
+docsrc/content/license.md
+docsrc/content/release-notes.md

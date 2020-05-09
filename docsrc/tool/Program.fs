@@ -114,8 +114,8 @@ Target.create "Docs" (fun _ ->
     Shell.rename ( rootDir @@ "docsrc/content/release-notes.md" ) "docsrc/content/RELEASE_NOTES.md"
 
     System.IO.File.Delete ( rootDir @@ "docsrc/content/license.md" )
-    Shell.copyFile ( rootDir @@ "docsrc/content/" ) "LICENSE.txt"
-    Shell.rename ( rootDir @@ "docsrc/content/license.md" ) "docsrc/content/LICENSE.txt"
+    Shell.copyFile ( rootDir @@ "docsrc/content/" ) "LICENSE"
+    Shell.rename ( rootDir @@ "docsrc/content/license.md" ) "docsrc/content/LICENSE"
 
     
     DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath templates)
