@@ -219,8 +219,8 @@ module SystemTextJson =
     open System.Text.Json
 
     type JsonValue = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit> } with
-        override this.ToString () =
-            let options = new JsonWriterOptions (Indented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
+
+        member this.ToString (options: JsonWriterOptions) =
             use stream = new System.IO.MemoryStream ()
             use writer = new Utf8JsonWriter (stream, options)
             use reader = new System.IO.StreamReader (stream)
@@ -230,6 +230,8 @@ module SystemTextJson =
             writer.Flush ()
             stream.Seek (0L, System.IO.SeekOrigin.Begin) |> ignore
             reader.ReadToEnd ()
+
+        override this.ToString () = this.ToString (new JsonWriterOptions (Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
 
         member this.getValue () =
             match this with
