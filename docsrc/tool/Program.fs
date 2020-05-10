@@ -64,32 +64,38 @@ let root = website
 
 let referenceBinaries = []
 open Tools.Path
+open System.IO
 let bin  = rootDir @@ "src"
 let layoutRootsAll = new System.Collections.Generic.Dictionary<string, string list>()
 layoutRootsAll.Add("en",[   templates; 
                             formatting @@ "templates"
                             formatting @@ "templates/reference" ])
-
 Target.create "ReferenceDocs" (fun _ ->
     Directory.ensure (output @@ "reference")
-
+    let nameAndDirectory (d:DirectoryInfo)=
+        let net46Bin = DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath (d.FullName @@ "bin" @@ "Release")) |> Array.filter (fun x -> x.FullName.ToLower().Contains("net461"))
+        if net46Bin.Length = 0 then failwithf "Failure: No binaries found for %s." d.FullName
+        else d.Name, net46Bin.[0]
+    let filter (x:DirectoryInfo)= not <| x.FullName.EndsWith("Fleece")
     let binaries () =
         let manuallyAdded = referenceBinaries |> List.map (fun b -> bin @@ b)
    
         let conventionBased = 
-            DirectoryInfo.getSubDirectories <| System.IO.DirectoryInfo bin
-            |> Array.filter (fun x -> not ( x.FullName.EndsWith("Fleece") ))
+            DirectoryInfo.getSubDirectories <| DirectoryInfo bin
+            |> Array.filter filter
             |> Array.collect (fun d ->
-                let (name, d) =
-                    let net46Bin = DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath (d.FullName @@ "bin" @@ "Release")) |> Array.filter (fun x -> x.FullName.ToLower().Contains("net461"))
-                    if net46Bin.Length = 0 then failwithf "Failure: No binaries found for %s." d.FullName
-                    else d.Name, net46Bin.[0]
+                let (name, d) = nameAndDirectory d
                 d.GetFiles ()
                 |> Array.filter (fun x -> x.Name.ToLower() = (sprintf "%s.dll" name).ToLower())
                 |> Array.map (fun x -> x.FullName))
             |> List.ofArray
 
         conventionBased @ manuallyAdded
+    let directories() =
+        DirectoryInfo.getSubDirectories <| DirectoryInfo bin
+        |> Array.filter filter
+        |> Array.map (fun d-> let dir= nameAndDirectory d |> snd in dir.FullName)
+        |> List.ofArray
 
     binaries()
     |> FSFormatting.createDocsForDlls (fun args ->
@@ -97,6 +103,7 @@ Target.create "ReferenceDocs" (fun _ ->
             OutputDirectory = output @@ "reference"
             LayoutRoots =  layoutRootsAll.["en"]
             ProjectParameters =  ("root", root)::info
+            LibDirs = directories()
             SourceRepository = githubLink @@ "tree/master" }
            )
 )

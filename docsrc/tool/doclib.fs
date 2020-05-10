@@ -1067,14 +1067,16 @@ module FSFormatting =
           OutputDirectory : string 
           Template : string
           ProjectParameters : (string * string) list
-          LayoutRoots : string list }
+          LayoutRoots : string list
+          LibDirs: string list}
 
     let defaultLiterateArguments =
         { Source = ""
           OutputDirectory = ""
           Template = ""
           ProjectParameters = []
-          LayoutRoots = [] }
+          LayoutRoots = [] 
+          LibDirs = []}
 
     let createDocs p =
         let arguments = (p:LiterateArguments->LiterateArguments) defaultLiterateArguments
@@ -1082,11 +1084,12 @@ module FSFormatting =
         let source = arguments.Source
         let template = arguments.Template
         let outputDir = arguments.OutputDirectory
+        let libDirs = if arguments.LibDirs.IsEmpty then [] else [ "--libDirs" ] @ arguments.LibDirs
         arguments.ProjectParameters
             |> Seq.collect (fun (k, v) -> [ k; v ])
             |> Seq.append 
                     (["literate"; "--processdirectory" ] @ layoutroots @ [ "--inputdirectory"; source; "--templatefile"; template; 
-                        "--outputDirectory"; outputDir; "--replacements" ])
+                        "--outputDirectory"; outputDir; "--replacements"; ] @ libDirs)
             |> Seq.map (fun s -> if s.StartsWith "\"" then s else sprintf "\"%s\"" s)
             |> String.separated " "
             |> run //arguments.ToolPath.Value
