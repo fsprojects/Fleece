@@ -67,9 +67,10 @@ open Tools.Path
 open System.IO
 let bin  = rootDir @@ "src"
 let layoutRootsAll = new System.Collections.Generic.Dictionary<string, string list>()
-layoutRootsAll.Add("en",[   templates; 
+layoutRootsAll.Add("en",[   templates; templates @@ "reference"; 
                             formatting @@ "templates"
-                            formatting @@ "templates/reference" ])
+                            //formatting @@ "templates/reference"
+                        ])
 Target.create "ReferenceDocs" (fun _ ->
     Directory.ensure (output @@ "reference")
     let nameAndDirectory (d:DirectoryInfo)=

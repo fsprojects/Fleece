@@ -29,7 +29,7 @@ module String =
     let getRegEx pattern = 
         match regexes.TryGetValue pattern with
         | true, regex -> regex
-        | _ -> (new System.Text.RegularExpressions.Regex(pattern))
+        | _ -> (System.Text.RegularExpressions.Regex(pattern))
 
     /// Trims the given string
     let inline trim (x : string) = if String.IsNullOrEmpty x then x else x.Trim()
