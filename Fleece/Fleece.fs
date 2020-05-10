@@ -218,9 +218,7 @@ module SystemTextJson =
 
     open System.Text.Json
 
-    type JsonValueW = Utf8JsonWriter -> string option-> unit
-
-    type ValueOrWriter = { mutable Value : Choice<JsonElement,JsonValueW> } with
+    type ValueOrWriter = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit> } with
         override this.ToString () =
             let options = new JsonWriterOptions (Indented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
             use stream = new System.IO.MemoryStream ()
