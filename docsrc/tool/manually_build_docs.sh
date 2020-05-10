@@ -4,6 +4,7 @@ cd ../../
 # Restore
 dotnet tool restore
 
+./docsrc/tool/download_nugets.sh
 # Build
 # dotnet build -c Release
 msbuild /t:Build /p:Configuration=Release 
