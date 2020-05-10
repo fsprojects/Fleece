@@ -24,3 +24,9 @@ if ERRORLEVEL 1 (
 	echo Error creating package for Fleece.NewtonsoftJson
 	exit /b 1
 )
+
+dotnet pack Fleece.SystemTextJson -c Release
+if ERRORLEVEL 1 (
+	echo Error creating package for Fleece.SystemTextJson
+	exit /b 1
+)
