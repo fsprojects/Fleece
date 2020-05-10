@@ -886,8 +886,8 @@ module SystemTextJson =
             let codec = (^R : (static member JsonObjCodec : ConcreteCodec<_,_,_,'R>) ())
             codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
-        static member inline OfJson (r: 'R, _: Default5) = Result.catch (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
-        static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.catch (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
+        static member inline OfJson (r: 'R, _: Default5) = Result.bindError (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
+        static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
         static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 

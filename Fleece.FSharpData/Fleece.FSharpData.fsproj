@@ -13,7 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="4.6.2" />
-    <PackageReference Include="FSharpPlus" Version="1.1.0" />
+    <PackageReference Include="FSharpPlus" Version="1.1.1" />
     <PackageReference Include="FSharp.Data" Version="3.0.0" />
   </ItemGroup>
 </Project>
