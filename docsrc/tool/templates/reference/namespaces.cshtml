@@ -21,7 +21,10 @@
       .Select((c, i) => new {
         Name = String.IsNullOrEmpty(c) ? "Other namespace members" : c,
         Index = String.Format("{0}_{1}", nsIndex, i),
-        Types = typedNs.Types.Where(t => t.Category == c).ToArray(),
+        Types = typedNs.Types.Where(t => t.Category == c)
+                  .Where(t=>!t.Name.StartsWith("Default")
+                            &&!t.Name.StartsWith("Id1")
+                            &&!t.Name.StartsWith("Id2")).ToArray(),
         Modules = typedNs.Modules.Where(m => m.Category == c).ToArray() })
       .Where(c => c.Types.Length + c.Modules.Length > 0).ToArray();
 
