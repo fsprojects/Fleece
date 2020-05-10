@@ -225,12 +225,13 @@ module SystemTextJson =
             let options = new JsonWriterOptions (Indented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
             use stream = new System.IO.MemoryStream ()
             use writer = new Utf8JsonWriter (stream, options)
+            use reader = new System.IO.StreamReader (stream)
             match this with
             | { Value = Choice2Of2 jobj  } -> jobj writer None
             | { Value = Choice1Of2 value } -> value.WriteTo writer
             writer.Flush ()
-            let json = System.Text.Encoding.UTF8.GetString (stream.ToArray ())
-            json
+            stream.Seek (0L, System.IO.SeekOrigin.Begin) |> ignore
+            reader.ReadToEnd ()
 
         member this.getValue () =
             match this with
