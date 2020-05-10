@@ -218,18 +218,18 @@ module SystemTextJson =
 
     open System.Text.Json
 
-    type JsonValueW=Utf8JsonWriter -> string option-> unit
+    type JsonValueW = Utf8JsonWriter -> string option-> unit
 
     type ValueOrWriter = { mutable Value : Choice<JsonElement,JsonValueW> } with
         override this.ToString () =
             let options = new JsonWriterOptions (Indented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping)
-            use stream = new System.IO.MemoryStream()
-            use writer = new Utf8JsonWriter(stream, options)
+            use stream = new System.IO.MemoryStream ()
+            use writer = new Utf8JsonWriter (stream, options)
             match this with
             | { Value = Choice2Of2 jobj  } -> jobj writer None
-            | { Value = Choice1Of2 value } -> value.WriteTo(writer)
-            writer.Flush()
-            let json = System.Text.Encoding.UTF8.GetString(stream.ToArray())
+            | { Value = Choice1Of2 value } -> value.WriteTo writer
+            writer.Flush ()
+            let json = System.Text.Encoding.UTF8.GetString (stream.ToArray ())
             json
 
         member this.getValue () =
@@ -237,8 +237,8 @@ module SystemTextJson =
             | { Value = Choice1Of2 value } -> value
             | { Value = Choice2Of2 _ } ->
                 // run the function, then parseback
-                let s = string this
-                let doc = JsonDocument.Parse (s)
+                let str = string this
+                let doc = JsonDocument.Parse str
                 let value = doc.RootElement
                 this.Value <- Choice1Of2 value
                 value
@@ -247,86 +247,71 @@ module SystemTextJson =
             match this with
             | { Value = Choice2Of2 writer } -> writer
             | { Value = Choice1Of2 value  } ->
-                let writer = fun (writer: Utf8JsonWriter) (name: string option) -> (match name with Some name -> writer.WritePropertyName(name) | None -> ()); value.WriteTo(writer) // not sure about how to write the value
-                writer
+                fun (writer: Utf8JsonWriter) (name: string option) ->
+                    name |> Option.iter writer.WritePropertyName
+                    value.WriteTo writer
+                    
 
     type JsonValue = ValueOrWriter
-    type JsonObject=(string * JsonValue) []
+    type JsonObject = (string * JsonValue) []
 
-    module JsonValue=
-        let Parse (x:string) = let doc =JsonDocument.Parse (x) in { Value = Choice1Of2 doc.RootElement }
+    module JsonValue =
+        let Parse (x: string) = let doc = JsonDocument.Parse x in { Value = Choice1Of2 doc.RootElement }
 
     let jsonObjectGetValues (o: JsonObject) = readOnlyDict o
 
+    let inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
+
     type private JsonHelpers () =
-        static member create (x: decimal) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: Single ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: Double ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: int    ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: int64  ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: uint32 ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: uint64 ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
-        static member create (x: int16  ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, uint32 x) | _-> writer.WriteNumberValue(uint32 x)) }
-        static member create (x: uint16 ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, uint32 x) | _-> writer.WriteNumberValue(uint32 x)) }
-        static member create (x: byte   ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, uint32 x) | _-> writer.WriteNumberValue(uint32 x)) }
-        static member create (x: sbyte  ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> 
-            match name with | Some name->writer.WriteNumber(name, int32 x) | _-> writer.WriteNumberValue(int32 x)) }
-        static member create (x: string ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)) }
-        static member create (x: char   ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteString(name,string x) | _-> writer.WriteStringValue(string x)) }
-        static member create (x: Guid   ) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) ->
-            match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)) }
+
+        static member create (x: string ) = writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+        static member create (x: Guid   ) = writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+        static member create (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: Single ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: Double ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: int    ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: int64  ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: uint32 ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: uint64 ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+        static member create (x: int16  ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
+        static member create (x: uint16 ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
+        static member create (x: byte   ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
+        static member create (x: sbyte  ) = writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))        
+        static member create (x: char   ) = writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
+        
+
     // pseudo-AST, wrapping JsonValue subtypes:
     let (|JArray|JObject|JNumber|JBool|JString|JNull|) (j: JsonValue) =
         let o = j.getValue ()
         match o.ValueKind with
-        | JsonValueKind.Null -> JNull
+        | JsonValueKind.Null
         | JsonValueKind.Undefined -> JNull
-        | JsonValueKind.Array -> JArray ( [ for x in o.EnumerateArray () -> { Value = Choice1Of2 x} ] :> IReadOnlyList<_>)
-        | JsonValueKind.Object -> JObject ( Map.ofList [for x in o.EnumerateObject() -> (x.Name, { Value = Choice1Of2 x.Value})] :> IReadOnlyDictionary<_,_>)
-        | JsonValueKind.Number -> JNumber j
-        | JsonValueKind.False -> JBool false
-        | JsonValueKind.True -> JBool true
-        | JsonValueKind.String -> JString (o.GetString())
-        | _ -> failwithf "Invalid JsonValue %A" o
+        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> {Value = Choice1Of2 x} ] :> IReadOnlyList<_>)
+        | JsonValueKind.Object    -> JObject ( Map.ofList [for x in o.EnumerateObject () -> (x.Name, {Value = Choice1Of2 x.Value})] :> IReadOnlyDictionary<_,_>)
+        | JsonValueKind.Number    -> JNumber j
+        | JsonValueKind.False     -> JBool false
+        | JsonValueKind.True      -> JBool true
+        | JsonValueKind.String    -> JString (o.GetString ())
+        | _                       -> failwithf "Invalid JsonValue %A" o
 
-    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = x |> Seq.map (fun (KeyValue (k, v)) -> k, v) |> Array.ofSeq
+    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
 
     let inline JArray (x: JsonValue IReadOnlyList) =
-        let w =
-            fun (writer: Utf8JsonWriter) (name: string option) ->
-              match name with | Some name->writer.WriteStartArray name | _ -> writer.WriteStartArray ()
-              for v in x do
-                  (v.getWriter ()) writer None
-              writer.WriteEndArray ()
-        { Value = Choice2Of2 w}
+        let f w =
+            for v in x do (v.getWriter ()) w None
+            w.WriteEndArray ()
+        writers (fun w k -> w.WriteStartArray k; f w) (fun w -> w.WriteStartArray (); f w)
 
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) =
-        let w =
-            fun (writer: Utf8JsonWriter) (name: string option) ->
-              match name with | Some name->writer.WriteStartObject name | _ -> writer.WriteStartObject ()
-              for kv in x do
-                  kv.Value.getWriter () writer <| Some kv.Key
-              writer.WriteEndObject ()
-        { Value = Choice2Of2 w}
+        let f w =
+            for kv in x do kv.Value.getWriter () w (Some kv.Key)
+            w.WriteEndObject ()
+        writers (fun w k -> w.WriteStartObject k; f w) (fun w -> w.WriteStartObject (); f w)
 
-    let inline JBool (x: bool) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteBoolean(name, x) | _-> writer.WriteBooleanValue(x)) }
-    let JNull = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteNull(name) | _-> writer.WriteNullValue())}
-    let inline JString (x: string) = 
-      if isNull x then JNull 
-      else { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteString(name, x) | _-> writer.WriteStringValue(x)) }
-    let inline JNumber (x: decimal) = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) (name: string option) -> match name with | Some name->writer.WriteNumber(name, x) | _-> writer.WriteNumberValue(x)) }
+    let JBool (x: bool)      = writers (fun w k -> w.WriteBoolean (k, x)) (fun w -> w.WriteBooleanValue x)
+    let JNull                = writers (fun w k -> w.WriteNull k) (fun w -> w.WriteNullValue ())
+    let JString (x: string)  = if isNull x then JNull else writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+    let JNumber (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
     
 #endif
     // Deserializing:
@@ -410,7 +395,7 @@ module SystemTextJson =
         let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
 #if !NETCOREAPP
         type ArraySegment<'a> with
-            member x.ToArray() =
+            member x.ToArray () =
                 if isNull x.Array then invalidOp "Null Array" else
                 if x.Count = 0 then Array.empty else
                 let array = Array.zeroCreate<'a> x.Count
@@ -477,17 +462,17 @@ module SystemTextJson =
         #if SYSTEMTEXTJSON
 
         type TryGet = TryGet with                
-            static member ($) (TryGet, _: decimal) = fun (x: JsonValue) -> x.getValue().GetDecimal()
-            static member ($) (TryGet, _: int16  ) = fun (x: JsonValue) -> x.getValue().GetInt16()
-            static member ($) (TryGet, _: int    ) = fun (x: JsonValue) -> x.getValue().GetInt32()
-            static member ($) (TryGet, _: int64  ) = fun (x: JsonValue) -> x.getValue().GetInt64()
-            static member ($) (TryGet, _: uint16 ) = fun (x: JsonValue) -> x.getValue().GetUInt16()
-            static member ($) (TryGet, _: uint32 ) = fun (x: JsonValue) -> x.getValue().GetUInt32()
-            static member ($) (TryGet, _: uint64 ) = fun (x: JsonValue) -> x.getValue().GetUInt64()
-            static member ($) (TryGet, _: byte   ) = fun (x: JsonValue) -> x.getValue().GetByte()
-            static member ($) (TryGet, _: sbyte  ) = fun (x: JsonValue) -> x.getValue().GetSByte()
-            static member ($) (TryGet, _: float  ) = fun (x: JsonValue) -> x.getValue().GetDouble()
-            static member ($) (TryGet, _: float32) = fun (x: JsonValue) -> x.getValue().GetSingle()
+            static member ($) (TryGet, _: decimal) = fun (x: JsonValue) -> x.getValue().GetDecimal ()
+            static member ($) (TryGet, _: int16  ) = fun (x: JsonValue) -> x.getValue().GetInt16 ()
+            static member ($) (TryGet, _: int    ) = fun (x: JsonValue) -> x.getValue().GetInt32 ()
+            static member ($) (TryGet, _: int64  ) = fun (x: JsonValue) -> x.getValue().GetInt64 ()
+            static member ($) (TryGet, _: uint16 ) = fun (x: JsonValue) -> x.getValue().GetUInt16 ()
+            static member ($) (TryGet, _: uint32 ) = fun (x: JsonValue) -> x.getValue().GetUInt32 ()
+            static member ($) (TryGet, _: uint64 ) = fun (x: JsonValue) -> x.getValue().GetUInt64 ()
+            static member ($) (TryGet, _: byte   ) = fun (x: JsonValue) -> x.getValue().GetByte ()
+            static member ($) (TryGet, _: sbyte  ) = fun (x: JsonValue) -> x.getValue().GetSByte ()
+            static member ($) (TryGet, _: float  ) = fun (x: JsonValue) -> x.getValue().GetDouble ()
+            static member ($) (TryGet, _: float32) = fun (x: JsonValue) -> x.getValue().GetSingle ()
 
         let inline tryGet (x: JsonValue) : 't = (TryGet $ Unchecked.defaultof<'t>) x
 
@@ -742,7 +727,7 @@ module SystemTextJson =
 
         let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
         let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> IList.toIReadOnlyList)
-        let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray())) |> IList.toIReadOnlyList)
+        let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray ())) |> IList.toIReadOnlyList)
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
         let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
@@ -1134,7 +1119,7 @@ module SystemTextJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline (<*/>) (rest: SplitCodec<_, _->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
+        let inline (<*/>) (rest: SplitCodec<_, _ ->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
 
         /// <summary>Appends the first field mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
