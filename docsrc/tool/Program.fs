@@ -22,7 +22,7 @@ let gitHome = sprintf "%s/%s" "https://github.com" gitOwner
 // The name of the project on GitHub
 let gitName = "Fleece"
 
-let website = "/fleece"
+let website = "/Fleece"
 
 let github_release_user = Environment.environVarOrDefault "github_release_user" gitOwner
 let githubLink = sprintf "https://github.com/%s/%s" github_release_user gitName
