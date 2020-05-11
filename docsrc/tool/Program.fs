@@ -22,7 +22,7 @@ let gitHome = sprintf "%s/%s" "https://github.com" gitOwner
 // The name of the project on GitHub
 let gitName = "Fleece"
 
-let website = "/fleece"
+let website = "/Fleece"
 
 let github_release_user = Environment.environVarOrDefault "github_release_user" gitOwner
 let githubLink = sprintf "https://github.com/%s/%s" github_release_user gitName
@@ -171,7 +171,8 @@ let main argv =
         Target.create "ReleaseDocs" (fun _ ->
             let tempDocsDir = rootDir @@ "temp/gh-pages"
             Shell.cleanDir tempDocsDir
-            Git.Repository.cloneSingleBranch rootDir (gitHome + "/" + gitName + ".git") "gh-pages" tempDocsDir
+            let repoUrl = Git.Config.remoteOriginUrl rootDir
+            Git.Repository.cloneSingleBranch rootDir repoUrl "gh-pages" tempDocsDir
             let docDir = rootDir @@ "docs"
             Shell.copyRecursive docDir tempDocsDir true |> Trace.tracefn "%A"
             Git.Staging.stageAll tempDocsDir
