@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Codec - Fleece</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/fleece/style.css" />
+    <script type="text/javascript" src="/fleece/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="https://github.com/fsprojects/Fleece">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/fleece/index.html">Fleece</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+<h1>Codec</h1>
+<p>
+  <span>Namespace: Fleece</span><br />
+  <span>Parent Module: <a href="fleece-systemjson.html">SystemJson</a></span>
+  </p>
+<div class="xmldoc">
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '237', 237)" onmouseover="showTip(event, '237', 237)">
+            compose(arg1, arg2) (arg3, arg4)
+          </code>
+          <div class="tip" id="237">
+            <strong>Signature:</strong> ((&#39;?9319 -&gt; ^?9320) * (&#39;?9323 -&gt; &#39;?9324)) -&gt; ((&#39;?9322 -&gt; ^?9321) * (&#39;?9325 -&gt; &#39;?9323)) -&gt; (&#39;?9319 -&gt; ^?9321) * (&#39;?9325 -&gt; &#39;?9324)<br />
+                          <strong>Type parameters:</strong> '?9319, ^?9320, ^?9321, '?9322, '?9323, '?9324, '?9325                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L535-535" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '238', 238)" onmouseover="showTip(event, '238', 238)">
+            decode(d, arg2) i
+          </code>
+          <div class="tip" id="238">
+            <strong>Signature:</strong> (d:Decoder&lt;&#39;i,&#39;a&gt; * &#39;?9329) -&gt; i:&#39;i -&gt; &#39;a ParseResult<br />
+                          <strong>Type parameters:</strong> 'i, 'a, '?9329                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L540-540" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '239', 239)" onmouseover="showTip(event, '239', 239)">
+            encode(arg1, e) a
+          </code>
+          <div class="tip" id="239">
+            <strong>Signature:</strong> (&#39;?9331 * e:Encoder&lt;&#39;o,&#39;a&gt;) -&gt; a:&#39;a -&gt; &#39;o<br />
+                          <strong>Type parameters:</strong> '?9331, 'o, 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L541-541" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '240', 240)" onmouseover="showTip(event, '240', 240)">
+            invmap f g (r, w)
+          </code>
+          <div class="tip" id="240">
+            <strong>Signature:</strong> f:(&#39;T -&gt; &#39;U) -&gt; g:(&#39;U -&gt; &#39;T) -&gt; (r:^?9314 * w:^?9316) -&gt; ^?9315 * ^?9317<br />
+                          <strong>Type parameters:</strong> 'T, 'U, ^?9314, ^?9315, ^?9316, ^?9317                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L533-533" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Turns a Codec into another Codec, by mapping it over an isomorphism.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '241', 241)" onmouseover="showTip(event, '241', 241)">
+            ofConcrete(arg1)
+          </code>
+          <div class="tip" id="241">
+            <strong>Signature:</strong> ConcreteCodec&lt;&#39;?9341 list,KeyValuePair&lt;&#39;?9342,&#39;?9343&gt; list,&#39;?9344,&#39;?9345&gt; -&gt; (^?9346 -&gt; &#39;?9344 ParseResult) * (&#39;?9345 -&gt; IReadOnlyDictionary&lt;&#39;?9342,&#39;?9343&gt;)<br />
+                          <strong>Type parameters:</strong> '?9341, '?9342, '?9343, '?9344, '?9345, ^?9346                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L546-546" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '242', 242)" onmouseover="showTip(event, '242', 242)">
+            ofMonoid(x)
+          </code>
+          <div class="tip" id="242">
+            <strong>Signature:</strong> x:KeyValuePair&lt;&#39;?9338,&#39;?9339&gt; list -&gt; IReadOnlyDictionary&lt;&#39;?9338,&#39;?9339&gt;<br />
+                          <strong>Type parameters:</strong> '?9338, '?9339                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L544-544" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '243', 243)" onmouseover="showTip(event, '243', 243)">
+            toConcrete(d, e)
+          </code>
+          <div class="tip" id="243">
+            <strong>Signature:</strong> (d:(IReadOnlyDictionary&lt;&#39;?9348,&#39;?9349&gt; -&gt; &#39;?9350 ParseResult) * e:(&#39;?9351 -&gt; ^?9352)) -&gt; ConcreteCodec&lt;KeyValuePair&lt;&#39;?9348,&#39;?9349&gt; list,&#39;?9353 list,&#39;?9350,&#39;?9351&gt;<br />
+                          <strong>Type parameters:</strong> '?9348, '?9349, '?9350, '?9351, ^?9352, '?9353                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L547-547" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '244', 244)" onmouseover="showTip(event, '244', 244)">
+            toMonoid(x)
+          </code>
+          <div class="tip" id="244">
+            <strong>Signature:</strong> x:^?9335 -&gt; &#39;?9336 list<br />
+                          <strong>Type parameters:</strong> ^?9335, '?9336                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L543-543" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <img src="/fleece/img/logo-color.svg" alt="F# Project" style="width:150px;margin:10px" />  
+		  <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+		  	<li class="nav-header">Fleece</li>
+		  <li><a href="/fleece/index.html">Home page</a></li>
+		  <li class="divider"></li>
+      <!--
+		  <li><a href="http://nuget.org/packages/Fleece">Get Library via NuGet</a></li>
+      -->
+		  <li><a href="https://github.com/fsprojects/Fleece">Source Code on GitHub</a></li>
+		  <li><a href="/fleece/license.html">License</a></li>
+		  <li><a href="/fleece/release-notes.html">Release Notes</a></li>
+
+		  <li class="nav-header">Documentation</li>
+		  <li><a href="/fleece/reference/index.html">API Reference</a></li>
+		  </ul>
+        </div>
+      </div>
+    </div>
+    <a href="https://github.com/fsprojects/Fleece"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>

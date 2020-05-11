@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>JsonEncode - Fleece</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content=""/>
+    <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon"/>
+
+    <script src="https://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet"/>
+
+    <link type="text/css" rel="stylesheet" href="/fleece/style.css" />
+    <script type="text/javascript" src="/fleece/tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="http://fsharp.org">fsharp.org</a></li>
+          <li><a href="https://github.com/fsprojects/Fleece">github page</a></li>
+        </ul>
+        <h3 class="muted"><a href="/fleece/index.html">Fleece</a></h3>
+      </div>
+      <hr />
+      <div class="row">
+        <div class="span9" id="main">
+          
+
+<h1>JsonEncode</h1>
+<p>
+  <span>Namespace: Fleece</span><br />
+  <span>Parent Module: <a href="fleece-fsharpdata.html">FSharpData</a></span>
+        <span>
+          Attributes:<br />
+[&lt;RequireQualifiedAccess&gt;]<br />
+          
+      </span>
+</p>
+<div class="xmldoc">
+</div>
+
+<!-- Render nested types and modules, if there are any -->
+
+  <h3>Functions and values</h3>
+  <table class="table table-bordered member-list">
+    <thead>
+      <tr><td>Function or value</td><td>Description</td></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '137', 137)" onmouseover="showTip(event, '137', 137)">
+            JsonEncode.array encoder x
+          </code>
+          <div class="tip" id="137">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:&#39;a [] -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L729-729" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '138', 138)" onmouseover="showTip(event, '138', 138)">
+            JsonEncode.arraySegment encoder x
+          </code>
+          <div class="tip" id="138">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:ArraySegment&lt;&#39;a&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L730-730" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '139', 139)" onmouseover="showTip(event, '139', 139)">
+            JsonEncode.boolean(x)
+          </code>
+          <div class="tip" id="139">
+            <strong>Signature:</strong> x:bool -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L747-747" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '140', 140)" onmouseover="showTip(event, '140', 140)">
+            JsonEncode.byte(x)
+          </code>
+          <div class="tip" id="140">
+            <strong>Signature:</strong> x:byte -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L761-761" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '141', 141)" onmouseover="showTip(event, '141', 141)">
+            JsonEncode.char(x)
+          </code>
+          <div class="tip" id="141">
+            <strong>Signature:</strong> x:char -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L763-763" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '142', 142)" onmouseover="showTip(event, '142', 142)">
+            JsonEncode.choice(...)
+          </code>
+          <div class="tip" id="142">
+            <strong>Signature:</strong> encoder1:(&#39;?8431 -&gt; JsonValue) -&gt; encoder2:(&#39;?8432 -&gt; JsonValue) -&gt; _arg1:Choice&lt;&#39;?8431,&#39;?8432&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> '?8431, '?8432                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L715-715" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '143', 143)" onmouseover="showTip(event, '143', 143)">
+            JsonEncode.choice3(...)
+          </code>
+          <div class="tip" id="143">
+            <strong>Signature:</strong> encoder1:(&#39;?8434 -&gt; JsonValue) -&gt; encoder2:(&#39;?8435 -&gt; JsonValue) -&gt; encoder3:(&#39;?8436 -&gt; JsonValue) -&gt; _arg1:Choice&lt;&#39;?8434,&#39;?8435,&#39;?8436&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> '?8434, '?8435, '?8436                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L719-719" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '144', 144)" onmouseover="showTip(event, '144', 144)">
+            JsonEncode.dateTime(x)
+          </code>
+          <div class="tip" id="144">
+            <strong>Signature:</strong> x:DateTime -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L749-749" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '145', 145)" onmouseover="showTip(event, '145', 145)">
+            JsonEncode.dateTimeOffset(x)
+          </code>
+          <div class="tip" id="145">
+            <strong>Signature:</strong> x:DateTimeOffset -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L750-750" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '146', 146)" onmouseover="showTip(event, '146', 146)">
+            JsonEncode.decimal(x)
+          </code>
+          <div class="tip" id="146">
+            <strong>Signature:</strong> x:decimal -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L752-752" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '147', 147)" onmouseover="showTip(event, '147', 147)">
+            JsonEncode.dictionary encoder x
+          </code>
+          <div class="tip" id="147">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:Dictionary&lt;string,&#39;a&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L735-735" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '148', 148)" onmouseover="showTip(event, '148', 148)">
+            JsonEncode.enum(x)
+          </code>
+          <div class="tip" id="148">
+            <strong>Signature:</strong> x:^t -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> ^t, '?8490                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L744-744" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '149', 149)" onmouseover="showTip(event, '149', 149)">
+            JsonEncode.float(x)
+          </code>
+          <div class="tip" id="149">
+            <strong>Signature:</strong> x:Double -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L753-753" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '150', 150)" onmouseover="showTip(event, '150', 150)">
+            JsonEncode.float32(x)
+          </code>
+          <div class="tip" id="150">
+            <strong>Signature:</strong> x:Single -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L754-754" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '151', 151)" onmouseover="showTip(event, '151', 151)">
+            JsonEncode.guid(x)
+          </code>
+          <div class="tip" id="151">
+            <strong>Signature:</strong> x:Guid -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L764-764" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '152', 152)" onmouseover="showTip(event, '152', 152)">
+            JsonEncode.int(x)
+          </code>
+          <div class="tip" id="152">
+            <strong>Signature:</strong> x:int -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L755-755" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '153', 153)" onmouseover="showTip(event, '153', 153)">
+            JsonEncode.int16(x)
+          </code>
+          <div class="tip" id="153">
+            <strong>Signature:</strong> x:int16 -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L759-759" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '154', 154)" onmouseover="showTip(event, '154', 154)">
+            JsonEncode.int64(x)
+          </code>
+          <div class="tip" id="154">
+            <strong>Signature:</strong> x:int64 -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L757-757" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '155', 155)" onmouseover="showTip(event, '155', 155)">
+            JsonEncode.list encoder x
+          </code>
+          <div class="tip" id="155">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:&#39;a list -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L731-731" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '156', 156)" onmouseover="showTip(event, '156', 156)">
+            JsonEncode.map encoder x
+          </code>
+          <div class="tip" id="156">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:Map&lt;string,&#39;a&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L734-734" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '157', 157)" onmouseover="showTip(event, '157', 157)">
+            JsonEncode.nullable encoder x
+          </code>
+          <div class="tip" id="157">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:Nullable&lt;&#39;a&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L728-728" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '158', 158)" onmouseover="showTip(event, '158', 158)">
+            JsonEncode.option encoder _arg1
+          </code>
+          <div class="tip" id="158">
+            <strong>Signature:</strong> encoder:(&#39;?8438 -&gt; JsonValue) -&gt; _arg1:&#39;?8438 option -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> '?8438                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L724-724" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '159', 159)" onmouseover="showTip(event, '159', 159)">
+            JsonEncode.resizeArray encoder x
+          </code>
+          <div class="tip" id="159">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:ResizeArray&lt;&#39;a&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L733-733" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '160', 160)" onmouseover="showTip(event, '160', 160)">
+            JsonEncode.sbyte(x)
+          </code>
+          <div class="tip" id="160">
+            <strong>Signature:</strong> x:sbyte -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L762-762" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '161', 161)" onmouseover="showTip(event, '161', 161)">
+            JsonEncode.set encoder x
+          </code>
+          <div class="tip" id="161">
+            <strong>Signature:</strong> encoder:(&#39;a -&gt; JsonValue) -&gt; x:Set&lt;&#39;a&gt; -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L732-732" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '162', 162)" onmouseover="showTip(event, '162', 162)">
+            JsonEncode.string(x)
+          </code>
+          <div class="tip" id="162">
+            <strong>Signature:</strong> x:string -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L748-748" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '163', 163)" onmouseover="showTip(event, '163', 163)">
+            JsonEncode.tuple2(...)
+          </code>
+          <div class="tip" id="163">
+            <strong>Signature:</strong> encoder1:(&#39;a -&gt; JsonValue) -&gt; encoder2:(&#39;b -&gt; JsonValue) -&gt; (a:&#39;a * b:&#39;b) -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a, 'b                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L737-737" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '164', 164)" onmouseover="showTip(event, '164', 164)">
+            JsonEncode.tuple3(...)
+          </code>
+          <div class="tip" id="164">
+            <strong>Signature:</strong> encoder1:(&#39;a -&gt; JsonValue) -&gt; encoder2:(&#39;b -&gt; JsonValue) -&gt; encoder3:(&#39;c -&gt; JsonValue) -&gt; (a:&#39;a * b:&#39;b * c:&#39;c) -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a, 'b, 'c                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L738-738" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '165', 165)" onmouseover="showTip(event, '165', 165)">
+            JsonEncode.tuple4(...)
+          </code>
+          <div class="tip" id="165">
+            <strong>Signature:</strong> encoder1:(&#39;a -&gt; JsonValue) -&gt; encoder2:(&#39;b -&gt; JsonValue) -&gt; encoder3:(&#39;c -&gt; JsonValue) -&gt; encoder4:(&#39;d -&gt; JsonValue) -&gt; (a:&#39;a * b:&#39;b * c:&#39;c * d:&#39;d) -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a, 'b, 'c, 'd                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L739-739" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '166', 166)" onmouseover="showTip(event, '166', 166)">
+            JsonEncode.tuple5(...)
+          </code>
+          <div class="tip" id="166">
+            <strong>Signature:</strong> encoder1:(&#39;a -&gt; JsonValue) -&gt; encoder2:(&#39;b -&gt; JsonValue) -&gt; encoder3:(&#39;c -&gt; JsonValue) -&gt; encoder4:(&#39;d -&gt; JsonValue) -&gt; encoder5:(&#39;e -&gt; JsonValue) -&gt; (a:&#39;a * b:&#39;b * c:&#39;c * d:&#39;d * e:&#39;e) -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a, 'b, 'c, 'd, 'e                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L740-740" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '167', 167)" onmouseover="showTip(event, '167', 167)">
+            JsonEncode.tuple6(...)
+          </code>
+          <div class="tip" id="167">
+            <strong>Signature:</strong> encoder1:(&#39;a -&gt; JsonValue) -&gt; encoder2:(&#39;b -&gt; JsonValue) -&gt; encoder3:(&#39;c -&gt; JsonValue) -&gt; encoder4:(&#39;d -&gt; JsonValue) -&gt; encoder5:(&#39;e -&gt; JsonValue) -&gt; encoder6:(&#39;f -&gt; JsonValue) -&gt; (a:&#39;a * b:&#39;b * c:&#39;c * d:&#39;d * e:&#39;e * f:&#39;f) -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a, 'b, 'c, 'd, 'e, 'f                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L741-741" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '168', 168)" onmouseover="showTip(event, '168', 168)">
+            JsonEncode.tuple7(...)
+          </code>
+          <div class="tip" id="168">
+            <strong>Signature:</strong> encoder1:(&#39;a -&gt; JsonValue) -&gt; encoder2:(&#39;b -&gt; JsonValue) -&gt; encoder3:(&#39;c -&gt; JsonValue) -&gt; encoder4:(&#39;d -&gt; JsonValue) -&gt; encoder5:(&#39;e -&gt; JsonValue) -&gt; encoder6:(&#39;f -&gt; JsonValue) -&gt; encoder7:(&#39;g -&gt; JsonValue) -&gt; (a:&#39;a * b:&#39;b * c:&#39;c * d:&#39;d * e:&#39;e * f:&#39;f * g:&#39;g) -&gt; JsonValue<br />
+                          <strong>Type parameters:</strong> 'a, 'b, 'c, 'd, 'e, 'f, 'g                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L742-742" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '169', 169)" onmouseover="showTip(event, '169', 169)">
+            JsonEncode.uint16(x)
+          </code>
+          <div class="tip" id="169">
+            <strong>Signature:</strong> x:uint16 -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L760-760" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '170', 170)" onmouseover="showTip(event, '170', 170)">
+            JsonEncode.uint32(x)
+          </code>
+          <div class="tip" id="170">
+            <strong>Signature:</strong> x:uint32 -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L756-756" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '171', 171)" onmouseover="showTip(event, '171', 171)">
+            JsonEncode.uint64(x)
+          </code>
+          <div class="tip" id="171">
+            <strong>Signature:</strong> x:uint64 -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L758-758" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '172', 172)" onmouseover="showTip(event, '172', 172)">
+            JsonEncode.unit()
+          </code>
+          <div class="tip" id="172">
+            <strong>Signature:</strong> unit -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L745-745" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+        </div>
+        <div class="span3">
+          <img src="/fleece/img/logo-color.svg" alt="F# Project" style="width:150px;margin:10px" />  
+		  <ul class="nav nav-list" id="menu" style="margin-top: 20px;">
+		  	<li class="nav-header">Fleece</li>
+		  <li><a href="/fleece/index.html">Home page</a></li>
+		  <li class="divider"></li>
+      <!--
+		  <li><a href="http://nuget.org/packages/Fleece">Get Library via NuGet</a></li>
+      -->
+		  <li><a href="https://github.com/fsprojects/Fleece">Source Code on GitHub</a></li>
+		  <li><a href="/fleece/license.html">License</a></li>
+		  <li><a href="/fleece/release-notes.html">Release Notes</a></li>
+
+		  <li class="nav-header">Documentation</li>
+		  <li><a href="/fleece/reference/index.html">API Reference</a></li>
+		  </ul>
+        </div>
+      </div>
+    </div>
+    <a href="https://github.com/fsprojects/Fleece"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"/></a>
+  </body>
+  </html>
