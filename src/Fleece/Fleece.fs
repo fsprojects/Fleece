@@ -646,7 +646,7 @@ module SystemTextJson =
 
         let tuple7 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = function
             | JArray a as x ->
-                if a.Count <> 7 then Decode.Fail.count 3 x
+                if a.Count <> 7 then Decode.Fail.count 7 x
                 else tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6]
             | a -> Decode.Fail.arrExpected a
 
