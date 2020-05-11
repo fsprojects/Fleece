@@ -1,4 +1,4 @@
-image: Visual Studio 2017
+image: Visual Studio 2019
 
 before_build:
   - ps: >-
@@ -14,9 +14,10 @@ build_script:
   - cmd: echo vs %VersionSuffix%"
   - cmd: build.bat
 test_script:
-  - cmd: dotnet run -p .\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
-  - cmd: dotnet run -p .\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net461
-  - cmd: dotnet run -p .\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net461
+  - cmd: dotnet run -p .\test\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
+  - cmd: dotnet run -p .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net461
+  - cmd: dotnet run -p .\test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net461
+  - cmd: dotnet run -p .\test\Tests.SystemTextJson\Tests.SystemTextJson.fsproj -c Release -f net461
 
 artifacts:
   # pushing all *.nupkg files in build directory recursively

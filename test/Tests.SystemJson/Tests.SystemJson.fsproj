@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
-    <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
+    <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Tests/Lenses.fs" />
@@ -16,6 +16,6 @@
     <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Fleece.SystemTextJson\Fleece.SystemTextJson.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
   </ItemGroup>
 </Project>

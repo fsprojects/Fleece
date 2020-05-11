@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0;net461</TargetFrameworks>    
-    <DefineConstants>FSHARPDATA;$(DefineConstants)</DefineConstants>
+    <TargetFrameworks>net461;netcoreapp2.0</TargetFrameworks>
+    <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Tests/Lenses.fs" />
@@ -16,7 +16,6 @@
     <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece.SystemTextJson\Fleece.SystemTextJson.fsproj" />
   </ItemGroup>
-  
 </Project>
