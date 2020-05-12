@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
@@ -13,7 +13,7 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.*" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Update="FSharp.Core" Version="4.6.2" />
     <ProjectReference Include="..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
     <ProjectReference Include="..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />

@@ -83,6 +83,10 @@ type ParseTest () =
         Bench.SystemJson.parse jsonString
 
     [<Benchmark>]
+    member __.SystemTextJson () =
+        Bench.SystemTextJson.parse jsonString
+
+    [<Benchmark>]
     member __.NewtonsoftJson () =
         Bench.NewtonsoftJson.parse jsonString
 
