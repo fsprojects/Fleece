@@ -1,5 +1,7 @@
 ﻿namespace Fleece
 
+#nowarn "00042"
+
 open System
 open System.Globalization
 open System.Collections.Generic
@@ -314,6 +316,9 @@ module SystemTextJson =
     let JNumber (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
     
 #endif
+
+    let inline retype (x:'a) : 'b = (# "" x : 'b #)
+
     // Deserializing:
 
     type JType =
@@ -612,6 +617,9 @@ module SystemTextJson =
         let unit : JsonValue -> ParseResult<unit> = 
             createTuple 0 (konst (Success ()))
 
+        let tuple1 (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
+            createTuple 1 (fun a -> Tuple  <!> decoder1 a.[0])
+
         let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
             createTuple 2 (fun a -> tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1])
 
@@ -714,6 +722,7 @@ module SystemTextJson =
         let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
         let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
 
+        let tuple1 (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([|encoder1 a.Item1|] |> IList.toIReadOnlyList)
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
         let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> IList.toIReadOnlyList)
@@ -815,6 +824,26 @@ module SystemTextJson =
             let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson : ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
             iOfJson (Unchecked.defaultof<OfJson>, Unchecked.defaultof<'t>) x
 
+    type OfJson with
+        static member inline OfJson (_: Tuple<'a>, _: OfJson) : JsonValue -> ParseResult<Tuple<'a>> = JsonDecode.tuple1 OfJson.Invoke
+        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
+
+    type OfJson with
+        static member inline OfJson (t:'tuple, _: OfJson) = function
+            | JArray a as x ->
+                let (t1: 't1 ParseResult) = if false then Ok (^tuple : (member Item1: 't1) t) else OfJson.Invoke (a.[0])
+                let (t2: 't2 ParseResult) = if false then Ok (^tuple : (member Item2: 't2) t) else OfJson.Invoke (a.[1])
+                let (t3: 't3 ParseResult) = if false then Ok (^tuple : (member Item3: 't3) t) else OfJson.Invoke (a.[2])
+                let (t4: 't4 ParseResult) = if false then Ok (^tuple : (member Item4: 't4) t) else OfJson.Invoke (a.[3])
+                let (t5: 't5 ParseResult) = if false then Ok (^tuple : (member Item5: 't5) t) else OfJson.Invoke (a.[4])
+                let (t6: 't6 ParseResult) = if false then Ok (^tuple : (member Item6: 't6) t) else OfJson.Invoke (a.[5])
+                let (t7: 't7 ParseResult) = if false then Ok (^tuple : (member Item7: 't7) t) else OfJson.Invoke (a.[6])
+                let (tr: 'tr ParseResult) = if false then Ok (^tuple : (member Rest : 'tr) t) else OfJson.Invoke (JArray (IReadOnlyList.ofArray ((toArray a).[7..])))
+                match tr with
+                | Error (IndexOutOfRange (i, _)) -> Error (IndexOutOfRange (i + 8, x))
+                | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
+            | a -> Decode.Fail.arrExpected a
+
     type OfJson with static member inline OfJson (_: Choice<'a, 'b>    , _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>>     = JsonDecode.choice  OfJson.Invoke OfJson.Invoke
     type OfJson with static member inline OfJson (_: Choice<'a, 'b, 'c>, _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = JsonDecode.choice3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
 
@@ -833,7 +862,6 @@ module SystemTextJson =
         static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
         static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
         static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
-        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
     
     type OfJson with
         static member inline OfJson (_: 'a * 'b, _: OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
@@ -934,6 +962,22 @@ module SystemTextJson =
             iToJson (Unchecked.defaultof<ToJson>, x)
 
     type ToJson with        
+        static member inline ToJson (x         , _: ToJson) = JsonEncode.tuple1 ToJson.Invoke x
+        static member        ToJson (_: Id1<'t>, _: ToJson) = ()
+
+    type ToJson with
+        static member inline ToJson (t: 'tuple, _: ToJson) =
+            let t1 = ToJson.Invoke (^tuple : (member Item1: 't1) t)
+            let t2 = ToJson.Invoke (^tuple : (member Item2: 't2) t)
+            let t3 = ToJson.Invoke (^tuple : (member Item3: 't3) t)
+            let t4 = ToJson.Invoke (^tuple : (member Item4: 't4) t)
+            let t5 = ToJson.Invoke (^tuple : (member Item5: 't5) t)
+            let t6 = ToJson.Invoke (^tuple : (member Item6: 't6) t)
+            let t7 = ToJson.Invoke (^tuple : (member Item7: 't7) t)
+            let (JArray tr) = ToJson.Invoke (^tuple : (member Rest : 'tr) t)
+            JArray ([|t1; t2; t3; t4; t5; t6; t7|] ++ IReadOnlyList.toArray tr)
+    
+    type ToJson with
         static member inline ToJson (x: Choice<'a, 'b>, _: ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
