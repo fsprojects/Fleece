@@ -389,10 +389,6 @@ module SystemTextJson =
                 member __.GetEnumerator () = (l :> _ seq).GetEnumerator ()
                 member __.GetEnumerator () = (l :> System.Collections.IEnumerable).GetEnumerator () }
 
-        let rdict x = x |> dict |> Dict.toIReadOnlyDictionary
-
-        let keys   (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(k, _)) -> k) x
-        let values (x: IReadOnlyDictionary<_,_>) = Seq.map (fun (KeyValue(_, v)) -> v) x
 #if !NETCOREAPP
         type ArraySegment<'a> with
             member x.ToArray () =
@@ -541,7 +537,7 @@ module SystemTextJson =
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
         let inline toMonoid x = x |> toList
-        let inline ofMonoid x = x |> (List.map (|KeyValue|) >> rdict)
+        let inline ofMonoid x = x |> (List.map (|KeyValue|) >> readOnlyDict)
 
         let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
         let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
@@ -550,7 +546,7 @@ module SystemTextJson =
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> rdict)
+    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> readOnlyDict)
 
 
     [<RequireQualifiedAccess>]
@@ -601,11 +597,11 @@ module SystemTextJson =
             | a        -> Decode.Fail.arrExpected a
 
         let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
-            | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> ofSeq)
+            | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> ofSeq)
             | a -> Decode.Fail.objExpected a
 
         let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
-            | JObject o -> traverse decoder (values o) |> map (fun values -> Seq.zip (keys o) values |> Map.ofSeq)
+            | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Map.ofSeq)
             | a -> Decode.Fail.objExpected a
 
         let unit : JsonValue -> ParseResult<unit> = function
@@ -731,8 +727,8 @@ module SystemTextJson =
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
         let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
-        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> rdict |> JObject
-        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> rdict |> JObject
+        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
+        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
 
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
@@ -854,7 +850,7 @@ module SystemTextJson =
         static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
         static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
         static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
-
+    
     type OfJson with
         static member inline OfJson (_: 'a * 'b, _: OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
 
@@ -953,7 +949,7 @@ module SystemTextJson =
             let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson : ^b * _ -> JsonValue) b, a)
             iToJson (Unchecked.defaultof<ToJson>, x)
 
-    type ToJson with
+    type ToJson with        
         static member inline ToJson (x: Choice<'a, 'b>, _: ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
 
     type ToJson with
@@ -1049,7 +1045,7 @@ module SystemTextJson =
     /// <summary>Initialize the field mappings.</summary>
     /// <param name="f">An object constructor as a curried function.</param>
     /// <returns>The resulting object codec.</returns>
-    let withFields f = (fun _ -> Success f), (fun _ -> rdict [])
+    let withFields f = (fun _ -> Success f), (fun _ -> readOnlyDict [])
 
     let diApply combiner (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: SplitCodec<'S, 'f, 'T>) =
         ( 
@@ -1067,7 +1063,7 @@ module SystemTextJson =
         let inline deriveFieldCodec codec prop getter =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
-                (getter >> fun (x: 'Value) -> rdict [prop, (snd codec) x])
+                (getter >> fun (x: 'Value) -> readOnlyDict [prop, (snd codec) x])
             )
         diApply IReadOnlyDictionary.union rest (deriveFieldCodec codec fieldName getter)
 
@@ -1088,7 +1084,7 @@ module SystemTextJson =
         let inline deriveFieldCodecOpt codec prop getter =
             (
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
-                (getter >> function Some (x: 'Value) -> rdict [prop, (snd codec) x] | _ -> rdict [])
+                (getter >> function Some (x: 'Value) -> readOnlyDict [prop, (snd codec) x] | _ -> readOnlyDict [])
             )
         diApply IReadOnlyDictionary.union rest (deriveFieldCodecOpt codec fieldName getter)
 
