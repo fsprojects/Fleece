@@ -551,6 +551,11 @@ module SystemTextJson =
 
     [<RequireQualifiedAccess>]
     module JsonDecode =
+
+        let private createTuple c t = function 
+            | JArray a as x -> if length a <> c then Decode.Fail.count c x else t a
+            | a -> Decode.Fail.arrExpected a
+
         let choice (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> = function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -604,47 +609,26 @@ module SystemTextJson =
             | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Map.ofSeq)
             | a -> Decode.Fail.objExpected a
 
-        let unit : JsonValue -> ParseResult<unit> = function
-            | JArray a as x ->
-                if a.Count <> 0 then Decode.Fail.count 0 x
-                else Success ()
-            | a -> Decode.Fail.arrExpected a
+        let unit : JsonValue -> ParseResult<unit> = 
+            createTuple 0 (konst (Success ()))
 
-        let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> = function
-            | JArray a as x ->
-                if a.Count <> 2 then Decode.Fail.count 2 x
-                else tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1]
-            | a -> Decode.Fail.arrExpected a
+        let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
+            createTuple 2 (fun a -> tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1])
 
-        let tuple3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> = function
-            | JArray a as x ->
-                if a.Count <> 3 then Decode.Fail.count 3 x
-                else tuple3 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2]
-            | a -> Decode.Fail.arrExpected a
+        let tuple3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> =
+            createTuple 3 (fun a -> tuple3 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2])
 
-        let tuple4 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = function
-            | JArray a as x ->
-                if a.Count <> 4 then Decode.Fail.count 4 x
-                else tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3]
-            | a -> Decode.Fail.arrExpected a
+        let tuple4 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
+            createTuple 4 (fun a -> tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
 
-        let tuple5 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = function
-            | JArray a as x ->
-                if a.Count <> 5 then Decode.Fail.count 5 x
-                else tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4]
-            | a -> Decode.Fail.arrExpected a
+        let tuple5 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
+            createTuple 5 (fun a -> tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
 
-        let tuple6 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = function
-            | JArray a as x ->
-                if a.Count <> 6 then Decode.Fail.count 6 x
-                else tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5]
-            | a -> Decode.Fail.arrExpected a
+        let tuple6 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
+            createTuple 6 (fun a -> tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
 
-        let tuple7 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = function
-            | JArray a as x ->
-                if a.Count <> 7 then Decode.Fail.count 7 x
-                else tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6]
-            | a -> Decode.Fail.arrExpected a
+        let tuple7 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
+            createTuple 7 (fun a -> tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
 
         let decimal x = tryRead<decimal> x
         let int16   x = tryRead<int16>   x
