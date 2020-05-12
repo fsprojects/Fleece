@@ -71,7 +71,7 @@ module Bench =
 type ParseTest () =
     let mutable jsonString = null
 
-    [<Setup>]
+    [<GlobalSetup>]
     member this.Setup () =
         jsonString <- loadJsonResourceAsString this.Name
 
