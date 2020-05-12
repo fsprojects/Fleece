@@ -23,6 +23,20 @@ module Bench =
             reader.ReadToEnd()
             |> parse
 
+    module SystemTextJson =
+        open Fleece.SystemTextJson
+        open Fleece.SystemTextJson.Decode
+        open System.Text.Json
+        let inline parse (s: string): JsonObject =
+            s
+            |> parseJson
+            |> function | Success v->v | Failure e ->failwithf "%A" e 
+
+        let inline parseStream (stream: #Stream): JsonObject =
+            let reader = new StreamReader(stream)
+            reader.ReadToEnd()
+            |> parse
+
     module NewtonsoftJson =
         open Fleece.Newtonsoft
         open Fleece.Newtonsoft.Decode
