@@ -564,6 +564,11 @@ let tests = [
             yield testProperty "int option array" (roundtrip<int option array>)
             //yield testProperty "int Nullable array" (roundtrip<int Nullable array>) // not handled by FsCheck
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
+            yield testProperty "8-tuple"  (roundtrip<int * int * decimal * decimal * string * string * byte * byte>)
+            yield testProperty "9-tuple"  (roundtrip<int * int * decimal * decimal * string * string * byte * byte * bool>)
+            yield testProperty "15-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte>)
+            yield testProperty "16-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte * byte>)
+            yield testProperty "17-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte * byte * bool>)
             yield testProperty "Choice<(int * string) list, Choice<decimal option, string>>" (roundtrip<Choice<(int * string) list, Choice<decimal option, string>>>)
 
             yield test "null string" {
