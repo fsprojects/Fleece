@@ -29,9 +29,7 @@ type Default1 = class inherit Default2 end
 module FSharpData =
     
     open FSharp.Data
-
-    type JsonObject = IReadOnlyDictionary<string,JsonValue>
-
+        
     type private JsonHelpers () =
         static member create (x: decimal) : JsonValue = JsonValue.Number          x
         static member create (x: Double ) : JsonValue = JsonValue.Float           x
@@ -49,7 +47,32 @@ module FSharpData =
         static member create (x: Guid   ) : JsonValue = JsonValue.String (string  x)
 
 
-    let jsonObjectGetValues (x: JsonObject) = x
+    type JsonObject (properties: (string * JsonValue) []) =
+        let properties = properties
+        member __.Properties = properties
+        with
+            interface System.Collections.IEnumerable with
+                member __.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator () :> System.Collections.IEnumerator
+
+            interface IEnumerable<KeyValuePair<string, JsonValue>> with
+                member __.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator ()
+
+            interface IReadOnlyCollection<KeyValuePair<string,JsonValue>> with
+                member __.Count = properties.Length
+        
+            interface IReadOnlyDictionary<string, JsonValue> with
+                member __.Keys = properties |> Seq.map fst
+                member __.Values = properties |> Seq.map snd
+                member __.Item with get (key: string) = properties |> Array.find (fun (k, _) -> k = key) |> snd
+                member __.ContainsKey (key: string) = properties |> Array.exists (fun (k, _) -> k = key)
+                member __.TryGetValue (key: string, value:byref<JsonValue>) =
+                    match properties |> Array.tryFindIndex (fun (k, _) -> k = key) with
+                    | Some i ->
+                        value <- snd properties.[i]
+                        true
+                    | None -> false
+
+    let jsonObjectGetValues (x: JsonObject) = x :> IReadOnlyDictionary<string, JsonValue>
 
 
     // FSharp.Data.JsonValue AST adapter
@@ -58,14 +81,21 @@ module FSharpData =
         match o with
         | JsonValue.Null          -> JNull
         | JsonValue.Array els     -> JArray (IList.toIReadOnlyList els)
-        | JsonValue.Record props  -> JObject (readOnlyDict props)
+        | JsonValue.Record props  -> JObject (jsonObjectGetValues (JsonObject props))
         | JsonValue.Number _ as x -> JNumber x
         | JsonValue.Float _ as x  -> JNumber x
         | JsonValue.Boolean x     -> JBool x
         | JsonValue.String x      -> JString x
     
+    let dictAsJsonObject (x: IReadOnlyDictionary<string, JsonValue>) =
+        match x with
+        | :? JsonObject as x' -> x'
+        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq |> JsonObject
+
     let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) =
-        x |> Seq.map (|KeyValue|) |> Array.ofSeq
+        match x with
+        | :? JsonObject as x' -> x'.Properties
+        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq
 
     let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
     let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
@@ -227,12 +257,12 @@ module SystemTextJson =
                     value.WriteTo writer
                     
 
-    type JsonObject = IReadOnlyDictionary<string,JsonValue>
+    type JsonObject = Map<string, JsonValue>
 
     module JsonValue =
         let Parse (x: string) = let doc = JsonDocument.Parse x in { Value = Choice1Of2 doc.RootElement }
 
-    let jsonObjectGetValues (o: JsonObject) = o
+    let jsonObjectGetValues (o: JsonObject) = o :> IReadOnlyDictionary<string, JsonValue>
 
     let inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
 
@@ -268,7 +298,10 @@ module SystemTextJson =
         | JsonValueKind.String    -> JString (o.GetString ())
         | _                       -> failwithf "Invalid JsonValue %A" o
 
-    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
+    let dictAsJsonObject (x: IReadOnlyDictionary<string, JsonValue>) =
+        match x with
+        | :? JsonObject as x' -> x'
+        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq |> JsonObject
 
     let inline JArray (x: JsonValue IReadOnlyList) =
         let f w =
@@ -387,7 +420,7 @@ module SystemTextJson =
 
         type JsonHelpers with
             static member jsonObjectOfJson = function
-                | JObject x -> Success x
+                | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
 
         #endif
@@ -460,7 +493,7 @@ module SystemTextJson =
 
         type JsonHelpers with
             static member jsonObjectOfJson = function
-                | JObject x -> Success x
+                | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
 
         #endif
