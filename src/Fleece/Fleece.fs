@@ -423,8 +423,7 @@ module SystemTextJson =
                 | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
 
-            static member jsonOfJsonObject o =
-                Success (JObject o)
+            static member jsonOfJsonObject o = JObject o
 
         #endif
 
@@ -446,8 +445,7 @@ module SystemTextJson =
                     | JTokenType.Object -> Success (o :?> JObject)
                     | _ -> Decode.Fail.objExpected o
 
-            static member jsonOfJsonObject o =
-                Success (o :> JToken)
+            static member jsonOfJsonObject o = o :> JToken
  
         #endif
 
@@ -503,8 +501,7 @@ module SystemTextJson =
                 | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
 
-            static member jsonOfJsonObject (o: JsonObject) =
-                Success (JObject o)
+            static member jsonOfJsonObject (o: JsonObject) = JObject o
 
         #endif
 
@@ -1055,7 +1052,7 @@ module SystemTextJson =
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
 
         static member ToJson (_: JsonObject, _: Default1) = JsonHelpers.jsonOfJsonObject
-        static member ToJson (_: JsonValue, _: Default1) = Success
+        static member ToJson (_: JsonValue, _: Default1) = id
 
     /// Maps a value to Json
     let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
