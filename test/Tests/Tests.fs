@@ -171,7 +171,6 @@ type Assert with
 
 
 open FsCheck
-open FsCheck.GenOperators
 
 type ArraySegmentGenerator =
   static member ArraySegment() =

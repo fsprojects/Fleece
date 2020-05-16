@@ -12,9 +12,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="4.6.2" />
-    <PackageReference Include="FsCheck" Version="0.9.4.0" />
-    <PackageReference Include="Fuchu" Version="0.4.0.0" />
-    <PackageReference Include="Fuchu.FsCheck" Version="0.4.0.0" />
+    <PackageReference Include="FsCheck" Version="2.14.2" />
+    <PackageReference Include="Fuchu" Version="1.1.0" />
+    <PackageReference Include="Fuchu.FsCheck" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />

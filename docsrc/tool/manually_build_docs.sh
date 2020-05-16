@@ -10,5 +10,5 @@ dotnet tool restore
 msbuild /t:Build /p:Configuration=Release 
 
 # Gen docs
-dotnet run --project ./docsrc/tool
+dotnet run --project ./docsrc/tool ReleaseDocs
 
