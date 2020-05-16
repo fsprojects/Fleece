@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: msbuild /p:Configuration=Release
+      run: dotnet build -c Release 
     - name: Test SystemJson
       run: dotnet run --no-build -p ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f netcoreapp2.0
     - name: Test FSharpData
