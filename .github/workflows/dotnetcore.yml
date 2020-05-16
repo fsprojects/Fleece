@@ -1,0 +1,31 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: msbuild /p:Configuration=Release
+    - name: Test SystemJson
+      run: dotnet run --no-build -p ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f netcoreapp2.0
+    - name: Test FSharpData
+      run: dotnet run --no-build -p ./test/Tests.FSharpData/Tests.FSharpData.fsproj -c Release -f netcoreapp2.0
+    - name: Test NewtonsoftJson
+      run: dotnet run --no-build -p ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f netcoreapp2.0
+    - name: Test SystemTextJson
+      run: dotnet run --no-build -p ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f netcoreapp2.0
