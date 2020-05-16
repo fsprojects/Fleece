@@ -445,6 +445,15 @@ let tests = [
             
             }
 
+            test "Map roundtrips as JsonValue and JsonObject" {
+                let p = Map.ofList [ ("1", "one"); ("2", "two")]
+                let x = p |> toJson |> toJson |> ofJson<Map<string,string>>
+                let (Ok o)  = p |> toJson |> ofJson<JsonObject>
+                let y = o |> toJson |> toJson |> ofJson<Map<string,string>>
+                Assert.Equal("roundtrip through JsonValue", Option.ofResult x, Some p)
+                Assert.Equal("roundtrip through JsonObject", Option.ofResult y, Some p)
+            }
+
             test "Map with null key" {
                 let p: Map<string, _> = Map.ofList [null, "a"]
                 Assert.JSON("{}", p)
