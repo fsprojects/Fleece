@@ -445,10 +445,10 @@ module SystemTextJson =
                     match o.Type with
                     | JTokenType.Object -> Success (o :?> JObject)
                     | _ -> Decode.Fail.objExpected o
- 
+
             static member jsonOfJsonObject o =
                 Success (o :> JToken)
-
+ 
         #endif
 
         #if SYSTEMJSON
@@ -502,6 +502,9 @@ module SystemTextJson =
             static member jsonObjectOfJson = function
                 | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
+
+            static member jsonOfJsonObject (o: JsonObject) =
+                Success (JObject o)
 
         #endif
 
@@ -1053,7 +1056,7 @@ module SystemTextJson =
 
         static member ToJson (_: JsonObject, _: Default1) = JsonHelpers.jsonOfJsonObject
         static member ToJson (_: JsonValue, _: Default1) = Success
-   
+
     /// Maps a value to Json
     let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
 
