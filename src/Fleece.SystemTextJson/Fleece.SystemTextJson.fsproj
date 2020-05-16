@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <NoWarn>0686</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>JSON mapper for System.Text.Json</Description>
+    <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
+    <OtherFlags>--warnon:1182</OtherFlags>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Fleece/Fleece.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.6.2" />
+    <PackageReference Include="FSharpPlus" Version="1.1.1" />
+    <PackageReference Include="System.Text.Json" Version="4.7.1" />
+  </ItemGroup>
+</Project>

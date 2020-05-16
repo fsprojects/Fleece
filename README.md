@@ -3,13 +3,14 @@ Fleece
 
 Fleece is a JSON mapper for F#. It simplifies mapping from a Json library's JsonValue onto your types, and mapping from your types onto JsonValue. 
 
-The Json library could be [System.Json](http://bit.ly/1axIBoA), [FSharp.Data](http://fsharp.github.io/FSharp.Data/)'s or [NewtonSoft's Json.NET](https://www.newtonsoft.com/json).
+The Json library could be [System.Json](http://bit.ly/1axIBoA), [System.Text.Json](https://docs.microsoft.com/en-us/dotnet/api/system.text.json), [FSharp.Data](http://fsharp.github.io/FSharp.Data/)'s or [NewtonSoft's Json.NET](https://www.newtonsoft.com/json).
 
 Its design is strongly influenced by Haskell's [Aeson](http://hackage.haskell.org/package/aeson-0.7.0.0/docs/Data-Aeson.html). Like Aeson, Fleece is designed around two typeclasses (in [FSharpPlus](https://github.com/fsprojects/FSharpPlus) style) ToJson and OfJson.
 
 ### Download binaries
 
 * [For System.Json](https://www.nuget.org/packages/Fleece.SystemJson/)
+* [For System.Text.Json](https://www.nuget.org/packages/Fleece.SystemTextJson/)
 * [For FSharp.Data](https://www.nuget.org/packages/Fleece.FSharpData/)
 * [For NewtonSoft](https://www.nuget.org/packages/Fleece.NewtonSoftJson/)
 
@@ -250,3 +251,9 @@ let car = { Id = "xyz"; Color = Red; Kms = 0 }
 let jsonCar = Codec.encode carCodec car
 // val jsonCar : JsonValue = {"id": "xyz", "color": "red", "kms": 0}
 ```
+
+## Maintainer(s)
+
+- [@mausch](https://github.com/mausch)
+- [@gusty](https://github.com/gusty)
+- [@wallymathieu](https://github.com/wallymathieu)

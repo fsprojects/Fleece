@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
@@ -13,11 +13,14 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.10.*" />
-    <PackageReference Include="FSharp.Core" Version="4.3.*" />
-    <ProjectReference Include="..\Fleece\Fleece.fsproj" />
-    <ProjectReference Include="..\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
-    <ProjectReference Include="..\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Update="FSharp.Core" Version="4.6.2" />
+    <ProjectReference Include="..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
+    <ProjectReference Include="..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
+    <ProjectReference Include="..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\Fleece.SystemTextJson\Fleece.SystemTextJson.fsproj" />
   </ItemGroup>
 
 </Project>
