@@ -431,7 +431,7 @@ let tests = [
                 let expectedU = "\"[{bike:[]}]\""
                 let expectedV = "\"[{motorBike:[]}]\""
                 let expectedW = "\"[{car:Renault}]\""
-                let expectedX = "\"[{van:[Fiat,5.7999999999999998]}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
                 let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
                 let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
                 #endif
