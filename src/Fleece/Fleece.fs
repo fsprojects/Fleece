@@ -423,6 +423,8 @@ module SystemTextJson =
                 | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
 
+            static member jsonOfJsonObject o = JObject o
+
         #endif
 
         #if NEWTONSOFT
@@ -442,8 +444,9 @@ module SystemTextJson =
                     match o.Type with
                     | JTokenType.Object -> Success (o :?> JObject)
                     | _ -> Decode.Fail.objExpected o
- 
 
+            static member jsonOfJsonObject o = o :> JToken
+ 
         #endif
 
         #if SYSTEMJSON
@@ -462,6 +465,8 @@ module SystemTextJson =
                     match box o with
                     | :? JsonObject as x -> Success x
                     | _ -> Decode.Fail.objExpected o
+
+            static member jsonOfJsonObject (o: JsonObject) = o :> JsonValue
 
         #endif
 
@@ -495,6 +500,8 @@ module SystemTextJson =
             static member jsonObjectOfJson = function
                 | JObject x -> Success (dictAsJsonObject x)
                 | a -> Decode.Fail.objExpected a
+
+            static member jsonOfJsonObject (o: JsonObject) = JObject o
 
         #endif
 
@@ -905,6 +912,7 @@ module SystemTextJson =
         static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
 
         static member OfJson (_: JsonObject, _: Default1) = JsonHelpers.jsonObjectOfJson
+        static member OfJson (_: JsonValue, _: Default1) = Success
 
 
     /// Maps Json to a type
@@ -1042,6 +1050,9 @@ module SystemTextJson =
 
         static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
         static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
+
+        static member ToJson (t: JsonObject, _: Default1) = JsonHelpers.jsonOfJsonObject t
+        static member ToJson (t: JsonValue , _: Default1) = t
 
     /// Maps a value to Json
     let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
