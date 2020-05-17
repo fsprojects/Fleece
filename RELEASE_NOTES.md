@@ -1,3 +1,11 @@
+#### 0.8.0  - May 17 2020
+* Added System.Text.Json implementation
+* Support for enums and all tuple sizes
+* Fix: error reporting wrong index in 7-uples
+* FSharpData use its own type for JsonObject
+* Added missing ofJson/toJson support for JsonValue and JsonObject
+* Upgrade to FSharpPlus 1.1.1
+
 #### 0.7.0  - September 27 2018
 * Json Lens
 * Codecs
