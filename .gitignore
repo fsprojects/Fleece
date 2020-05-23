@@ -13,3 +13,4 @@ packages/*
 
 docsrc/content/license.md
 docsrc/content/release-notes.md
+*.user
