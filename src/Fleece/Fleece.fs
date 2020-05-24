@@ -336,7 +336,9 @@ module SystemTextJson =
         | String = 4
         | Bool   = 5
         | Null   = 6
+#if NEWTONSOFT
         | Date   = 7
+#endif
 
     let getJType (o: JsonValue) =
         match o with
