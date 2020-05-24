@@ -391,15 +391,15 @@ let tests = [
                 Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
-                let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMJSON
-                let expected = """{"age":44,"children":[{"age":5,"children":[],"gender":"Female","name":"Katy"},{"age":7,"children":[],"gender":"Male","name":"Johnny"}],"gender":"Male","name":"John"}"""
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
-                let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
             }
