@@ -419,20 +419,17 @@ let tests = [
                       ] }
                 #if NEWTONSOFT
                 let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
                 let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMJSON
                 let expected = """{"age":44,"children":[{"age":5,"children":[],"gender":"Female","name":"Katy"},{"age":7,"children":[],"gender":"Male","name":"Johnny"}],"gender":"Male","name":"John"}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
                 let expected = """{"name":"John","age":44,"gender":"Male","children":[{"name":"Katy","age":5,"gender":"Female","children":[]},{"name":"Johnny","age":7,"gender":"Male","children":[]}]}"""
-                Assert.JSON(expected, p)
                 #endif
+                Assert.JSON(expected, p)
             }
             test "Person2" {
                 let p = 
@@ -441,20 +438,17 @@ let tests = [
                       Gender = Gender.Male }
                 #if NEWTONSOFT
                 let expected = """{"name":"John","age":44,"gender":0}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
                 let expected = """{"name":"John","age":44,"gender":0}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMJSON
                 let expected = """{"age":44,"gender":0,"name":"John"}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
                 let expected = """{"name":"John","age":44,"gender":0}"""
-                Assert.JSON(expected, p)
                 #endif
+                Assert.JSON(expected, p)
             }
             test "Vehicle" {
                 let u = [ Bike                       ] |> toJson |> string |> strCleanUpAll
