@@ -564,7 +564,7 @@ let tests = [
             //yield testProperty "float32" (roundtrip<float32>)  // not handled by FsCheck
             yield testProperty "string" (roundtrip<string>)
             yield testProperty "decimal" (roundtrip<decimal>)
-            //yield testProperty "DateTime" (roundtrip<DateTime>)
+            yield testProperty "DateTime" (roundtrip<DateTime>)
             yield testProperty "DateTimeOffset" (roundtrip<DateTimeOffset>)
             yield testProperty "char" (roundtrip<char>)
             yield testProperty "byte" (roundtrip<byte>)
