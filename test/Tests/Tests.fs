@@ -92,7 +92,7 @@ type Person2 with
         jobj [ 
             "name" .= x.Name
             "age" .= x.Age
-            "gender" .= (int x.Gender)
+            "gender" .= (match x.Gender with |Gender.Male -> 0 | Gender.Female -> 1)
         ] 
 
 type Attribute = {
