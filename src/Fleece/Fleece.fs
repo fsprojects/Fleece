@@ -445,6 +445,11 @@ module SystemTextJson =
                   Success (j.ToObject<'a> ())
                 with
                 | e -> Decode.Fail.invalidValue j (string e)
+            | JString _ -> 
+                try
+                    Success (x.ToObject<'a> ())
+                with
+                | e -> Decode.Fail.invalidValue x (string e)
             | js -> Decode.Fail.numExpected js
 
         type JsonHelpers with
