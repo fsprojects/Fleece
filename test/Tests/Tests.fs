@@ -526,8 +526,6 @@ let tests = [
             }
         ]
 
-
-
         testList "Roundtrip" [
             let inline roundtripEq (isEq: 'a -> 'a -> bool) p =
                 let actual = p |> toJson |> ofJson
@@ -539,6 +537,12 @@ let tests = [
                 ok
 
             let inline roundtrip p = roundtripEq (=) p
+
+            let inline eq (a: float) (b: float) = 
+                a.CompareTo(b) = 0
+            
+            // Need a specific comparison for floats, since NaN is never = to NaN. We must use IComparable<T>, which System.Double implements by default..
+            let inline roundtripFloat p = roundtripEq eq p
 
             let testProperty name = testPropertyWithConfig { Config.Default with MaxTest = 10000; Arbitrary=[typeof<ArraySegmentGenerator>] } name
 
@@ -560,7 +564,10 @@ let tests = [
             yield testProperty "int" (roundtrip<int>)
             //yield testProperty "uint32" (roundtrip<uint32>) // not handled by FsCheck
             yield testProperty "int64" (roundtrip<int64>)
-            //yield testProperty "float" (roundtrip<float>) // wrong error due to nan <> nan
+            #if SYSTEMTEXTJSON // System.Text.Json doesn't handle infinities or NaN
+            #else
+            yield testProperty "float" (roundtripFloat) 
+            #endif
             //yield testProperty "float32" (roundtrip<float32>)  // not handled by FsCheck
             yield testProperty "string" (roundtrip<string>)
             yield testProperty "decimal" (roundtrip<decimal>)
