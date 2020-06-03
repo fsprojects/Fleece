@@ -121,24 +121,25 @@ module Newtonsoft =
     type JsonObject = JObject
     
     type private JsonHelpers () =
-        static member create (x: decimal) = JValue          x  :> JToken
-        static member create (x: Double ) = JValue          x  :> JToken
-        static member create (x: Single ) = JValue          x  :> JToken
-        static member create (x: int    ) = JValue          x  :> JToken
-        static member create (x: uint32 ) = JValue          x  :> JToken
-        static member create (x: int64  ) = JValue          x  :> JToken
-        static member create (x: uint64 ) = JValue          x  :> JToken
-        static member create (x: int16  ) = JValue          x  :> JToken
-        static member create (x: uint16 ) = JValue          x  :> JToken
-        static member create (x: byte   ) = JValue          x  :> JToken
-        static member create (x: sbyte  ) = JValue          x  :> JToken
-        static member create (x: char   ) = JValue (string  x) :> JToken
-        static member create (x: Guid   ) = JValue (string  x) :> JToken
+        static member create (x: decimal)  = JValue          x  :> JToken
+        static member create (x: Double )  = JValue          x  :> JToken
+        static member create (x: Single )  = JValue          x  :> JToken
+        static member create (x: int    )  = JValue          x  :> JToken
+        static member create (x: uint32 )  = JValue          x  :> JToken
+        static member create (x: int64  )  = JValue          x  :> JToken
+        static member create (x: uint64 )  = JValue          x  :> JToken
+        static member create (x: int16  )  = JValue          x  :> JToken
+        static member create (x: uint16 )  = JValue          x  :> JToken
+        static member create (x: byte   )  = JValue          x  :> JToken
+        static member create (x: sbyte  )  = JValue          x  :> JToken
+        static member create (x: char   )  = JValue (string  x) :> JToken
+        static member create (x: Guid   )  = JValue (string  x) :> JToken
+        static member create (x: DateTime) = JValue           x :> JToken
 
 
     // FSharp.Newtonsoft.Json AST adapter
 
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JToken) =
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|JDate|) (o: JToken) =
         match o.Type with
         | JTokenType.Null    -> JNull
         | JTokenType.Array   -> JArray ((o :?> JArray) |> IList.toIReadOnlyList)
@@ -147,6 +148,7 @@ module Newtonsoft =
         | JTokenType.Float   -> JNumber  o
         | JTokenType.Boolean -> JBool   (o.ToObject () : bool)
         | JTokenType.String  -> JString (o.ToObject () : string)
+        | JTokenType.Date    -> JDate    o
         | t                  -> failwithf "Invalid JTokenType %A" t
     
     let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
@@ -161,6 +163,7 @@ module Newtonsoft =
     let inline JNumber (x: decimal) = JValue x :> JToken
     let JNull = JValue.CreateNull () :> JToken
     let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
+    let inline JDate (x: DateTime) = JValue x :> JToken
     
 #endif
 
@@ -333,6 +336,9 @@ module SystemTextJson =
         | String = 4
         | Bool   = 5
         | Null   = 6
+#if NEWTONSOFT
+        | Date   = 7
+#endif
 
     let getJType (o: JsonValue) =
         match o with
@@ -342,6 +348,9 @@ module SystemTextJson =
         | JNumber _ -> JType.Number
         | JBool _   -> JType.Bool
         | JString _ -> JType.String
+#if NEWTONSOFT
+        | JDate _   -> JType.Date
+#endif
 
     type DecodeError =
         | JsonTypeMismatch of System.Type * JsonValue * JType * JType
@@ -436,6 +445,11 @@ module SystemTextJson =
                   Success (j.ToObject<'a> ())
                 with
                 | e -> Decode.Fail.invalidValue j (string e)
+            | JString _ -> 
+                try
+                    Success (x.ToObject<'a> ())
+                with
+                | e -> Decode.Fail.invalidValue x (string e)
             | js -> Decode.Fail.numExpected js
 
         type JsonHelpers with
@@ -691,6 +705,20 @@ module SystemTextJson =
             | JString s    -> tryParse<Guid> s |> Operators.option Success (Decode.Fail.invalidValue x "")
             | a -> Decode.Fail.strExpected a
 
+#if NEWTONSOFT
+        let dateTime x =
+            match x with
+            | JString null
+            | JDate null -> Decode.Fail.nullString
+            | JString s -> 
+                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                | true, t -> Success t
+                | _       -> Decode.Fail.invalidValue x ""
+            | JDate d    ->
+                Success <| d.Value<DateTime>()
+            | a -> Decode.Fail.strExpected a
+
+#else
         let dateTime x =
             match x with
             | JString null -> Decode.Fail.nullString
@@ -699,6 +727,7 @@ module SystemTextJson =
                 | true, t -> Success t
                 | _       -> Decode.Fail.invalidValue x ""
             | a -> Decode.Fail.strExpected a
+#endif
 
         let dateTimeOffset x =
             match x with
