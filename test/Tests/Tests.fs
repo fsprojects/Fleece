@@ -165,7 +165,36 @@ type Name = {FirstName: string; LastName: string} with
         | JString x when String.contains ',' x -> Ok { FirstName = (split [|","|] x).[0]; LastName = (split [|","|] x).[1] }
         | JString _ -> Error "Expected a ',' separator"
         | _ -> Error "Invalid Json Type"
+
+type Address = { 
+    country: string }
+with 
+    static member OfJson json = 
+        match json with 
+        | JObject o -> monad { 
+            let! country = o .@ "country"
+
+            return { country = country }}
+        | x -> Decode.Fail.objExpected x
         
+type Customer = { 
+    id: int 
+    name: string
+    address: Address option} 
+with 
+    static member OfJson json = 
+        match json with 
+        | JObject o -> monad { 
+            let! id = o .@ "id"
+            let! name = o .@ "name"
+            let! address = o .@? "address"
+            return { 
+                id = id
+                name = name
+                address = address } }
+        | x -> Decode.Fail.objExpected x
+
+
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 let strCleanUpAll x = System.Text.RegularExpressions.Regex.Replace(x, "\s|\r\n?|\n|\"|\\\\", "")
 type Assert with
@@ -523,6 +552,22 @@ let tests = [
                     | Error (Uncategorized s) -> "Uncategorized:" + s
                     | s -> string s
                 Assert.Equal ("Expecting an Uncategorized error (Expected a ',' separator)", "Uncategorized:Expected a ',' separator", actual)
+            }
+        ]
+        
+        testList "Options from nulls" [ 
+            test "Property is present and value is null" { 
+                let json = """{"id":1, "name": "Joe", "address": null}"""
+                let (customer:Customer ParseResult) = parseJson json
+
+                Assert.Equal("Customer with null address", Some { id = 1; name = "Joe"; address = None}, Option.ofResult customer)
+            }
+        
+            test "Property is absent" { 
+                let json = """{"id":1, "name": "Joe"}"""
+                let (customer:Customer ParseResult) = parseJson json
+        
+                Assert.Equal("Customer without address", Some { id = 1; name = "Joe"; address = None}, Option.ofResult customer)
             }
         ]
 
