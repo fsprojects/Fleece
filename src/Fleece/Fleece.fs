@@ -963,7 +963,7 @@ module SystemTextJson =
     /// Returns None if key is not present in the object.
     let inline jgetOptWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
-        | true, JNull -> Ok None
+        | true, JNull -> Success None
         | true, value -> ofJson value |> map Some
         | _ -> Success None
 
