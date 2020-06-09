@@ -521,6 +521,24 @@ module SystemTextJson =
 
     open Helpers
 
+    /// A specific type to represent codecs, with associated operations
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
+        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
+        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
+                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
+            }
+        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
+        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
+                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
+            }
+
+    
+    // Type aliases for functions, representing Codecs
+
     /// Encodes a value of a generic type 't into a value of raw type 'S.
     type Encoder<'S, 't> = 't -> 'S
 
@@ -539,26 +557,15 @@ module SystemTextJson =
     /// A codec for raw type 'S to strong type 't.
     type Codec<'S, 't> = Codec<'S, 'S, 't>
 
-    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
-        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
-        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
-            {
-                Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
-                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
-            }
-        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
-        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
-            {
-                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
-                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
-            }
 
-
+    /// Functions operating on Codecs (as pair of functions)
     module Codec =
 
         /// Turns a Codec into another Codec, by mapping it over an isomorphism.
         let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) (r, w) = (contramap f r, map g w)
 
+        /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
+        /// and codec1 then codec2 for decoding
         let inline compose codec1 codec2 = 
             let (dec1, enc1) = codec1
             let (dec2, enc2) = codec2
@@ -570,10 +577,16 @@ module SystemTextJson =
         let inline toMonoid x = x |> toList
         let inline ofMonoid x = x |> (List.map (|KeyValue|) >> readOnlyDict)
 
+        /// Extracts a pair of functions from a ConcreteCodec
         let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
+
+        /// Wraps a pair of functions into a ConcreteCodec
         let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
 
+    /// A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
+    
+    /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
@@ -1104,16 +1117,16 @@ module SystemTextJson =
 
 
 
-    /// Creates a new Json key,value pair for a Json object
+    /// Creates a new Json key-value pair for a Json object
     let inline jpairWith toJson (key: string) value = key, toJson value
 
-    /// Creates a new Json key,value pair for a Json object
+    /// Creates a new Json key-value pair for a Json object
     let inline jpair (key: string) value = jpairWith toJson key value
     
-    /// Creates a new Json key,value pair for a Json object if the value option is present
+    /// Creates a new Json key-value pair for a Json object if the value option is present
     let inline jpairOptWith toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
 
-    /// Creates a new Json key,value pair for a Json object if the value option is present
+    /// Creates a new Json key-value pair for a Json object if the value option is present
     let inline jpairOpt (key: string) value = jpairOptWith toJson key value
 
     /// <summary>Initialize the field mappings.</summary>
@@ -1171,10 +1184,10 @@ module SystemTextJson =
 
     module Operators =
 
-        /// Creates a new Json key,value pair for a Json object
+        /// Creates a new Json key-value pair for a Json object
         let inline (.=) key value = jpair key value
         
-        /// Creates a new Json key,value pair for a Json object if the value is present in the option
+        /// Creates a new Json key-value pair for a Json object if the value is present in the option
         let inline (.=?) (key: string) value = jpairOpt key value
 
         /// Gets a value from a Json object
@@ -1216,9 +1229,9 @@ module SystemTextJson =
         let inline (^=) a b = (a, b)
 
         /// Gets a value from a Json object
-        let inline jgetFromListWith ofJson (o: list<KeyValuePair<string, JsonValue>>) key =
+        let inline jgetFromListWith decoder (o: list<KeyValuePair<string, JsonValue>>) key =
             match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
-            | Some (KeyValue(_, value)) -> ofJson value
+            | Some (KeyValue(_, value)) -> decoder value
             | _                         -> Decode.Fail.propertyNotFound key (ofList o)
 
         // /// Gets a value from a Json object
@@ -1226,9 +1239,9 @@ module SystemTextJson =
 
         /// Tries to get a value from a Json object.
         /// Returns None if key is not present in the object.
-        let inline jgetFromListOptWith ofJson (o: list<KeyValuePair<string, JsonValue>>) key =
+        let inline jgetFromListOptWith decoder (o: list<KeyValuePair<string, JsonValue>>) key =
             match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
-            | Some (KeyValue(_, value)) -> ofJson value |> map Some
+            | Some (KeyValue(_, value)) -> decoder value |> map Some
             | _ -> Success None
 
         let inline joptWith codec prop getter =
@@ -1261,10 +1274,12 @@ module SystemTextJson =
         let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
         let inline _JNumber x = (prism' JNumber <| fun v -> match ofJson v : decimal ParseResult with Ok s -> Some s | _ -> None) x
         let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
+
         /// Like '_jnth', but for 'Object' with Text indices.
         let inline _jkey i =
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
             _JObject << dkey i
+
         let inline _jnth i =
             let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
             _JArray << dnth i
