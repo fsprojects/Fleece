@@ -16,7 +16,6 @@ For types that deserialize to Json Objets, typically (but not limited to) record
 
 *)
 
-
 type Person = { 
     name : string * string
     age : int option
@@ -50,14 +49,16 @@ If you prefer you can write the same with functions:
 
 type PersonF = { 
     name : string * string
-    age : int option }
+    age : int option
+    children: PersonF list }
     with
     static member JsonObjCodec =
-        fun f l a -> { name = (f, l); age = a; }
+        fun f l a c -> { name = (f, l); age = a; children = c }
         |> withFields
         |> jfield    "firstName" (fun x -> fst x.name)
         |> jfield    "lastName"  (fun x -> snd x.name)
         |> jfieldOpt "age"       (fun x -> x.age)
+        |> jfieldWith jsonValueCodec "children"  (fun x -> x.children)
 
 (**
 Discriminated unions can be modeled with alternatives:
@@ -95,7 +96,7 @@ What's happening here is that we're getting a Codec to/from a Json Object (not n
 We can also do that by hand, we can manipulate codecs by using functions in the Codec module. Here's an example:
 *)
 open System.Text
-let pf : PersonF= {name = ("John", "Doe"); age = None; }
+let pf : PersonF= {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
 
 let personBytesCodec =
     let getString (bytes:byte array) = Encoding.UTF8.GetString bytes
@@ -107,3 +108,15 @@ let personBytesCodec =
 let bytePerson = Codec.encode personBytesCodec pf
 // val bytePerson : byte [] = [|123uy; 13uy; 10uy; 32uy; 32uy; ... |]
 let p' = Codec.decode personBytesCodec bytePerson
+
+(**
+While if the type of codec is concrete then we need to convert it to before composing it
+*)
+
+let personBytesCodec2 =
+    let getString (bytes:byte array) = Encoding.UTF8.GetString bytes
+    Person.JsonObjCodec
+    |> Codec.ofConcrete
+    |> Codec.compose jsonObjToValueCodec    // this is the codec that fills the gap to/from JsonValue
+    |> Codec.compose jsonValueToTextCodec   // this is a codec between JsonValue and JsonText
+    |> Codec.invmap getString Encoding.UTF8.GetBytes    // This is a pair of of isomorphic functions
