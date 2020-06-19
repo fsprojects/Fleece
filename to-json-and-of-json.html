@@ -84,6 +84,18 @@
 <span class="l">16: </span>
 <span class="l">17: </span>
 <span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+<span class="l">23: </span>
+<span class="l">24: </span>
+<span class="l">25: </span>
+<span class="l">26: </span>
+<span class="l">27: </span>
+<span class="l">28: </span>
+<span class="l">29: </span>
+<span class="l">30: </span>
 </pre></td>
 <td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, '6', 35)" onmouseover="showTip(event, '6', 35)" class="rt">Person</span> <span class="k">with</span>
     <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, '19', 36)" onmouseover="showTip(event, '19', 36)" class="fn">OfJson</span> <span onmouseout="hideTip(event, '20', 37)" onmouseover="showTip(event, '20', 37)" class="id">json</span> <span class="o">=</span>
@@ -102,7 +114,19 @@
             <span class="pn">|</span> <span onmouseout="hideTip(event, '31', 65)" onmouseover="showTip(event, '31', 65)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '32', 66)" onmouseover="showTip(event, '32', 66)" class="uc">Error</span> <span class="o">&lt;|</span> <span onmouseout="hideTip(event, '33', 67)" onmouseover="showTip(event, '33', 67)" class="uc">Uncategorized</span> <span class="pn">(</span><span onmouseout="hideTip(event, '34', 68)" onmouseover="showTip(event, '34', 68)" class="fn">sprintf</span> <span class="s">&quot;Error parsing person: </span><span class="pf">%A</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, '31', 69)" onmouseover="showTip(event, '31', 69)" class="id">x</span><span class="pn">)</span>
         <span class="pn">|</span> <span onmouseout="hideTip(event, '35', 70)" onmouseover="showTip(event, '35', 70)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '26', 71)" onmouseover="showTip(event, '26', 71)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 72)" onmouseover="showTip(event, '36', 72)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, '37', 73)" onmouseover="showTip(event, '37', 73)" class="id">objExpected</span> <span onmouseout="hideTip(event, '35', 74)" onmouseover="showTip(event, '35', 74)" class="id">x</span>
         
-<span class="k">let</span> <span onmouseout="hideTip(event, '38', 75)" onmouseover="showTip(event, '38', 75)" class="id">john</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '6', 76)" onmouseover="showTip(event, '6', 76)" class="rt">Person</span> <span onmouseout="hideTip(event, '39', 77)" onmouseover="showTip(event, '39', 77)" class="vt">ParseResult</span> <span class="o">=</span> <span onmouseout="hideTip(event, '40', 78)" onmouseover="showTip(event, '40', 78)" class="fn">parseJson</span> <span class="s">&quot;&quot;&quot;{&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 44, &quot;children&quot;: [{&quot;name&quot;: &quot;Katy&quot;, &quot;age&quot;: 5, &quot;children&quot;: []}, {&quot;name&quot;: &quot;Johnny&quot;, &quot;age&quot;: 7, &quot;children&quot;: []}]}&quot;&quot;&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, '38', 75)" onmouseover="showTip(event, '38', 75)" class="id">john</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '6', 76)" onmouseover="showTip(event, '6', 76)" class="rt">Person</span> <span onmouseout="hideTip(event, '39', 77)" onmouseover="showTip(event, '39', 77)" class="vt">ParseResult</span> <span class="o">=</span> <span onmouseout="hideTip(event, '40', 78)" onmouseover="showTip(event, '40', 78)" class="fn">parseJson</span> <span class="s">&quot;&quot;&quot;{</span>
+<span class="s">    &quot;name&quot;: &quot;John&quot;,</span>
+<span class="s">    &quot;age&quot;: 44,</span>
+<span class="s">    &quot;children&quot;: [{</span>
+<span class="s">        &quot;name&quot;: &quot;Katy&quot;,</span>
+<span class="s">        &quot;age&quot;: 5,</span>
+<span class="s">        &quot;children&quot;: []</span>
+<span class="s">    }, {</span>
+<span class="s">        &quot;name&quot;: &quot;Johnny&quot;,</span>
+<span class="s">        &quot;age&quot;: 7,</span>
+<span class="s">        &quot;children&quot;: []</span>
+<span class="s">    }]</span>
+<span class="s">}&quot;&quot;&quot;</span>
 </code></pre></td>
 </tr>
 </table>

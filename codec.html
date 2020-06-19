@@ -18,6 +18,15 @@
 <span class="l">15: </span>
 <span class="l">16: </span>
 <span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+<span class="l">23: </span>
+<span class="l">24: </span>
+<span class="l">25: </span>
+<span class="l">26: </span>
 </pre></td>
 <td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span class="rt">Person</span> <span class="o">=</span> <span class="pn">{</span> 
     <span onmouseout="hideTip(event, '6', 8)" onmouseover="showTip(event, '6', 8)" class="id">name</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '7', 9)" onmouseover="showTip(event, '7', 9)" class="rt">string</span> <span class="pn">*</span> <span onmouseout="hideTip(event, '7', 10)" onmouseover="showTip(event, '7', 10)" class="rt">string</span>
@@ -35,7 +44,16 @@
 <span class="k">let</span> <span onmouseout="hideTip(event, '24', 46)" onmouseover="showTip(event, '24', 46)" class="id">p</span> <span class="o">=</span> <span class="pn">{</span><span class="id">name</span> <span class="o">=</span> <span class="pn">(</span><span class="s">&quot;John&quot;</span><span class="pn">,</span> <span class="s">&quot;Doe&quot;</span><span class="pn">)</span><span class="pn">;</span> <span class="id">age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '25', 47)" onmouseover="showTip(event, '25', 47)" class="uc">None</span><span class="pn">;</span> <span class="id">children</span> <span class="o">=</span> <span class="pn">[</span><span class="pn">{</span><span class="id">name</span> <span class="o">=</span> <span class="pn">(</span><span class="s">&quot;Johnny&quot;</span><span class="pn">,</span> <span class="s">&quot;Doe&quot;</span><span class="pn">)</span><span class="pn">;</span> <span class="id">age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '19', 48)" onmouseover="showTip(event, '19', 48)" class="uc">Some</span> <span class="n">21</span><span class="pn">;</span> <span class="id">children</span> <span class="o">=</span> <span class="pn">[</span><span class="pn">]</span><span class="pn">}</span><span class="pn">]</span><span class="pn">}</span>
 <span class="c">//printfn &quot;%s&quot; (string (toJson p))</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '26', 49)" onmouseover="showTip(event, '26', 49)" class="id">john</span> <span class="o">=</span> <span onmouseout="hideTip(event, '27', 50)" onmouseover="showTip(event, '27', 50)" class="fn">parseJson</span><span class="pn">&lt;</span><span onmouseout="hideTip(event, '12', 51)" onmouseover="showTip(event, '12', 51)" class="rt">Person</span><span class="pn">&gt;</span> <span class="s">&quot;&quot;&quot;{&quot;children&quot;: [{&quot;children&quot;: [],&quot;age&quot;: 21,&quot;lastName&quot;: &quot;Doe&quot;,&quot;firstName&quot;: &quot;Johnny&quot;}],&quot;lastName&quot;: &quot;Doe&quot;,&quot;firstName&quot;: &quot;John&quot;}&quot;&quot;&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, '26', 49)" onmouseover="showTip(event, '26', 49)" class="id">john</span> <span class="o">=</span> <span onmouseout="hideTip(event, '27', 50)" onmouseover="showTip(event, '27', 50)" class="fn">parseJson</span><span class="pn">&lt;</span><span onmouseout="hideTip(event, '12', 51)" onmouseover="showTip(event, '12', 51)" class="rt">Person</span><span class="pn">&gt;</span> <span class="s">&quot;&quot;&quot;{</span>
+<span class="s">    &quot;children&quot;: [{</span>
+<span class="s">        &quot;children&quot;: [],</span>
+<span class="s">        &quot;age&quot;: 21,</span>
+<span class="s">        &quot;lastName&quot;: &quot;Doe&quot;,</span>
+<span class="s">        &quot;firstName&quot;: &quot;Johnny&quot;</span>
+<span class="s">    }],</span>
+<span class="s">    &quot;lastName&quot;: &quot;Doe&quot;,</span>
+<span class="s">    &quot;firstName&quot;: &quot;John&quot;</span>
+<span class="s">}&quot;&quot;&quot;</span>
 </code></pre></td>
 </tr>
 </table>
