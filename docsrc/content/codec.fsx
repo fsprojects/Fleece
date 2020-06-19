@@ -33,7 +33,16 @@ type Person = {
 let p = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
 //printfn "%s" (string (toJson p))
 
-let john = parseJson<Person> """{"children": [{"children": [],"age": 21,"lastName": "Doe","firstName": "Johnny"}],"lastName": "Doe","firstName": "John"}"""
+let john = parseJson<Person> """{
+    "children": [{
+        "children": [],
+        "age": 21,
+        "lastName": "Doe",
+        "firstName": "Johnny"
+    }],
+    "lastName": "Doe",
+    "firstName": "John"
+}"""
 
 (**
 If you prefer you can write the same with functions:

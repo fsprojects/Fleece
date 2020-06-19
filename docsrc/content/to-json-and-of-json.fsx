@@ -81,7 +81,19 @@ type Person with
             | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
         | x -> Decode.Fail.objExpected x
         
-let john : Person ParseResult = parseJson """{"name": "John", "age": 44, "children": [{"name": "Katy", "age": 5, "children": []}, {"name": "Johnny", "age": 7, "children": []}]}"""
+let john : Person ParseResult = parseJson """{
+    "name": "John",
+    "age": 44,
+    "children": [{
+        "name": "Katy",
+        "age": 5,
+        "children": []
+    }, {
+        "name": "Johnny",
+        "age": 7,
+        "children": []
+    }]
+}"""
 
 (**
 Though it's much easier to do this in a monadic or applicative way. For example, using [FSharpPlus](https://github.com/fsprojects/FSharpPlus) (which is already a dependency of Fleece):
