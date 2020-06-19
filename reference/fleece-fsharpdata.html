@@ -252,11 +252,11 @@
             diApply(...)
           </code>
           <div class="tip" id="1">
-            <strong>Signature:</strong> combiner:(&#39;S -&gt; &#39;S -&gt; &#39;?8170) -&gt; (Decoder&lt;&#39;S,(&#39;f -&gt; &#39;r)&gt; * Encoder&lt;&#39;S,&#39;T&gt;) -&gt; (Decoder&lt;&#39;S,&#39;f&gt; * Encoder&lt;&#39;S,&#39;T&gt;) -&gt; (&#39;S -&gt; Result&lt;&#39;r,DecodeError&gt;) * (&#39;T -&gt; &#39;?8170)<br />
-                          <strong>Type parameters:</strong> 'S, '?8170, 'f, 'r, 'T                      </div>
+            <strong>Signature:</strong> combiner:(&#39;S -&gt; &#39;S -&gt; &#39;?8205) -&gt; (Decoder&lt;&#39;S,(&#39;f -&gt; &#39;r)&gt; * Encoder&lt;&#39;S,&#39;T&gt;) -&gt; (Decoder&lt;&#39;S,&#39;f&gt; * Encoder&lt;&#39;S,&#39;T&gt;) -&gt; (&#39;S -&gt; Result&lt;&#39;r,DecodeError&gt;) * (&#39;T -&gt; &#39;?8205)<br />
+                          <strong>Type parameters:</strong> 'S, '?8205, 'f, 'r, 'T                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1054-1054" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1128-1128" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -266,14 +266,14 @@
       <tr>
         <td class="member-name">
           <code onmouseout="hideTip(event, '2', 2)" onmouseover="showTip(event, '2', 2)">
-            dictAsProps(x)
+            dictAsJsonObject(x)
           </code>
           <div class="tip" id="2">
-            <strong>Signature:</strong> x:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; (string * JsonValue) []<br />
+            <strong>Signature:</strong> x:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; JsonObject<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L91-91" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L90-90" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -283,9 +283,26 @@
       <tr>
         <td class="member-name">
           <code onmouseout="hideTip(event, '3', 3)" onmouseover="showTip(event, '3', 3)">
-            fromJSON(x)
+            dictAsProps(x)
           </code>
           <div class="tip" id="3">
+            <strong>Signature:</strong> x:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; (string * JsonValue) []<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L95-95" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '4', 4)" onmouseover="showTip(event, '4', 4)">
+            fromJSON(x)
+          </code>
+          <div class="tip" id="4">
             <strong>Signature:</strong> x:JsonValue -&gt; ^t ParseResult<br />
                           <strong>Type parameters:</strong> ^t                        <span>
             <strong>Attributes:</strong><br />
@@ -298,7 +315,7 @@
               <strong>WARNING: </strong> This API is obsolete
               <p>Use &#39;ofJson&#39;</p>
               </div> 
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L901-901" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L956-956" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -307,15 +324,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '4', 4)" onmouseover="showTip(event, '4', 4)">
+          <code onmouseout="hideTip(event, '5', 5)" onmouseover="showTip(event, '5', 5)">
             getJsonValueCodec()
           </code>
-          <div class="tip" id="4">
+          <div class="tip" id="5">
             <strong>Signature:</strong> unit -&gt; Codec&lt;JsonValue,^t&gt;<br />
                           <strong>Type parameters:</strong> ^t                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1024-1024" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1098-1098" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -326,32 +343,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '5', 5)" onmouseover="showTip(event, '5', 5)">
+          <code onmouseout="hideTip(event, '6', 6)" onmouseover="showTip(event, '6', 6)">
             getJType(o)
           </code>
-          <div class="tip" id="5">
+          <div class="tip" id="6">
             <strong>Signature:</strong> o:JsonValue -&gt; JType<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L327-327" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '6', 6)" onmouseover="showTip(event, '6', 6)">
-            JArray(x)
-          </code>
-          <div class="tip" id="6">
-            <strong>Signature:</strong> x:IReadOnlyList&lt;JsonValue&gt; -&gt; JsonValue<br />
-                                  </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L96-96" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L343-343" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -361,206 +361,10 @@
       <tr>
         <td class="member-name">
           <code onmouseout="hideTip(event, '7', 7)" onmouseover="showTip(event, '7', 7)">
-            JBool(x)
+            JArray(x)
           </code>
           <div class="tip" id="7">
-            <strong>Signature:</strong> x:bool -&gt; JsonValue<br />
-                                  </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L98-98" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '8', 8)" onmouseover="showTip(event, '8', 8)">
-            jfield fieldName getter (arg3, arg4)
-          </code>
-          <div class="tip" id="8">
-            <strong>Signature:</strong> fieldName:string -&gt; getter:(&#39;T -&gt; ^Value) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(^Value -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
-                          <strong>Type parameters:</strong> 'T, ^Value, 'Rest                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1079-1079" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Appends a field mapping to the codec.</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '9', 9)" onmouseover="showTip(event, '9', 9)">
-            jfieldOpt fieldName getter (arg3, arg4)
-          </code>
-          <div class="tip" id="9">
-            <strong>Signature:</strong> fieldName:string -&gt; getter:(&#39;T -&gt; ^Value option) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(^Value option -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
-                          <strong>Type parameters:</strong> 'T, ^Value, 'Rest                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1100-1100" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Appends an optional field mapping to the codec.</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '10', 10)" onmouseover="showTip(event, '10', 10)">
-            jfieldOptWith(...)
-          </code>
-          <div class="tip" id="10">
-            <strong>Signature:</strong> ((JsonValue -&gt; ^?8184) * (&#39;Value -&gt; JsonValue)) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value option) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(&#39;?8185 option -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
-                          <strong>Type parameters:</strong> ^?8184, '?8185, '?8186, 'Value, 'T, 'Rest                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1087-1087" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Appends an optional field mapping to the codec.</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '11', 11)" onmouseover="showTip(event, '11', 11)">
-            jfieldWith(...)
-          </code>
-          <div class="tip" id="11">
-            <strong>Signature:</strong> ((JsonValue -&gt; Result&lt;&#39;?8175,DecodeError&gt;) * (&#39;Value -&gt; JsonValue)) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(&#39;?8175 -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
-                          <strong>Type parameters:</strong> '?8175, 'Value, 'T, 'Rest                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1066-1066" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Appends a field mapping to the codec.</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '12', 12)" onmouseover="showTip(event, '12', 12)">
-            jget o key
-          </code>
-          <div class="tip" id="12">
-            <strong>Signature:</strong> o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;^?8040,DecodeError&gt;<br />
-                          <strong>Type parameters:</strong> ^?8040                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L910-910" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Gets a value from a Json object</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '13', 13)" onmouseover="showTip(event, '13', 13)">
-            jgetopt o key
-          </code>
-          <div class="tip" id="13">
-            <strong>Signature:</strong> o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;^?8049 option,DecodeError&gt;<br />
-                          <strong>Type parameters:</strong> ^?8049                        <span>
-            <strong>Attributes:</strong><br />
-[&lt;Obsolete(&quot;Use &#39;jgetOpt&#39;&quot;)&gt;]<br />
-          </span>
-          </div>
-        </td>
-        <td class="xmldoc">
-              <div class="alert alert-warning">
-              <strong>WARNING: </strong> This API is obsolete
-              <p>Use &#39;jgetOpt&#39;</p>
-              </div> 
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L924-924" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '14', 14)" onmouseover="showTip(event, '14', 14)">
-            jgetOpt o key
-          </code>
-          <div class="tip" id="14">
-            <strong>Signature:</strong> o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;^?8047 option,DecodeError&gt;<br />
-                          <strong>Type parameters:</strong> ^?8047                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L921-921" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Tries to get a value from a Json object.
-Returns None if key is not present in the object.</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '15', 15)" onmouseover="showTip(event, '15', 15)">
-            jgetOptWith ofJson o key
-          </code>
-          <div class="tip" id="15">
-            <strong>Signature:</strong> ofJson:(JsonValue -&gt; ^?8042) -&gt; o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;&#39;?8043 option,&#39;?8044&gt;<br />
-                          <strong>Type parameters:</strong> ^?8042, '?8043, '?8044, '?8045                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L914-914" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Tries to get a value from a Json object.
-Returns None if key is not present in the object.</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '16', 16)" onmouseover="showTip(event, '16', 16)">
-            jgetWith ofJson o key
-          </code>
-          <div class="tip" id="16">
-            <strong>Signature:</strong> ofJson:(JsonValue -&gt; Result&lt;&#39;?8038,DecodeError&gt;) -&gt; o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;&#39;?8038,DecodeError&gt;<br />
-                          <strong>Type parameters:</strong> '?8038                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L904-904" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Gets a value from a Json object</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
-            JNull
-          </code>
-          <div class="tip" id="17">
-            <strong>Signature:</strong> JsonValue<br />
+            <strong>Signature:</strong> x:IReadOnlyList&lt;JsonValue&gt; -&gt; JsonValue<br />
                                   </div>
         </td>
         <td class="xmldoc">
@@ -573,15 +377,211 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
-            JNumber(x)
+          <code onmouseout="hideTip(event, '8', 8)" onmouseover="showTip(event, '8', 8)">
+            JBool(x)
           </code>
-          <div class="tip" id="18">
-            <strong>Signature:</strong> x:decimal -&gt; JsonValue<br />
+          <div class="tip" id="8">
+            <strong>Signature:</strong> x:bool -&gt; JsonValue<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L99-99" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L102-102" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '9', 9)" onmouseover="showTip(event, '9', 9)">
+            jfield fieldName getter (arg3, arg4)
+          </code>
+          <div class="tip" id="9">
+            <strong>Signature:</strong> fieldName:string -&gt; getter:(&#39;T -&gt; ^Value) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(^Value -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
+                          <strong>Type parameters:</strong> 'T, ^Value, 'Rest                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1153-1153" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Appends a field mapping to the codec.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '10', 10)" onmouseover="showTip(event, '10', 10)">
+            jfieldOpt fieldName getter (arg3, arg4)
+          </code>
+          <div class="tip" id="10">
+            <strong>Signature:</strong> fieldName:string -&gt; getter:(&#39;T -&gt; ^Value option) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(^Value option -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
+                          <strong>Type parameters:</strong> 'T, ^Value, 'Rest                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1174-1174" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Appends an optional field mapping to the codec.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '11', 11)" onmouseover="showTip(event, '11', 11)">
+            jfieldOptWith(...)
+          </code>
+          <div class="tip" id="11">
+            <strong>Signature:</strong> ((JsonValue -&gt; ^?8219) * (&#39;Value -&gt; JsonValue)) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value option) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(&#39;?8220 option -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
+                          <strong>Type parameters:</strong> ^?8219, '?8220, '?8221, 'Value, 'T, 'Rest                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1161-1161" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Appends an optional field mapping to the codec.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '12', 12)" onmouseover="showTip(event, '12', 12)">
+            jfieldWith(...)
+          </code>
+          <div class="tip" id="12">
+            <strong>Signature:</strong> ((JsonValue -&gt; Result&lt;&#39;?8210,DecodeError&gt;) * (&#39;Value -&gt; JsonValue)) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; (Decoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,(&#39;?8210 -&gt; &#39;Rest)&gt; * Encoder&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,&#39;T&gt;) -&gt; (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)<br />
+                          <strong>Type parameters:</strong> '?8210, 'Value, 'T, 'Rest                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1140-1140" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Appends a field mapping to the codec.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '13', 13)" onmouseover="showTip(event, '13', 13)">
+            jget o key
+          </code>
+          <div class="tip" id="13">
+            <strong>Signature:</strong> o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;^?8059,DecodeError&gt;<br />
+                          <strong>Type parameters:</strong> ^?8059                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L965-965" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets a value from a Json object</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '14', 14)" onmouseover="showTip(event, '14', 14)">
+            jgetopt o key
+          </code>
+          <div class="tip" id="14">
+            <strong>Signature:</strong> o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;^?8068 option,DecodeError&gt;<br />
+                          <strong>Type parameters:</strong> ^?8068                        <span>
+            <strong>Attributes:</strong><br />
+[&lt;Obsolete(&quot;Use &#39;jgetOpt&#39;&quot;)&gt;]<br />
+          </span>
+          </div>
+        </td>
+        <td class="xmldoc">
+              <div class="alert alert-warning">
+              <strong>WARNING: </strong> This API is obsolete
+              <p>Use &#39;jgetOpt&#39;</p>
+              </div> 
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L979-979" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '15', 15)" onmouseover="showTip(event, '15', 15)">
+            jgetOpt o key
+          </code>
+          <div class="tip" id="15">
+            <strong>Signature:</strong> o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;^?8066 option,DecodeError&gt;<br />
+                          <strong>Type parameters:</strong> ^?8066                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L976-976" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Tries to get a value from a Json object.
+Returns None if key is not present in the object.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '16', 16)" onmouseover="showTip(event, '16', 16)">
+            jgetOptWith ofJson o key
+          </code>
+          <div class="tip" id="16">
+            <strong>Signature:</strong> ofJson:(JsonValue -&gt; ^?8061) -&gt; o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;&#39;?8062 option,&#39;?8063&gt;<br />
+                          <strong>Type parameters:</strong> ^?8061, '?8062, '?8063, '?8064                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L969-969" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Tries to get a value from a Json object.
+Returns None if key is not present in the object.</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '17', 17)" onmouseover="showTip(event, '17', 17)">
+            jgetWith ofJson o key
+          </code>
+          <div class="tip" id="17">
+            <strong>Signature:</strong> ofJson:(JsonValue -&gt; Result&lt;&#39;?8057,DecodeError&gt;) -&gt; o:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; key:string -&gt; Result&lt;&#39;?8057,DecodeError&gt;<br />
+                          <strong>Type parameters:</strong> '?8057                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L959-959" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Gets a value from a Json object</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '18', 18)" onmouseover="showTip(event, '18', 18)">
+            JNull
+          </code>
+          <div class="tip" id="18">
+            <strong>Signature:</strong> JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L104-104" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -591,14 +591,31 @@ Returns None if key is not present in the object.</p>
       <tr>
         <td class="member-name">
           <code onmouseout="hideTip(event, '19', 19)" onmouseover="showTip(event, '19', 19)">
-            jobj(x)
+            JNumber(x)
           </code>
           <div class="tip" id="19">
+            <strong>Signature:</strong> x:decimal -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L103-103" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+            jobj(x)
+          </code>
+          <div class="tip" id="20">
             <strong>Signature:</strong> x:seq&lt;string * JsonValue&gt; -&gt; JsonValue<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L553-553" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L580-580" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -609,172 +626,11 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '20', 20)" onmouseover="showTip(event, '20', 20)">
+          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
             JObject(x)
           </code>
-          <div class="tip" id="20">
-            <strong>Signature:</strong> x:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; JsonValue<br />
-                                  </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L97-97" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '21', 21)" onmouseover="showTip(event, '21', 21)">
-            jpair key value
-          </code>
           <div class="tip" id="21">
-            <strong>Signature:</strong> key:string -&gt; value:^?8156 -&gt; string * JsonValue<br />
-                          <strong>Type parameters:</strong> ^?8156                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1041-1041" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Creates a new Json key,value pair for a Json object</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
-            jpairOpt key value
-          </code>
-          <div class="tip" id="22">
-            <strong>Signature:</strong> key:string -&gt; value:^?8160 option -&gt; string * JsonValue<br />
-                          <strong>Type parameters:</strong> ^?8160                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1047-1047" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Creates a new Json key,value pair for a Json object if the value option is present</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
-            jpairOptWith toJson key value
-          </code>
-          <div class="tip" id="23">
-            <strong>Signature:</strong> toJson:(&#39;?8158 -&gt; JsonValue) -&gt; key:string -&gt; value:&#39;?8158 option -&gt; string * JsonValue<br />
-                          <strong>Type parameters:</strong> '?8158                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1044-1044" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Creates a new Json key,value pair for a Json object if the value option is present</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
-            jpairWith toJson key value
-          </code>
-          <div class="tip" id="24">
-            <strong>Signature:</strong> toJson:(&#39;?8153 -&gt; &#39;?8154) -&gt; key:string -&gt; value:&#39;?8153 -&gt; string * &#39;?8154<br />
-                          <strong>Type parameters:</strong> '?8153, '?8154                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1038-1038" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          <p>Creates a new Json key,value pair for a Json object</p>
-
-
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
-            jsonObjectGetValues(x)
-          </code>
-          <div class="tip" id="25">
-            <strong>Signature:</strong> x:JsonObject -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;<br />
-                                  </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L76-76" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
-            jsonObjToValueCodec
-          </code>
-          <div class="tip" id="26">
-            <strong>Signature:</strong> (JsonValue -&gt; Result&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,DecodeError&gt;) * (&#39;?7931 -&gt; JsonValue)<br />
-                          <strong>Type parameters:</strong> '?7931                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L549-549" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
-            jsonValueCodec
-          </code>
-          <div class="tip" id="27">
-            <strong>Signature:</strong> Codec&lt;JsonValue,^t&gt;<br />
-                          <strong>Type parameters:</strong> ^t                      </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1027-1027" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
-            jsonValueToTextCodec
-          </code>
-          <div class="tip" id="28">
-            <strong>Signature:</strong> (string -&gt; Result&lt;JsonValue,DecodeError&gt;) * (JsonValue -&gt; string)<br />
-                                  </div>
-        </td>
-        <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L550-550" class="github-link">
-              <img src="../content/img/github.png" class="normal" />
-              <img src="../content/img/github-blue.png" class="hover" />
-            </a>
-          
-        </td>
-      </tr>
-      <tr>
-        <td class="member-name">
-          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
-            JString(x)
-          </code>
-          <div class="tip" id="29">
-            <strong>Signature:</strong> x:string -&gt; JsonValue<br />
+            <strong>Signature:</strong> x:IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; JsonValue<br />
                                   </div>
         </td>
         <td class="xmldoc">
@@ -787,15 +643,176 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
+          <code onmouseout="hideTip(event, '22', 22)" onmouseover="showTip(event, '22', 22)">
+            jpair key value
+          </code>
+          <div class="tip" id="22">
+            <strong>Signature:</strong> key:string -&gt; value:^?8191 -&gt; string * JsonValue<br />
+                          <strong>Type parameters:</strong> ^?8191                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1115-1115" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new Json key,value pair for a Json object</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '23', 23)" onmouseover="showTip(event, '23', 23)">
+            jpairOpt key value
+          </code>
+          <div class="tip" id="23">
+            <strong>Signature:</strong> key:string -&gt; value:^?8195 option -&gt; string * JsonValue<br />
+                          <strong>Type parameters:</strong> ^?8195                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1121-1121" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new Json key,value pair for a Json object if the value option is present</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '24', 24)" onmouseover="showTip(event, '24', 24)">
+            jpairOptWith toJson key value
+          </code>
+          <div class="tip" id="24">
+            <strong>Signature:</strong> toJson:(&#39;?8193 -&gt; JsonValue) -&gt; key:string -&gt; value:&#39;?8193 option -&gt; string * JsonValue<br />
+                          <strong>Type parameters:</strong> '?8193                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1118-1118" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new Json key,value pair for a Json object if the value option is present</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '25', 25)" onmouseover="showTip(event, '25', 25)">
+            jpairWith toJson key value
+          </code>
+          <div class="tip" id="25">
+            <strong>Signature:</strong> toJson:(&#39;?8188 -&gt; &#39;?8189) -&gt; key:string -&gt; value:&#39;?8188 -&gt; string * &#39;?8189<br />
+                          <strong>Type parameters:</strong> '?8188, '?8189                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1112-1112" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          <p>Creates a new Json key,value pair for a Json object</p>
+
+
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '26', 26)" onmouseover="showTip(event, '26', 26)">
+            jsonObjectGetValues(x)
+          </code>
+          <div class="tip" id="26">
+            <strong>Signature:</strong> x:JsonObject -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L75-75" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '27', 27)" onmouseover="showTip(event, '27', 27)">
+            jsonObjToValueCodec
+          </code>
+          <div class="tip" id="27">
+            <strong>Signature:</strong> (JsonValue -&gt; Result&lt;IReadOnlyDictionary&lt;string,JsonValue&gt;,DecodeError&gt;) * (&#39;?7935 -&gt; JsonValue)<br />
+                          <strong>Type parameters:</strong> '?7935                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L576-576" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '28', 28)" onmouseover="showTip(event, '28', 28)">
+            jsonValueCodec
+          </code>
+          <div class="tip" id="28">
+            <strong>Signature:</strong> Codec&lt;JsonValue,^t&gt;<br />
+                          <strong>Type parameters:</strong> ^t                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1101-1101" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '29', 29)" onmouseover="showTip(event, '29', 29)">
+            jsonValueToTextCodec
+          </code>
+          <div class="tip" id="29">
+            <strong>Signature:</strong> (string -&gt; Result&lt;JsonValue,DecodeError&gt;) * (JsonValue -&gt; string)<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L577-577" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
           <code onmouseout="hideTip(event, '30', 30)" onmouseover="showTip(event, '30', 30)">
-            ofJson(x)
+            JString(x)
           </code>
           <div class="tip" id="30">
+            <strong>Signature:</strong> x:string -&gt; JsonValue<br />
+                                  </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L105-105" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
+            ofJson(x)
+          </code>
+          <div class="tip" id="31">
             <strong>Signature:</strong> x:JsonValue -&gt; ^t ParseResult<br />
                           <strong>Type parameters:</strong> ^t                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L898-898" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L953-953" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -806,15 +823,15 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '31', 31)" onmouseover="showTip(event, '31', 31)">
+          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
             parseJson(x)
           </code>
-          <div class="tip" id="31">
+          <div class="tip" id="32">
             <strong>Signature:</strong> x:string -&gt; ^a ParseResult<br />
                           <strong>Type parameters:</strong> ^a                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1030-1030" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1104-1104" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -825,10 +842,10 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '32', 32)" onmouseover="showTip(event, '32', 32)">
+          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
             parseJSON(x)
           </code>
-          <div class="tip" id="32">
+          <div class="tip" id="33">
             <strong>Signature:</strong> x:string -&gt; ^a ParseResult<br />
                           <strong>Type parameters:</strong> ^a                        <span>
             <strong>Attributes:</strong><br />
@@ -841,7 +858,7 @@ Returns None if key is not present in the object.</p>
               <strong>WARNING: </strong> This API is obsolete
               <p>Use &#39;parseJson&#39;</p>
               </div> 
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1033-1033" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1107-1107" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -850,15 +867,32 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '33', 33)" onmouseover="showTip(event, '33', 33)">
+          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
+            retype(x)
+          </code>
+          <div class="tip" id="34">
+            <strong>Signature:</strong> x:&#39;a -&gt; &#39;b<br />
+                          <strong>Type parameters:</strong> 'a, 'b                      </div>
+        </td>
+        <td class="xmldoc">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L328-328" class="github-link">
+              <img src="../content/img/github.png" class="normal" />
+              <img src="../content/img/github-blue.png" class="hover" />
+            </a>
+          
+        </td>
+      </tr>
+      <tr>
+        <td class="member-name">
+          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
             toJson(x)
           </code>
-          <div class="tip" id="33">
+          <div class="tip" id="35">
             <strong>Signature:</strong> x:^t -&gt; JsonValue<br />
                           <strong>Type parameters:</strong> ^t                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1018-1018" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1092-1092" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -869,10 +903,10 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '34', 34)" onmouseover="showTip(event, '34', 34)">
+          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
             toJSON(x)
           </code>
-          <div class="tip" id="34">
+          <div class="tip" id="36">
             <strong>Signature:</strong> x:^t -&gt; JsonValue<br />
                           <strong>Type parameters:</strong> ^t                        <span>
             <strong>Attributes:</strong><br />
@@ -885,7 +919,7 @@ Returns None if key is not present in the object.</p>
               <strong>WARNING: </strong> This API is obsolete
               <p>Use &#39;toJson&#39;</p>
               </div> 
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1021-1021" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1095-1095" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -894,15 +928,15 @@ Returns None if key is not present in the object.</p>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '35', 35)" onmouseover="showTip(event, '35', 35)">
+          <code onmouseout="hideTip(event, '37', 37)" onmouseover="showTip(event, '37', 37)">
             withFields(f)
           </code>
-          <div class="tip" id="35">
-            <strong>Signature:</strong> f:&#39;?8162 -&gt; (&#39;?8163 -&gt; Result&lt;&#39;?8162,&#39;?8164&gt;) * (&#39;?8165 -&gt; IReadOnlyDictionary&lt;&#39;?8166,&#39;?8167&gt;)<br />
-                          <strong>Type parameters:</strong> '?8162, '?8163, '?8164, '?8165, '?8166, '?8167                      </div>
+          <div class="tip" id="37">
+            <strong>Signature:</strong> f:&#39;?8197 -&gt; (&#39;?8198 -&gt; Result&lt;&#39;?8197,&#39;?8199&gt;) * (&#39;?8200 -&gt; IReadOnlyDictionary&lt;&#39;?8201,&#39;?8202&gt;)<br />
+                          <strong>Type parameters:</strong> '?8197, '?8198, '?8199, '?8200, '?8201, '?8202                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1052-1052" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L1126-1126" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -921,15 +955,15 @@ Returns None if key is not present in the object.</p>
     <tbody>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '36', 36)" onmouseover="showTip(event, '36', 36)">
+          <code onmouseout="hideTip(event, '38', 38)" onmouseover="showTip(event, '38', 38)">
             ( |JArray|JObject|JNumber|JBool|JString|JNull| )(...)
           </code>
-          <div class="tip" id="36">
+          <div class="tip" id="38">
             <strong>Signature:</strong> o:JsonValue -&gt; Choice&lt;IReadOnlyList&lt;JsonValue&gt;,IReadOnlyDictionary&lt;string,JsonValue&gt;,JsonValue,bool,string,unit&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L81-81" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L80-80" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>

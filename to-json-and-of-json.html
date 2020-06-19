@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" /><title></title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="Fleece is a JSON mapper for F#. It simplifies mapping from a Json library&#x27;s JsonValue onto your types, and mapping from your types onto JsonValue." /><meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon" /><script src="https://code.jquery.com/jquery-1.8.0.js"></script><script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script><script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script><link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet" /><link type="text/css" rel="stylesheet" href="./style.css" /><script type="text/javascript" src="./tips.js"></script></head><body><div class="container"><div class="masthead"><ul class="nav nav-pills pull-right"><li><a href="http://fsharp.org">fsharp.org</a></li><li><a href="https://github.com/fsprojects/Fleece">github page</a></li></ul><h3 class="muted"><a href="./index.html">Fleece</a></h3></div><hr /><div class="row"><div class="span9" id="main"><h2><a name="ToJson-and-OfJson" class="anchor" href="#ToJson-and-OfJson">ToJson and OfJson</a></h2>
+<p>In order to parse or encode instances into Json you can define static members</p>
+<p>For example, given this data type:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l">1: </span>
+<span class="l">2: </span>
+<span class="l">3: </span>
+<span class="l">4: </span>
+<span class="l">5: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, '6', 8)" onmouseover="showTip(event, '6', 8)" class="rt">Person</span> <span class="o">=</span> <span class="pn">{</span>
+    <span onmouseout="hideTip(event, '7', 9)" onmouseover="showTip(event, '7', 9)" class="id">Name</span><span class="pn">:</span> <span onmouseout="hideTip(event, '8', 10)" onmouseover="showTip(event, '8', 10)" class="rt">string</span>
+    <span onmouseout="hideTip(event, '9', 11)" onmouseover="showTip(event, '9', 11)" class="id">Age</span><span class="pn">:</span> <span onmouseout="hideTip(event, '10', 12)" onmouseover="showTip(event, '10', 12)" class="vt">int</span>
+    <span onmouseout="hideTip(event, '11', 13)" onmouseover="showTip(event, '11', 13)" class="id">Children</span><span class="pn">:</span> <span onmouseout="hideTip(event, '6', 14)" onmouseover="showTip(event, '6', 14)" class="rt">Person</span> <span onmouseout="hideTip(event, '12', 15)" onmouseover="showTip(event, '12', 15)" class="rt">list</span>
+<span class="pn">}</span>
+</code></pre></td>
+</tr>
+</table>
+<p>You can map it to JSON like this:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+<span class="l">22: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, '6', 16)" onmouseover="showTip(event, '6', 16)" class="rt">Person</span> <span class="k">with</span>
+    <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, '13', 17)" onmouseover="showTip(event, '13', 17)" class="fn">ToJson</span> <span class="pn">(</span><span onmouseout="hideTip(event, '14', 18)" onmouseover="showTip(event, '14', 18)" class="id">x</span><span class="pn">:</span> <span onmouseout="hideTip(event, '6', 19)" onmouseover="showTip(event, '6', 19)" class="rt">Person</span><span class="pn">)</span> <span class="o">=</span>
+        <span onmouseout="hideTip(event, '15', 20)" onmouseover="showTip(event, '15', 20)" class="fn">jobj</span> <span class="pn">[</span> 
+            <span class="s">&quot;name&quot;</span> <span class="o">.</span><span class="o">=</span> <span onmouseout="hideTip(event, '14', 21)" onmouseover="showTip(event, '14', 21)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '7', 22)" onmouseover="showTip(event, '7', 22)" class="id">Name</span>
+            <span class="s">&quot;age&quot;</span> <span class="o">.</span><span class="o">=</span> <span onmouseout="hideTip(event, '14', 23)" onmouseover="showTip(event, '14', 23)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '9', 24)" onmouseover="showTip(event, '9', 24)" class="id">Age</span>
+            <span class="s">&quot;children&quot;</span> <span class="o">.</span><span class="o">=</span> <span onmouseout="hideTip(event, '14', 25)" onmouseover="showTip(event, '14', 25)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '11', 26)" onmouseover="showTip(event, '11', 26)" class="id">Children</span>
+        <span class="pn">]</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, '16', 27)" onmouseover="showTip(event, '16', 27)" class="id">p</span> <span class="o">=</span> 
+    <span class="pn">{</span> <span onmouseout="hideTip(event, '6', 28)" onmouseover="showTip(event, '6', 28)" class="rt">Person</span><span class="pn">.</span><span class="id">Name</span> <span class="o">=</span> <span class="s">&quot;John&quot;</span>
+      <span class="id">Age</span> <span class="o">=</span> <span class="n">44</span>
+      <span class="id">Children</span> <span class="o">=</span> 
+      <span class="pn">[</span>
+        <span class="pn">{</span> <span onmouseout="hideTip(event, '6', 29)" onmouseover="showTip(event, '6', 29)" class="rt">Person</span><span class="pn">.</span><span class="id">Name</span> <span class="o">=</span> <span class="s">&quot;Katy&quot;</span>
+          <span class="id">Age</span> <span class="o">=</span> <span class="n">5</span>
+          <span class="id">Children</span> <span class="o">=</span> <span class="pn">[</span><span class="pn">]</span> <span class="pn">}</span>
+        <span class="pn">{</span> <span onmouseout="hideTip(event, '6', 30)" onmouseover="showTip(event, '6', 30)" class="rt">Person</span><span class="pn">.</span><span class="id">Name</span> <span class="o">=</span> <span class="s">&quot;Johnny&quot;</span>
+          <span class="id">Age</span> <span class="o">=</span> <span class="n">7</span>
+          <span class="id">Children</span> <span class="o">=</span> <span class="pn">[</span><span class="pn">]</span> <span class="pn">}</span>
+      <span class="pn">]</span> <span class="pn">}</span>
+
+<span onmouseout="hideTip(event, '17', 31)" onmouseover="showTip(event, '17', 31)" class="fn">printfn</span> <span class="s">&quot;</span><span class="pf">%s</span><span class="s">&quot;</span> <span class="pn">(</span><span onmouseout="hideTip(event, '8', 32)" onmouseover="showTip(event, '8', 32)" class="fn">string</span> <span class="pn">(</span><span onmouseout="hideTip(event, '18', 33)" onmouseover="showTip(event, '18', 33)" class="fn">toJson</span> <span onmouseout="hideTip(event, '16', 34)" onmouseover="showTip(event, '16', 34)" class="id">p</span><span class="pn">)</span><span class="pn">)</span>
+</code></pre></td>
+</tr>
+</table>
+<p>And you can map it from JSON like this:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, '6', 35)" onmouseover="showTip(event, '6', 35)" class="rt">Person</span> <span class="k">with</span>
+    <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, '19', 36)" onmouseover="showTip(event, '19', 36)" class="fn">OfJson</span> <span onmouseout="hideTip(event, '20', 37)" onmouseover="showTip(event, '20', 37)" class="id">json</span> <span class="o">=</span>
+        <span class="k">match</span> <span onmouseout="hideTip(event, '20', 38)" onmouseover="showTip(event, '20', 38)" class="id">json</span> <span class="k">with</span>
+        <span class="pn">|</span> <span onmouseout="hideTip(event, '21', 39)" onmouseover="showTip(event, '21', 39)" class="uc">JObject</span> <span onmouseout="hideTip(event, '22', 40)" onmouseover="showTip(event, '22', 40)" class="id">o</span> <span class="k">-&gt;</span>
+            <span class="k">let</span> <span onmouseout="hideTip(event, '23', 41)" onmouseover="showTip(event, '23', 41)" class="id">name</span> <span class="o">=</span> <span onmouseout="hideTip(event, '22', 42)" onmouseover="showTip(event, '22', 42)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;name&quot;</span>
+            <span class="k">let</span> <span onmouseout="hideTip(event, '24', 43)" onmouseover="showTip(event, '24', 43)" class="id">age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '22', 44)" onmouseover="showTip(event, '22', 44)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;age&quot;</span>
+            <span class="k">let</span> <span onmouseout="hideTip(event, '25', 45)" onmouseover="showTip(event, '25', 45)" class="id">children</span> <span class="o">=</span> <span onmouseout="hideTip(event, '22', 46)" onmouseover="showTip(event, '22', 46)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;children&quot;</span>
+            <span class="k">match</span> <span onmouseout="hideTip(event, '23', 47)" onmouseover="showTip(event, '23', 47)" class="id">name</span><span class="pn">,</span> <span onmouseout="hideTip(event, '24', 48)" onmouseover="showTip(event, '24', 48)" class="id">age</span><span class="pn">,</span> <span onmouseout="hideTip(event, '25', 49)" onmouseover="showTip(event, '25', 49)" class="id">children</span> <span class="k">with</span>
+            <span class="pn">|</span> <span onmouseout="hideTip(event, '26', 50)" onmouseover="showTip(event, '26', 50)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '27', 51)" onmouseover="showTip(event, '27', 51)" class="id">Success</span> <span onmouseout="hideTip(event, '28', 52)" onmouseover="showTip(event, '28', 52)" class="id">name</span><span class="pn">,</span> <span onmouseout="hideTip(event, '26', 53)" onmouseover="showTip(event, '26', 53)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '27', 54)" onmouseover="showTip(event, '27', 54)" class="id">Success</span> <span onmouseout="hideTip(event, '29', 55)" onmouseover="showTip(event, '29', 55)" class="id">age</span><span class="pn">,</span> <span onmouseout="hideTip(event, '26', 56)" onmouseover="showTip(event, '26', 56)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '27', 57)" onmouseover="showTip(event, '27', 57)" class="id">Success</span> <span onmouseout="hideTip(event, '30', 58)" onmouseover="showTip(event, '30', 58)" class="id">children</span> <span class="k">-&gt;</span>
+                <span onmouseout="hideTip(event, '26', 59)" onmouseover="showTip(event, '26', 59)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '27', 60)" onmouseover="showTip(event, '27', 60)" class="id">Success</span> <span class="pn">{</span>
+                    <span onmouseout="hideTip(event, '6', 61)" onmouseover="showTip(event, '6', 61)" class="rt">Person</span><span class="pn">.</span><span class="id">Name</span> <span class="o">=</span> <span onmouseout="hideTip(event, '28', 62)" onmouseover="showTip(event, '28', 62)" class="id">name</span>
+                    <span class="id">Age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '29', 63)" onmouseover="showTip(event, '29', 63)" class="id">age</span>
+                    <span class="id">Children</span> <span class="o">=</span> <span onmouseout="hideTip(event, '30', 64)" onmouseover="showTip(event, '30', 64)" class="id">children</span>
+                <span class="pn">}</span>
+            <span class="pn">|</span> <span onmouseout="hideTip(event, '31', 65)" onmouseover="showTip(event, '31', 65)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '32', 66)" onmouseover="showTip(event, '32', 66)" class="uc">Error</span> <span class="o">&lt;|</span> <span onmouseout="hideTip(event, '33', 67)" onmouseover="showTip(event, '33', 67)" class="uc">Uncategorized</span> <span class="pn">(</span><span onmouseout="hideTip(event, '34', 68)" onmouseover="showTip(event, '34', 68)" class="fn">sprintf</span> <span class="s">&quot;Error parsing person: </span><span class="pf">%A</span><span class="s">&quot;</span> <span onmouseout="hideTip(event, '31', 69)" onmouseover="showTip(event, '31', 69)" class="id">x</span><span class="pn">)</span>
+        <span class="pn">|</span> <span onmouseout="hideTip(event, '35', 70)" onmouseover="showTip(event, '35', 70)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '26', 71)" onmouseover="showTip(event, '26', 71)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 72)" onmouseover="showTip(event, '36', 72)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, '37', 73)" onmouseover="showTip(event, '37', 73)" class="id">objExpected</span> <span onmouseout="hideTip(event, '35', 74)" onmouseover="showTip(event, '35', 74)" class="id">x</span>
+        
+<span class="k">let</span> <span onmouseout="hideTip(event, '38', 75)" onmouseover="showTip(event, '38', 75)" class="id">john</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '6', 76)" onmouseover="showTip(event, '6', 76)" class="rt">Person</span> <span onmouseout="hideTip(event, '39', 77)" onmouseover="showTip(event, '39', 77)" class="vt">ParseResult</span> <span class="o">=</span> <span onmouseout="hideTip(event, '40', 78)" onmouseover="showTip(event, '40', 78)" class="fn">parseJson</span> <span class="s">&quot;&quot;&quot;{&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 44, &quot;children&quot;: [{&quot;name&quot;: &quot;Katy&quot;, &quot;age&quot;: 5, &quot;children&quot;: []}, {&quot;name&quot;: &quot;Johnny&quot;, &quot;age&quot;: 7, &quot;children&quot;: []}]}&quot;&quot;&quot;</span>
+</code></pre></td>
+</tr>
+</table>
+<p>Though it's much easier to do this in a monadic or applicative way. For example, using <a href="https://github.com/fsprojects/FSharpPlus">FSharpPlus</a> (which is already a dependency of Fleece):</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, '41', 79)" onmouseover="showTip(event, '41', 79)" class="id">FSharpPlus</span>
+
+<span class="k">type</span> <span onmouseout="hideTip(event, '42', 80)" onmouseover="showTip(event, '42', 80)" class="rt">PersonAp</span> <span class="o">=</span> <span class="pn">{</span>
+    <span onmouseout="hideTip(event, '43', 81)" onmouseover="showTip(event, '43', 81)" class="id">Name</span><span class="pn">:</span> <span onmouseout="hideTip(event, '8', 82)" onmouseover="showTip(event, '8', 82)" class="rt">string</span>
+    <span onmouseout="hideTip(event, '44', 83)" onmouseover="showTip(event, '44', 83)" class="id">Age</span><span class="pn">:</span> <span onmouseout="hideTip(event, '10', 84)" onmouseover="showTip(event, '10', 84)" class="vt">int</span>
+    <span onmouseout="hideTip(event, '45', 85)" onmouseover="showTip(event, '45', 85)" class="id">Children</span><span class="pn">:</span> <span onmouseout="hideTip(event, '42', 86)" onmouseover="showTip(event, '42', 86)" class="rt">PersonAp</span> <span onmouseout="hideTip(event, '12', 87)" onmouseover="showTip(event, '12', 87)" class="rt">list</span>
+<span class="pn">}</span>
+
+<span class="k">type</span> <span onmouseout="hideTip(event, '42', 88)" onmouseover="showTip(event, '42', 88)" class="rt">PersonAp</span> <span class="k">with</span>
+    <span class="k">static</span> <span class="k">member</span> <span class="fn">Create</span> <span onmouseout="hideTip(event, '28', 89)" onmouseover="showTip(event, '28', 89)" class="id">name</span> <span onmouseout="hideTip(event, '29', 90)" onmouseover="showTip(event, '29', 90)" class="id">age</span> <span onmouseout="hideTip(event, '46', 91)" onmouseover="showTip(event, '46', 91)" class="id">children</span> <span class="o">=</span> <span class="pn">{</span> <span onmouseout="hideTip(event, '42', 92)" onmouseover="showTip(event, '42', 92)" class="rt">PersonAp</span><span class="pn">.</span><span class="id">Name</span> <span class="o">=</span> <span onmouseout="hideTip(event, '28', 93)" onmouseover="showTip(event, '28', 93)" class="id">name</span><span class="pn">;</span> <span class="id">Age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '29', 94)" onmouseover="showTip(event, '29', 94)" class="id">age</span><span class="pn">;</span> <span class="id">Children</span> <span class="o">=</span> <span onmouseout="hideTip(event, '46', 95)" onmouseover="showTip(event, '46', 95)" class="id">children</span> <span class="pn">}</span>
+
+    <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, '19', 96)" onmouseover="showTip(event, '19', 96)" class="fn">OfJson</span> <span onmouseout="hideTip(event, '20', 97)" onmouseover="showTip(event, '20', 97)" class="id">json</span> <span class="o">=</span>
+        <span class="k">match</span> <span onmouseout="hideTip(event, '20', 98)" onmouseover="showTip(event, '20', 98)" class="id">json</span> <span class="k">with</span>
+        <span class="pn">|</span> <span onmouseout="hideTip(event, '21', 99)" onmouseover="showTip(event, '21', 99)" class="uc">JObject</span> <span onmouseout="hideTip(event, '22', 100)" onmouseover="showTip(event, '22', 100)" class="id">o</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '42', 101)" onmouseover="showTip(event, '42', 101)" class="rt">PersonAp</span><span class="pn">.</span><span onmouseout="hideTip(event, '47', 102)" onmouseover="showTip(event, '47', 102)" class="id">Create</span> <span class="o">&lt;!&gt;</span> <span class="pn">(</span><span onmouseout="hideTip(event, '22', 103)" onmouseover="showTip(event, '22', 103)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;name&quot;</span><span class="pn">)</span> <span class="o">&lt;*&gt;</span> <span class="pn">(</span><span onmouseout="hideTip(event, '22', 104)" onmouseover="showTip(event, '22', 104)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;age&quot;</span><span class="pn">)</span> <span class="o">&lt;*&gt;</span> <span class="pn">(</span><span onmouseout="hideTip(event, '22', 105)" onmouseover="showTip(event, '22', 105)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;children&quot;</span><span class="pn">)</span>
+        <span class="pn">|</span> <span onmouseout="hideTip(event, '35', 106)" onmouseover="showTip(event, '35', 106)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '26', 107)" onmouseover="showTip(event, '26', 107)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 108)" onmouseover="showTip(event, '36', 108)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, '37', 109)" onmouseover="showTip(event, '37', 109)" class="id">objExpected</span> <span onmouseout="hideTip(event, '35', 110)" onmouseover="showTip(event, '35', 110)" class="id">x</span>
+</code></pre></td>
+</tr>
+</table>
+<p>Or monadically:</p>
+<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
+<span class="l"> 2: </span>
+<span class="l"> 3: </span>
+<span class="l"> 4: </span>
+<span class="l"> 5: </span>
+<span class="l"> 6: </span>
+<span class="l"> 7: </span>
+<span class="l"> 8: </span>
+<span class="l"> 9: </span>
+<span class="l">10: </span>
+<span class="l">11: </span>
+<span class="l">12: </span>
+<span class="l">13: </span>
+<span class="l">14: </span>
+<span class="l">15: </span>
+<span class="l">16: </span>
+<span class="l">17: </span>
+<span class="l">18: </span>
+<span class="l">19: </span>
+<span class="l">20: </span>
+<span class="l">21: </span>
+</pre></td>
+<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, '48', 111)" onmouseover="showTip(event, '48', 111)" class="rt">PersonM</span> <span class="o">=</span> <span class="pn">{</span>
+    <span onmouseout="hideTip(event, '49', 112)" onmouseover="showTip(event, '49', 112)" class="id">Name</span><span class="pn">:</span> <span onmouseout="hideTip(event, '8', 113)" onmouseover="showTip(event, '8', 113)" class="rt">string</span>
+    <span onmouseout="hideTip(event, '50', 114)" onmouseover="showTip(event, '50', 114)" class="id">Age</span><span class="pn">:</span> <span onmouseout="hideTip(event, '10', 115)" onmouseover="showTip(event, '10', 115)" class="vt">int</span>
+    <span onmouseout="hideTip(event, '51', 116)" onmouseover="showTip(event, '51', 116)" class="id">Children</span><span class="pn">:</span> <span onmouseout="hideTip(event, '48', 117)" onmouseover="showTip(event, '48', 117)" class="rt">PersonM</span> <span onmouseout="hideTip(event, '12', 118)" onmouseover="showTip(event, '12', 118)" class="rt">list</span>
+<span class="pn">}</span>
+
+<span class="k">type</span> <span onmouseout="hideTip(event, '48', 119)" onmouseover="showTip(event, '48', 119)" class="rt">PersonM</span> <span class="k">with</span>
+    <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, '19', 120)" onmouseover="showTip(event, '19', 120)" class="fn">OfJson</span> <span onmouseout="hideTip(event, '20', 121)" onmouseover="showTip(event, '20', 121)" class="id">json</span> <span class="o">=</span>
+        <span class="k">match</span> <span onmouseout="hideTip(event, '20', 122)" onmouseover="showTip(event, '20', 122)" class="id">json</span> <span class="k">with</span>
+        <span class="pn">|</span> <span onmouseout="hideTip(event, '21', 123)" onmouseover="showTip(event, '21', 123)" class="uc">JObject</span> <span onmouseout="hideTip(event, '22', 124)" onmouseover="showTip(event, '22', 124)" class="id">o</span> <span class="k">-&gt;</span> 
+            <span onmouseout="hideTip(event, '52', 125)" onmouseover="showTip(event, '52', 125)" class="k">monad</span> <span class="pn">{</span>
+                <span class="k">let!</span> <span onmouseout="hideTip(event, '28', 126)" onmouseover="showTip(event, '28', 126)" class="id">name</span> <span class="o">=</span> <span onmouseout="hideTip(event, '22', 127)" onmouseover="showTip(event, '22', 127)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;name&quot;</span>
+                <span class="k">let!</span> <span onmouseout="hideTip(event, '29', 128)" onmouseover="showTip(event, '29', 128)" class="id">age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '22', 129)" onmouseover="showTip(event, '22', 129)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;age&quot;</span>
+                <span class="k">let!</span> <span onmouseout="hideTip(event, '30', 130)" onmouseover="showTip(event, '30', 130)" class="id">children</span> <span class="o">=</span> <span onmouseout="hideTip(event, '22', 131)" onmouseover="showTip(event, '22', 131)" class="id">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;children&quot;</span>
+                <span class="k">return</span> <span class="pn">{</span>
+                    <span onmouseout="hideTip(event, '6', 132)" onmouseover="showTip(event, '6', 132)" class="rt">Person</span><span class="pn">.</span><span class="id">Name</span> <span class="o">=</span> <span onmouseout="hideTip(event, '28', 133)" onmouseover="showTip(event, '28', 133)" class="id">name</span>
+                    <span class="id">Age</span> <span class="o">=</span> <span onmouseout="hideTip(event, '29', 134)" onmouseover="showTip(event, '29', 134)" class="id">age</span>
+                    <span class="id">Children</span> <span class="o">=</span> <span onmouseout="hideTip(event, '30', 135)" onmouseover="showTip(event, '30', 135)" class="id">children</span>
+                <span class="pn">}</span>
+            <span class="pn">}</span>
+        <span class="pn">|</span> <span onmouseout="hideTip(event, '35', 136)" onmouseover="showTip(event, '35', 136)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '26', 137)" onmouseover="showTip(event, '26', 137)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 138)" onmouseover="showTip(event, '36', 138)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, '37', 139)" onmouseover="showTip(event, '37', 139)" class="id">objExpected</span> <span onmouseout="hideTip(event, '35', 140)" onmouseover="showTip(event, '35', 140)" class="id">x</span>
+</code></pre></td>
+</tr>
+</table>
+<p>Or you can use the Choice monad/applicative in <a href="https://github.com/fsprojects/FSharpx.Extras">FSharpx.Extras</a> instead, if you prefer.</p>
+<p>You can see more examples in the <a href="https://github.com/mausch/EdmundsNet">EdmundsNet</a> project.</p>
+</div><div class="span3"><img src="./img/logo-color.svg" alt="F# Project" style="width:150px;margin:10px" /><ul class="nav nav-list" id="menu" style="margin-top:20px"><li class="nav-header">Fleece</li><li><a href="./index.html">Home page</a></li><li class="divider"></li><li><a href="https://github.com/fsprojects/Fleece">Source Code on GitHub</a></li><li><a href="./license.html">License</a></li><li><a href="./release-notes.html">Release Notes</a></li><li class="nav-header">Documentation</li><li><a href="./reference/index.html">API Reference</a></li></ul></div></div></div><a href="https://github.com/fsprojects/Fleece"><img style="position:absolute;top:0;right:0;border:0" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" /></a></body></html>

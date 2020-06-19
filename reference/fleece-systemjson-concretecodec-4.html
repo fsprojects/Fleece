@@ -40,6 +40,8 @@
         <span>Parent Module: <a href="fleece-systemjson.html">SystemJson</a></span><br />
     </p>
 <div class="xmldoc">
+<p>A specific type to represent codecs, with associated operations</p>
+
 </div>
   <h3>Record Fields</h3>
   <table class="table table-bordered member-list">
@@ -49,15 +51,15 @@
     <tbody>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '924', 924)" onmouseover="showTip(event, '924', 924)">
+          <code onmouseout="hideTip(event, '940', 940)" onmouseover="showTip(event, '940', 940)">
             Decoder
           </code>
-          <div class="tip" id="924">
+          <div class="tip" id="940">
             <strong>Signature:</strong> ReaderT&lt;&#39;S1,&#39;t1 ParseResult&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L515-515" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L525-525" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -66,15 +68,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '925', 925)" onmouseover="showTip(event, '925', 925)">
+          <code onmouseout="hideTip(event, '941', 941)" onmouseover="showTip(event, '941', 941)">
             Encoder
           </code>
-          <div class="tip" id="925">
+          <div class="tip" id="941">
             <strong>Signature:</strong> &#39;t2 -&gt; Const&lt;&#39;S2,unit&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L515-515" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L525-525" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -91,15 +93,15 @@
     <tbody>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '926', 926)" onmouseover="showTip(event, '926', 926)">
+          <code onmouseout="hideTip(event, '942', 942)" onmouseover="showTip(event, '942', 942)">
             ConcreteCodec.( &lt;!&gt; )(f, field)
           </code>
-          <div class="tip" id="926">
-            <strong>Signature:</strong> (f:(&#39;f -&gt; &#39;?8924) * field:ConcreteCodec&lt;^S,^S,&#39;f,&#39;T&gt;) -&gt; ConcreteCodec&lt;^S,^S,&#39;?8924,&#39;T&gt;<br />
+          <div class="tip" id="942">
+            <strong>Signature:</strong> (f:(&#39;f -&gt; &#39;?8983) * field:ConcreteCodec&lt;^S,^S,&#39;f,&#39;T&gt;) -&gt; ConcreteCodec&lt;^S,^S,&#39;?8983,&#39;T&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L522-522" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L532-532" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -109,15 +111,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '927', 927)" onmouseover="showTip(event, '927', 927)">
+          <code onmouseout="hideTip(event, '943', 943)" onmouseover="showTip(event, '943', 943)">
             ConcreteCodec.( &lt;*&gt; )(...)
           </code>
-          <div class="tip" id="927">
+          <div class="tip" id="943">
             <strong>Signature:</strong> (remainderFields:ConcreteCodec&lt;^S,^S,(&#39;f -&gt; &#39;r),&#39;T&gt; * currentField:ConcreteCodec&lt;^S,^S,&#39;f,&#39;T&gt;) -&gt; ConcreteCodec&lt;^S,^S,&#39;r,&#39;T&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L517-517" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L527-527" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -127,15 +129,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '928', 928)" onmouseover="showTip(event, '928', 928)">
+          <code onmouseout="hideTip(event, '944', 944)" onmouseover="showTip(event, '944', 944)">
             ConcreteCodec.( &lt;|&gt; )(...)
           </code>
-          <div class="tip" id="928">
+          <div class="tip" id="944">
             <strong>Signature:</strong> (source:ConcreteCodec&lt;^S,^S,&#39;f,&#39;T&gt; * alternative:ConcreteCodec&lt;^S,^S,&#39;f,&#39;T&gt;) -&gt; ConcreteCodec&lt;^S,^S,&#39;f,&#39;T&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L523-523" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L533-533" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -145,15 +147,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '929', 929)" onmouseover="showTip(event, '929', 929)">
+          <code onmouseout="hideTip(event, '945', 945)" onmouseover="showTip(event, '945', 945)">
             ConcreteCodec.Return(f)
           </code>
-          <div class="tip" id="929">
-            <strong>Signature:</strong> f:&#39;?8905 -&gt; ConcreteCodec&lt;&#39;?8906,^?8907,&#39;?8905,&#39;?8908&gt;<br />
+          <div class="tip" id="945">
+            <strong>Signature:</strong> f:&#39;?8964 -&gt; ConcreteCodec&lt;&#39;?8965,^?8966,&#39;?8964,&#39;?8967&gt;<br />
                                   </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L516-516" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L526-526" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>

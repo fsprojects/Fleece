@@ -39,6 +39,8 @@
   <span>Parent Module: <a href="fleece-systemjson.html">SystemJson</a></span>
   </p>
 <div class="xmldoc">
+<p>Functions operating on Codecs (as pair of functions)</p>
+
 </div>
 
 <!-- Render nested types and modules, if there are any -->
@@ -51,32 +53,35 @@
     <tbody>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '237', 237)" onmouseover="showTip(event, '237', 237)">
+          <code onmouseout="hideTip(event, '240', 240)" onmouseover="showTip(event, '240', 240)">
             compose(arg1, arg2) (arg3, arg4)
           </code>
-          <div class="tip" id="237">
-            <strong>Signature:</strong> ((&#39;?9319 -&gt; ^?9320) * (&#39;?9323 -&gt; &#39;?9324)) -&gt; ((&#39;?9322 -&gt; ^?9321) * (&#39;?9325 -&gt; &#39;?9323)) -&gt; (&#39;?9319 -&gt; ^?9321) * (&#39;?9325 -&gt; &#39;?9324)<br />
-                          <strong>Type parameters:</strong> '?9319, ^?9320, ^?9321, '?9322, '?9323, '?9324, '?9325                      </div>
+          <div class="tip" id="240">
+            <strong>Signature:</strong> ((&#39;?9401 -&gt; ^?9402) * (&#39;?9405 -&gt; &#39;?9406)) -&gt; ((&#39;?9404 -&gt; ^?9403) * (&#39;?9407 -&gt; &#39;?9405)) -&gt; (&#39;?9401 -&gt; ^?9403) * (&#39;?9407 -&gt; &#39;?9406)<br />
+                          <strong>Type parameters:</strong> '?9401, ^?9402, ^?9403, '?9404, '?9405, '?9406, '?9407                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L535-535" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L569-569" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Creates a new codec which is the result of applying codec2 then codec1 for encoding
+and codec1 then codec2 for decoding</p>
+
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '238', 238)" onmouseover="showTip(event, '238', 238)">
+          <code onmouseout="hideTip(event, '241', 241)" onmouseover="showTip(event, '241', 241)">
             decode(d, arg2) i
           </code>
-          <div class="tip" id="238">
-            <strong>Signature:</strong> (d:Decoder&lt;&#39;i,&#39;a&gt; * &#39;?9329) -&gt; i:&#39;i -&gt; &#39;a ParseResult<br />
-                          <strong>Type parameters:</strong> 'i, 'a, '?9329                      </div>
+          <div class="tip" id="241">
+            <strong>Signature:</strong> (d:Decoder&lt;&#39;i,&#39;a&gt; * &#39;?9411) -&gt; i:&#39;i -&gt; &#39;a ParseResult<br />
+                          <strong>Type parameters:</strong> 'i, 'a, '?9411                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L540-540" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L574-574" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -85,15 +90,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '239', 239)" onmouseover="showTip(event, '239', 239)">
+          <code onmouseout="hideTip(event, '242', 242)" onmouseover="showTip(event, '242', 242)">
             encode(arg1, e) a
           </code>
-          <div class="tip" id="239">
-            <strong>Signature:</strong> (&#39;?9331 * e:Encoder&lt;&#39;o,&#39;a&gt;) -&gt; a:&#39;a -&gt; &#39;o<br />
-                          <strong>Type parameters:</strong> '?9331, 'o, 'a                      </div>
+          <div class="tip" id="242">
+            <strong>Signature:</strong> (&#39;?9413 * e:Encoder&lt;&#39;o,&#39;a&gt;) -&gt; a:&#39;a -&gt; &#39;o<br />
+                          <strong>Type parameters:</strong> '?9413, 'o, 'a                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L541-541" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L575-575" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -102,15 +107,15 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '240', 240)" onmouseover="showTip(event, '240', 240)">
+          <code onmouseout="hideTip(event, '243', 243)" onmouseover="showTip(event, '243', 243)">
             invmap f g (r, w)
           </code>
-          <div class="tip" id="240">
-            <strong>Signature:</strong> f:(&#39;T -&gt; &#39;U) -&gt; g:(&#39;U -&gt; &#39;T) -&gt; (r:^?9314 * w:^?9316) -&gt; ^?9315 * ^?9317<br />
-                          <strong>Type parameters:</strong> 'T, 'U, ^?9314, ^?9315, ^?9316, ^?9317                      </div>
+          <div class="tip" id="243">
+            <strong>Signature:</strong> f:(&#39;T -&gt; &#39;U) -&gt; g:(&#39;U -&gt; &#39;T) -&gt; (r:^?9396 * w:^?9398) -&gt; ^?9397 * ^?9399<br />
+                          <strong>Type parameters:</strong> 'T, 'U, ^?9396, ^?9397, ^?9398, ^?9399                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L533-533" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L565-565" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -121,32 +126,34 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '241', 241)" onmouseover="showTip(event, '241', 241)">
+          <code onmouseout="hideTip(event, '244', 244)" onmouseover="showTip(event, '244', 244)">
             ofConcrete(arg1)
           </code>
-          <div class="tip" id="241">
-            <strong>Signature:</strong> ConcreteCodec&lt;&#39;?9341 list,KeyValuePair&lt;&#39;?9342,&#39;?9343&gt; list,&#39;?9344,&#39;?9345&gt; -&gt; (^?9346 -&gt; &#39;?9344 ParseResult) * (&#39;?9345 -&gt; IReadOnlyDictionary&lt;&#39;?9342,&#39;?9343&gt;)<br />
-                          <strong>Type parameters:</strong> '?9341, '?9342, '?9343, '?9344, '?9345, ^?9346                      </div>
+          <div class="tip" id="244">
+            <strong>Signature:</strong> ConcreteCodec&lt;&#39;?9423 list,KeyValuePair&lt;&#39;?9424,&#39;?9425&gt; list,&#39;?9426,&#39;?9427&gt; -&gt; (^?9428 -&gt; &#39;?9426 ParseResult) * (&#39;?9427 -&gt; IReadOnlyDictionary&lt;&#39;?9424,&#39;?9425&gt;)<br />
+                          <strong>Type parameters:</strong> '?9423, '?9424, '?9425, '?9426, '?9427, ^?9428                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L546-546" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L581-581" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Extracts a pair of functions from a ConcreteCodec</p>
+
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '242', 242)" onmouseover="showTip(event, '242', 242)">
+          <code onmouseout="hideTip(event, '245', 245)" onmouseover="showTip(event, '245', 245)">
             ofMonoid(x)
           </code>
-          <div class="tip" id="242">
-            <strong>Signature:</strong> x:KeyValuePair&lt;&#39;?9338,&#39;?9339&gt; list -&gt; IReadOnlyDictionary&lt;&#39;?9338,&#39;?9339&gt;<br />
-                          <strong>Type parameters:</strong> '?9338, '?9339                      </div>
+          <div class="tip" id="245">
+            <strong>Signature:</strong> x:KeyValuePair&lt;&#39;?9420,&#39;?9421&gt; list -&gt; IReadOnlyDictionary&lt;&#39;?9420,&#39;?9421&gt;<br />
+                          <strong>Type parameters:</strong> '?9420, '?9421                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L544-544" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L578-578" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
@@ -155,32 +162,34 @@
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '243', 243)" onmouseover="showTip(event, '243', 243)">
+          <code onmouseout="hideTip(event, '246', 246)" onmouseover="showTip(event, '246', 246)">
             toConcrete(d, e)
           </code>
-          <div class="tip" id="243">
-            <strong>Signature:</strong> (d:(IReadOnlyDictionary&lt;&#39;?9348,&#39;?9349&gt; -&gt; &#39;?9350 ParseResult) * e:(&#39;?9351 -&gt; ^?9352)) -&gt; ConcreteCodec&lt;KeyValuePair&lt;&#39;?9348,&#39;?9349&gt; list,&#39;?9353 list,&#39;?9350,&#39;?9351&gt;<br />
-                          <strong>Type parameters:</strong> '?9348, '?9349, '?9350, '?9351, ^?9352, '?9353                      </div>
+          <div class="tip" id="246">
+            <strong>Signature:</strong> (d:(IReadOnlyDictionary&lt;&#39;?9430,&#39;?9431&gt; -&gt; &#39;?9432 ParseResult) * e:(&#39;?9433 -&gt; ^?9434)) -&gt; ConcreteCodec&lt;KeyValuePair&lt;&#39;?9430,&#39;?9431&gt; list,&#39;?9435 list,&#39;?9432,&#39;?9433&gt;<br />
+                          <strong>Type parameters:</strong> '?9430, '?9431, '?9432, '?9433, ^?9434, '?9435                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L547-547" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L584-584" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
-          
+          <p>Wraps a pair of functions into a ConcreteCodec</p>
+
+
         </td>
       </tr>
       <tr>
         <td class="member-name">
-          <code onmouseout="hideTip(event, '244', 244)" onmouseover="showTip(event, '244', 244)">
+          <code onmouseout="hideTip(event, '247', 247)" onmouseover="showTip(event, '247', 247)">
             toMonoid(x)
           </code>
-          <div class="tip" id="244">
-            <strong>Signature:</strong> x:^?9335 -&gt; &#39;?9336 list<br />
-                          <strong>Type parameters:</strong> ^?9335, '?9336                      </div>
+          <div class="tip" id="247">
+            <strong>Signature:</strong> x:^?9417 -&gt; &#39;?9418 list<br />
+                          <strong>Type parameters:</strong> ^?9417, '?9418                      </div>
         </td>
         <td class="xmldoc">
-                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L543-543" class="github-link">
+                      <a href="https://github.com/fsprojects/Fleece/tree/master/src/Fleece/Fleece.fs#L577-577" class="github-link">
               <img src="../content/img/github.png" class="normal" />
               <img src="../content/img/github-blue.png" class="hover" />
             </a>
