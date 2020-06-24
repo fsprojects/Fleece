@@ -59,8 +59,10 @@ with
                 match! o .@ "type" with
                 | "Bike" -> return Bike
                 | "Car" ->
+                    // we know that json token is a JObject due to the check above so we can directly cast it:
                     let jobj : Linq.JObject = downcast json
                     try
+                        // now we can use the default Newtonsoft Json decoder:
                         let info = jobj.ToObject<CarInfo>()
                         return Car info
                     with
