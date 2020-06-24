@@ -63,10 +63,13 @@ with
                     let jobj : Linq.JObject = downcast json
                     try
                         // now we can use the default Newtonsoft Json decoder:
-                        let info = jobj.ToObject<CarInfo>()
+                        let info = jobj.ToObject<CarInfo>() // NOTE: Use this pattern with care since you hand over control to Newtonsoft.Json
                         return Car info
                     with
                     | e-> return! Decode.Fail.parseError e "Could not parse CarInfo"
                 | x -> return! Uncategorized (sprintf "Unexpected type name %s" x) |> Error
             }
         | x -> Decode.Fail.objExpected x
+(**
+This pattern is *ugly* but can be useful. Modifying the type CarInfo above will give you runtime exceptions without a clear indication that it's a broken contract.
+*)
