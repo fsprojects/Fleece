@@ -73,3 +73,11 @@ with
 (**
 This pattern is *ugly* but can be useful. Modifying the type CarInfo above will give you runtime exceptions without a clear indication that it's a broken contract.
 *)
+
+(**
+## Full contract specification
+
+The default approach to serialization and deserialization in Fleece let you have a lot of control. You choose exactly how it should work.
+
+It's easy to let the structure of your Json be completely independent of the structure of your data. Newtonsoft assumes that what you want follow a lot of conventions.
+*)
