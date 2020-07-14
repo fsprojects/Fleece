@@ -63,7 +63,7 @@ with
                     let jobj : Linq.JObject = downcast json
                     try
                         // now we can use the default Newtonsoft Json decoder:
-                        let info = jobj.ToObject<CarInfo>() // NOTE: Use this pattern with care since you hand over control to Newtonsoft.Json
+                        let info = jobj.ToObject<CarInfo>() // NOTE: here we hand over control of the format to Newtonsoft.Json
                         return Car info
                     with
                     | e-> return! Decode.Fail.parseError e "Could not parse CarInfo"
@@ -72,6 +72,8 @@ with
         | x -> Decode.Fail.objExpected x
 (**
 This pattern is *ugly* but can be useful. Modifying the type CarInfo above will give you runtime exceptions without a clear indication that it's a broken contract.
+
+One of the useful things about having a mixed approach as seen above is that you can gradually convert to say Fleece in a large codebase without having to fix everything at once.
 *)
 
 (**
@@ -81,3 +83,16 @@ The default approach to serialization and deserialization in Fleece let you have
 
 It's easy to let the structure of your Json be completely independent of the structure of your data. Newtonsoft assumes that what you want follow a lot of conventions.
 *)
+
+type Person = { 
+    name : string * string // in order to do this in Newtonsoft you either need to use 
+    age : int option
+    tag : string list
+    children: Person list }
+with
+    static member JsonObjCodec =
+        fun f l a c t-> { name = (f, l); age = a; children = c; tag =t }
+        <!> jreq  "firstName" (Some << fun x -> fst x.name)
+        <*> jreq  "lastName"  (Some << fun x -> snd x.name)
+        <*> jopt  "age"       (fun x -> x.age) // Optional fields: use 'jopt'
+        <*> jreq  "children"  (fun x -> Some x.children)
