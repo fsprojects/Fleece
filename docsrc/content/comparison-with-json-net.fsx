@@ -63,7 +63,7 @@ with
                     let jobj : Linq.JObject = downcast json
                     try
                         // now we can use the default Newtonsoft Json decoder:
-                        let info = jobj.ToObject<CarInfo>() // NOTE: here we hand over control of the format to Newtonsoft.Json
+                        let info = jobj.ToObject<CarInfo>() // NOTE: here we hand over control of the mapping to Newtonsoft.Json
                         return Car info
                     with
                     | e-> return! Decode.Fail.parseError e "Could not parse CarInfo"
@@ -77,22 +77,37 @@ One of the useful things about having a mixed approach as seen above is that you
 *)
 
 (**
-## Full contract specification
+## Full control over mapping
 
 The default approach to serialization and deserialization in Fleece let you have a lot of control. You choose exactly how it should work.
 
 It's easy to let the structure of your Json be completely independent of the structure of your data. Newtonsoft assumes that what you want follow a lot of conventions.
+
+If we look at a simple example of the Json not matching the representation (where you would need a custom JsonConverter):
 *)
 
 type Person = { 
-    name : string * string // in order to do this in Newtonsoft you either need to use 
-    age : int option
-    tag : string list
-    children: Person list }
+    Name : string * string
+}
 with
-    static member JsonObjCodec =
-        fun f l a c t-> { name = (f, l); age = a; children = c; tag =t }
-        <!> jreq  "firstName" (Some << fun x -> fst x.name)
-        <*> jreq  "lastName"  (Some << fun x -> snd x.name)
-        <*> jopt  "age"       (fun x -> x.age) // Optional fields: use 'jopt'
-        <*> jreq  "children"  (fun x -> Some x.children)
+    static member ToJson (x: Person) =
+        jobj [ 
+            "firstname" .= fst x.Name
+            "lastname" .= snd x.Name
+        ]
+    static member OfJson json =
+        match json with
+        | JObject o ->
+            let firstname = jget o "firstname"
+            let lastname = jget o "lastname"
+            match firstname, lastname with
+            | Decode.Success firstname, Decode.Success lastname ->
+                Decode.Success {
+                    Person.Name = (firstname,lastname)
+                }
+            | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
+        | x -> Decode.Fail.objExpected x
+
+(**
+In that sense, having access to functions helps us make what in Newtonsoft is a pain to implement, very easy.
+*)
