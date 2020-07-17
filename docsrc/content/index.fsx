@@ -21,4 +21,11 @@ You can get an overview of the important part of the library by reading the foll
  - [Codec](./codec.html) let's you combine both ToJson and OfJson in one declaration
  - [Combinators](./combinators.html) lets you have more control
 
+### Integration with Web frameworks
+
+In order to use Fleece mappings in your Web API you might follow one of the below guides:
+
+ - [Giraffe](./giraffe.html)
+ - [Suave](./suave.html)
+
 *)
