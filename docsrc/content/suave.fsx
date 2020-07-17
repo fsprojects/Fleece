@@ -31,12 +31,8 @@ module BusinessApp=
     [<RequireQualifiedAccess>]
     module Json =
         let inline OK (dataObj) : WebPart=
-            let str=toJson dataObj |> string
+            let str = toJson dataObj |> string
             Successful.OK str
-            >=> Writers.setMimeType "application/json; charset=utf-8"
-        let inline BAD_REQUEST (dataObj) : WebPart=
-            let str=toJson dataObj |> string
-            RequestErrors.BAD_REQUEST str
             >=> Writers.setMimeType "application/json; charset=utf-8"
 
         let inline parseRequestForm (ctx : HttpContext) =
