@@ -69,7 +69,7 @@ open Giraffe
 open FSharp.Control.Tasks.V2.ContextInsensitive
 // we open the Json helpers we defined last in order to avoid using the default "json" function from Giraffe:
 open BusinessApp.Json
-type Person={Name:string}
+type Person = { Name : string }
 with
     static member JsonObjCodec =
         fun name -> { Name = name }
