@@ -20,6 +20,9 @@ try {
     & $nuget install FSharp.Literate "-ExcludeVersion" "-version" 4.0.0-rc2  -source https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
     & $nuget install FSharp.Compiler.Service "-ExcludeVersion" "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
     & $nuget install FSharp.Formatting "-ExcludeVersion" "-version" 4.0.0-rc2 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
+    & $nuget install TaskBuilder.fs "-ExcludeVersion" "-version" 2.1.0 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
+    & $nuget install Suave "-ExcludeVersion" "-version" 2.5.6 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
+
 }
 finally {
     Pop-Location
