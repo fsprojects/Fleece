@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-    <NoWarn>0686</NoWarn>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Description>JSON mapper for Newtonsoft Json</Description>
-    <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
-    <OtherFlags>--warnon:1182</OtherFlags>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="../Fleece/Fleece.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.6.2" />
-    <PackageReference Include="FSharpPlus" Version="1.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.1</TargetFrameworks>
+        <NoWarn>0686</NoWarn>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Description>JSON mapper for Newtonsoft Json</Description>
+        <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
+        <OtherFlags>--warnon:1182</OtherFlags>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="../Fleece/Fleece.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Update="FSharp.Core" Version="4.6.2" />
+        <PackageReference Include="FSharpPlus" Version="1.1.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    </ItemGroup>
 </Project>

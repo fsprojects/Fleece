@@ -1,9 +1,9 @@
 (*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
+// This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.NewtonsoftJson/bin/Release/net461/Newtonsoft.Json.dll"
-#r @"../../src/Fleece.NewtonsoftJson/bin/Release/net461/Fleece.NewtonsoftJson.dll"
-#r @"../../src/Fleece.NewtonsoftJson/bin/Release/net461/FSharpPlus.dll"
+#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/Newtonsoft.Json.dll"
+#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/Fleece.NewtonsoftJson.dll"
+#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/FSharpPlus.dll"
 
 open System
 open Newtonsoft.Json
@@ -86,12 +86,12 @@ It's easy to let the structure of your Json be completely independent of the str
 If we look at a simple example of the Json not matching the representation (where you would need a custom JsonConverter):
 *)
 
-type Person = { 
+type Person = {
     Name : string * string
 }
 with
     static member ToJson (x: Person) =
-        jobj [ 
+        jobj [
             "firstname" .= fst x.Name
             "lastname" .= snd x.Name
         ]
