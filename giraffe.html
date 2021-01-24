@@ -99,4 +99,10 @@
 </code></pre></td>
 </tr>
 </table>
+<p>The benefit of doing an integration in this way is:</p>
+<ul>
+<li>You get a compilation error when trying to use types that don't have the proper functions defined.</li>
+<li>You avoid having to use runtime reflection to bind and serialize the Json.</li>
+<li>You have more control over the serialization than with System.Text.Json or Newtonsoft.Json</li>
+</ul>
 </div><div class="span3"><img src="./img/logo-color.svg" alt="F# Project" style="width:150px;margin:10px" /><ul class="nav nav-list" id="menu" style="margin-top:20px"><li class="nav-header">Fleece</li><li><a href="./index.html">Home page</a></li><li class="divider"></li><li><a href="https://github.com/fsprojects/Fleece">Source Code on GitHub</a></li><li><a href="./license.html">License</a></li><li><a href="./release-notes.html">Release Notes</a></li><li class="nav-header">Documentation</li><li><a href="./reference/index.html">API Reference</a></li></ul></div></div></div><a href="https://github.com/fsprojects/Fleece"><img style="position:absolute;top:0;right:0;border:0" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" /></a></body></html>
