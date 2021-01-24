@@ -83,3 +83,11 @@ let personHandler =
                 return! json person next ctx
             // and ideally we would deal with case when the parsing fails as well
         }
+
+(**
+The benefit of doing an integration in this way is:
+
+- You get a compilation error when trying to use types that don't have the proper functions defined.
+- You avoid having to use runtime reflection to bind and serialize the Json.
+- You have more control over the serialization than with System.Text.Json or Newtonsoft.Json
+*)
