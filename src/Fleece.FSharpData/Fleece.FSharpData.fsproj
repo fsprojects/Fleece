@@ -15,9 +15,5 @@
         <PackageReference Update="FSharp.Core" Version="4.6.2" />
         <PackageReference Include="FSharpPlus" Version="1.1.1" />
         <PackageReference Include="FSharp.Data" Version="3.0.0" />
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-        </PackageReference>
     </ItemGroup>
 </Project>
