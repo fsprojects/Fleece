@@ -1,21 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net461;netcoreapp3.1</TargetFrameworks>
-    <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="../Tests/Lenses.fs" />
-    <Compile Include="../Tests/Tests.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.6.2" />
-    <PackageReference Include="FsCheck" Version="2.14.2" />
-    <PackageReference Include="Fuchu" Version="1.1.0" />
-    <PackageReference Include="Fuchu.FsCheck" Version="1.1.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
-  </ItemGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
+        <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="../Tests/Lenses.fs" />
+        <Compile Include="../Tests/Tests.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Update="FSharp.Core" Version="4.6.2" />
+        <PackageReference Include="FsCheck" Version="2.14.2" />
+        <PackageReference Include="Fuchu" Version="1.1.0" />
+        <PackageReference Include="Fuchu.FsCheck" Version="1.1.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
+    </ItemGroup>
 </Project>

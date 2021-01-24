@@ -1,18 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Library.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Library.fs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.6.2" />
-    <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
-    <ProjectReference Include="..\..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
-    <ProjectReference Include="..\..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Update="FSharp.Core" Version="4.6.2" />
+        <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
+        <ProjectReference Include="..\..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
+        <ProjectReference Include="..\..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
+    </ItemGroup>
 
 </Project>

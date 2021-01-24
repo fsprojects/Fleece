@@ -1,17 +1,17 @@
 (*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
+// This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/System.Json.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/FSharpPlus.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
 
 open System.Json
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 #if FSHARPDATA
-#r @"../../src/Fleece.FSharpData/bin/Release/net461/FSharp.Data.dll"
-#r @"../../src/Fleece.FSharpData/bin/Release/net461/Fleece.FSharpData.dll"
-#r @"../../src/Fleece.FSharpData/bin/Release/net461/FSharpPlus.dll"
+#r @"../../src/Fleece.FSharpData/bin/Release/netstandard2.1/FSharp.Data.dll"
+#r @"../../src/Fleece.FSharpData/bin/Release/netstandard2.1/Fleece.FSharpData.dll"
+#r @"../../src/Fleece.FSharpData/bin/Release/netstandard2.1/FSharpPlus.dll"
 
 open FSharp.Data
 open Fleece.FSharpData
@@ -39,16 +39,16 @@ You can map it to JSON like this:
 
 type Person with
     static member ToJson (x: Person) =
-        jobj [ 
+        jobj [
             "name" .= x.Name
             "age" .= x.Age
             "children" .= x.Children
         ]
 
-let p = 
+let p =
     { Person.Name = "John"
       Age = 44
-      Children = 
+      Children =
       [
         { Person.Name = "Katy"
           Age = 5
@@ -80,7 +80,7 @@ type Person with
                 }
             | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
         | x -> Decode.Fail.objExpected x
-        
+
 let john : Person ParseResult = parseJson """{
     "name": "John",
     "age": 44,
@@ -129,7 +129,7 @@ type PersonM = {
 type PersonM with
     static member OfJson json =
         match json with
-        | JObject o -> 
+        | JObject o ->
             monad {
                 let! name = o .@ "name"
                 let! age = o .@ "age"

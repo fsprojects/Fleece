@@ -1,10 +1,10 @@
 (*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
+// This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/System.Json.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/FSharpPlus.dll"
-#r @"../../packages/docs/Suave/lib/net461/Suave.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
+#r @"../../packages/docs/Suave/lib/netstandard2.1/Suave.dll"
 
 
 (**

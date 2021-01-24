@@ -1,42 +1,27 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-      <RepositoryUrl>https://github.com/fsprojects/Fleece</RepositoryUrl>
-      <PackageProjectUrl>https://github.com/fsprojects/Fleece</PackageProjectUrl>
-      <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon</Authors>
-      <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-      <PackageTags>json fsharp</PackageTags>
+    <PropertyGroup>
+        <RepositoryUrl>https://github.com/fsprojects/Fleece</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/fsprojects/Fleece</PackageProjectUrl>
+        <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon</Authors>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageTags>json fsharp</PackageTags>
 
-      <WarningLevel>3</WarningLevel>
+        <WarningLevel>3</WarningLevel>
 
-      <VersionPrefix>0.8.0</VersionPrefix>
-      <VersionSuffix></VersionSuffix>
-      <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
-      <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
-      <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
-      <FileVersion>$(VersionPrefix).0</FileVersion>
-  </PropertyGroup>
+        <VersionPrefix>0.8.0</VersionPrefix>
+        <VersionSuffix></VersionSuffix>
+        <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
+        <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
+        <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
+        <FileVersion>$(VersionPrefix).0</FileVersion>
+    </PropertyGroup>
 
-  <!-- mono -->
-  <PropertyGroup Condition="'$(OS)' == 'Unix'">
-    <MonoRoot Condition="'$(MonoRoot)' == '' and $([MSBuild]::IsOsPlatform('Linux'))">/usr</MonoRoot>
-    <MonoRoot Condition="'$(MonoRoot)' == '' and $([MSBuild]::IsOsPlatform('OSX'))">/Library/Frameworks/Mono.framework/Versions/Current</MonoRoot>
-    <MonoLibFolder>$(MonoRoot)/lib/mono</MonoLibFolder>
-    <MonoPackaging Condition="$(TargetFramework.StartsWith('net4'))">true</MonoPackaging>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net45'">$(MonoLibFolder)/4.5-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net451'">$(MonoLibFolder)/4.5.1-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net452'">$(MonoLibFolder)/4.5.2-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net46'">$(MonoLibFolder)/4.6-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net461'">$(MonoLibFolder)/4.6.1-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net462'">$(MonoLibFolder)/4.6.2-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net47'">$(MonoLibFolder)/4.7-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net471'">$(MonoLibFolder)/4.7.1-api</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net472'">$(MonoLibFolder)/4.7.2-api</FrameworkPathOverride>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
 </Project>

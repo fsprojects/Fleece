@@ -1,9 +1,9 @@
 (*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
+// This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/System.Json.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/net461/FSharpPlus.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
 
 open System.Json
 open Fleece.SystemJson
@@ -12,14 +12,14 @@ open Fleece.SystemJson.Operators
 (**
 ## CODEC
 
-For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values. 
+For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values.
 
 *)
 
-type Person = { 
+type Person = {
     name : string * string
     age : int option
-    children: Person list } 
+    children: Person list }
     with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
@@ -47,7 +47,7 @@ let john = parseJson<Person> """{
 If you prefer you can write the same with functions:
 *)
 
-type PersonF = { 
+type PersonF = {
     name : string * string
     age : int option
     children: PersonF list }
@@ -68,7 +68,7 @@ type Shape =
     | Rectangle of width : float * length : float
     | Circle of radius : float
     | Prism of width : float * float * height : float
-    with 
+    with
         static member JsonObjCodec =
             Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
             <|> ( Circle <!> jreq "radius" (function Circle x -> Some x | _ -> None) )
@@ -81,7 +81,7 @@ type ShapeC =
     | Rectangle of width : float * length : float
     | Circle of radius : float
     | Prism of width : float * float * height : float
-    with 
+    with
         static member JsonObjCodec =
             jchoice
                 [
