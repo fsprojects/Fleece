@@ -1,6 +1,5 @@
 *.ide
 *.suo
-docs/*
 **/bin/*
 **/obj/*
 packages/*
