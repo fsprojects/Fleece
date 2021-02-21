@@ -14,3 +14,7 @@ packages/*
 docsrc/content/license.md
 docsrc/content/release-notes.md
 *.user
+
+# FSFormatting
+.fsdocs/
+tmp/watch

@@ -2,10 +2,10 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "FSharp.Formatting.CommandTool":{
-      "version": "4.0.0-rc2",
+    "FSharp.Formatting.CommandTool": {
+      "version": "8.0.1",
       "commands": [
-        "fsformatting"
+        "fsdocs"
       ]
     }
   }
