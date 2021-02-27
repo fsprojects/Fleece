@@ -15,7 +15,7 @@ try {
         Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile ./bin/nuget.exe
     }
     & $nuget install FSharp.Compiler.Service "-ExcludeVersion" "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
-    & $nuget install FSharp.Formatting "-ExcludeVersion" "-version" 8.0.1 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
+    & $nuget install FSharp.Formatting "-ExcludeVersion" "-version" 9.0.1 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
 
 }
 finally {

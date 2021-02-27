@@ -17,8 +17,8 @@
     <PackageReference Include="Fable.Core" Version="3.1.5" />
     <PackageReference Include="Fable.React" Version="5.3.6" />
     <PackageReference Include="FSharpPlus" Version="1.1.0" />
-    <PackageReference Include="FSharp.Formatting.Literate" Version="8.0.1" />
-    <PackageReference Include="FSharp.Formatting" Version="8.0.1" />
+    <PackageReference Include="FSharp.Formatting.Literate" Version="9.0.1" />
+    <PackageReference Include="FSharp.Formatting" Version="9.0.1" />
     <PackageReference Include="MathNet.Numerics.FSharp" Version="4.9.0" />
   </ItemGroup>
 

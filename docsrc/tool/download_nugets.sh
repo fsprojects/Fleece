@@ -15,4 +15,4 @@ else
 fi
 
 $MONO $NUGET install FSharp.Compiler.Service "-ExcludeVersion" "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
-$MONO $NUGET install FSharp.Formatting "-ExcludeVersion" "-version" 8.0.1 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
+$MONO $NUGET install FSharp.Formatting "-ExcludeVersion" "-version" 9.0.1 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
