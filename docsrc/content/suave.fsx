@@ -1,10 +1,10 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/Fleece.NewtonsoftJson.dll"
-#r "nuget: FSharpPlus,1.1.1"
-#r "nuget: Newtonsoft.Json,10.0.2"
+#r "nuget: FSharpPlus, 1.1.7"
+#r "nuget: System.Json"
 #r "nuget: Suave,2.5.6"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 
 (**
 ## Suave
@@ -15,15 +15,15 @@ A minimal integration can be done by
 
 *)
 
-
 open Suave
 open Suave.Http
 open Suave.Operators
 open System.IO
 open System.Text
 // Fleece and Json related:
-open Fleece.Newtonsoft
-open Fleece.Newtonsoft.Operators
+open System.Json
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
 
 module BusinessApp=
     [<RequireQualifiedAccess>]
@@ -41,8 +41,8 @@ module BusinessApp=
 In the web API part of your business app you would then do something like the code below:
 *)
 
-open Suave
 open BusinessApp
+
 type Person = { Name : string }
 with
     static member JsonObjCodec =

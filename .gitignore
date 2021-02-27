@@ -17,3 +17,5 @@ docsrc/content/release-notes.md
 # FSFormatting
 .fsdocs/
 tmp/watch
+
+docs/
