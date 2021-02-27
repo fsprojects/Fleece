@@ -1,5 +1,6 @@
 *.ide
 *.suo
+docs/*
 **/bin/*
 **/obj/*
 packages/*
@@ -17,5 +18,3 @@ docsrc/content/release-notes.md
 # FSFormatting
 .fsdocs/
 tmp/watch
-
-docs/
