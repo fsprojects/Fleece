@@ -1,11 +1,10 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
-#r @"../../packages/docs/Suave/lib/netstandard2.1/Suave.dll"
-
+#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/Fleece.NewtonsoftJson.dll"
+#r "nuget: FSharpPlus,1.1.1"
+#r "nuget: Newtonsoft.Json,10.0.2"
+#r "nuget: Suave,2.5.6"
 
 (**
 ## Suave
@@ -23,9 +22,8 @@ open Suave.Operators
 open System.IO
 open System.Text
 // Fleece and Json related:
-open System.Json
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
+open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 
 module BusinessApp=
     [<RequireQualifiedAccess>]
