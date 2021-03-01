@@ -16,6 +16,7 @@ try {
     }
     & $nuget install FSharp.Compiler.Service "-ExcludeVersion" "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
     & $nuget install FSharp.Formatting "-ExcludeVersion" "-version" 9.0.1 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
+    & $nuget install FSharp.Data "-ExcludeVersion" "-version" 3.0.0 "-source" https://www.nuget.org/api/v2 "-OutputDirectory" packages/docs/
 
 }
 finally {
