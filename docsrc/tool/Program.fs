@@ -59,6 +59,7 @@ Target.create "Build" (fun _ ->
             ProjectParameters =  ("root", root)::info
             Projects = rootDir
             TargetPath = rootDir
+            
             SourceRepository = githubLink @@ "tree/master" }
            )
 )
@@ -73,19 +74,12 @@ let referenceBinaries = []
 open Tools.Path
 open System.IO
 let bin  = rootDir @@ "src"
-let layoutRootsAll = new System.Collections.Generic.Dictionary<string, string list>()
-layoutRootsAll.Add("en",[   templates; templates @@ "reference"; 
-                            formatting @@ "templates"
-                            //formatting @@ "templates/reference"
-                        ])
 
 let copyFiles () =
     Shell.copyRecursive files output true 
     |> Trace.logItems "Copying file: "
     Directory.ensure (output @@ "content")
-    Shell.copyRecursive (formatting @@ "styles") (output @@ "content") true 
-    |> Trace.logItems "Copying styles and scripts: "
-        
+
 Target.create "Docs" (fun _ ->
     System.IO.File.Delete ( rootDir @@ "docsrc/content/release-notes.md" )
     Shell.copyFile (rootDir @@ "docsrc/content/") "RELEASE_NOTES.md"
