@@ -7,19 +7,19 @@ dotnet tool restore
 ./docsrc/tool/download_nugets.sh
 # Build
 # dotnet build -c Release
-msbuild /t:Build /p:Configuration=Release 
+msbuild /t:Build /p:Configuration=Debug 
 
-cp packages/docs/FSharp.Data/lib/netstandard2.0/FSharp.Data.* /Users/mathieu/src/fs/Fleece/src/Fleece.FSharpData/bin/Debug/netstandard2.0/
-cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.FSharpData/bin/Debug/netstandard2.0/
+#cp packages/docs/FSharp.Data/lib/netstandard2.0/FSharp.Data.* /Users/mathieu/src/fs/Fleece/src/Fleece.FSharpData/bin/Debug/netstandard2.0/
+#cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.FSharpData/bin/Debug/netstandard2.0/
 
-cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.NewtonsoftJson/bin/Debug/netstandard2.0/
-cp packages/docs/Newtonsoft.Json/lib/netstandard1.3/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.NewtonsoftJson/bin/Debug/netstandard2.0/
+#cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.NewtonsoftJson/bin/Debug/netstandard2.0/
+#cp packages/docs/Newtonsoft.Json/lib/netstandard1.3/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.NewtonsoftJson/bin/Debug/netstandard2.0/
 
-cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemJson/bin/Debug/netstandard2.0/
-cp packages/docs/System.Json/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemJson/bin/Debug/netstandard2.0/
+#cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemJson/bin/Debug/netstandard2.0/
+#cp packages/docs/System.Json/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemJson/bin/Debug/netstandard2.0/
 
-cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemTextJson/bin/Debug/netstandard2.0/
-cp packages/docs/System.Text.Json/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemTextJson/bin/Debug/netstandard2.0/
+#cp packages/docs/FSharpPlus/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemTextJson/bin/Debug/netstandard2.0/
+#cp packages/docs/System.Text.Json/lib/netstandard2.0/*.* /Users/mathieu/src/fs/Fleece/src/Fleece.SystemTextJson/bin/Debug/netstandard2.0/
 
 # Gen docs
 dotnet run --project ./docsrc/tool ReleaseDocs
