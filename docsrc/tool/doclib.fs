@@ -1144,6 +1144,16 @@ module Git =
             msg.[0]
         with exn -> failwithf "Could not run \"git %s\".\r\nError: %s" command exn.Message
 
+    module Config = 
+        /// Get remote origin url
+        /// ## Parameters
+        ///
+        ///  - `workingDir` - The working directory.
+        let remoteOriginUrl workingDir =
+            let url = 
+                "config --get remote.origin.url"
+                |> runSimpleGitCommand workingDir
+            url.Trim([|'\n';'\r';'\t';' '|])
 
     module Branches =
         /// Pushes all branches to the default remote.
