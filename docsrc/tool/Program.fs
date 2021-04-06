@@ -32,6 +32,8 @@ let info =
     "project-author", "Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon"
     "project-summary", "Fleece is a JSON mapper for F#. It simplifies mapping from a Json library's JsonValue onto your types, and mapping from your types onto JsonValue."
     "project-github", githubLink
+    "fsdocs-logo-source","https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg"
+    "fsdocs-logo-link","http://fsprojects.github.io/Fleece/"
     "project-nuget", "http://nuget.org/packages/Fleece" ]
 
 // --------------------------------------------------------------------------------------

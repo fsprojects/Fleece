@@ -15,8 +15,7 @@
         <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
         <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
         <FileVersion>$(VersionPrefix).0</FileVersion>
-        <!-- Styling options for Docs -->
-        <FsDocsLogoSource>content/img/logo.svg</FsDocsLogoSource>
+        
     </PropertyGroup>
 
     <ItemGroup>
