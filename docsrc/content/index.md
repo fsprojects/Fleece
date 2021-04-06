@@ -1,17 +1,8 @@
-(*** hide ***)
-// This block of code is omitted in the generated HTML documentation. Use 
-// it to define helpers that you do not want to show in the documentation.
-
-(**
 Fleece
 ======
 
-Fleece is a library intended to help with parsing and crafting specific Json without having to write data transfer objects in order to get the expected 
+Fleece is a library intended to help with parsing and crafting specific Json without having to write data transfer objects in order to get the expected
 representation.
-
-*)
-
-(**
 
 ### Introduction
 
@@ -27,5 +18,3 @@ In order to use Fleece mappings in your Web API you might follow one of the belo
 
  - [Giraffe](./giraffe.html)
  - [Suave](./suave.html)
-
-*)

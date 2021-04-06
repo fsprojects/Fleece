@@ -7,6 +7,7 @@
         <Description>JSON mapper for System.Text.Json</Description>
         <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
         <OtherFlags>--warnon:1182</OtherFlags>
+        <CopyLocalLockFileAssemblies Condition=" '$(Configuration)' == 'Debug' ">true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="../Fleece/Fleece.fs" />

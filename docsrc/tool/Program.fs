@@ -1,7 +1,6 @@
 ﻿// Learn more about F# at http://fsharp.org
 
 open System
-open Generate
 
 open DocLib
 
@@ -33,6 +32,8 @@ let info =
     "project-author", "Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon"
     "project-summary", "Fleece is a JSON mapper for F#. It simplifies mapping from a Json library's JsonValue onto your types, and mapping from your types onto JsonValue."
     "project-github", githubLink
+    "fsdocs-logo-source","https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg"
+    "fsdocs-logo-link","http://fsprojects.github.io/Fleece/"
     "project-nuget", "http://nuget.org/packages/Fleece" ]
 
 // --------------------------------------------------------------------------------------
@@ -50,10 +51,19 @@ Target.create "CleanDocs" (fun _ ->
 let rootDir = __SOURCE_DIRECTORY__ @@ ".." @@ ".."
 // --------------------------------------------------------------------------------------
 // Build project
+open Tools.Path
 
 Target.create "Build" (fun _ ->
-    copyFiles()
-    buildDocumentation()
+    let root = website+"/"
+    FSFormatting.buildDocs (fun args ->
+        { args with
+            OutputDirectory = output
+            ProjectParameters =  ("root", root)::info
+            Projects = rootDir
+            TargetPath = rootDir
+            
+            SourceRepository = githubLink @@ "tree/master" }
+           )
 )
 
 
@@ -66,56 +76,12 @@ let referenceBinaries = []
 open Tools.Path
 open System.IO
 let bin  = rootDir @@ "src"
-let layoutRootsAll = new System.Collections.Generic.Dictionary<string, string list>()
-layoutRootsAll.Add("en",[   templates; templates @@ "reference"; 
-                            formatting @@ "templates"
-                            //formatting @@ "templates/reference"
-                        ])
-Target.create "ReferenceDocs" (fun _ ->
-    Directory.ensure (output @@ "reference")
-    let nameAndDirectory (d:DirectoryInfo)=
-        let net46Bin = DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath (d.FullName @@ "bin" @@ "Release")) |> Array.filter (fun x -> x.FullName.ToLower().Contains("net461"))
-        if net46Bin.Length = 0 then failwithf "Failure: No binaries found for %s." d.FullName
-        else d.Name, net46Bin.[0]
-    let filter (x:DirectoryInfo)= not <| x.FullName.EndsWith("Fleece")
-    let binaries () =
-        let manuallyAdded = referenceBinaries |> List.map (fun b -> bin @@ b)
-   
-        let conventionBased = 
-            DirectoryInfo.getSubDirectories <| DirectoryInfo bin
-            |> Array.filter filter
-            |> Array.collect (fun d ->
-                let (name, d) = nameAndDirectory d
-                d.GetFiles ()
-                |> Array.filter (fun x -> x.Name.ToLower() = (sprintf "%s.dll" name).ToLower())
-                |> Array.map (fun x -> x.FullName))
-            |> List.ofArray
-
-        conventionBased @ manuallyAdded
-    let directories() =
-        DirectoryInfo.getSubDirectories <| DirectoryInfo bin
-        |> Array.filter filter
-        |> Array.map (fun d-> let dir= nameAndDirectory d |> snd in dir.FullName)
-        |> List.ofArray
-
-    binaries()
-    |> FSFormatting.createDocsForDlls (fun args ->
-        { args with
-            OutputDirectory = output @@ "reference"
-            LayoutRoots =  layoutRootsAll.["en"]
-            ProjectParameters =  ("root", root)::info
-            LibDirs = directories()
-            SourceRepository = githubLink @@ "tree/master" }
-           )
-)
 
 let copyFiles () =
     Shell.copyRecursive files output true 
     |> Trace.logItems "Copying file: "
     Directory.ensure (output @@ "content")
-    Shell.copyRecursive (formatting @@ "styles") (output @@ "content") true 
-    |> Trace.logItems "Copying styles and scripts: "
-        
+
 Target.create "Docs" (fun _ ->
     System.IO.File.Delete ( rootDir @@ "docsrc/content/release-notes.md" )
     Shell.copyFile (rootDir @@ "docsrc/content/") "RELEASE_NOTES.md"
@@ -125,34 +91,7 @@ Target.create "Docs" (fun _ ->
     Shell.copyFile ( rootDir @@ "docsrc/content/" ) "LICENSE"
     Shell.rename ( rootDir @@ "docsrc/content/license.md" ) "docsrc/content/LICENSE"
 
-    
-    DirectoryInfo.getSubDirectories (DirectoryInfo.ofPath templates)
-    |> Seq.iter (fun d ->
-                    let name = d.Name
-                    if name.Length = 2 || name.Length = 3 then
-                        layoutRootsAll.Add(
-                                name, [templates @@ name
-                                       formatting @@ "templates"
-                                       formatting @@ "templates/reference" ]))
     copyFiles ()
-    
-    for dir in  [ content; ] do
-        let langSpecificPath(lang, path:string) =
-            path.Split([|'/'; '\\'|], System.StringSplitOptions.RemoveEmptyEntries)
-            |> Array.exists(fun i -> i = lang)
-        let layoutRoots =
-            let key = layoutRootsAll.Keys |> Seq.tryFind (fun i -> langSpecificPath(i, dir))
-            match key with
-            | Some lang -> layoutRootsAll.[lang]
-            | None -> layoutRootsAll.["en"] // "en" is the default language
-
-        FSFormatting.createDocs (fun args ->
-            { args with
-                Source = content
-                OutputDirectory = output 
-                LayoutRoots = layoutRoots
-                ProjectParameters  = ("root", root)::info
-                Template = docTemplate } )
 )
 
 // --------------------------------------------------------------------------------------

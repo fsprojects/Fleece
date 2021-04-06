@@ -5,12 +5,10 @@ let (</>) x y = IO.Path.Combine(x,y)
 
 module Path =
     // Paths with template/source/output locations
-    let bin        = __SOURCE_DIRECTORY__ </> "../../src/FSharpPlus/bin/Release/net45/"
     let content    = __SOURCE_DIRECTORY__ </> "../content"
     let output     = __SOURCE_DIRECTORY__ </> "../../docs"
     let files      = __SOURCE_DIRECTORY__ </> "../files"
     let templates      = __SOURCE_DIRECTORY__ </> "./templates"
-    let formatting = __SOURCE_DIRECTORY__ </> "../../packages/docs/FSharp.Formatting/"
 
     let dir p = IO.Path.GetDirectoryName(p: string)
     let filename p = IO.Path.GetFileName(p: string)

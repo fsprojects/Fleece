@@ -1,11 +1,10 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r "nuget: FSharpPlus, 1.1.7"
+#r "nuget: System.Json"
+#r "nuget: Suave,2.5.6"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
-#r @"../../packages/docs/Suave/lib/netstandard2.1/Suave.dll"
-
 
 (**
 ## Suave
@@ -15,7 +14,6 @@ In this page we will get an overview of how you can use Fleece together with Sua
 A minimal integration can be done by
 
 *)
-
 
 open Suave
 open Suave.Http
@@ -43,8 +41,8 @@ module BusinessApp=
 In the web API part of your business app you would then do something like the code below:
 *)
 
-open Suave
 open BusinessApp
+
 type Person = { Name : string }
 with
     static member JsonObjCodec =

@@ -1,10 +1,10 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r "nuget: FSharpPlus"
+#r "nuget: System.Json"
+#r "nuget: TaskBuilder.fs,2.1.0"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
-#r @"../../packages/docs/TaskBuilder.fs/lib/net46/TaskBuilder.fs.dll"
 
 module Giraffe=
     open System.Threading.Tasks
@@ -33,14 +33,12 @@ A minimal integration can be done by looking at how Giraffe implements the metho
 
 *)
 
-
 open Giraffe
 open System.IO
 open System.Text
 // task computation builder from TaskBuilder.fs:
 open FSharp.Control.Tasks.V2.ContextInsensitive
 // Fleece and Json related:
-open System.Json
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 

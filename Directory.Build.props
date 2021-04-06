@@ -15,6 +15,7 @@
         <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
         <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
         <FileVersion>$(VersionPrefix).0</FileVersion>
+        
     </PropertyGroup>
 
     <ItemGroup>
