@@ -1,108 +1,248 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8" /><title></title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="Fleece is a JSON mapper for F#. It simplifies mapping from a Json library&#x27;s JsonValue onto your types, and mapping from your types onto JsonValue." /><meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon" /><script src="https://code.jquery.com/jquery-1.8.0.js"></script><script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script><script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script><link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet" /><link type="text/css" rel="stylesheet" href="./style.css" /><script type="text/javascript" src="./tips.js"></script></head><body><div class="container"><div class="masthead"><ul class="nav nav-pills pull-right"><li><a href="http://fsharp.org">fsharp.org</a></li><li><a href="https://github.com/fsprojects/Fleece">github page</a></li></ul><h3 class="muted"><a href="./index.html">Fleece</a></h3></div><hr /><div class="row"><div class="span9" id="main"><h2><a name="Giraffe" class="anchor" href="#Giraffe">Giraffe</a></h2>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>giraffe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
+
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
+    <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
+    <!-- END SEARCH BOX: this adds support for the search box -->
+    
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
+            <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+            <div id="header">
+                <div class="searchbox" id="fsdocs-searchbox">
+                    <label for="search-by">
+                        <i class="fas fa-search"></i>
+                    </label>
+                    <input data-search-input="" id="search-by" type="search" placeholder="Search..." />
+                    <span data-search-clear="">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- END SEARCH BOX: this adds support for the search box -->
+            <ul class="navbar-nav">
+                <li class="nav-header">Links</li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+                <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
+                <li class="nav-header">
+  Documentation
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/codec.html">
+    codec
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/license.html">
+    license
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/release-notes.html">
+    release-notes
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
+    comparison-with-json-net
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/giraffe.html">
+    giraffe
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/suave.html">
+    suave
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/combinators.html">
+    combinators
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/to-json-and-of-json.html">
+    to-json-and-of-json
+  </a>
+</li>
+                <li class="nav-header">
+  API Reference
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/reference/index.html">
+    All Namespaces
+  </a>
+</li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="masthead">
+            <h3 class="muted"><a href="https://github.com/fsprojects/Fleece/">Fleece</a></h3>
+        </div>
+        <hr />
+        <div class="container" id="fsdocs-content">
+            <h2><a name="Giraffe" class="anchor" href="#Giraffe">Giraffe</a></h2>
 <p>In this page we will get an overview of how you can use Fleece together with Giraffe.</p>
 <p>A minimal integration can be done by looking at how Giraffe implements the method <a href="https://github.com/giraffe-fsharp/Giraffe/blob/37e69a54d1e85649968705f13cab77abe2d0a928/src/Giraffe/ResponseWriters.fs#L53-L57">WriteJsonAsync</a> and function <a href="https://github.com/giraffe-fsharp/Giraffe/blob/37e69a54d1e85649968705f13cab77abe2d0a928/src/Giraffe/ResponseWriters.fs#L186-L188">json</a>:</p>
-<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
-<span class="l"> 2: </span>
-<span class="l"> 3: </span>
-<span class="l"> 4: </span>
-<span class="l"> 5: </span>
-<span class="l"> 6: </span>
-<span class="l"> 7: </span>
-<span class="l"> 8: </span>
-<span class="l"> 9: </span>
-<span class="l">10: </span>
-<span class="l">11: </span>
-<span class="l">12: </span>
-<span class="l">13: </span>
-<span class="l">14: </span>
-<span class="l">15: </span>
-<span class="l">16: </span>
-<span class="l">17: </span>
-<span class="l">18: </span>
-<span class="l">19: </span>
-<span class="l">20: </span>
-<span class="l">21: </span>
-<span class="l">22: </span>
-<span class="l">23: </span>
-<span class="l">24: </span>
-<span class="l">25: </span>
-<span class="l">26: </span>
-</pre></td>
-<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, '21', 35)" onmouseover="showTip(event, '21', 35)" class="id">Giraffe</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '2', 36)" onmouseover="showTip(event, '2', 36)" class="id">System</span><span class="pn">.</span><span onmouseout="hideTip(event, '5', 37)" onmouseover="showTip(event, '5', 37)" class="id">IO</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '2', 38)" onmouseover="showTip(event, '2', 38)" class="id">System</span><span class="pn">.</span><span onmouseout="hideTip(event, '22', 39)" onmouseover="showTip(event, '22', 39)" class="id">Text</span>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs21', 35)" onmouseover="showTip(event, 'fs21', 35)" class="m">Giraffe</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 36)" onmouseover="showTip(event, 'fs2', 36)" class="id">System</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs5', 37)" onmouseover="showTip(event, 'fs5', 37)" class="id">IO</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 38)" onmouseover="showTip(event, 'fs2', 38)" class="id">System</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs22', 39)" onmouseover="showTip(event, 'fs22', 39)" class="id">Text</span>
 <span class="c">// task computation builder from TaskBuilder.fs:</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '23', 40)" onmouseover="showTip(event, '23', 40)" class="id">FSharp</span><span class="pn">.</span><span onmouseout="hideTip(event, '24', 41)" onmouseover="showTip(event, '24', 41)" class="id">Control</span><span class="pn">.</span><span onmouseout="hideTip(event, '25', 42)" onmouseover="showTip(event, '25', 42)" class="id">Tasks</span><span class="pn">.</span><span onmouseout="hideTip(event, '26', 43)" onmouseover="showTip(event, '26', 43)" class="id">V2</span><span class="pn">.</span><span onmouseout="hideTip(event, '27', 44)" onmouseover="showTip(event, '27', 44)" class="id">ContextInsensitive</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs23', 40)" onmouseover="showTip(event, 'fs23', 40)" class="id">FSharp</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs24', 41)" onmouseover="showTip(event, 'fs24', 41)" class="id">Control</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs25', 42)" onmouseover="showTip(event, 'fs25', 42)" class="id">Tasks</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs26', 43)" onmouseover="showTip(event, 'fs26', 43)" class="m">V2</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs27', 44)" onmouseover="showTip(event, 'fs27', 44)" class="m">ContextInsensitive</span>
 <span class="c">// Fleece and Json related:</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '2', 45)" onmouseover="showTip(event, '2', 45)" class="id">System</span><span class="pn">.</span><span onmouseout="hideTip(event, '28', 46)" onmouseover="showTip(event, '28', 46)" class="id">Json</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '29', 47)" onmouseover="showTip(event, '29', 47)" class="id">Fleece</span><span class="pn">.</span><span onmouseout="hideTip(event, '30', 48)" onmouseover="showTip(event, '30', 48)" class="id">SystemJson</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '29', 49)" onmouseover="showTip(event, '29', 49)" class="id">Fleece</span><span class="pn">.</span><span onmouseout="hideTip(event, '30', 50)" onmouseover="showTip(event, '30', 50)" class="id">SystemJson</span><span class="pn">.</span><span onmouseout="hideTip(event, '31', 51)" onmouseover="showTip(event, '31', 51)" class="id">Operators</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs28', 45)" onmouseover="showTip(event, 'fs28', 45)" class="id">Fleece</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs29', 46)" onmouseover="showTip(event, 'fs29', 46)" class="m">SystemJson</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs28', 47)" onmouseover="showTip(event, 'fs28', 47)" class="id">Fleece</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs29', 48)" onmouseover="showTip(event, 'fs29', 48)" class="m">SystemJson</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs30', 49)" onmouseover="showTip(event, 'fs30', 49)" class="m">Operators</span>
 
 <span class="k">module</span> <span class="m">BusinessApp</span><span class="o">=</span>
-    <span class="k">module</span> <span onmouseout="hideTip(event, '32', 52)" onmouseover="showTip(event, '32', 52)" class="m">Json</span> <span class="o">=</span>
-        <span class="k">let</span> <span class="k">inline</span> <span onmouseout="hideTip(event, '33', 53)" onmouseover="showTip(event, '33', 53)" class="fn">json</span> <span class="pn">(</span><span onmouseout="hideTip(event, '34', 54)" onmouseover="showTip(event, '34', 54)" class="id">dataObj</span> <span class="pn">)</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '20', 55)" onmouseover="showTip(event, '20', 55)" class="rt">HttpHandler</span> <span class="o">=</span>
-            <span class="k">fun</span> <span class="pn">(</span><span class="fn">_</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '19', 56)" onmouseover="showTip(event, '19', 56)" class="rt">HttpFunc</span><span class="pn">)</span> <span class="pn">(</span><span onmouseout="hideTip(event, '35', 57)" onmouseover="showTip(event, '35', 57)" class="id">ctx</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '9', 58)" onmouseover="showTip(event, '9', 58)" class="rt">HttpContext</span><span class="pn">)</span> <span class="k">-&gt;</span>
-                <span onmouseout="hideTip(event, '35', 59)" onmouseover="showTip(event, '35', 59)" class="fn">ctx</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 60)" onmouseover="showTip(event, '36', 60)" class="id">SetContentType</span> <span class="s">&quot;application/json; charset=utf-8&quot;</span>
-                <span onmouseout="hideTip(event, '37', 61)" onmouseover="showTip(event, '37', 61)" class="fn">toJson</span> <span onmouseout="hideTip(event, '34', 62)" onmouseover="showTip(event, '34', 62)" class="id">dataObj</span> <span class="c">// turn dataObj into Json</span>
-                <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '12', 63)" onmouseover="showTip(event, '12', 63)" class="fn">string</span> <span class="c">// get the Json string</span>
-                <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '38', 64)" onmouseover="showTip(event, '38', 64)" class="rt">Encoding</span><span class="pn">.</span><span onmouseout="hideTip(event, '39', 65)" onmouseover="showTip(event, '39', 65)" class="id">UTF8</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 66)" onmouseover="showTip(event, '36', 66)" class="id">GetBytes</span> <span class="c">// turn the string into bytes</span>
-                <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '35', 67)" onmouseover="showTip(event, '35', 67)" class="fn">ctx</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 68)" onmouseover="showTip(event, '36', 68)" class="id">WriteBytesAsync</span> <span class="c">// write bytes to the response</span>
+    <span class="k">module</span> <span onmouseout="hideTip(event, 'fs31', 50)" onmouseover="showTip(event, 'fs31', 50)" class="m">Json</span> <span class="o">=</span>
+        <span class="k">let</span> <span class="k">inline</span> <span onmouseout="hideTip(event, 'fs32', 51)" onmouseover="showTip(event, 'fs32', 51)" class="fn">json</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs33', 52)" onmouseover="showTip(event, 'fs33', 52)" class="fn">dataObj</span> <span class="pn">)</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs20', 53)" onmouseover="showTip(event, 'fs20', 53)" class="fn">HttpHandler</span> <span class="o">=</span>
+            <span class="k">fun</span> <span class="pn">(</span><span class="pn">_</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs19', 54)" onmouseover="showTip(event, 'fs19', 54)" class="fn">HttpFunc</span><span class="pn">)</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs34', 55)" onmouseover="showTip(event, 'fs34', 55)" class="fn">ctx</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs9', 56)" onmouseover="showTip(event, 'fs9', 56)" class="rt">HttpContext</span><span class="pn">)</span> <span class="k">-&gt;</span>
+                <span onmouseout="hideTip(event, 'fs34', 57)" onmouseover="showTip(event, 'fs34', 57)" class="fn">ctx</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs35', 58)" onmouseover="showTip(event, 'fs35', 58)" class="id">SetContentType</span> <span class="s">&quot;application/json; charset=utf-8&quot;</span>
+                <span onmouseout="hideTip(event, 'fs36', 59)" onmouseover="showTip(event, 'fs36', 59)" class="fn">toJson</span> <span onmouseout="hideTip(event, 'fs33', 60)" onmouseover="showTip(event, 'fs33', 60)" class="fn">dataObj</span> <span class="c">// turn dataObj into Json</span>
+                <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs12', 61)" onmouseover="showTip(event, 'fs12', 61)" class="fn">string</span> <span class="c">// get the Json string</span>
+                <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs37', 62)" onmouseover="showTip(event, 'fs37', 62)" class="rt">Encoding</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs38', 63)" onmouseover="showTip(event, 'fs38', 63)" class="id">UTF8</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs39', 64)" onmouseover="showTip(event, 'fs39', 64)" class="id">GetBytes</span> <span class="c">// turn the string into bytes</span>
+                <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs34', 65)" onmouseover="showTip(event, 'fs34', 65)" class="fn">ctx</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs40', 66)" onmouseover="showTip(event, 'fs40', 66)" class="id">WriteBytesAsync</span> <span class="c">// write bytes to the response</span>
 
-        <span class="k">let</span> <span class="k">inline</span> <span onmouseout="hideTip(event, '40', 69)" onmouseover="showTip(event, '40', 69)" class="fn">bindJsonAsync</span> <span class="pn">(</span><span onmouseout="hideTip(event, '35', 70)" onmouseover="showTip(event, '35', 70)" class="id">ctx</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '9', 71)" onmouseover="showTip(event, '9', 71)" class="rt">HttpContext</span><span class="pn">)</span> <span class="o">=</span>
-            <span onmouseout="hideTip(event, '41', 72)" onmouseover="showTip(event, '41', 72)" class="k">task</span> <span class="pn">{</span>
-                <span class="k">use</span> <span onmouseout="hideTip(event, '42', 73)" onmouseover="showTip(event, '42', 73)" class="id">reader</span> <span class="o">=</span> <span class="k">new</span> <span onmouseout="hideTip(event, '43', 74)" onmouseover="showTip(event, '43', 74)" class="d">StreamReader</span><span class="pn">(</span><span onmouseout="hideTip(event, '35', 75)" onmouseover="showTip(event, '35', 75)" class="id">ctx</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 76)" onmouseover="showTip(event, '36', 76)" class="id">Request</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 77)" onmouseover="showTip(event, '36', 77)" class="id">Body</span><span class="pn">)</span>
-                <span class="k">let!</span> <span onmouseout="hideTip(event, '44', 78)" onmouseover="showTip(event, '44', 78)" class="id">body</span> <span class="o">=</span> <span onmouseout="hideTip(event, '42', 79)" onmouseover="showTip(event, '42', 79)" class="fn">reader</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 80)" onmouseover="showTip(event, '36', 80)" class="id">ReadToEndAsync</span><span class="pn">(</span><span class="pn">)</span>
-                <span class="k">return</span> <span onmouseout="hideTip(event, '45', 81)" onmouseover="showTip(event, '45', 81)" class="fn">parseJson</span> <span onmouseout="hideTip(event, '44', 82)" onmouseover="showTip(event, '44', 82)" class="id">body</span>
+        <span class="k">let</span> <span class="k">inline</span> <span onmouseout="hideTip(event, 'fs41', 67)" onmouseover="showTip(event, 'fs41', 67)" class="fn">bindJsonAsync</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs34', 68)" onmouseover="showTip(event, 'fs34', 68)" class="fn">ctx</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs9', 69)" onmouseover="showTip(event, 'fs9', 69)" class="rt">HttpContext</span><span class="pn">)</span> <span class="o">=</span>
+            <span onmouseout="hideTip(event, 'fs42', 70)" onmouseover="showTip(event, 'fs42', 70)" class="k">task</span> <span class="pn">{</span>
+                <span class="k">use</span> <span onmouseout="hideTip(event, 'fs43', 71)" onmouseover="showTip(event, 'fs43', 71)" class="d">reader</span> <span class="o">=</span> <span class="k">new</span> <span onmouseout="hideTip(event, 'fs44', 72)" onmouseover="showTip(event, 'fs44', 72)" class="d">StreamReader</span><span class="pn">(</span><span onmouseout="hideTip(event, 'fs34', 73)" onmouseover="showTip(event, 'fs34', 73)" class="fn">ctx</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs45', 74)" onmouseover="showTip(event, 'fs45', 74)" class="prop">Request</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs46', 75)" onmouseover="showTip(event, 'fs46', 75)" class="id">Body</span><span class="pn">)</span>
+                <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs47', 76)" onmouseover="showTip(event, 'fs47', 76)" class="fn">body</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs43', 77)" onmouseover="showTip(event, 'fs43', 77)" class="d">reader</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs48', 78)" onmouseover="showTip(event, 'fs48', 78)" class="id">ReadToEndAsync</span><span class="pn">(</span><span class="pn">)</span>
+                <span class="k">return</span> <span onmouseout="hideTip(event, 'fs49', 79)" onmouseover="showTip(event, 'fs49', 79)" class="fn">parseJson</span> <span onmouseout="hideTip(event, 'fs47', 80)" onmouseover="showTip(event, 'fs47', 80)" class="fn">body</span>
             <span class="pn">}</span>
-</code></pre></td>
-</tr>
-</table>
+</code></pre>
 <p>In the web API part of your business app you would then do something like the code below:</p>
-<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
-<span class="l"> 2: </span>
-<span class="l"> 3: </span>
-<span class="l"> 4: </span>
-<span class="l"> 5: </span>
-<span class="l"> 6: </span>
-<span class="l"> 7: </span>
-<span class="l"> 8: </span>
-<span class="l"> 9: </span>
-<span class="l">10: </span>
-<span class="l">11: </span>
-<span class="l">12: </span>
-<span class="l">13: </span>
-<span class="l">14: </span>
-<span class="l">15: </span>
-<span class="l">16: </span>
-<span class="l">17: </span>
-<span class="l">18: </span>
-</pre></td>
-<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, '21', 83)" onmouseover="showTip(event, '21', 83)" class="id">Giraffe</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '23', 84)" onmouseover="showTip(event, '23', 84)" class="id">FSharp</span><span class="pn">.</span><span onmouseout="hideTip(event, '24', 85)" onmouseover="showTip(event, '24', 85)" class="id">Control</span><span class="pn">.</span><span onmouseout="hideTip(event, '25', 86)" onmouseover="showTip(event, '25', 86)" class="id">Tasks</span><span class="pn">.</span><span onmouseout="hideTip(event, '26', 87)" onmouseover="showTip(event, '26', 87)" class="id">V2</span><span class="pn">.</span><span onmouseout="hideTip(event, '27', 88)" onmouseover="showTip(event, '27', 88)" class="id">ContextInsensitive</span>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs21', 81)" onmouseover="showTip(event, 'fs21', 81)" class="m">Giraffe</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs23', 82)" onmouseover="showTip(event, 'fs23', 82)" class="id">FSharp</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs24', 83)" onmouseover="showTip(event, 'fs24', 83)" class="id">Control</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs25', 84)" onmouseover="showTip(event, 'fs25', 84)" class="id">Tasks</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs26', 85)" onmouseover="showTip(event, 'fs26', 85)" class="m">V2</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs27', 86)" onmouseover="showTip(event, 'fs27', 86)" class="m">ContextInsensitive</span>
 <span class="c">// we open the Json helpers we defined last in order to avoid using the default &quot;json&quot; function from Giraffe:</span>
-<span class="k">open</span> <span onmouseout="hideTip(event, '46', 89)" onmouseover="showTip(event, '46', 89)" class="id">BusinessApp</span><span class="pn">.</span><span onmouseout="hideTip(event, '47', 90)" onmouseover="showTip(event, '47', 90)" class="id">Json</span>
-<span class="k">type</span> <span class="rt">Person</span> <span class="o">=</span> <span class="pn">{</span> <span onmouseout="hideTip(event, '48', 91)" onmouseover="showTip(event, '48', 91)" class="id">Name</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '12', 92)" onmouseover="showTip(event, '12', 92)" class="rt">string</span> <span class="pn">}</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs50', 87)" onmouseover="showTip(event, 'fs50', 87)" class="m">BusinessApp</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs51', 88)" onmouseover="showTip(event, 'fs51', 88)" class="m">Json</span>
+<span class="k">type</span> <span class="rt">Person</span> <span class="o">=</span> <span class="pn">{</span> <span onmouseout="hideTip(event, 'fs52', 89)" onmouseover="showTip(event, 'fs52', 89)" class="prop">Name</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs12', 90)" onmouseover="showTip(event, 'fs12', 90)" class="rt">string</span> <span class="pn">}</span>
 <span class="k">with</span>
     <span class="k">static</span> <span class="k">member</span> <span class="prop">JsonObjCodec</span> <span class="o">=</span>
-        <span class="k">fun</span> <span onmouseout="hideTip(event, '49', 93)" onmouseover="showTip(event, '49', 93)" class="id">name</span> <span class="k">-&gt;</span> <span class="pn">{</span> <span class="id">Name</span> <span class="o">=</span> <span onmouseout="hideTip(event, '49', 94)" onmouseover="showTip(event, '49', 94)" class="id">name</span> <span class="pn">}</span>
-        <span class="o">&lt;!&gt;</span> <span onmouseout="hideTip(event, '50', 95)" onmouseover="showTip(event, '50', 95)" class="fn">jreq</span>  <span class="s">&quot;name&quot;</span> <span class="pn">(</span><span onmouseout="hideTip(event, '51', 96)" onmouseover="showTip(event, '51', 96)" class="uc">Some</span> <span class="o">&lt;&lt;</span> <span class="k">fun</span> <span onmouseout="hideTip(event, '52', 97)" onmouseover="showTip(event, '52', 97)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '52', 98)" onmouseover="showTip(event, '52', 98)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 99)" onmouseover="showTip(event, '36', 99)" class="id">Name</span><span class="pn">)</span>
+        <span class="k">fun</span> <span onmouseout="hideTip(event, 'fs53', 91)" onmouseover="showTip(event, 'fs53', 91)" class="fn">name</span> <span class="k">-&gt;</span> <span class="pn">{</span> <span class="prop">Name</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs53', 92)" onmouseover="showTip(event, 'fs53', 92)" class="fn">name</span> <span class="pn">}</span>
+        <span class="pn">&lt;!&gt;</span> <span onmouseout="hideTip(event, 'fs54', 93)" onmouseover="showTip(event, 'fs54', 93)" class="fn">jreq</span>  <span class="s">&quot;name&quot;</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs55', 94)" onmouseover="showTip(event, 'fs55', 94)" class="uc">Some</span> <span class="o">&lt;&lt;</span> <span class="k">fun</span> <span onmouseout="hideTip(event, 'fs56', 95)" onmouseover="showTip(event, 'fs56', 95)" class="fn">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs56', 96)" onmouseover="showTip(event, 'fs56', 96)" class="fn">x</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs52', 97)" onmouseover="showTip(event, 'fs52', 97)" class="id">Name</span><span class="pn">)</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '53', 100)" onmouseover="showTip(event, '53', 100)" class="fn">personHandler</span> <span class="o">=</span>
-    <span class="k">fun</span> <span class="pn">(</span><span onmouseout="hideTip(event, '54', 101)" onmouseover="showTip(event, '54', 101)" class="fn">next</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '19', 102)" onmouseover="showTip(event, '19', 102)" class="rt">HttpFunc</span><span class="pn">)</span> <span class="pn">(</span><span onmouseout="hideTip(event, '35', 103)" onmouseover="showTip(event, '35', 103)" class="id">ctx</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '9', 104)" onmouseover="showTip(event, '9', 104)" class="rt">HttpContext</span><span class="pn">)</span> <span class="k">-&gt;</span>
-        <span onmouseout="hideTip(event, '41', 105)" onmouseover="showTip(event, '41', 105)" class="k">task</span> <span class="pn">{</span>
-            <span class="k">match!</span> <span onmouseout="hideTip(event, '40', 106)" onmouseover="showTip(event, '40', 106)" class="fn">bindJsonAsync</span> <span onmouseout="hideTip(event, '35', 107)" onmouseover="showTip(event, '35', 107)" class="id">ctx</span> <span class="k">with</span> <span class="c">// instead of using ctx.BindJsonAsync we use the function above</span>
-            <span class="pn">|</span> <span onmouseout="hideTip(event, '55', 108)" onmouseover="showTip(event, '55', 108)" class="uc">Ok</span> <span class="pn">(</span><span onmouseout="hideTip(event, '56', 109)" onmouseover="showTip(event, '56', 109)" class="id">person</span><span class="pn">:</span><span onmouseout="hideTip(event, '57', 110)" onmouseover="showTip(event, '57', 110)" class="rt">Person</span><span class="pn">)</span><span class="k">-&gt;</span>
-                <span class="k">return!</span> <span onmouseout="hideTip(event, '33', 111)" onmouseover="showTip(event, '33', 111)" class="fn">json</span> <span onmouseout="hideTip(event, '56', 112)" onmouseover="showTip(event, '56', 112)" class="id">person</span> <span onmouseout="hideTip(event, '54', 113)" onmouseover="showTip(event, '54', 113)" class="fn">next</span> <span onmouseout="hideTip(event, '35', 114)" onmouseover="showTip(event, '35', 114)" class="id">ctx</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs57', 98)" onmouseover="showTip(event, 'fs57', 98)" class="fn">personHandler</span> <span class="o">=</span>
+    <span class="k">fun</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs58', 99)" onmouseover="showTip(event, 'fs58', 99)" class="fn">next</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs19', 100)" onmouseover="showTip(event, 'fs19', 100)" class="fn">HttpFunc</span><span class="pn">)</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs34', 101)" onmouseover="showTip(event, 'fs34', 101)" class="fn">ctx</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs9', 102)" onmouseover="showTip(event, 'fs9', 102)" class="rt">HttpContext</span><span class="pn">)</span> <span class="k">-&gt;</span>
+        <span onmouseout="hideTip(event, 'fs42', 103)" onmouseover="showTip(event, 'fs42', 103)" class="k">task</span> <span class="pn">{</span>
+            <span class="k">match!</span> <span onmouseout="hideTip(event, 'fs41', 104)" onmouseover="showTip(event, 'fs41', 104)" class="fn">bindJsonAsync</span> <span onmouseout="hideTip(event, 'fs34', 105)" onmouseover="showTip(event, 'fs34', 105)" class="fn">ctx</span> <span class="k">with</span> <span class="c">// instead of using ctx.BindJsonAsync we use the function above</span>
+            <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs59', 106)" onmouseover="showTip(event, 'fs59', 106)" class="uc">Ok</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs60', 107)" onmouseover="showTip(event, 'fs60', 107)" class="fn">person</span><span class="pn">:</span><span onmouseout="hideTip(event, 'fs61', 108)" onmouseover="showTip(event, 'fs61', 108)" class="rt">Person</span><span class="pn">)</span><span class="k">-&gt;</span>
+                <span class="k">return!</span> <span onmouseout="hideTip(event, 'fs32', 109)" onmouseover="showTip(event, 'fs32', 109)" class="fn">json</span> <span onmouseout="hideTip(event, 'fs60', 110)" onmouseover="showTip(event, 'fs60', 110)" class="fn">person</span> <span onmouseout="hideTip(event, 'fs58', 111)" onmouseover="showTip(event, 'fs58', 111)" class="fn">next</span> <span onmouseout="hideTip(event, 'fs34', 112)" onmouseover="showTip(event, 'fs34', 112)" class="fn">ctx</span>
             <span class="c">// and ideally we would deal with case when the parsing fails as well</span>
         <span class="pn">}</span>
-</code></pre></td>
-</tr>
-</table>
+</code></pre>
 <p>The benefit of doing an integration in this way is:</p>
 <ul>
 <li>You get a compilation error when trying to use types that don't have the proper functions defined.</li>
 <li>You avoid having to use runtime reflection to bind and serialize the Json.</li>
 <li>You have more control over the serialization than with System.Text.Json or Newtonsoft.Json</li>
 </ul>
-</div><div class="span3"><img src="./img/logo-color.svg" alt="F# Project" style="width:150px;margin:10px" /><ul class="nav nav-list" id="menu" style="margin-top:20px"><li class="nav-header">Fleece</li><li><a href="./index.html">Home page</a></li><li class="divider"></li><li><a href="https://github.com/fsprojects/Fleece">Source Code on GitHub</a></li><li><a href="./license.html">License</a></li><li><a href="./release-notes.html">Release Notes</a></li><li class="nav-header">Documentation</li><li><a href="./reference/index.html">API Reference</a></li></ul></div></div></div><a href="https://github.com/fsprojects/Fleece"><img style="position:absolute;top:0;right:0;border:0" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" /></a></body></html>
+
+            <div class="fsdocs-tip" id="fs1">module Giraffe</div>
+<div class="fsdocs-tip" id="fs2">namespace System</div>
+<div class="fsdocs-tip" id="fs3">namespace System.Threading</div>
+<div class="fsdocs-tip" id="fs4">namespace System.Threading.Tasks</div>
+<div class="fsdocs-tip" id="fs5">namespace System.IO</div>
+<div class="fsdocs-tip" id="fs6">Multiple items<br />type Request =<br />&#160;&#160;new : unit -&gt; Request<br />&#160;&#160;member Body : Stream<br /><em>&#160;fake definition</em><br /><br />--------------------<br />new : unit -&gt; Request</div>
+<div class="fsdocs-tip" id="fs7">type Stream =<br />&#160;&#160;inherit MarshalByRefObject<br />&#160;&#160;interface IAsyncDisposable<br />&#160;&#160;interface IDisposable<br />&#160;&#160;new : unit -&gt; unit<br />&#160;&#160;member BeginRead : buffer: byte [] * offset: int * count: int * callback: AsyncCallback * state: obj -&gt; IAsyncResult<br />&#160;&#160;member BeginWrite : buffer: byte [] * offset: int * count: int * callback: AsyncCallback * state: obj -&gt; IAsyncResult<br />&#160;&#160;member Close : unit -&gt; unit<br />&#160;&#160;member CopyTo : destination: Stream -&gt; unit + 1 overload<br />&#160;&#160;member CopyToAsync : destination: Stream -&gt; Task + 3 overloads<br />&#160;&#160;member CreateWaitHandle : unit -&gt; WaitHandle<br />&#160;&#160;...</div>
+<div class="fsdocs-tip" id="fs8">val failwith : message:string -&gt; &#39;T</div>
+<div class="fsdocs-tip" id="fs9">Multiple items<br />type HttpContext =<br />&#160;&#160;new : unit -&gt; HttpContext<br />&#160;&#160;member SetContentType : s:string -&gt; &#39;a<br />&#160;&#160;member WriteBytesAsync : b:byte array -&gt; Task&lt;HttpContext option&gt;<br />&#160;&#160;member Request : Request<br /><br />--------------------<br />new : unit -&gt; HttpContext</div>
+<div class="fsdocs-tip" id="fs10">val __ : HttpContext</div>
+<div class="fsdocs-tip" id="fs11">val s : string</div>
+<div class="fsdocs-tip" id="fs12">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
+<div class="fsdocs-tip" id="fs13">val b : byte array</div>
+<div class="fsdocs-tip" id="fs14">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type byte = System.Byte<br /><br />--------------------<br />type byte&lt;&#39;Measure&gt; =<br />&#160;&#160;byte</div>
+<div class="fsdocs-tip" id="fs15">type &#39;T array = &#39;T []</div>
+<div class="fsdocs-tip" id="fs16">Multiple items<br />type Task =<br />&#160;&#160;interface IAsyncResult<br />&#160;&#160;interface IDisposable<br />&#160;&#160;new : action: Action -&gt; unit + 7 overloads<br />&#160;&#160;member ConfigureAwait : continueOnCapturedContext: bool -&gt; ConfiguredTaskAwaitable<br />&#160;&#160;member ContinueWith : continuationAction: Action&lt;Task,obj&gt; * state: obj -&gt; Task + 19 overloads<br />&#160;&#160;member Dispose : unit -&gt; unit + 1 overload<br />&#160;&#160;member GetAwaiter : unit -&gt; TaskAwaiter<br />&#160;&#160;member RunSynchronously : unit -&gt; unit + 1 overload<br />&#160;&#160;member Start : unit -&gt; unit + 1 overload<br />&#160;&#160;member Wait : unit -&gt; unit + 4 overloads<br />&#160;&#160;...<br /><br />--------------------<br />type Task&lt;&#39;TResult&gt; =<br />&#160;&#160;inherit Task<br />&#160;&#160;new : function: Func&lt;obj,&#39;TResult&gt; * state: obj -&gt; unit + 7 overloads<br />&#160;&#160;member ConfigureAwait : continueOnCapturedContext: bool -&gt; ConfiguredTaskAwaitable&lt;&#39;TResult&gt;<br />&#160;&#160;member ContinueWith : continuationAction: Action&lt;Task&lt;&#39;TResult&gt;,obj&gt; * state: obj -&gt; Task + 19 overloads<br />&#160;&#160;member GetAwaiter : unit -&gt; TaskAwaiter&lt;&#39;TResult&gt;<br />&#160;&#160;member Result : &#39;TResult<br />&#160;&#160;static member Factory : TaskFactory&lt;&#39;TResult&gt;<br /><br />--------------------<br />Task(action: System.Action) : Task<br />Task(action: System.Action, cancellationToken: System.Threading.CancellationToken) : Task<br />Task(action: System.Action, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj) : Task<br />Task(action: System.Action, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, cancellationToken: System.Threading.CancellationToken) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task<br /><br />--------------------<br />Task(function: System.Func&lt;&#39;TResult&gt;) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, cancellationToken: System.Threading.CancellationToken) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, cancellationToken: System.Threading.CancellationToken) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;</div>
+<div class="fsdocs-tip" id="fs17">type &#39;T option = Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs18">type HttpFuncResult = Task&lt;HttpContext option&gt;</div>
+<div class="fsdocs-tip" id="fs19">type HttpFunc = HttpContext -&gt; HttpFuncResult</div>
+<div class="fsdocs-tip" id="fs20">type HttpHandler = HttpFunc -&gt; HttpFunc</div>
+<div class="fsdocs-tip" id="fs21">module Giraffe<br /><br />from Giraffe</div>
+<div class="fsdocs-tip" id="fs22">namespace System.Text</div>
+<div class="fsdocs-tip" id="fs23">Multiple items<br />namespace FSharp<br /><br />--------------------<br />namespace Microsoft.FSharp</div>
+<div class="fsdocs-tip" id="fs24">Multiple items<br />namespace FSharp.Control<br /><br />--------------------<br />namespace Microsoft.FSharp.Control</div>
+<div class="fsdocs-tip" id="fs25">namespace FSharp.Control.Tasks</div>
+<div class="fsdocs-tip" id="fs26">module V2<br /><br />from FSharp.Control.Tasks</div>
+<div class="fsdocs-tip" id="fs27">module ContextInsensitive<br /><br />from FSharp.Control.Tasks.V2</div>
+<div class="fsdocs-tip" id="fs28">namespace Fleece</div>
+<div class="fsdocs-tip" id="fs29">module SystemJson<br /><br />from Fleece</div>
+<div class="fsdocs-tip" id="fs30">module Operators<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs31">Multiple items<br />module Json<br /><br />from Giraffe.BusinessApp<br /><br />--------------------<br />namespace System.Text.Json</div>
+<div class="fsdocs-tip" id="fs32">val json : dataObj:&#39;a -&gt; HttpFunc -&gt; ctx:HttpContext -&gt; HttpFuncResult (requires member ToJson)</div>
+<div class="fsdocs-tip" id="fs33">val dataObj : &#39;a (requires member ToJson)</div>
+<div class="fsdocs-tip" id="fs34">val ctx : HttpContext</div>
+<div class="fsdocs-tip" id="fs35">member HttpContext.SetContentType : s:string -&gt; &#39;a</div>
+<div class="fsdocs-tip" id="fs36">val toJson : x:&#39;t -&gt; System.Json.JsonValue (requires member ToJson)</div>
+<div class="fsdocs-tip" id="fs37">type Encoding =<br />&#160;&#160;interface ICloneable<br />&#160;&#160;new : unit -&gt; unit + 2 overloads<br />&#160;&#160;member Clone : unit -&gt; obj<br />&#160;&#160;member Equals : value: obj -&gt; bool<br />&#160;&#160;member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads<br />&#160;&#160;member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads<br />&#160;&#160;member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads<br />&#160;&#160;member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads<br />&#160;&#160;member GetDecoder : unit -&gt; Decoder<br />&#160;&#160;member GetEncoder : unit -&gt; Encoder<br />&#160;&#160;...</div>
+<div class="fsdocs-tip" id="fs38">property Encoding.UTF8: Encoding with get</div>
+<div class="fsdocs-tip" id="fs39">(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(s: string) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: char []) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;, writer: System.Buffers.IBufferWriter&lt;byte&gt;) : int64<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;, bytes: System.Span&lt;byte&gt;) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: System.ReadOnlySpan&lt;char&gt;, writer: System.Buffers.IBufferWriter&lt;byte&gt;) : int64<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: System.ReadOnlySpan&lt;char&gt;, bytes: System.Span&lt;byte&gt;) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(s: string, index: int, count: int) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: char [], index: int, count: int) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: nativeptr&lt;char&gt;, charCount: int, bytes: nativeptr&lt;byte&gt;, byteCount: int) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
+<div class="fsdocs-tip" id="fs40">member HttpContext.WriteBytesAsync : b:byte array -&gt; System.Threading.Tasks.Task&lt;HttpContext option&gt;</div>
+<div class="fsdocs-tip" id="fs41">val bindJsonAsync : ctx:HttpContext -&gt; System.Threading.Tasks.Task&lt;&#39;a ParseResult&gt; (requires member OfJson)</div>
+<div class="fsdocs-tip" id="fs42">val task : FSharp.Control.Tasks.TaskBuilder.TaskBuilderV2</div>
+<div class="fsdocs-tip" id="fs43">val reader : StreamReader</div>
+<div class="fsdocs-tip" id="fs44">Multiple items<br />type StreamReader =<br />&#160;&#160;inherit TextReader<br />&#160;&#160;new : stream: Stream -&gt; unit + 10 overloads<br />&#160;&#160;member Close : unit -&gt; unit<br />&#160;&#160;member DiscardBufferedData : unit -&gt; unit<br />&#160;&#160;member Dispose : disposing: bool -&gt; unit<br />&#160;&#160;member Peek : unit -&gt; int<br />&#160;&#160;member Read : unit -&gt; int + 2 overloads<br />&#160;&#160;member ReadAsync : buffer: char [] * index: int * count: int -&gt; Task&lt;int&gt; + 1 overload<br />&#160;&#160;member ReadBlock : buffer: char [] * index: int * count: int -&gt; int + 1 overload<br />&#160;&#160;member ReadBlockAsync : buffer: char [] * index: int * count: int -&gt; Task&lt;int&gt; + 1 overload<br />&#160;&#160;...<br /><br />--------------------<br />StreamReader(stream: Stream) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding, detectEncodingFromByteOrderMarks: bool, bufferSize: int) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding, detectEncodingFromByteOrderMarks: bool, bufferSize: int) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
+<div class="fsdocs-tip" id="fs45">property HttpContext.Request: Request with get</div>
+<div class="fsdocs-tip" id="fs46">property Request.Body: Stream with get</div>
+<div class="fsdocs-tip" id="fs47">val body : string</div>
+<div class="fsdocs-tip" id="fs48">StreamReader.ReadToEndAsync() : System.Threading.Tasks.Task&lt;string&gt;</div>
+<div class="fsdocs-tip" id="fs49">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)</div>
+<div class="fsdocs-tip" id="fs50">module BusinessApp<br /><br />from Giraffe</div>
+<div class="fsdocs-tip" id="fs51">module Json<br /><br />from Giraffe.BusinessApp</div>
+<div class="fsdocs-tip" id="fs52">Person.Name: string</div>
+<div class="fsdocs-tip" id="fs53">val name : string</div>
+<div class="fsdocs-tip" id="fs54">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)</div>
+<div class="fsdocs-tip" id="fs55">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs56">val x : Person</div>
+<div class="fsdocs-tip" id="fs57">val personHandler : next:HttpFunc -&gt; ctx:HttpContext -&gt; System.Threading.Tasks.Task&lt;HttpContext option&gt;</div>
+<div class="fsdocs-tip" id="fs58">val next : HttpFunc</div>
+<div class="fsdocs-tip" id="fs59">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;</div>
+<div class="fsdocs-tip" id="fs60">val person : Person</div>
+<div class="fsdocs-tip" id="fs61">type Person =<br />&#160;&#160;{ Name: string }<br />&#160;&#160;&#160;&#160;static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
+
+        </div>
+
+        <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
+        <script type="text/javascript">var fsdocs_search_baseurl = '/Fleece/';</script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.min.js"></script>
+        <script type="text/javascript" src="/Fleece/content/fsdocs-search.js"></script>
+        <!-- END SEARCH BOX: this adds support for the search box -->
+    </div>
+</body>
+
+</html>
+

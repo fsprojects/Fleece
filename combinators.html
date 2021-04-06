@@ -1,76 +1,212 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8" /><title></title><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="Fleece is a JSON mapper for F#. It simplifies mapping from a Json library&#x27;s JsonValue onto your types, and mapping from your types onto JsonValue." /><meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon" /><script src="https://code.jquery.com/jquery-1.8.0.js"></script><script src="https://code.jquery.com/ui/1.8.23/jquery-ui.js"></script><script src="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script><link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet" /><link type="text/css" rel="stylesheet" href="./style.css" /><script type="text/javascript" src="./tips.js"></script></head><body><div class="container"><div class="masthead"><ul class="nav nav-pills pull-right"><li><a href="http://fsharp.org">fsharp.org</a></li><li><a href="https://github.com/fsprojects/Fleece">github page</a></li></ul><h3 class="muted"><a href="./index.html">Fleece</a></h3></div><hr /><div class="row"><div class="span9" id="main"><h2><a name="Combinators" class="anchor" href="#Combinators">Combinators</a></h2>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>combinators</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
+
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
+    <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
+    <!-- END SEARCH BOX: this adds support for the search box -->
+    
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
+            <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+            <div id="header">
+                <div class="searchbox" id="fsdocs-searchbox">
+                    <label for="search-by">
+                        <i class="fas fa-search"></i>
+                    </label>
+                    <input data-search-input="" id="search-by" type="search" placeholder="Search..." />
+                    <span data-search-clear="">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- END SEARCH BOX: this adds support for the search box -->
+            <ul class="navbar-nav">
+                <li class="nav-header">Links</li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
+                <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
+                <li class="nav-header">
+  Documentation
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/codec.html">
+    codec
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/license.html">
+    license
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/release-notes.html">
+    release-notes
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
+    comparison-with-json-net
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/giraffe.html">
+    giraffe
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/suave.html">
+    suave
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/combinators.html">
+    combinators
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/to-json-and-of-json.html">
+    to-json-and-of-json
+  </a>
+</li>
+                <li class="nav-header">
+  API Reference
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/reference/index.html">
+    All Namespaces
+  </a>
+</li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="masthead">
+            <h3 class="muted"><a href="https://github.com/fsprojects/Fleece/">Fleece</a></h3>
+        </div>
+        <hr />
+        <div class="container" id="fsdocs-content">
+            <h2><a name="Combinators" class="anchor" href="#Combinators">Combinators</a></h2>
 <p>So far we've seen how Fleece is capable of encoding/decoding by deriving automatically a codec from static members in the type.</p>
 <p>But for those cases where we don't have control over the types (extension members won't be taken into account) we can explicitly specify combinators.</p>
 <p>To do so, a set of the available functions exists, ending with the <code>With</code> suffix, which accepts a combinator as first parameter:</p>
-<table class="pre"><tr><td class="lines"><pre class="fssnip"><span class="l"> 1: </span>
-<span class="l"> 2: </span>
-<span class="l"> 3: </span>
-<span class="l"> 4: </span>
-<span class="l"> 5: </span>
-<span class="l"> 6: </span>
-<span class="l"> 7: </span>
-<span class="l"> 8: </span>
-<span class="l"> 9: </span>
-<span class="l">10: </span>
-<span class="l">11: </span>
-<span class="l">12: </span>
-<span class="l">13: </span>
-<span class="l">14: </span>
-<span class="l">15: </span>
-<span class="l">16: </span>
-<span class="l">17: </span>
-<span class="l">18: </span>
-<span class="l">19: </span>
-<span class="l">20: </span>
-<span class="l">21: </span>
-<span class="l">22: </span>
-<span class="l">23: </span>
-<span class="l">24: </span>
-<span class="l">25: </span>
-<span class="l">26: </span>
-<span class="l">27: </span>
-<span class="l">28: </span>
-<span class="l">29: </span>
-<span class="l">30: </span>
-<span class="l">31: </span>
-<span class="l">32: </span>
-<span class="l">33: </span>
-</pre></td>
-<td class="snippet"><pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, '6', 8)" onmouseover="showTip(event, '6', 8)" class="rt">Color</span> <span class="o">=</span> <span onmouseout="hideTip(event, '7', 9)" onmouseover="showTip(event, '7', 9)" class="uc">Red</span> <span class="pn">|</span> <span onmouseout="hideTip(event, '8', 10)" onmouseover="showTip(event, '8', 10)" class="uc">Blue</span> <span class="pn">|</span> <span onmouseout="hideTip(event, '9', 11)" onmouseover="showTip(event, '9', 11)" class="uc">White</span>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="rt">Color</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="uc">Red</span> <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="uc">Blue</span> <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="uc">White</span>
 
-<span class="k">type</span> <span onmouseout="hideTip(event, '10', 12)" onmouseover="showTip(event, '10', 12)" class="rt">Car</span> <span class="o">=</span> <span class="pn">{</span>
-    <span onmouseout="hideTip(event, '11', 13)" onmouseover="showTip(event, '11', 13)" class="id">Id</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '12', 14)" onmouseover="showTip(event, '12', 14)" class="rt">string</span>
-    <span onmouseout="hideTip(event, '13', 15)" onmouseover="showTip(event, '13', 15)" class="id">Color</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '6', 16)" onmouseover="showTip(event, '6', 16)" class="rt">Color</span>
-    <span onmouseout="hideTip(event, '14', 17)" onmouseover="showTip(event, '14', 17)" class="id">Kms</span> <span class="pn">:</span> <span onmouseout="hideTip(event, '15', 18)" onmouseover="showTip(event, '15', 18)" class="vt">int</span> <span class="pn">}</span>
+<span class="k">type</span> <span onmouseout="hideTip(event, 'fs7', 7)" onmouseover="showTip(event, 'fs7', 7)" class="rt">Car</span> <span class="o">=</span> <span class="pn">{</span>
+    <span onmouseout="hideTip(event, 'fs8', 8)" onmouseover="showTip(event, 'fs8', 8)" class="prop">Id</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs9', 9)" onmouseover="showTip(event, 'fs9', 9)" class="rt">string</span>
+    <span onmouseout="hideTip(event, 'fs10', 10)" onmouseover="showTip(event, 'fs10', 10)" class="prop">Color</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs3', 11)" onmouseover="showTip(event, 'fs3', 11)" class="rt">Color</span>
+    <span onmouseout="hideTip(event, 'fs11', 12)" onmouseover="showTip(event, 'fs11', 12)" class="prop">Kms</span> <span class="pn">:</span> <span onmouseout="hideTip(event, 'fs12', 13)" onmouseover="showTip(event, 'fs12', 13)" class="vt">int</span> <span class="pn">}</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '16', 19)" onmouseover="showTip(event, '16', 19)" class="fn">colorDecoder</span> <span class="o">=</span> <span class="k">function</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '17', 20)" onmouseover="showTip(event, '17', 20)" class="uc">JString</span> <span class="s">&quot;red&quot;</span>   <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '18', 21)" onmouseover="showTip(event, '18', 21)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '19', 22)" onmouseover="showTip(event, '19', 22)" class="id">Success</span> <span onmouseout="hideTip(event, '7', 23)" onmouseover="showTip(event, '7', 23)" class="uc">Red</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '17', 24)" onmouseover="showTip(event, '17', 24)" class="uc">JString</span> <span class="s">&quot;blue&quot;</span>  <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '18', 25)" onmouseover="showTip(event, '18', 25)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '19', 26)" onmouseover="showTip(event, '19', 26)" class="id">Success</span> <span onmouseout="hideTip(event, '8', 27)" onmouseover="showTip(event, '8', 27)" class="uc">Blue</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '17', 28)" onmouseover="showTip(event, '17', 28)" class="uc">JString</span> <span class="s">&quot;white&quot;</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '18', 29)" onmouseover="showTip(event, '18', 29)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '19', 30)" onmouseover="showTip(event, '19', 30)" class="id">Success</span> <span onmouseout="hideTip(event, '9', 31)" onmouseover="showTip(event, '9', 31)" class="uc">White</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '17', 32)" onmouseover="showTip(event, '17', 32)" class="uc">JString</span>  <span onmouseout="hideTip(event, '20', 33)" onmouseover="showTip(event, '20', 33)" class="id">x</span> <span class="k">as</span> <span onmouseout="hideTip(event, '21', 34)" onmouseover="showTip(event, '21', 34)" class="id">v</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '18', 35)" onmouseover="showTip(event, '18', 35)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '22', 36)" onmouseover="showTip(event, '22', 36)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, '23', 37)" onmouseover="showTip(event, '23', 37)" class="id">invalidValue</span> <span onmouseout="hideTip(event, '21', 38)" onmouseover="showTip(event, '21', 38)" class="id">v</span> <span class="pn">(</span><span class="s">&quot;Wrong color: &quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, '20', 39)" onmouseover="showTip(event, '20', 39)" class="id">x</span><span class="pn">)</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '24', 40)" onmouseover="showTip(event, '24', 40)" class="id">x</span>               <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '18', 41)" onmouseover="showTip(event, '18', 41)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, '22', 42)" onmouseover="showTip(event, '22', 42)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, '25', 43)" onmouseover="showTip(event, '25', 43)" class="id">strExpected</span>  <span onmouseout="hideTip(event, '24', 44)" onmouseover="showTip(event, '24', 44)" class="id">x</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs13', 14)" onmouseover="showTip(event, 'fs13', 14)" class="fn">colorDecoder</span> <span class="o">=</span> <span class="k">function</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs14', 15)" onmouseover="showTip(event, 'fs14', 15)" class="uc">JString</span> <span class="s">&quot;red&quot;</span>   <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 16)" onmouseover="showTip(event, 'fs15', 16)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs16', 17)" onmouseover="showTip(event, 'fs16', 17)" class="id">Success</span> <span onmouseout="hideTip(event, 'fs4', 18)" onmouseover="showTip(event, 'fs4', 18)" class="uc">Red</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs14', 19)" onmouseover="showTip(event, 'fs14', 19)" class="uc">JString</span> <span class="s">&quot;blue&quot;</span>  <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 20)" onmouseover="showTip(event, 'fs15', 20)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs16', 21)" onmouseover="showTip(event, 'fs16', 21)" class="id">Success</span> <span onmouseout="hideTip(event, 'fs5', 22)" onmouseover="showTip(event, 'fs5', 22)" class="uc">Blue</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs14', 23)" onmouseover="showTip(event, 'fs14', 23)" class="uc">JString</span> <span class="s">&quot;white&quot;</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 24)" onmouseover="showTip(event, 'fs15', 24)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs16', 25)" onmouseover="showTip(event, 'fs16', 25)" class="id">Success</span> <span onmouseout="hideTip(event, 'fs6', 26)" onmouseover="showTip(event, 'fs6', 26)" class="uc">White</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs14', 27)" onmouseover="showTip(event, 'fs14', 27)" class="uc">JString</span>  <span onmouseout="hideTip(event, 'fs17', 28)" onmouseover="showTip(event, 'fs17', 28)" class="fn">x</span> <span class="k">as</span> <span onmouseout="hideTip(event, 'fs18', 29)" onmouseover="showTip(event, 'fs18', 29)" class="fn">v</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 30)" onmouseover="showTip(event, 'fs15', 30)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs19', 31)" onmouseover="showTip(event, 'fs19', 31)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs20', 32)" onmouseover="showTip(event, 'fs20', 32)" class="id">invalidValue</span> <span onmouseout="hideTip(event, 'fs18', 33)" onmouseover="showTip(event, 'fs18', 33)" class="fn">v</span> <span class="pn">(</span><span class="s">&quot;Wrong color: &quot;</span> <span class="o">+</span> <span onmouseout="hideTip(event, 'fs17', 34)" onmouseover="showTip(event, 'fs17', 34)" class="fn">x</span><span class="pn">)</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs21', 35)" onmouseover="showTip(event, 'fs21', 35)" class="fn">x</span>               <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs15', 36)" onmouseover="showTip(event, 'fs15', 36)" class="m">Decode</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs19', 37)" onmouseover="showTip(event, 'fs19', 37)" class="m">Fail</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs22', 38)" onmouseover="showTip(event, 'fs22', 38)" class="id">strExpected</span>  <span onmouseout="hideTip(event, 'fs21', 39)" onmouseover="showTip(event, 'fs21', 39)" class="fn">x</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '26', 45)" onmouseover="showTip(event, '26', 45)" class="fn">colorEncoder</span> <span class="o">=</span> <span class="k">function</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '7', 46)" onmouseover="showTip(event, '7', 46)" class="uc">Red</span>   <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '17', 47)" onmouseover="showTip(event, '17', 47)" class="fn">JString</span> <span class="s">&quot;red&quot;</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '8', 48)" onmouseover="showTip(event, '8', 48)" class="uc">Blue</span>  <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '17', 49)" onmouseover="showTip(event, '17', 49)" class="fn">JString</span> <span class="s">&quot;blue&quot;</span>
-    <span class="pn">|</span> <span onmouseout="hideTip(event, '9', 50)" onmouseover="showTip(event, '9', 50)" class="uc">White</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '17', 51)" onmouseover="showTip(event, '17', 51)" class="fn">JString</span> <span class="s">&quot;white&quot;</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs23', 40)" onmouseover="showTip(event, 'fs23', 40)" class="fn">colorEncoder</span> <span class="o">=</span> <span class="k">function</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs4', 41)" onmouseover="showTip(event, 'fs4', 41)" class="uc">Red</span>   <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs14', 42)" onmouseover="showTip(event, 'fs14', 42)" class="fn">JString</span> <span class="s">&quot;red&quot;</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs5', 43)" onmouseover="showTip(event, 'fs5', 43)" class="uc">Blue</span>  <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs14', 44)" onmouseover="showTip(event, 'fs14', 44)" class="fn">JString</span> <span class="s">&quot;blue&quot;</span>
+    <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs6', 45)" onmouseover="showTip(event, 'fs6', 45)" class="uc">White</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs14', 46)" onmouseover="showTip(event, 'fs14', 46)" class="fn">JString</span> <span class="s">&quot;white&quot;</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '27', 52)" onmouseover="showTip(event, '27', 52)" class="id">colorCodec</span> <span class="o">=</span> <span onmouseout="hideTip(event, '16', 53)" onmouseover="showTip(event, '16', 53)" class="fn">colorDecoder</span><span class="pn">,</span> <span onmouseout="hideTip(event, '26', 54)" onmouseover="showTip(event, '26', 54)" class="fn">colorEncoder</span>
-    
-<span class="k">let</span> <span class="pn">[&lt;</span><span onmouseout="hideTip(event, '28', 55)" onmouseover="showTip(event, '28', 55)" class="rt">GeneralizableValue</span><span class="pn">&gt;]</span><span onmouseout="hideTip(event, '29', 56)" onmouseover="showTip(event, '29', 56)" class="id">carCodec</span><span class="pn">&lt;</span><span class="ta">&#39;</span><span class="id">t</span><span class="pn">&gt;</span> <span class="o">=</span>
-    <span class="k">fun</span> <span onmouseout="hideTip(event, '30', 57)" onmouseover="showTip(event, '30', 57)" class="id">i</span> <span onmouseout="hideTip(event, '31', 58)" onmouseover="showTip(event, '31', 58)" class="id">c</span> <span onmouseout="hideTip(event, '32', 59)" onmouseover="showTip(event, '32', 59)" class="id">k</span> <span class="k">-&gt;</span> <span class="pn">{</span> <span class="id">Id</span> <span class="o">=</span> <span onmouseout="hideTip(event, '30', 60)" onmouseover="showTip(event, '30', 60)" class="id">i</span><span class="pn">;</span> <span onmouseout="hideTip(event, '6', 61)" onmouseover="showTip(event, '6', 61)" class="id">Color</span> <span class="o">=</span> <span onmouseout="hideTip(event, '31', 62)" onmouseover="showTip(event, '31', 62)" class="id">c</span><span class="pn">;</span> <span class="id">Kms</span> <span class="o">=</span> <span onmouseout="hideTip(event, '32', 63)" onmouseover="showTip(event, '32', 63)" class="id">k</span> <span class="pn">}</span>
-    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '33', 64)" onmouseover="showTip(event, '33', 64)" class="fn">withFields</span>
-    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '34', 65)" onmouseover="showTip(event, '34', 65)" class="fn">jfieldWith</span> <span onmouseout="hideTip(event, '35', 66)" onmouseover="showTip(event, '35', 66)" class="m">JsonCodec</span><span class="pn">.</span><span onmouseout="hideTip(event, '36', 67)" onmouseover="showTip(event, '36', 67)" class="id">string</span> <span class="s">&quot;id&quot;</span>    <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, '37', 68)" onmouseover="showTip(event, '37', 68)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '37', 69)" onmouseover="showTip(event, '37', 69)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '11', 70)" onmouseover="showTip(event, '11', 70)" class="id">Id</span><span class="pn">)</span>
-    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '34', 71)" onmouseover="showTip(event, '34', 71)" class="fn">jfieldWith</span> <span onmouseout="hideTip(event, '27', 72)" onmouseover="showTip(event, '27', 72)" class="id">colorCodec</span>       <span class="s">&quot;color&quot;</span> <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, '37', 73)" onmouseover="showTip(event, '37', 73)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '37', 74)" onmouseover="showTip(event, '37', 74)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '38', 75)" onmouseover="showTip(event, '38', 75)" class="id">Color</span><span class="pn">)</span>
-    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '34', 76)" onmouseover="showTip(event, '34', 76)" class="fn">jfieldWith</span> <span onmouseout="hideTip(event, '35', 77)" onmouseover="showTip(event, '35', 77)" class="m">JsonCodec</span><span class="pn">.</span><span onmouseout="hideTip(event, '39', 78)" onmouseover="showTip(event, '39', 78)" class="id">int</span>    <span class="s">&quot;kms&quot;</span>   <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, '37', 79)" onmouseover="showTip(event, '37', 79)" class="id">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, '37', 80)" onmouseover="showTip(event, '37', 80)" class="id">x</span><span class="pn">.</span><span onmouseout="hideTip(event, '14', 81)" onmouseover="showTip(event, '14', 81)" class="id">Kms</span><span class="pn">)</span>
-    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, '40', 82)" onmouseover="showTip(event, '40', 82)" class="m">Codec</span><span class="pn">.</span><span onmouseout="hideTip(event, '41', 83)" onmouseover="showTip(event, '41', 83)" class="id">compose</span> <span onmouseout="hideTip(event, '42', 84)" onmouseover="showTip(event, '42', 84)" class="id">jsonObjToValueCodec</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs24', 47)" onmouseover="showTip(event, 'fs24', 47)" class="id">colorCodec</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs13', 48)" onmouseover="showTip(event, 'fs13', 48)" class="fn">colorDecoder</span><span class="pn">,</span> <span onmouseout="hideTip(event, 'fs23', 49)" onmouseover="showTip(event, 'fs23', 49)" class="fn">colorEncoder</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '43', 85)" onmouseover="showTip(event, '43', 85)" class="id">car</span> <span class="o">=</span> <span class="pn">{</span> <span class="id">Id</span> <span class="o">=</span> <span class="s">&quot;xyz&quot;</span><span class="pn">;</span> <span onmouseout="hideTip(event, '6', 86)" onmouseover="showTip(event, '6', 86)" class="id">Color</span> <span class="o">=</span> <span onmouseout="hideTip(event, '7', 87)" onmouseover="showTip(event, '7', 87)" class="uc">Red</span><span class="pn">;</span> <span class="id">Kms</span> <span class="o">=</span> <span class="n">0</span> <span class="pn">}</span>
+<span class="k">let</span> <span class="pn">[&lt;</span><span onmouseout="hideTip(event, 'fs25', 50)" onmouseover="showTip(event, 'fs25', 50)" class="rt">GeneralizableValue</span><span class="pn">&gt;]</span><span onmouseout="hideTip(event, 'fs26', 51)" onmouseover="showTip(event, 'fs26', 51)" class="id">carCodec</span><span class="pn">&lt;</span><span class="ta">&#39;</span><span class="id">t</span><span class="pn">&gt;</span> <span class="o">=</span>
+    <span class="k">fun</span> <span onmouseout="hideTip(event, 'fs27', 52)" onmouseover="showTip(event, 'fs27', 52)" class="fn">i</span> <span onmouseout="hideTip(event, 'fs28', 53)" onmouseover="showTip(event, 'fs28', 53)" class="fn">c</span> <span onmouseout="hideTip(event, 'fs29', 54)" onmouseover="showTip(event, 'fs29', 54)" class="fn">k</span> <span class="k">-&gt;</span> <span class="pn">{</span> <span class="prop">Id</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs27', 55)" onmouseover="showTip(event, 'fs27', 55)" class="fn">i</span><span class="pn">;</span> <span onmouseout="hideTip(event, 'fs3', 56)" onmouseover="showTip(event, 'fs3', 56)" class="prop">Color</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs28', 57)" onmouseover="showTip(event, 'fs28', 57)" class="fn">c</span><span class="pn">;</span> <span class="prop">Kms</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs29', 58)" onmouseover="showTip(event, 'fs29', 58)" class="fn">k</span> <span class="pn">}</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs30', 59)" onmouseover="showTip(event, 'fs30', 59)" class="fn">withFields</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs31', 60)" onmouseover="showTip(event, 'fs31', 60)" class="fn">jfieldWith</span> <span onmouseout="hideTip(event, 'fs32', 61)" onmouseover="showTip(event, 'fs32', 61)" class="m">JsonCodec</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs33', 62)" onmouseover="showTip(event, 'fs33', 62)" class="id">string</span> <span class="s">&quot;id&quot;</span>    <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, 'fs34', 63)" onmouseover="showTip(event, 'fs34', 63)" class="fn">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs34', 64)" onmouseover="showTip(event, 'fs34', 64)" class="fn">x</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs8', 65)" onmouseover="showTip(event, 'fs8', 65)" class="id">Id</span><span class="pn">)</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs31', 66)" onmouseover="showTip(event, 'fs31', 66)" class="fn">jfieldWith</span> <span onmouseout="hideTip(event, 'fs24', 67)" onmouseover="showTip(event, 'fs24', 67)" class="id">colorCodec</span>       <span class="s">&quot;color&quot;</span> <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, 'fs34', 68)" onmouseover="showTip(event, 'fs34', 68)" class="fn">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs34', 69)" onmouseover="showTip(event, 'fs34', 69)" class="fn">x</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs35', 70)" onmouseover="showTip(event, 'fs35', 70)" class="id">Color</span><span class="pn">)</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs31', 71)" onmouseover="showTip(event, 'fs31', 71)" class="fn">jfieldWith</span> <span onmouseout="hideTip(event, 'fs32', 72)" onmouseover="showTip(event, 'fs32', 72)" class="m">JsonCodec</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs36', 73)" onmouseover="showTip(event, 'fs36', 73)" class="id">int</span>    <span class="s">&quot;kms&quot;</span>   <span class="pn">(</span><span class="k">fun</span> <span onmouseout="hideTip(event, 'fs34', 74)" onmouseover="showTip(event, 'fs34', 74)" class="fn">x</span> <span class="k">-&gt;</span> <span onmouseout="hideTip(event, 'fs34', 75)" onmouseover="showTip(event, 'fs34', 75)" class="fn">x</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs11', 76)" onmouseover="showTip(event, 'fs11', 76)" class="id">Kms</span><span class="pn">)</span>
+    <span class="o">|&gt;</span> <span onmouseout="hideTip(event, 'fs37', 77)" onmouseover="showTip(event, 'fs37', 77)" class="m">Codec</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs38', 78)" onmouseover="showTip(event, 'fs38', 78)" class="id">compose</span> <span onmouseout="hideTip(event, 'fs39', 79)" onmouseover="showTip(event, 'fs39', 79)" class="id">jsonObjToValueCodec</span>
 
-<span class="k">let</span> <span onmouseout="hideTip(event, '44', 88)" onmouseover="showTip(event, '44', 88)" class="id">jsonCar</span> <span class="o">=</span> <span onmouseout="hideTip(event, '40', 89)" onmouseover="showTip(event, '40', 89)" class="m">Codec</span><span class="pn">.</span><span onmouseout="hideTip(event, '45', 90)" onmouseover="showTip(event, '45', 90)" class="id">encode</span> <span onmouseout="hideTip(event, '29', 91)" onmouseover="showTip(event, '29', 91)" class="id">carCodec</span> <span onmouseout="hideTip(event, '43', 92)" onmouseover="showTip(event, '43', 92)" class="id">car</span>
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs40', 80)" onmouseover="showTip(event, 'fs40', 80)" class="id">car</span> <span class="o">=</span> <span class="pn">{</span> <span class="prop">Id</span> <span class="o">=</span> <span class="s">&quot;xyz&quot;</span><span class="pn">;</span> <span onmouseout="hideTip(event, 'fs3', 81)" onmouseover="showTip(event, 'fs3', 81)" class="prop">Color</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs4', 82)" onmouseover="showTip(event, 'fs4', 82)" class="uc">Red</span><span class="pn">;</span> <span class="prop">Kms</span> <span class="o">=</span> <span class="n">0</span> <span class="pn">}</span>
+
+<span class="k">let</span> <span onmouseout="hideTip(event, 'fs41', 83)" onmouseover="showTip(event, 'fs41', 83)" class="id">jsonCar</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs37', 84)" onmouseover="showTip(event, 'fs37', 84)" class="m">Codec</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs42', 85)" onmouseover="showTip(event, 'fs42', 85)" class="id">encode</span> <span onmouseout="hideTip(event, 'fs26', 86)" onmouseover="showTip(event, 'fs26', 86)" class="id">carCodec</span> <span onmouseout="hideTip(event, 'fs40', 87)" onmouseover="showTip(event, 'fs40', 87)" class="id">car</span>
 <span class="c">// val jsonCar : JsonValue = {&quot;id&quot;: &quot;xyz&quot;, &quot;color&quot;: &quot;red&quot;, &quot;kms&quot;: 0}</span>
-</code></pre></td>
-</tr>
-</table>
-</div><div class="span3"><img src="./img/logo-color.svg" alt="F# Project" style="width:150px;margin:10px" /><ul class="nav nav-list" id="menu" style="margin-top:20px"><li class="nav-header">Fleece</li><li><a href="./index.html">Home page</a></li><li class="divider"></li><li><a href="https://github.com/fsprojects/Fleece">Source Code on GitHub</a></li><li><a href="./license.html">License</a></li><li><a href="./release-notes.html">Release Notes</a></li><li class="nav-header">Documentation</li><li><a href="./reference/index.html">API Reference</a></li></ul></div></div></div><a href="https://github.com/fsprojects/Fleece"><img style="position:absolute;top:0;right:0;border:0" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub" /></a></body></html>
+</code></pre>
+
+            <div class="fsdocs-tip" id="fs1">namespace Fleece</div>
+<div class="fsdocs-tip" id="fs2">module SystemJson<br /><br />from Fleece</div>
+<div class="fsdocs-tip" id="fs3">type Color =<br />&#160;&#160;| Red<br />&#160;&#160;| Blue<br />&#160;&#160;| White</div>
+<div class="fsdocs-tip" id="fs4">union case Color.Red: Color</div>
+<div class="fsdocs-tip" id="fs5">union case Color.Blue: Color</div>
+<div class="fsdocs-tip" id="fs6">union case Color.White: Color</div>
+<div class="fsdocs-tip" id="fs7">type Car =<br />&#160;&#160;{ Id: string<br />&#160;&#160;&#160;&#160;Color: Color<br />&#160;&#160;&#160;&#160;Kms: int }</div>
+<div class="fsdocs-tip" id="fs8">Car.Id: string</div>
+<div class="fsdocs-tip" id="fs9">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
+<div class="fsdocs-tip" id="fs10">Multiple items<br />Car.Color: Color<br /><br />--------------------<br />type Color =<br />&#160;&#160;| Red<br />&#160;&#160;| Blue<br />&#160;&#160;| White</div>
+<div class="fsdocs-tip" id="fs11">Car.Kms: int</div>
+<div class="fsdocs-tip" id="fs12">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type int = int32<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; =<br />&#160;&#160;int</div>
+<div class="fsdocs-tip" id="fs13">val colorDecoder : _arg1:System.Json.JsonValue -&gt; Result&lt;Color,DecodeError&gt;</div>
+<div class="fsdocs-tip" id="fs14">Multiple items<br />val JString : x:string -&gt; System.Json.JsonValue<br /><br />--------------------<br />active recognizer JString: System.Json.JsonValue -&gt; Choice&lt;System.Collections.Generic.IReadOnlyList&lt;System.Json.JsonValue&gt;,System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,System.Json.JsonPrimitive,bool,string,unit&gt;</div>
+<div class="fsdocs-tip" id="fs15">module Decode<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs16">Multiple items<br />val Success : x:&#39;a -&gt; Result&lt;&#39;a,&#39;b&gt;<br /><br />--------------------<br />active recognizer Success: Result&lt;&#39;a,&#39;b&gt; -&gt; Choice&lt;&#39;a,&#39;b&gt;</div>
+<div class="fsdocs-tip" id="fs17">val x : string</div>
+<div class="fsdocs-tip" id="fs18">val v : System.Json.JsonValue</div>
+<div class="fsdocs-tip" id="fs19">module Fail<br /><br />from Fleece.SystemJson.Decode</div>
+<div class="fsdocs-tip" id="fs20">val invalidValue : v:System.Json.JsonValue -&gt; o:string -&gt; Result&lt;&#39;t,DecodeError&gt;</div>
+<div class="fsdocs-tip" id="fs21">val x : System.Json.JsonValue</div>
+<div class="fsdocs-tip" id="fs22">val strExpected : v:System.Json.JsonValue -&gt; Result&lt;&#39;t,DecodeError&gt;</div>
+<div class="fsdocs-tip" id="fs23">val colorEncoder : _arg1:Color -&gt; System.Json.JsonValue</div>
+<div class="fsdocs-tip" id="fs24">val colorCodec : (#System.Json.JsonValue -&gt; Result&lt;Color,DecodeError&gt;) * (Color -&gt; System.Json.JsonValue)</div>
+<div class="fsdocs-tip" id="fs25">Multiple items<br />type GeneralizableValueAttribute =<br />&#160;&#160;inherit Attribute<br />&#160;&#160;new : unit -&gt; GeneralizableValueAttribute<br /><br />--------------------<br />new : unit -&gt; GeneralizableValueAttribute</div>
+<div class="fsdocs-tip" id="fs26">val carCodec&lt;&#39;t&gt; : (System.Json.JsonValue -&gt; Result&lt;Car,DecodeError&gt;) * (Car -&gt; System.Json.JsonValue)</div>
+<div class="fsdocs-tip" id="fs27">val i : string</div>
+<div class="fsdocs-tip" id="fs28">val c : Color</div>
+<div class="fsdocs-tip" id="fs29">val k : int</div>
+<div class="fsdocs-tip" id="fs30">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)</div>
+<div class="fsdocs-tip" id="fs31">val jfieldWith : (System.Json.JsonValue -&gt; Result&lt;&#39;a,DecodeError&gt;) * (&#39;Value -&gt; System.Json.JsonValue) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;a -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;)</div>
+<div class="fsdocs-tip" id="fs32">module JsonCodec<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs33">val string : (#System.Json.JsonValue -&gt; Result&lt;string,DecodeError&gt;) * (string -&gt; System.Json.JsonValue)</div>
+<div class="fsdocs-tip" id="fs34">val x : Car</div>
+<div class="fsdocs-tip" id="fs35">Car.Color: Color</div>
+<div class="fsdocs-tip" id="fs36">val int : (#System.Json.JsonValue -&gt; Result&lt;int,DecodeError&gt;) * (int -&gt; System.Json.JsonValue)</div>
+<div class="fsdocs-tip" id="fs37">Multiple items<br />module Codec<br /><br />from Fleece.SystemJson<br /><br />--------------------<br />type Codec&lt;&#39;S,&#39;t&gt; = Codec&lt;&#39;S,&#39;S,&#39;t&gt;<br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t&gt; = Codec&lt;&#39;S1,&#39;S2,&#39;t,&#39;t&gt;<br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t1,&#39;t2&gt; = Decoder&lt;&#39;S1,&#39;t1&gt; * Encoder&lt;&#39;S2,&#39;t2&gt;</div>
+<div class="fsdocs-tip" id="fs38">val compose : (&#39;a -&gt; &#39;b) * (&#39;e -&gt; &#39;f) -&gt; (&#39;d -&gt; &#39;c) * (&#39;g -&gt; &#39;e) -&gt; (&#39;a -&gt; &#39;c) * (&#39;g -&gt; &#39;f) (requires member ( &gt;&gt;= ))</div>
+<div class="fsdocs-tip" id="fs39">val jsonObjToValueCodec : (#System.Json.JsonValue -&gt; Result&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,DecodeError&gt;) * (#System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; System.Json.JsonValue)</div>
+<div class="fsdocs-tip" id="fs40">val car : Car</div>
+<div class="fsdocs-tip" id="fs41">val jsonCar : System.Json.JsonValue</div>
+<div class="fsdocs-tip" id="fs42">val encode : &#39;a * e:Encoder&lt;&#39;o,&#39;a0&gt; -&gt; a:&#39;a0 -&gt; &#39;o</div>
+
+        </div>
+
+        <!-- BEGIN SEARCH BOX: this adds support for the search box -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.css" />
+        <script type="text/javascript">var fsdocs_search_baseurl = '/Fleece/';</script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lunr.js/2.3.8/lunr.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/JavaScript-autoComplete/1.0.4/auto-complete.min.js"></script>
+        <script type="text/javascript" src="/Fleece/content/fsdocs-search.js"></script>
+        <!-- END SEARCH BOX: this adds support for the search box -->
+    </div>
+</body>
+
+</html>
+
