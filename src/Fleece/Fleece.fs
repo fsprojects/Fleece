@@ -600,6 +600,14 @@ module SystemTextJson =
             | JArray a as x -> if length a <> c then Decode.Fail.count c x else t a
             | a -> Decode.Fail.arrExpected a
 
+        let result (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Result<'a, 'b>> = function
+            | JObject o as jobj ->
+                match Seq.toList o with
+                | [KeyValue("Ok"   , a)] -> a |> decoder1 |> map Ok
+                | [KeyValue("Error", a)] -> a |> decoder2 |> map Error
+                | _ -> Decode.Fail.invalidValue jobj ""
+            | a -> Decode.Fail.objExpected a
+            
         let choice (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> = function
             | JObject o as jobj ->
                 match Seq.toList o with
@@ -754,6 +762,10 @@ module SystemTextJson =
     [<RequireQualifiedAccess>]
     module JsonEncode =
 
+        let result (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
+            | Ok    a -> jobj [ "Ok"   , encoder1 a ]
+            | Error a -> jobj [ "Error", encoder2 a ]
+
         let choice (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
             | Choice1Of2 a -> jobj [ "Choice1Of2", encoder1 a ]
             | Choice2Of2 a -> jobj [ "Choice2Of2", encoder2 a ]
@@ -809,6 +821,7 @@ module SystemTextJson =
     [<RequireQualifiedAccess>]
     module JsonCodec =
      
+        let result  codec1 codec2 = JsonDecode.result (fst codec1) (fst codec2), JsonEncode.result (snd codec1) (snd codec2)
         let choice  codec1 codec2 = JsonDecode.choice (fst codec1) (fst codec2), JsonEncode.choice (snd codec1) (snd codec2)
         let choice3 codec1 codec2 codec3 = JsonDecode.choice3 (fst codec1) (fst codec2) (fst codec3), JsonEncode.choice3 (snd codec1) (snd codec2) (snd codec3)
         let option codec = JsonDecode.option (fst codec), JsonEncode.option (snd codec)
