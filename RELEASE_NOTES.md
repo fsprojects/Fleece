@@ -1,3 +1,9 @@
+#### 0.9.0  - April 26 2021
+* Added Result codec and overload
+* Fix problem decoding null values into Options.
+* Fix parsing of floats for infinities and nan.
+* Fix parsing of Datetime when using newtonsoft.json
+
 #### 0.8.0  - May 17 2020
 * Added System.Text.Json implementation
 * Support for enums and all tuple sizes
