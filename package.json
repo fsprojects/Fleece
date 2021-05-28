@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "dotnet fable ./test/Tests.FableJson/ --outDir ./test/Tests.FableJson/bin --runScript ./test/Tests.FableJson/bin /d",
+    "test_debug": "node --eval \"require('esm')(module)('./test/Tests.FableJson/bin/Tests.js')\" ./test/Tests.FableJson/bin/Tests.js ./test/Tests.FableJson/bin /d"
+  },
+  "dependencies": {
+    "esm": "^3.2.25"
+  },
+  "name": "tests"
+}

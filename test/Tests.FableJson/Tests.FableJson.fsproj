@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+        <DefineConstants>FABLE;$(DefineConstants)</DefineConstants>
+        <Configurations>Debug;Release;Fable;Fable3</Configurations>
+        <LangVersion Condition=" '$(Configuration)' == 'Fable' OR '$(Configuration)' == 'Fable3' ">5.0</LangVersion>
+        <DefineConstants Condition=" '$(Configuration)' == 'Fable'">$(DefineConstants);FABLE_COMPILER;FABLE_COMPILER_FAKE</DefineConstants>
+        <DefineConstants Condition=" '$(Configuration)' == 'Fable3'">$(DefineConstants);FABLE_COMPILER;FABLE_COMPILER_3;FABLE_COMPILER_FAKE</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Fable|AnyCPU' ">
+      <Optimize>false</Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Fable3|AnyCPU' ">
+      <Optimize>false</Optimize>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="../Tests/Lenses.fs" />
+        <Compile Include="../Tests/Tests.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Fable.Core" Version="3.2.5" />
+        <PackageReference Include="Fable.Promise" Version="2.2.0" />
+        <PackageReference Include="Fable.Fetch" Version="2.2.0" />
+        <PackageReference Include="Fuchu" Version="1.2.0-beta-1" />
+        <PackageReference Update="FSharp.Core" Version="4.6.2" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Fleece.FableSimpleJson\Fleece.FableSimpleJson.fsproj" />
+    </ItemGroup>
+
+</Project>

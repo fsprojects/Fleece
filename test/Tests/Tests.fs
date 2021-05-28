@@ -29,8 +29,14 @@ open Newtonsoft.Json
 open Fleece.Newtonsoft.Helpers
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
-
 #endif
+#if FABLE
+open Fleece.FableSimpleJson
+open Fleece.FableSimpleJson.Operators
+open Fleece.FableSimpleJson.Lens
+open Fable.SimpleJson
+#endif
+
 let (|Success|Failure|) =
     function
     | Ok    x -> Success x
@@ -201,14 +207,14 @@ type Assert with
     static member inline JSON(expected: string, value: 'a) =
         Assert.Equal("", expected, strCleanUp ((toJson value).ToString()))
 
-
+#if !FABLE
 open FsCheck
 
 type ArraySegmentGenerator =
   static member ArraySegment() =
       Arb.Default.Array()
       |> Arb.convert ArraySegment<int> (fun (s:ArraySegment<int>) -> s.ToArray())
-      
+#endif
 let tests = [
         testList "From JSON" [
 
@@ -309,7 +315,9 @@ let tests = [
             #if SYSTEMTEXTJSON
                 let expected = """{"id": 1, "brand": "Sony"}"""
             #endif
-                    
+            #if FABLE
+                let expected = """{"id": 1, "brand": "Sony"}"""
+            #endif                    
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
             }
 
@@ -331,6 +339,10 @@ let tests = [
                 Assert.Equal("decimal", Some 2, Option.ofResult actual)
             #endif
             #if NEWTONSOFT
+                let actual : int ParseResult = parseJson "2.1"
+                Assert.Equal("decimal", Some 2, Option.ofResult actual)
+            #endif
+            #if FABLE
                 let actual : int ParseResult = parseJson "2.1"
                 Assert.Equal("decimal", Some 2, Option.ofResult actual)
             #endif
@@ -376,6 +388,9 @@ let tests = [
                 #if SYSTEMTEXTJSON
                     "\"2000-03-01T16:23:34.000\u002B03:00\""
                 #endif
+                #if FABLE
+                    "\"2000-03-01T16:23:34.000+03:00\""
+                #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
             }
 
@@ -392,6 +407,9 @@ let tests = [
                 #endif
                 #if SYSTEMTEXTJSON
                     "\"2000-03-01T16:23:34.078\u002B03:00\""
+                #endif
+                #if FABLE
+                    "\"2000-03-01T16:23:34.078+03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
             }
@@ -429,6 +447,10 @@ let tests = [
                 #endif
                 #if SYSTEMTEXTJSON
                 let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
+                Assert.JSON(expected, p)
+                #endif
+                #if FABLE
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
             }
@@ -472,6 +494,14 @@ let tests = [
                 let expectedX = "\"[{van:[Fiat,5.8]}]\""
                 let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
                 let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
+                #endif
+                #if FABLE
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
+                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
                 #endif
                 Assert.JSON(expectedU, u)
                 Assert.JSON(expectedV, v)
@@ -571,6 +601,7 @@ let tests = [
             }
         ]
 
+        #if !FABLE
         testList "Roundtrip" [
             let inline roundtripEq (isEq: 'a -> 'a -> bool) p =
                 let actual = p |> toJson |> ofJson
@@ -655,7 +686,15 @@ let tests = [
                 if not (roundtrip a) then failtest ""
             }
         ]
+        #endif
     ]
+
+#if FABLE
+let exitIfNonZero v =
+    if v <> 0 then
+        failwithf "expected a nonzero exitcode, but got %i" v
+    v
+#endif
 
 [<EntryPoint>]
 let main _ = 
@@ -671,5 +710,10 @@ let main _ =
                                         printf "."
                                     })
 *)
-
-    runParallel (TestList (tests @ Lenses.tests))
+    let allTests = (TestList (tests @ Lenses.tests))
+    #if FABLE
+    defaultMain allTests [||]
+    |> exitIfNonZero
+    #else
+    runParallel allTests
+    #endif
