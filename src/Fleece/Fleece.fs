@@ -420,11 +420,11 @@ module FableSimpleJson =
             let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
             let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.String, a))
             let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Bool  , a))
-            let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
+            let inline nullString<'t> : Result<'t, DecodeError> = Error (NullString typeof<'t>)
             let inline count e a = Error (IndexOutOfRange (e, a))
-            let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
+            let inline invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
             let propertyNotFound p o = Error (PropertyNotFound (p, o))
-            let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+            let inline parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
     
     module Helpers =
         // results:
@@ -692,9 +692,11 @@ module FableSimpleJson =
             | JArray a -> traverse decoder a |> map Seq.toArray
             | a        -> Decode.Fail.arrExpected a
             
+        #if !FABLE_COMPILER
         let arraySegment (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ArraySegment> = function
             | JArray a -> traverse decoder a |> map (Seq.toArray >> ArraySegment<_>)
             | a        -> Decode.Fail.arrExpected a
+        #endif
 
         let list (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a list> = function
             | JArray a -> traverse decoder a |> map Seq.toList
@@ -729,8 +731,10 @@ module FableSimpleJson =
         let unit : JsonValue -> ParseResult<unit> = 
             createTuple 0 (konst (Success ()))
 
+        #if !FABLE_COMPILER
         let tuple1 (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
             createTuple 1 (fun a -> Tuple  <!> decoder1 a.[0])
+        #endif
 
         let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
             createTuple 2 (fun a -> tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1])
@@ -847,7 +851,9 @@ module FableSimpleJson =
         let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
         #if FABLE_COMPILER
         let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> Seq.toList)
+        #if !FABLE_COMPILER
         let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray ())) |> Seq.toList)
+        #endif
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (List.map encoder x)
         let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toList (Seq.map encoder x))
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toList (Seq.map encoder x))
@@ -916,7 +922,9 @@ module FableSimpleJson =
         let option codec = JsonDecode.option (fst codec), JsonEncode.option (snd codec)
         let nullable codec = JsonDecode.nullable (fst codec), JsonEncode.nullable (snd codec)
         let array codec = JsonDecode.array (fst codec), JsonEncode.array (snd codec)
+        #if !FABLE_COMPILER
         let arraySegment codec = JsonDecode.array (fst codec), JsonEncode.arraySegment (snd codec)
+        #endif
         let list  codec = JsonDecode.list  (fst codec), JsonEncode.list  (snd codec)
         let set         codec = JsonDecode.set         (fst codec), JsonEncode.set         (snd codec)
         let resizeArray codec = JsonDecode.resizeArray (fst codec), JsonEncode.resizeArray (snd codec)
@@ -982,9 +990,11 @@ module FableSimpleJson =
             let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson : ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
             iOfJson (Unchecked.defaultof<OfJson>, Unchecked.defaultof<'t>) x
 
+    #if !FABLE_COMPILER
     type OfJson with
         static member inline OfJson (_: Tuple<'a>, _: OfJson) : JsonValue -> ParseResult<Tuple<'a>> = JsonDecode.tuple1 OfJson.Invoke
         static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
+    #endif
 
     #if !FABLE_COMPILER
     type OfJson with
@@ -1011,7 +1021,9 @@ module FableSimpleJson =
     type OfJson with static member inline OfJson (_: 'a Nullable, _: OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
 
     type OfJson with static member inline OfJson (_: 'a array, _: OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
+    #if !FABLE_COMPILER
     type OfJson with static member inline OfJson (_: 'a ArraySegment, _: OfJson) : JsonValue -> ParseResult<'a ArraySegment> = JsonDecode.arraySegment OfJson.Invoke
+    #endif
     
     type OfJson with static member inline OfJson (_: list<'a>, _: OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
     type OfJson with static member inline OfJson (_: 'a Set  , _: OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
@@ -1192,7 +1204,9 @@ module FableSimpleJson =
 
     type ToJson with
         static member inline ToJson (x: 'a array, _: ToJson) = JsonEncode.array ToJson.Invoke x
+        #if !FABLE_COMPILER
         static member inline ToJson (x: 'a ArraySegment, _: ToJson) = JsonEncode.arraySegment ToJson.Invoke x
+        #endif
 
     type ToJson with
         static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
