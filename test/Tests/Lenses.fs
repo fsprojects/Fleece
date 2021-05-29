@@ -1,7 +1,9 @@
 module Tests.Lenses
 open System
 open System.Collections.Generic
+#if !FABLE_COMPILER
 open System.Linq
+#endif
 open Fuchu
 open Fleece
 open FSharpPlus

@@ -2,7 +2,9 @@
 open System
 open System.Text
 open System.Collections.Generic
+#if !FABLE_COMPILER
 open System.Linq
+#endif
 open Fuchu
 open FSharpPlus
 
@@ -135,8 +137,12 @@ type NestedItem with
 let tag prop codec =
     Codec.ofConcrete codec
     |> Codec.compose (
-                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o), 
+                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o),
+                        #if FABLE_COMPILER
+                        (fun x -> if Seq.isEmpty x then zero else (Map.ofList [prop, JObject x]))
+                        #else
                         (fun x -> if Seq.isEmpty x then zero else Dict.toIReadOnlyDictionary (dict [prop, JObject x]))
+                        #endif
                      )
     |> Codec.toConcrete
 
