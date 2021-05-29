@@ -324,7 +324,7 @@ module SystemTextJson =
     let JNumber (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
     
 #endif
-#if FABLE
+#if FABLE_COMPILER
 module FableSimpleJson =
     open Fable.SimpleJson
     type JsonValue = Json
@@ -381,7 +381,7 @@ module FableSimpleJson =
         | NullString of System.Type
         | IndexOutOfRange of int * JsonValue
         | InvalidValue of System.Type * JsonValue * string
-        #if FABLE
+        #if FABLE_COMPILER
         | PropertyNotFound of string * Map<string, JsonValue>
         #else
         | PropertyNotFound of string * IReadOnlyDictionary<string, JsonValue>
@@ -546,7 +546,7 @@ module FableSimpleJson =
             static member jsonOfJsonObject (o: JsonObject) = JObject o
 
         #endif
-        #if FABLE
+        #if FABLE_COMPILER
 
         let inline tryRead x =
             match x with
@@ -619,7 +619,7 @@ module FableSimpleJson =
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
         let inline toMonoid x = x |> toList
-        #if FABLE
+        #if FABLE_COMPILER
         let inline ofMonoid x = x |> (List.map (|KeyValue|) >> Map.ofList)
         #else
         let inline ofMonoid x = x |> (List.map (|KeyValue|) >> readOnlyDict)
@@ -632,7 +632,7 @@ module FableSimpleJson =
         let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
 
     /// A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
-    #if FABLE
+    #if FABLE_COMPILER
     let jsonObjToValueCodec = ((function JObject (o: Map<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
     #else
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
@@ -642,7 +642,7 @@ module FableSimpleJson =
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
-    #if FABLE
+    #if FABLE_COMPILER
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
     #else
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> readOnlyDict)
@@ -705,7 +705,7 @@ module FableSimpleJson =
             | a        -> Decode.Fail.arrExpected a
 
         let resizeArray (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ResizeArray> = function
-            #if FABLE
+            #if FABLE_COMPILER
             | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (List.toSeq x))
             #else
             | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (x: 'a seq))
@@ -713,7 +713,7 @@ module FableSimpleJson =
             | a        -> Decode.Fail.arrExpected a
 
         let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
-            #if FABLE
+            #if FABLE_COMPILER
             | JObject o -> traverse decoder (Map.values o) |> map (fun values -> Seq.zip (Map.keys o) values |> ofSeq)
             #else
             | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> ofSeq)
@@ -721,7 +721,7 @@ module FableSimpleJson =
             | a -> Decode.Fail.objExpected a
 
         let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
-            #if FABLE
+            #if FABLE_COMPILER
             | JObject o -> traverse decoder (Map.values o) |> map (fun values -> Seq.zip (Map.keys o) values |> Map.ofSeq)
             #else
             | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Map.ofSeq)
@@ -847,7 +847,7 @@ module FableSimpleJson =
             | Some a -> encoder a
 
         let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
-        #if FABLE
+        #if FABLE_COMPILER
         let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> Seq.toList)
         let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray ())) |> Seq.toList)
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (List.map encoder x)
@@ -865,7 +865,7 @@ module FableSimpleJson =
         let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
         #endif
 
-        #if FABLE
+        #if FABLE_COMPILER
         let tuple1 (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([encoder1 a.Item1])
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([encoder1 a; encoder2 b])
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([encoder1 a; encoder2 b; encoder3 c])
@@ -884,7 +884,7 @@ module FableSimpleJson =
         #endif
 
         let inline enum (x: 't when 't : enum<_>) = JString (string x)
-        #if FABLE
+        #if FABLE_COMPILER
         let unit () = JArray ([])
         #else
         let unit () = JArray ([||] |> IList.toIReadOnlyList)
@@ -986,7 +986,7 @@ module FableSimpleJson =
         static member inline OfJson (_: Tuple<'a>, _: OfJson) : JsonValue -> ParseResult<Tuple<'a>> = JsonDecode.tuple1 OfJson.Invoke
         static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
 
-    #if !FABLE
+    #if !FABLE_COMPILER
     type OfJson with
         static member inline OfJson (t:'tuple, _: OfJson) = function
             | JArray a as x ->
@@ -1047,7 +1047,7 @@ module FableSimpleJson =
     type OfJson with
 
         static member inline OfJson (_: 'R, _: Default7) =
-            #if FABLE
+            #if FABLE_COMPILER
             let codec = (^R : (static member JsonObjCodec : Codec<Map<string,JsonValue>,'R>) ())
             #else
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
@@ -1074,7 +1074,7 @@ module FableSimpleJson =
     let inline fromJSON (x: JsonValue) : 't ParseResult = OfJson.Invoke x
 
     /// Gets a value from a Json object
-    #if FABLE
+    #if FABLE_COMPILER
     let inline jgetWith ofJson (o: Map<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> ofJson value
@@ -1087,7 +1087,7 @@ module FableSimpleJson =
     #endif
 
     /// Gets a value from a Json object
-    #if FABLE
+    #if FABLE_COMPILER
     let inline jget (o: Map<string, JsonValue>) key = jgetWith ofJson o key
     #else
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = jgetWith ofJson o key
@@ -1095,7 +1095,7 @@ module FableSimpleJson =
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    #if FABLE
+    #if FABLE_COMPILER
     let inline jgetOptWith ofJson (o: Map<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, JNull -> Success None
@@ -1111,13 +1111,13 @@ module FableSimpleJson =
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    #if FABLE
+    #if FABLE_COMPILER
     let inline jgetOpt (o: Map<string, JsonValue>) key = jgetOptWith ofJson o key
     #else
     let inline jgetOpt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
     #endif
     [<Obsolete("Use 'jgetOpt'")>]
-    #if FABLE
+    #if FABLE_COMPILER
     let inline jgetopt (o: Map<string, JsonValue>) key = jgetOptWith ofJson o key
     #else
     let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
@@ -1156,7 +1156,7 @@ module FableSimpleJson =
         static member inline ToJson (x         , _: ToJson) = JsonEncode.tuple1 ToJson.Invoke x
         static member        ToJson (_: Id1<'t>, _: ToJson) = ()
 
-    #if !FABLE
+    #if !FABLE_COMPILER
     type ToJson with
         static member inline ToJson (t: 'tuple, _: ToJson) =
             let t1 = ToJson.Invoke (^tuple : (member Item1: 't1) t)
@@ -1221,7 +1221,7 @@ module FableSimpleJson =
     type ToJson with
 
         static member inline ToJson (t: 'T, _: Default5) =
-            #if FABLE
+            #if FABLE_COMPILER
             let codec = (^T : (static member JsonObjCodec : Codec<Map<string,JsonValue>,'T>) ())
             #else
             let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
@@ -1273,7 +1273,7 @@ module FableSimpleJson =
     /// <summary>Initialize the field mappings.</summary>
     /// <param name="f">An object constructor as a curried function.</param>
     /// <returns>The resulting object codec.</returns>
-    #if FABLE
+    #if FABLE_COMPILER
     let withFields f = (fun _ -> Success f), (fun _ -> Map.empty)
     #else
     let withFields f = (fun _ -> Success f), (fun _ -> readOnlyDict [])
@@ -1294,7 +1294,7 @@ module FableSimpleJson =
     let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) =
         let inline deriveFieldCodec codec prop getter =
             (
-                #if FABLE
+                #if FABLE_COMPILER
                 (fun (o: Map<string,JsonValue>) -> jgetWith (fst codec) o prop),
                 (getter >> fun (x: 'Value) -> Map.ofList [prop, (snd codec) x])
                 #else
@@ -1302,7 +1302,7 @@ module FableSimpleJson =
                 (getter >> fun (x: 'Value) -> readOnlyDict [prop, (snd codec) x])
                 #endif
             )
-        #if FABLE
+        #if FABLE_COMPILER
         diApply Map.union rest (deriveFieldCodec codec fieldName getter)
         #else
         diApply IReadOnlyDictionary.union rest (deriveFieldCodec codec fieldName getter)
@@ -1324,7 +1324,7 @@ module FableSimpleJson =
     let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) =
         let inline deriveFieldCodecOpt codec prop getter =
             (
-                #if FABLE
+                #if FABLE_COMPILER
                 (fun (o: Map<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
                 (getter >> function Some (x: 'Value) -> Map.ofList [prop, (snd codec) x] | _ -> Map.ofList [])
                 #else
@@ -1332,7 +1332,7 @@ module FableSimpleJson =
                 (getter >> function Some (x: 'Value) -> readOnlyDict [prop, (snd codec) x] | _ -> readOnlyDict [])
                 #endif
             )
-        #if FABLE
+        #if FABLE_COMPILER
         diApply Map.union rest (deriveFieldCodecOpt codec fieldName getter)
         #else
         diApply IReadOnlyDictionary.union rest (deriveFieldCodecOpt codec fieldName getter)
@@ -1440,7 +1440,7 @@ module FableSimpleJson =
 
         /// Like '_jnth', but for 'Object' with Text indices.
         let inline _jkey i =
-            #if FABLE
+            #if FABLE_COMPILER
             let inline dkey i f t = map (fun x -> Map.add i x t) (f (Map.tryFind i t |> Option.defaultValue JNull))
             #else
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
@@ -1448,7 +1448,7 @@ module FableSimpleJson =
             _JObject << dkey i
 
         let inline _jnth i =
-            #if FABLE
+            #if FABLE_COMPILER
             let inline trySetItem (pos) (value) (t: _ list) = List.mapi (fun i v -> if i = pos then value else v) t
             let inline dnth i f t = map (fun x -> t |> trySetItem i x) (f (List.tryItem i t |> Option.defaultValue JNull))
             #else

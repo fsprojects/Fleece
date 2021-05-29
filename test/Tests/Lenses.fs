@@ -33,7 +33,7 @@ open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 #endif
-#if FABLE
+#if FABLE_COMPILER
 open Fleece.FableSimpleJson
 open Fleece.FableSimpleJson.Operators
 open Fleece.FableSimpleJson.Lens
@@ -99,7 +99,7 @@ let tests = [
                 let expected = 100m
                 Assert.Equal("item", Some expected, actual)
             }
-            #if !FABLE
+            #if !FABLE_COMPILER
             test "example 2: write" {
                 let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") |> (_jkey "a" << _JNumber) .-> 200m
                 let expected =
@@ -127,7 +127,7 @@ let tests = [
                 let actual = JsonValue.Parse ("[1,2,3]") ^? (_jnth 4 << _JNumber)
                 Assert.Equal("item", None, actual)
             }
-            #if FABLE
+            #if FABLE_COMPILER
             test "example 4: write" {
                 let actual = JsonValue.Parse ("[1,2,3]") |> (_jnth 1  << _JNumber) .-> 2.5
                 let expected = JsonValue.Parse ("[1,2.5,3]")
