@@ -712,13 +712,11 @@ module FableSimpleJson =
             #endif
             | a        -> Decode.Fail.arrExpected a
 
+        #if !FABLE_COMPILER
         let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
-            #if FABLE_COMPILER
-            | JObject o -> traverse decoder (Map.values o) |> map (fun values -> Seq.zip (Map.keys o) values |> ofSeq)
-            #else
             | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> ofSeq)
-            #endif
             | a -> Decode.Fail.objExpected a
+        #endif
 
         let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
             #if FABLE_COMPILER
@@ -923,7 +921,9 @@ module FableSimpleJson =
         let set         codec = JsonDecode.set         (fst codec), JsonEncode.set         (snd codec)
         let resizeArray codec = JsonDecode.resizeArray (fst codec), JsonEncode.resizeArray (snd codec)
         let map         codec = JsonDecode.map         (fst codec), JsonEncode.map         (snd codec)
+        #if !FABLE_COMPILER
         let dictionary  codec = JsonDecode.dictionary  (fst codec), JsonEncode.dictionary  (snd codec)
+        #endif
 
         let unit  ()                                                = JsonDecode.unit                                                                                             , JsonEncode.unit ()
         let tuple2 codec1 codec2                                    = JsonDecode.tuple2 (fst codec1) (fst codec2)                                                                 , JsonEncode.tuple2 (snd codec1) (snd codec2)
@@ -1019,7 +1019,9 @@ module FableSimpleJson =
     type OfJson with static member inline OfJson (_: Map<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Map<string, 'a>> = JsonDecode.map OfJson.Invoke
 
     type OfJson with
+        #if !FABLE_COMPILER
         static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
+        #endif
         static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
         static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
     
@@ -1431,6 +1433,7 @@ module FableSimpleJson =
 
     module Lens =
         open FSharpPlus.Lens
+        #if !FABLE_COMPILER
         let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
         let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
         let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
@@ -1440,21 +1443,13 @@ module FableSimpleJson =
 
         /// Like '_jnth', but for 'Object' with Text indices.
         let inline _jkey i =
-            #if FABLE_COMPILER
-            let inline dkey i f t = map (fun x -> Map.add i x t) (f (Map.tryFind i t |> Option.defaultValue JNull))
-            #else
             let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
-            #endif
             _JObject << dkey i
 
         let inline _jnth i =
-            #if FABLE_COMPILER
-            let inline trySetItem (pos) (value) (t: _ list) = List.mapi (fun i v -> if i = pos then value else v) t
-            let inline dnth i f t = map (fun x -> t |> trySetItem i x) (f (List.tryItem i t |> Option.defaultValue JNull))
-            #else
             let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
-            #endif
             _JArray << dnth i
+        #endif
 
         // Reimport some basic Lens operations from F#+
 

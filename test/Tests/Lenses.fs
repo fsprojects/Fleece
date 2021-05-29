@@ -40,6 +40,7 @@ open Fleece.FableSimpleJson.Lens
 open Fable.SimpleJson
 #endif
 let tests = [
+        #if !FABLE_COMPILER
         testList "key" [
             test "example 1: read first key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "a" << _JBool)
@@ -146,4 +147,5 @@ let tests = [
                 Assert.Equal("item", string expected, string actual)
             }
         ]
+        #endif
     ]
