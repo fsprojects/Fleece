@@ -415,6 +415,18 @@ module FableSimpleJson =
             | Error x -> Failure x
 
         module Fail =
+        #if FABLE_COMPILER
+            let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Object, a))
+            let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Array , a))
+            let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Number, a))
+            let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.String, a))
+            let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Bool  , a))
+            let inline nullString<'t> : Result<'t, DecodeError> = Error (NullString typeof<obj>)
+            let inline count e a = Error (IndexOutOfRange (e, a))
+            let inline invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<obj>, v, o))
+            let propertyNotFound p o = Error (PropertyNotFound (p, o))
+            let inline parseError s v : Result<'t, _> = Error (ParseError (typeof<obj>, s, v))
+        #else
             let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Object, a))
             let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Array , a))
             let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
@@ -425,6 +437,7 @@ module FableSimpleJson =
             let inline invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
             let propertyNotFound p o = Error (PropertyNotFound (p, o))
             let inline parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+        #endif
     
     module Helpers =
         // results:
