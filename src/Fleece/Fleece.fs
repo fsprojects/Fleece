@@ -324,7 +324,31 @@ module SystemTextJson =
     let JNumber (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
     
 #endif
+#if FABLE_COMPILER
+module FableSimpleJson =
+    open Fable.SimpleJson
+    type JsonValue = Json
+    type Json with
+        static member Parse(x) = SimpleJson.parse x
+    type private JsonHelpers () =
+        static member create (x: decimal) : JsonValue = JNumber (float   x)
+        static member create (x: Double ) : JsonValue = JNumber          x
+        static member create (x: Single ) : JsonValue = JNumber (float   x)
+        static member create (x: int    ) : JsonValue = JNumber (float   x)
+        static member create (x: bool   ) : JsonValue = JBool            x
+        static member create (x: uint32 ) : JsonValue = JNumber (float   x)
+        static member create (x: int64  ) : JsonValue = JNumber (float   x)
+        static member create (x: uint64 ) : JsonValue = JNumber (float   x)
+        static member create (x: int16  ) : JsonValue = JNumber (float   x)
+        static member create (x: uint16 ) : JsonValue = JNumber (float   x)
+        static member create (x: byte   ) : JsonValue = JNumber (float   x)
+        static member create (x: sbyte  ) : JsonValue = JNumber (float   x)
+        static member create (x: char   ) : JsonValue = JString (string  x)
+        static member create (x: Guid   ) : JsonValue = JString (string  x)
+    type JsonObject = Map<string,Json>
+    let jsonObjectGetValues (o: JsonObject) = o
 
+#endif
     let inline retype (x:'a) : 'b = (# "" x : 'b #)
 
     // Deserializing:
@@ -340,7 +364,7 @@ module SystemTextJson =
         | Date   = 7
 #endif
 
-    let getJType (o: JsonValue) =
+    let inline getJType (o: JsonValue) =
         match o with
         | JNull     -> JType.Null
         | JArray _  -> JType.Array
@@ -357,7 +381,11 @@ module SystemTextJson =
         | NullString of System.Type
         | IndexOutOfRange of int * JsonValue
         | InvalidValue of System.Type * JsonValue * string
+        #if FABLE_COMPILER
+        | PropertyNotFound of string * Map<string, JsonValue>
+        #else
         | PropertyNotFound of string * IReadOnlyDictionary<string, JsonValue>
+        #endif
         | ParseError of System.Type * exn * string
         | Uncategorized of string
         | Multiple of DecodeError list
@@ -387,16 +415,29 @@ module SystemTextJson =
             | Error x -> Failure x
 
         module Fail =
+        #if FABLE_COMPILER
+            let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Object, a))
+            let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Array , a))
+            let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Number, a))
+            let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.String, a))
+            let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<obj>, v, JType.Bool  , a))
+            let inline nullString<'t> : Result<'t, DecodeError> = Error (NullString typeof<obj>)
+            let inline count e a = Error (IndexOutOfRange (e, a))
+            let inline invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<obj>, v, o))
+            let propertyNotFound p o = Error (PropertyNotFound (p, o))
+            let inline parseError s v : Result<'t, _> = Error (ParseError (typeof<obj>, s, v))
+        #else
             let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Object, a))
             let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Array , a))
             let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
             let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.String, a))
             let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Bool  , a))
-            let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
+            let inline nullString<'t> : Result<'t, DecodeError> = Error (NullString typeof<'t>)
             let inline count e a = Error (IndexOutOfRange (e, a))
-            let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
+            let inline invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
             let propertyNotFound p o = Error (PropertyNotFound (p, o))
-            let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+            let inline parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+        #endif
     
     module Helpers =
         // results:
@@ -518,24 +559,24 @@ module SystemTextJson =
             static member jsonOfJsonObject (o: JsonObject) = JObject o
 
         #endif
+        #if FABLE_COMPILER
+
+        let inline tryRead x =
+            match x with
+            | JNumber j ->
+                try 
+                    Success (explicit j)
+                with e -> Decode.Fail.invalidValue x (string e)
+            | js -> Decode.Fail.numExpected js
+        type JsonHelpers with
+            static member jsonObjectOfJson = function
+                | JObject x -> Success ( x)
+                | a -> Decode.Fail.objExpected a
+
+            static member jsonOfJsonObject o = JObject o
+        #endif
 
     open Helpers
-
-    /// A specific type to represent codecs, with associated operations
-    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
-        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
-        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
-            {
-                Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
-                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
-            }
-        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
-        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
-            {
-                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
-                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
-            }
-
     
     // Type aliases for functions, representing Codecs
 
@@ -544,6 +585,22 @@ module SystemTextJson =
 
     /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
     type Decoder<'S, 't> = 'S -> ParseResult<'t>
+
+    /// A specific type to represent codecs, with associated operations
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : Encoder<'S2, 't2> } with
+        static member inline Return f = { Decoder = result f; Encoder = zero }
+        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
+                Encoder = remainderFields.Encoder ++ currentField.Encoder
+            }
+        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
+        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
+            {
+                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
+                Encoder = source.Encoder ++ alternative.Encoder
+            }
+
 
     /// A decoder from raw type 'S1 and encoder to raw type 'S2 for string types 't1 and 't2.
     type Codec<'S1, 'S2, 't1, 't2> = Decoder<'S1, 't1> * Encoder<'S2, 't2>
@@ -575,23 +632,34 @@ module SystemTextJson =
         let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
 
         let inline toMonoid x = x |> toList
+        #if FABLE_COMPILER
+        let inline ofMonoid x = x |> (List.map (|KeyValue|) >> Map.ofList)
+        #else
         let inline ofMonoid x = x |> (List.map (|KeyValue|) >> readOnlyDict)
+        #endif
 
         /// Extracts a pair of functions from a ConcreteCodec
-        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
+        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid e
 
         /// Wraps a pair of functions into a ConcreteCodec
-        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
+        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = map toMonoid e }
 
     /// A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
+    #if FABLE_COMPILER
+    let jsonObjToValueCodec = ((function JObject (o: Map<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
+    #else
     let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
+    #endif
     
     /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
     let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
 
     /// Creates a new Json object for serialization
+    #if FABLE_COMPILER
+    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
+    #else
     let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> readOnlyDict)
-
+    #endif
 
     [<RequireQualifiedAccess>]
     module JsonDecode =
@@ -637,9 +705,11 @@ module SystemTextJson =
             | JArray a -> traverse decoder a |> map Seq.toArray
             | a        -> Decode.Fail.arrExpected a
             
+        #if !FABLE_COMPILER
         let arraySegment (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ArraySegment> = function
             | JArray a -> traverse decoder a |> map (Seq.toArray >> ArraySegment<_>)
             | a        -> Decode.Fail.arrExpected a
+        #endif
 
         let list (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a list> = function
             | JArray a -> traverse decoder a |> map Seq.toList
@@ -650,22 +720,34 @@ module SystemTextJson =
             | a        -> Decode.Fail.arrExpected a
 
         let resizeArray (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ResizeArray> = function
+            #if FABLE_COMPILER
+            | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (List.toSeq x))
+            #else
             | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (x: 'a seq))
+            #endif
             | a        -> Decode.Fail.arrExpected a
 
+        #if !FABLE_COMPILER
         let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
             | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> ofSeq)
             | a -> Decode.Fail.objExpected a
+        #endif
 
         let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
+            #if FABLE_COMPILER
+            | JObject o -> traverse decoder (Map.values o) |> map (fun values -> Seq.zip (Map.keys o) values |> Map.ofSeq)
+            #else
             | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Map.ofSeq)
+            #endif
             | a -> Decode.Fail.objExpected a
 
         let unit : JsonValue -> ParseResult<unit> = 
             createTuple 0 (konst (Success ()))
 
+        #if !FABLE_COMPILER
         let tuple1 (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
             createTuple 1 (fun a -> Tuple  <!> decoder1 a.[0])
+        #endif
 
         let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
             createTuple 2 (fun a -> tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1])
@@ -726,7 +808,7 @@ module SystemTextJson =
             | JString s    -> tryParse<Guid> s |> Operators.option Success (Decode.Fail.invalidValue x "")
             | a -> Decode.Fail.strExpected a
 
-#if NEWTONSOFT
+        #if NEWTONSOFT
         let dateTime x =
             match x with
             | JString null
@@ -739,7 +821,7 @@ module SystemTextJson =
                 Success <| d.Value<DateTime>()
             | a -> Decode.Fail.strExpected a
 
-#else
+        #else
         let dateTime x =
             match x with
             | JString null -> Decode.Fail.nullString
@@ -748,7 +830,7 @@ module SystemTextJson =
                 | true, t -> Success t
                 | _       -> Decode.Fail.invalidValue x ""
             | a -> Decode.Fail.strExpected a
-#endif
+        #endif
 
         let dateTimeOffset x =
             match x with
@@ -780,6 +862,17 @@ module SystemTextJson =
             | Some a -> encoder a
 
         let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
+        #if FABLE_COMPILER
+        let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> Seq.toList)
+        #if !FABLE_COMPILER
+        let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray ())) |> Seq.toList)
+        #endif
+        let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (List.map encoder x)
+        let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toList (Seq.map encoder x))
+        let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toList (Seq.map encoder x))
+        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> Map.ofSeq |> JObject
+        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> Map.ofSeq |> JObject
+        #else
         let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> IList.toIReadOnlyList)
         let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray ())) |> IList.toIReadOnlyList)
         let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
@@ -787,7 +880,17 @@ module SystemTextJson =
         let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
         let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
         let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
+        #endif
 
+        #if FABLE_COMPILER
+        let tuple1 (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([encoder1 a.Item1])
+        let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([encoder1 a; encoder2 b])
+        let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([encoder1 a; encoder2 b; encoder3 c])
+        let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([encoder1 a; encoder2 b; encoder3 c; encoder4 d])
+        let tuple5 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e])
+        let tuple6 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f])
+        let tuple7 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g])
+        #else
         let tuple1 (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([|encoder1 a.Item1|] |> IList.toIReadOnlyList)
         let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
         let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
@@ -795,9 +898,14 @@ module SystemTextJson =
         let tuple5 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|] |> IList.toIReadOnlyList)
         let tuple6 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|] |> IList.toIReadOnlyList)
         let tuple7 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> IList.toIReadOnlyList)
-        
+        #endif
+
         let inline enum (x: 't when 't : enum<_>) = JString (string x)
+        #if FABLE_COMPILER
+        let unit () = JArray ([])
+        #else
         let unit () = JArray ([||] |> IList.toIReadOnlyList)
+        #endif
 
         let boolean        (x: bool          ) = JBool x
         let string         (x: string        ) = JString x
@@ -827,12 +935,16 @@ module SystemTextJson =
         let option codec = JsonDecode.option (fst codec), JsonEncode.option (snd codec)
         let nullable codec = JsonDecode.nullable (fst codec), JsonEncode.nullable (snd codec)
         let array codec = JsonDecode.array (fst codec), JsonEncode.array (snd codec)
+        #if !FABLE_COMPILER
         let arraySegment codec = JsonDecode.array (fst codec), JsonEncode.arraySegment (snd codec)
+        #endif
         let list  codec = JsonDecode.list  (fst codec), JsonEncode.list  (snd codec)
         let set         codec = JsonDecode.set         (fst codec), JsonEncode.set         (snd codec)
         let resizeArray codec = JsonDecode.resizeArray (fst codec), JsonEncode.resizeArray (snd codec)
         let map         codec = JsonDecode.map         (fst codec), JsonEncode.map         (snd codec)
+        #if !FABLE_COMPILER
         let dictionary  codec = JsonDecode.dictionary  (fst codec), JsonEncode.dictionary  (snd codec)
+        #endif
 
         let unit  ()                                                = JsonDecode.unit                                                                                             , JsonEncode.unit ()
         let tuple2 codec1 codec2                                    = JsonDecode.tuple2 (fst codec1) (fst codec2)                                                                 , JsonEncode.tuple2 (snd codec1) (snd codec2)
@@ -891,10 +1003,13 @@ module SystemTextJson =
             let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson : ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
             iOfJson (Unchecked.defaultof<OfJson>, Unchecked.defaultof<'t>) x
 
+    #if !FABLE_COMPILER
     type OfJson with
         static member inline OfJson (_: Tuple<'a>, _: OfJson) : JsonValue -> ParseResult<Tuple<'a>> = JsonDecode.tuple1 OfJson.Invoke
         static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
+    #endif
 
+    #if !FABLE_COMPILER
     type OfJson with
         static member inline OfJson (t:'tuple, _: OfJson) = function
             | JArray a as x ->
@@ -910,6 +1025,7 @@ module SystemTextJson =
                 | Error (IndexOutOfRange (i, _)) -> Error (IndexOutOfRange (i + 8, x))
                 | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
             | a -> Decode.Fail.arrExpected a
+    #endif
 
     type OfJson with static member inline OfJson (_: Choice<'a, 'b>    , _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>>     = JsonDecode.choice  OfJson.Invoke OfJson.Invoke
     type OfJson with static member inline OfJson (_: Choice<'a, 'b, 'c>, _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = JsonDecode.choice3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
@@ -918,7 +1034,9 @@ module SystemTextJson =
     type OfJson with static member inline OfJson (_: 'a Nullable, _: OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
 
     type OfJson with static member inline OfJson (_: 'a array, _: OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
+    #if !FABLE_COMPILER
     type OfJson with static member inline OfJson (_: 'a ArraySegment, _: OfJson) : JsonValue -> ParseResult<'a ArraySegment> = JsonDecode.arraySegment OfJson.Invoke
+    #endif
     
     type OfJson with static member inline OfJson (_: list<'a>, _: OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
     type OfJson with static member inline OfJson (_: 'a Set  , _: OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
@@ -926,7 +1044,9 @@ module SystemTextJson =
     type OfJson with static member inline OfJson (_: Map<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Map<string, 'a>> = JsonDecode.map OfJson.Invoke
 
     type OfJson with
+        #if !FABLE_COMPILER
         static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
+        #endif
         static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
         static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
     
@@ -954,7 +1074,11 @@ module SystemTextJson =
     type OfJson with
 
         static member inline OfJson (_: 'R, _: Default7) =
+            #if FABLE_COMPILER
+            let codec = (^R : (static member JsonObjCodec : Codec<Map<string,JsonValue>,'R>) ())
+            #else
             let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
+            #endif
             codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
 
         static member inline OfJson (_: 'R, _: Default6) =
@@ -977,29 +1101,54 @@ module SystemTextJson =
     let inline fromJSON (x: JsonValue) : 't ParseResult = OfJson.Invoke x
 
     /// Gets a value from a Json object
+    #if FABLE_COMPILER
+    let inline jgetWith ofJson (o: Map<string, JsonValue>) key =
+        match o.TryGetValue key with
+        | true, value -> ofJson value
+        | _ -> Decode.Fail.propertyNotFound key o
+    #else
     let inline jgetWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, value -> ofJson value
         | _ -> Decode.Fail.propertyNotFound key o
+    #endif
 
     /// Gets a value from a Json object
+    #if FABLE_COMPILER
+    let inline jget (o: Map<string, JsonValue>) key = jgetWith ofJson o key
+    #else
     let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = jgetWith ofJson o key
+    #endif
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
+    #if FABLE_COMPILER
+    let inline jgetOptWith ofJson (o: Map<string, JsonValue>) key =
+        match o.TryGetValue key with
+        | true, JNull -> Success None
+        | true, value -> ofJson value |> map Some
+        | _ -> Success None
+    #else
     let inline jgetOptWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
         match o.TryGetValue key with
         | true, JNull -> Success None
         | true, value -> ofJson value |> map Some
         | _ -> Success None
+    #endif
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
+    #if FABLE_COMPILER
+    let inline jgetOpt (o: Map<string, JsonValue>) key = jgetOptWith ofJson o key
+    #else
     let inline jgetOpt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
-
+    #endif
     [<Obsolete("Use 'jgetOpt'")>]
+    #if FABLE_COMPILER
+    let inline jgetopt (o: Map<string, JsonValue>) key = jgetOptWith ofJson o key
+    #else
     let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
-
+    #endif
 
     // Serializing:
 
@@ -1034,6 +1183,7 @@ module SystemTextJson =
         static member inline ToJson (x         , _: ToJson) = JsonEncode.tuple1 ToJson.Invoke x
         static member        ToJson (_: Id1<'t>, _: ToJson) = ()
 
+    #if !FABLE_COMPILER
     type ToJson with
         static member inline ToJson (t: 'tuple, _: ToJson) =
             let t1 = ToJson.Invoke (^tuple : (member Item1: 't1) t)
@@ -1045,7 +1195,8 @@ module SystemTextJson =
             let t7 = ToJson.Invoke (^tuple : (member Item7: 't7) t)
             let (JArray tr) = ToJson.Invoke (^tuple : (member Rest : 'tr) t)
             JArray ([|t1; t2; t3; t4; t5; t6; t7|] ++ IReadOnlyList.toArray tr)
-    
+    #endif
+
     type ToJson with
         static member inline ToJson (x: Choice<'a, 'b>, _: ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
 
@@ -1066,7 +1217,9 @@ module SystemTextJson =
 
     type ToJson with
         static member inline ToJson (x: 'a array, _: ToJson) = JsonEncode.array ToJson.Invoke x
+        #if !FABLE_COMPILER
         static member inline ToJson (x: 'a ArraySegment, _: ToJson) = JsonEncode.arraySegment ToJson.Invoke x
+        #endif
 
     type ToJson with
         static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
@@ -1097,7 +1250,11 @@ module SystemTextJson =
     type ToJson with
 
         static member inline ToJson (t: 'T, _: Default5) =
+            #if FABLE_COMPILER
+            let codec = (^T : (static member JsonObjCodec : Codec<Map<string,JsonValue>,'T>) ())
+            #else
             let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
+            #endif
             (codec |> Codec.compose jsonObjToValueCodec |> snd) t
 
         static member inline ToJson (t: 'T, _: Default4) =
@@ -1145,7 +1302,11 @@ module SystemTextJson =
     /// <summary>Initialize the field mappings.</summary>
     /// <param name="f">An object constructor as a curried function.</param>
     /// <returns>The resulting object codec.</returns>
+    #if FABLE_COMPILER
+    let withFields f = (fun _ -> Success f), (fun _ -> Map.empty)
+    #else
     let withFields f = (fun _ -> Success f), (fun _ -> readOnlyDict [])
+    #endif
 
     let diApply combiner (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: SplitCodec<'S, 'f, 'T>) =
         ( 
@@ -1162,10 +1323,19 @@ module SystemTextJson =
     let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) =
         let inline deriveFieldCodec codec prop getter =
             (
+                #if FABLE_COMPILER
+                (fun (o: Map<string,JsonValue>) -> jgetWith (fst codec) o prop),
+                (getter >> fun (x: 'Value) -> Map.ofList [prop, (snd codec) x])
+                #else
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
                 (getter >> fun (x: 'Value) -> readOnlyDict [prop, (snd codec) x])
+                #endif
             )
+        #if FABLE_COMPILER
+        diApply Map.union rest (deriveFieldCodec codec fieldName getter)
+        #else
         diApply IReadOnlyDictionary.union rest (deriveFieldCodec codec fieldName getter)
+        #endif
 
     /// <summary>Appends a field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -1183,10 +1353,19 @@ module SystemTextJson =
     let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) =
         let inline deriveFieldCodecOpt codec prop getter =
             (
+                #if FABLE_COMPILER
+                (fun (o: Map<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
+                (getter >> function Some (x: 'Value) -> Map.ofList [prop, (snd codec) x] | _ -> Map.ofList [])
+                #else
                 (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
                 (getter >> function Some (x: 'Value) -> readOnlyDict [prop, (snd codec) x] | _ -> readOnlyDict [])
+                #endif
             )
+        #if FABLE_COMPILER
+        diApply Map.union rest (deriveFieldCodecOpt codec fieldName getter)
+        #else
         diApply IReadOnlyDictionary.union rest (deriveFieldCodecOpt codec fieldName getter)
+        #endif
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="fieldName">A string that will be used as key to the field.</param>
@@ -1260,7 +1439,7 @@ module SystemTextJson =
         let inline joptWith codec prop getter =
             {
                 Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListOptWith (fst codec) o prop)
-                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
+                Encoder = fun x -> (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
             }
 
         /// Derives a concrete field codec for an optional field
@@ -1269,7 +1448,7 @@ module SystemTextJson =
         let inline jreqWith codec (prop: string) (getter: 'T -> 'Value option) =
             {
                 Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListWith (fst codec) o prop)
-                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
+                Encoder = fun x -> (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
             }
 
         /// Derives a concrete field codec for a required field
@@ -1281,6 +1460,7 @@ module SystemTextJson =
 
     module Lens =
         open FSharpPlus.Lens
+        #if !FABLE_COMPILER
         let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
         let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
         let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
@@ -1296,6 +1476,7 @@ module SystemTextJson =
         let inline _jnth i =
             let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
             _JArray << dnth i
+        #endif
 
         // Reimport some basic Lens operations from F#+
 

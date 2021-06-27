@@ -7,6 +7,12 @@
       "commands": [
         "fsdocs"
       ]
+    },
+    "fable": {
+      "version": "3.2.6",
+      "commands": [
+        "fable"
+      ]
     }
   }
 }

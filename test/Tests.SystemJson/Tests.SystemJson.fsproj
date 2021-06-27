@@ -2,8 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>netcoreapp3.1;net461</TargetFrameworks>
+        <TargetFrameworks>net5;net461</TargetFrameworks>
         <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
+        <TargetProfile>netcore</TargetProfile>
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="../Tests/Lenses.fs" />

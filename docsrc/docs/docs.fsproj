@@ -2,14 +2,19 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net5</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\content\codec.fsx" />
+    <Compile Include="..\content\comparison-with-json-net.fsx" />
+    <Compile Include="..\content\giraffe.fsx" />
+    <Compile Include="..\content\suave.fsx" />
+    <Compile Include="..\content\combinators.fsx" />
+    <Compile Include="..\content\to-json-and-of-json.fsx" />
     <Compile Include="..\content\*.fsx">
-      <Link>Docs\%(FileName)%(Extension)</Link>	
+      <Link>Docs\%(FileName)%(Extension)</Link>
     </Compile>
     <Compile Include="Program.fs" />
   </ItemGroup>
-
 </Project>

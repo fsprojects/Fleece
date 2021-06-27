@@ -1,7 +1,9 @@
 module Tests.Lenses
 open System
 open System.Collections.Generic
+#if !FABLE_COMPILER
 open System.Linq
+#endif
 open Fuchu
 open Fleece
 open FSharpPlus
@@ -33,7 +35,14 @@ open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 #endif
+#if FABLE_COMPILER
+open Fleece.FableSimpleJson
+open Fleece.FableSimpleJson.Operators
+open Fleece.FableSimpleJson.Lens
+open Fable.SimpleJson
+#endif
 let tests = [
+        #if !FABLE_COMPILER
         testList "key" [
             test "example 1: read first key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "a" << _JBool)
@@ -93,6 +102,7 @@ let tests = [
                 let expected = 100m
                 Assert.Equal("item", Some expected, actual)
             }
+            #if !FABLE_COMPILER
             test "example 2: write" {
                 let actual = JsonValue.Parse ("{\"a\": 100, \"b\": true}") |> (_jkey "a" << _JNumber) .-> 200m
                 let expected =
@@ -103,6 +113,7 @@ let tests = [
                                 #endif
                 Assert.Equal("item", (string (JsonValue.Parse expected)), string actual)
             }
+            #endif
         ]
         testList "array" [
             test "example 1" {
@@ -119,15 +130,24 @@ let tests = [
                 let actual = JsonValue.Parse ("[1,2,3]") ^? (_jnth 4 << _JNumber)
                 Assert.Equal("item", None, actual)
             }
+            #if FABLE_COMPILER
+            test "example 4: write" {
+                let actual = JsonValue.Parse ("[1,2,3]") |> (_jnth 1  << _JNumber) .-> 2.5
+                let expected = JsonValue.Parse ("[1,2.5,3]")
+                Assert.Equal("item", string expected, string actual)
+            }
+            #else
             test "example 4: write" {
                 let actual = JsonValue.Parse ("[1,2,3]") |> (_jnth 1  << _JNumber) .-> 2.5m
                 let expected = JsonValue.Parse ("[1,2.5,3]")
                 Assert.Equal("item", string expected, string actual)
             }
+            #endif
             test "example 5: write for missing index" {
                 let actual = JsonValue.Parse ("[1]") |> (_jnth 1 << _JString) .-> "a"
                 let expected = JsonValue.Parse ("[1]")
                 Assert.Equal("item", string expected, string actual)
             }
         ]
+        #endif
     ]
