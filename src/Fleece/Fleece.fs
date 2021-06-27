@@ -585,7 +585,7 @@ module FableSimpleJson =
         static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
-                Encoder = remainderFields.Encoder ++ currentField.Encoder   
+                Encoder = source.Encoder ++ alternative.Encoder
             }
 
 
