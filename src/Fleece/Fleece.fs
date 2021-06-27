@@ -564,6 +564,14 @@ module FableSimpleJson =
         #endif
 
     open Helpers
+    
+    // Type aliases for functions, representing Codecs
+
+    /// Encodes a value of a generic type 't into a value of raw type 'S.
+    type Encoder<'S, 't> = 't -> 'S
+
+    /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
+    type Decoder<'S, 't> = 'S -> ParseResult<'t>
 
     /// A specific type to represent codecs, with associated operations
     type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : Encoder<'S2, 't2> } with
@@ -580,14 +588,6 @@ module FableSimpleJson =
                 Encoder = remainderFields.Encoder ++ currentField.Encoder   
             }
 
-    
-    // Type aliases for functions, representing Codecs
-
-    /// Encodes a value of a generic type 't into a value of raw type 'S.
-    type Encoder<'S, 't> = 't -> 'S
-
-    /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
-    type Decoder<'S, 't> = 'S -> ParseResult<'t>
 
     /// A decoder from raw type 'S1 and encoder to raw type 'S2 for string types 't1 and 't2.
     type Codec<'S1, 'S2, 't1, 't2> = Decoder<'S1, 't1> * Encoder<'S2, 't2>
