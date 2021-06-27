@@ -566,18 +566,18 @@ module FableSimpleJson =
     open Helpers
 
     /// A specific type to represent codecs, with associated operations
-    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
-        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
+    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : Encoder<'S2, 't2> } with
+        static member inline Return f = { Decoder = result f; Encoder = zero }
         static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
-                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
+                Encoder = remainderFields.Encoder ++ currentField.Encoder
             }
         static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
         static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
             {
                 Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
-                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
+                Encoder = remainderFields.Encoder ++ currentField.Encoder   
             }
 
     
@@ -626,10 +626,10 @@ module FableSimpleJson =
         #endif
 
         /// Extracts a pair of functions from a ConcreteCodec
-        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
+        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid e
 
         /// Wraps a pair of functions into a ConcreteCodec
-        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
+        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = map toMonoid e }
 
     /// A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
     #if FABLE_COMPILER
@@ -1426,7 +1426,7 @@ module FableSimpleJson =
         let inline joptWith codec prop getter =
             {
                 Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListOptWith (fst codec) o prop)
-                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
+                Encoder = fun x -> (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
             }
 
         /// Derives a concrete field codec for an optional field
@@ -1435,7 +1435,7 @@ module FableSimpleJson =
         let inline jreqWith codec (prop: string) (getter: 'T -> 'Value option) =
             {
                 Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListWith (fst codec) o prop)
-                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
+                Encoder = fun x -> (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
             }
 
         /// Derives a concrete field codec for a required field
