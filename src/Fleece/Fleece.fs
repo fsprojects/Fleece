@@ -364,7 +364,7 @@ module FableSimpleJson =
         | Date   = 7
 #endif
 
-    let getJType (o: JsonValue) =
+    let inline getJType (o: JsonValue) =
         match o with
         | JNull     -> JType.Null
         | JArray _  -> JType.Array
