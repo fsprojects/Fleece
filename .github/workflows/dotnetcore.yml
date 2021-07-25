@@ -51,6 +51,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.2.402
+    - name: Restore dotnet tools
+      run: dotnet tool restore
     - name: Install dependencies
       run: dotnet restore
     - name: Build
