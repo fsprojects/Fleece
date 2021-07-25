@@ -17,6 +17,10 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.301
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.405
     - name: Install dependencies
       run: dotnet restore
     - name: Build
@@ -38,7 +42,11 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.301 
+        dotnet-version: 2.2.402
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.301
     - name: Install dependencies
       run: dotnet restore
     - name: Build
