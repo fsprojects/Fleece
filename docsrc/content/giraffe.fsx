@@ -3,7 +3,7 @@
 // it to define helpers that you do not want to show in the documentation.
 #r "nuget: System.Json, 4.7.1"
 #r "nuget: FSharpPlus, 1.1.1"
-#r "nuget: TaskBuilder.fs"
+#r "nuget: TaskBuilder.fs, 2.1.0"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 module Giraffe=
     open System.Threading.Tasks
