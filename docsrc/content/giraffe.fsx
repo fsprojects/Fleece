@@ -1,11 +1,10 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.1.1"
+#r "nuget: TaskBuilder.fs"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
-#r @"../../packages/docs/TaskBuilder.fs/lib/net46/TaskBuilder.fs.dll"
-
 module Giraffe=
     open System.Threading.Tasks
     open System.IO

@@ -1,13 +1,18 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/System.Json.dll"
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.1.1"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/FSharpPlus.dll"
 
 open Fleece.SystemJson
 
 (**
+```f#
+#r "nuget: Fleece.SystemJson"
+open Fleece.SystemJson
+```
+
 ## Combinators
 
 So far we've seen how Fleece is capable of encoding/decoding by deriving automatically a codec from static members in the type.

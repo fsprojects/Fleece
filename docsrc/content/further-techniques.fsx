@@ -1,9 +1,9 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r "nuget: System.Json"
-#r "nuget: Fleece.SystemJson"
-#r "nuget: FSharpPlus"
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.1.1"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
@@ -14,6 +14,7 @@ For example, the JSON-RPC 2.0 specification requires every request/response obje
 In a codebase that only uses JSON-RPC 2.0, why capture this field on a record?
 
 When writing `ToJson` and `OfJson` methods for this data, handling the required field is fairly natural:
+
 *)
 
 type Request =

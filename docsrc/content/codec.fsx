@@ -1,18 +1,24 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r "nuget: System.Json"
-#r "nuget: Fleece.SystemJson"
-#r "nuget: FSharpPlus"
-
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.2.1"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 
+
 (**
+
 ## CODEC
 
-For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values.
+```f#
+#r "nuget: Fleece.SystemJson"
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+```
 
+For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values.
 *)
 
 type Person = {
