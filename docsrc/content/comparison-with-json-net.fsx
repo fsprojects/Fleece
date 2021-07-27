@@ -60,7 +60,7 @@ with
     static member OfJson (json:Linq.JToken) =
         match json with
         | JObject o ->
-            monad {
+            monad.strict {
                 match! o .@ "type" with
                 | "Bike" -> return Bike
                 | "Car" ->
