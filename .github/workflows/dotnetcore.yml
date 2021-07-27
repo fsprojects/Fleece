@@ -57,5 +57,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build -c Release
+    - name: Build Doc src
+      run: dotnet build -c Release ./docsrc/docs
     - name: Render Docs
       run: dotnet run --project ./docsrc/tool
