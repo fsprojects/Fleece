@@ -137,7 +137,7 @@ let someShapes = """
     },
     {
         "type": "circle",
-        "radius": "37.8"
+        "radius": 37.8
     },
     {
         "type": "prism",
@@ -147,6 +147,7 @@ let someShapes = """
 ]
 """
 
+open FSharpPlus
 open FSharpPlus.Operators
 
 type ShapeD =
@@ -155,19 +156,41 @@ type ShapeD =
     | Prism of width : float * float * height : float
     with
         static member JsonObjCodec =
+            /// Derives a concrete field codec for a required field and value
+            let inline jreqValue prop value codec =
+                let matchPropValue o =
+                     match IReadOnlyDictionary.tryGetValue prop o with
+                     | Some a when (ofJson a) = Ok value -> Ok o
+                     | Some a -> Decode.Fail.invalidValue a value
+                     | None -> Decode.Fail.propertyNotFound prop o
+                Codec.ofConcrete codec
+                |> Codec.compose (
+                                    matchPropValue,
+                                    fun encoded ->
+                                      if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
+                                      else IReadOnlyDictionary.union (Dict.toIReadOnlyDictionary (dict [prop, toJson value])) encoded
+                                 )
+                |> Codec.toConcrete
+
+
             jchoice
                 [
-                    Rectangle <!> jreq "type" (function Rectangle (_) -> Some "rectangle" | _ -> None)
-                    <*> jreq "width" (function Rectangle(w, _) -> Some w | _ -> None)
+                    fun w l -> Rectangle (w,l)
+                    <!> jreq "width" (function Rectangle(w, _) -> Some w | _ -> None)
                     <*> jreq "length" (function Rectangle(_, l) -> Some l | _ -> None)
+                    |> jreqValue "type" "rectangle"
 
-                    Circle <!> jreq "type" (function Circle (_) -> Some "circle" | _ -> None)
-                    <*> jreq "radius" (function Circle (r) -> Some r | _ -> None)
+                    Circle
+                    <!> jreq "radius" (function Circle (r) -> Some r | _ -> None)
+                    |> jreqValue "type" "circle"
 
-                    Prism <!> jreq "type" (function Prism (_) -> Some "prism" | _ -> None)
-                    <*> jreq "width" (function Prism (x, y, _) -> Some (x, y) | _ -> None)
+                    fun (w,w2) h -> Prism (w,w2,h)
+                    <!> jreq "width" (function Prism (x, y, _) -> Some (x, y) | _ -> None)
                     <*> jreq "height" (function Prism (_, _, h) -> Some h | _ -> None)
+                    |> jreqValue "type" "prism"
                 ]
+
+let parsedShapedD = parseJson<ShapeD list> someShapes
 
 (**
 We can manipulate codecs by using functions in the Codec module. Here's an example:
