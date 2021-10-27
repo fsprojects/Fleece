@@ -8,25 +8,21 @@ open FSharpPlus
 
 #if FSHARPDATA
 open FSharp.Data
-open Fleece.FSharpData.Helpers
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
-open Fleece.SystemJson.Helpers
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 open System.Json
 #endif
 #if SYSTEMTEXTJSON
-open Fleece.SystemTextJson.Helpers
 open Fleece.SystemTextJson
 open Fleece.SystemTextJson.Operators
 open System.Text.Json
 #endif
 #if NEWTONSOFT
 open Newtonsoft.Json
-open Fleece.Newtonsoft.Helpers
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 
