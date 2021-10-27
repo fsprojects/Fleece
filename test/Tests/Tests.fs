@@ -1,4 +1,4 @@
-﻿module Tests.Tests
+module Tests.Tests
 open System
 open System.Text
 open System.Collections.Generic
@@ -27,10 +27,7 @@ open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 
 #endif
-let (|Success|Failure|) =
-    function
-    | Ok    x -> Success x
-    | Error x -> Failure x
+
 #nowarn "0686"
 
 type Gender =
@@ -238,8 +235,8 @@ let tests = [
             test "attribute with null name" {
                 let actual : Attribute ParseResult = parseJson """{"name": null, "value": "a value"}"""
                 match actual with
-                | Success a -> failtest "should have failed"
-                | Failure e -> ()
+                | Ok a -> failtest "should have failed"
+                | Error e -> ()
             }
 
             test "attribute with null value" {
@@ -276,13 +273,13 @@ let tests = [
             test "DateTime with milliseconds" {
                 let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07.862Z")
                 let expected = new DateTime(2014,9,5,4,38,7,862)
-                Assert.Equal("DateTime", Success expected, actual)
+                Assert.Equal("DateTime", Ok expected, actual)
             }
 
             test "DateTime without milliseconds" {
                 let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07Z")
                 let expected = new DateTime(2014,9,5,4,38,7)
-                Assert.Equal("DateTime", Success expected, actual)
+                Assert.Equal("DateTime", Ok expected, actual)
             }
             #endif
         ]
@@ -572,7 +569,7 @@ let tests = [
                 let actual = p |> toJson |> ofJson
                 let ok = 
                     match actual with
-                    | Success actual -> isEq actual p
+                    | Ok actual -> isEq actual p
                     | _ -> false
                 if not ok then printfn "Got %A from %A" actual p
                 ok
