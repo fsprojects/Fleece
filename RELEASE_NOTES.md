@@ -1,4 +1,4 @@
-#### 0.9.0  - April 26 2021
+#### 0.9.0  - October 28 2021
 * Added Result codec and overload
 * Fix problem decoding null values into Options.
 * Fix parsing of floats for infinities and nan.
