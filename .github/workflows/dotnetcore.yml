@@ -21,4 +21,4 @@ jobs:
       run: dotnet restore
 
     - name: Test SystemTextJson
-      run: dotnet run -p ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f netcoreapp3.1
+      run: dotnet run -p ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f net5
