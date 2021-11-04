@@ -21,12 +21,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build -c Release
-    - name: Test SystemJson
-      run: dotnet run --no-build --project ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f net5
-    - name: Test FSharpData
-      run: dotnet run --no-build --project ./test/Tests.FSharpData/Tests.FSharpData.fsproj -c Release -f net5
-    - name: Test NewtonsoftJson
-      run: dotnet run --no-build --project ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f net5
+
     - name: Test SystemTextJson
       run: dotnet run --no-build --project ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f net5
 

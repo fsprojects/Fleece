@@ -465,6 +465,10 @@ module SystemTextJson =
     // Backwards compatibility functions
     module Operators =
 
+        let inline parseJson (x: string) : ParseResult<'T> =
+            let (x: JsonValue) = parse x
+            ofJson x
+
         let inline jreq name getter = req name getter : Codec<MultiObj<StjEncoding>,_,_,_>
         let inline jopt name getter = opt name getter : Codec<MultiObj<StjEncoding>,_,_,_>
     
@@ -480,12 +484,18 @@ module SystemTextJson =
             multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
             |> enc
 
+        let JString x = StjEncoding (JString x)
+
         let (|JObject|_|) (x: StjEncoding) =
             let (Codec (dec, _)) = Codecs.multiMap (Ok <-> id)
             dec x |> Option.ofResult
 
         let (|JNull|_|) (x: StjEncoding) =
             let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
+            dec x |> Option.ofResult
+
+        let (|JString|_|) (x: StjEncoding) =
+            let (Codec (dec, _)) = Codecs.string
             dec x |> Option.ofResult
 
         /// Gets a value from a Json object
@@ -525,3 +535,5 @@ module SystemTextJson =
 
         /// Creates a new Json key-value pair for a Json object
         let inline (.=) key value = jpair key value
+
+        let jsonObjectGetValues x = id x

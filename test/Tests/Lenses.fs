@@ -20,11 +20,11 @@ open Fleece.SystemJson.Operators
 open Fleece.SystemJson.Lens
 #endif
 #if SYSTEMTEXTJSON
-open Fleece.SystemTextJson.Helpers
+// open Fleece.SystemTextJson.Helpers
 open Fleece.SystemTextJson
 open Fleece.SystemTextJson.Operators
 open System.Text.Json
-open Fleece.SystemTextJson.Lens
+// open Fleece.SystemTextJson.Lens
 #endif
 #if NEWTONSOFT
 open Fleece.Newtonsoft
@@ -33,6 +33,8 @@ open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 #endif
+let tests = []
+(*
 let tests = [
         testList "key" [
             test "example 1: read first key" {
@@ -131,3 +133,4 @@ let tests = [
             }
         ]
     ]
+    *)
