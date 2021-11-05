@@ -526,7 +526,7 @@ let tests = [
             }
 
             test "JObj with null key" {
-                let j = jobj [null, JString "a"]
+                let j = jobj [null, JString "a"] |> StjEncoding.Unwrap
                 Assert.Equal("json", expected = "{}", actual = strCleanUp(j.ToString()))
             }
         ]
