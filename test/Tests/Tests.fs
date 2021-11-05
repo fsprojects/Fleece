@@ -334,7 +334,7 @@ let tests = [
                 let expected = """{"brand": "Sony", "id": 1}"""
             #endif
             #if SYSTEMTEXTJSON
-                let expected = """{"id": 1, "brand": "Sony"}"""
+                let expected = """{"brand":"Sony","id":1}"""
             #endif
                     
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
@@ -455,7 +455,7 @@ let tests = [
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
-                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.0000000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.0000000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.0000000Z","children":[]}]}"""
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
             }
@@ -497,8 +497,8 @@ let tests = [
                 let expectedV = "\"[{motorBike:[]}]\""
                 let expectedW = "\"[{car:Renault}]\""
                 let expectedX = "\"[{van:[Fiat,5.8]}]\""
-                let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
-                let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
+                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
+                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
                 #endif
                 Assert.JSON(expectedU, u)
                 Assert.JSON(expectedV, v)
