@@ -280,7 +280,7 @@ module SystemTextJson =
             match x with
             | JString null -> Decode.Fail.nullString
             | JString s    ->
-                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffffffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:fffffffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Ok t
                 | _       -> Decode.Fail.invalidValue (StjEncoding x) ""
             | a -> Decode.Fail.strExpected (StjEncoding a)
@@ -289,7 +289,7 @@ module SystemTextJson =
             match x with
             | JString null -> Decode.Fail.nullString
             | JString s    ->
-                match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffffffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+                match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:fffffffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Ok t
                 | _       -> Decode.Fail.invalidValue (StjEncoding x) ""
             | a -> Decode.Fail.strExpected (StjEncoding a)
