@@ -492,7 +492,9 @@ module SystemTextJson =
 
         let (|JNull|_|) (x: StjEncoding) =
             let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
-            dec x |> Option.ofResult
+            match dec x with
+            | Ok x when Nullable.isNull x -> Some ()
+            | _ -> None
 
         let (|JString|_|) (x: StjEncoding) =
             let (Codec (dec, _)) = Codecs.string
