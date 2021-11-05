@@ -604,9 +604,7 @@ let tests = [
 
         testList "Roundtrip" [
             let inline roundtripEq (isEq: 'a -> 'a -> bool) p =
-                let codec : Codec<StjEncoding, _> = getRawCodec ()
-                let (Codec (dec, enc)) = codec
-                let actual = p |> enc |> dec
+                let actual = p |> toJson |> ofJson
                 let ok = 
                     match actual with
                     | Ok actual -> isEq actual p
@@ -655,7 +653,7 @@ let tests = [
             yield testProperty "byte" (roundtrip<byte>)
             yield testProperty "sbyte" (roundtrip<sbyte>)
             yield testProperty "Guid" (roundtrip<Guid>)
-            // yield testProperty "attribute" (Prop.forAll attributeArb.Value roundtrip<Attribute>)
+            yield testProperty "attribute" (Prop.forAll attributeArb.Value roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
             yield testProperty "int array" (roundtrip<int array>)
