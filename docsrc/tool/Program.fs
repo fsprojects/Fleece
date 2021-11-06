@@ -34,6 +34,7 @@ let info =
     "project-github", githubLink
     "fsdocs-logo-src","https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg"
     "fsdocs-logo-link","http://fsprojects.github.io/Fleece/"
+    "fsdocs-license-link","http://fsprojects.github.io/Fleece/license.html"
     "project-nuget", "http://nuget.org/packages/Fleece" ]
 
 // --------------------------------------------------------------------------------------
