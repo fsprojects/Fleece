@@ -531,7 +531,7 @@ let tests = [
             }
         ]
 
-        (* we should try adding these codecs
+        
         testList "Codec" [
             test "binary" {
                 let itemBinaryCodec =
@@ -546,15 +546,14 @@ let tests = [
                 
                 let actual = 
                     { Item.Id = 1; Brand = "Sony"; Availability = None }
-                    |> snd itemBinaryCodec  // go to bytes
-                    |> fst itemBinaryCodec  // and come back to Item
+                    |> Codec.encode itemBinaryCodec  // go to bytes
+                    |> Codec.decode itemBinaryCodec  // and come back to Item
 
                 let expected = { Item.Id = 1; Brand = "Sony"; Availability = None }
                     
                 Assert.Equal("item", Some expected, Option.ofResult actual)
             }
         ]
-        *)
 
         testList "Errors" [
             test "ParseError" {
