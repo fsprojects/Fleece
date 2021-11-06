@@ -34,7 +34,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -63,6 +63,26 @@
   </a>
 </li>             
 <li class="nav-item">
+  <a class="nav-link" href="/Fleece/combinators.html">
+    combinators
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
+    comparison-with-json-net
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/further-techniques.html">
+    further-techniques
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/giraffe.html">
+    giraffe
+  </a>
+</li>             
+<li class="nav-item">
   <a class="nav-link" href="/Fleece/license.html">
     license
   </a>
@@ -73,23 +93,8 @@
   </a>
 </li>             
 <li class="nav-item">
-  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
-    comparison-with-json-net
-  </a>
-</li>             
-<li class="nav-item">
-  <a class="nav-link" href="/Fleece/giraffe.html">
-    giraffe
-  </a>
-</li>             
-<li class="nav-item">
   <a class="nav-link" href="/Fleece/suave.html">
     suave
-  </a>
-</li>             
-<li class="nav-item">
-  <a class="nav-link" href="/Fleece/combinators.html">
-    combinators
   </a>
 </li>             
 <li class="nav-item">
@@ -114,7 +119,15 @@
         </div>
         <hr />
         <div class="container" id="fsdocs-content">
-            <h2><a name="Comparison-with-Json-Net-or-Newtonsoft-Json" class="anchor" href="#Comparison-with-Json-Net-or-Newtonsoft-Json">Comparison with Json.Net or Newtonsoft Json</a></h2>
+            <table class="pre"><tr><td class="snippet"><pre class="fssnip"><code lang="f#">#r "nuget: Fleece.NewtonsoftJson"
+</code></pre></td></tr></table>
+<pre class="fssnip highlighted"><code lang="fsharp"><span class="k">open</span> <span onmouseout="hideTip(event, 'fs1', 1)" onmouseover="showTip(event, 'fs1', 1)" class="id">System</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs2', 2)" onmouseover="showTip(event, 'fs2', 2)" class="id">Newtonsoft</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs3', 3)" onmouseover="showTip(event, 'fs3', 3)" class="id">Json</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs4', 4)" onmouseover="showTip(event, 'fs4', 4)" class="id">FSharpPlus</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs5', 5)" onmouseover="showTip(event, 'fs5', 5)" class="id">Fleece</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs6', 6)" onmouseover="showTip(event, 'fs6', 6)" class="m">Newtonsoft</span>
+<span class="k">open</span> <span onmouseout="hideTip(event, 'fs5', 7)" onmouseover="showTip(event, 'fs5', 7)" class="id">Fleece</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs6', 8)" onmouseover="showTip(event, 'fs6', 8)" class="m">Newtonsoft</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs7', 9)" onmouseover="showTip(event, 'fs7', 9)" class="m">Operators</span>
+</code></pre>
+<h2><a name="Comparison-with-Json-Net-or-Newtonsoft-Json" class="anchor" href="#Comparison-with-Json-Net-or-Newtonsoft-Json">Comparison with Json.Net or Newtonsoft Json</a></h2>
 <p>In order to be compatible with Newtonsoft Json conventions you need to either specify a constructor or have a default constructor with the same name as the public field
 (note the different first letter casing).</p>
 <pre class="fssnip highlighted"><code lang="fsharp"><span class="k">type</span> <span onmouseout="hideTip(event, 'fs8', 10)" onmouseover="showTip(event, 'fs8', 10)" class="rt">User</span><span class="pn">(</span><span onmouseout="hideTip(event, 'fs9', 11)" onmouseover="showTip(event, 'fs9', 11)" class="fn">userName</span><span class="pn">:</span><span onmouseout="hideTip(event, 'fs10', 12)" onmouseover="showTip(event, 'fs10', 12)" class="rt">string</span> <span class="pn">,</span> <span onmouseout="hideTip(event, 'fs11', 13)" onmouseover="showTip(event, 'fs11', 13)" class="fn">enabled</span><span class="pn">:</span> <span onmouseout="hideTip(event, 'fs12', 14)" onmouseover="showTip(event, 'fs12', 14)" class="vt">bool</span><span class="pn">)</span><span class="o">=</span>
@@ -146,7 +159,7 @@
     <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, 'fs29', 46)" onmouseover="showTip(event, 'fs29', 46)" class="fn">OfJson</span> <span class="pn">(</span><span onmouseout="hideTip(event, 'fs30', 47)" onmouseover="showTip(event, 'fs30', 47)" class="fn">json</span><span class="pn">:</span><span onmouseout="hideTip(event, 'fs31', 48)" onmouseover="showTip(event, 'fs31', 48)" class="id">Linq</span><span class="pn">.</span><span onmouseout="hideTip(event, 'fs32', 49)" onmouseover="showTip(event, 'fs32', 49)" class="id">JToken</span><span class="pn">)</span> <span class="o">=</span>
         <span class="k">match</span> <span onmouseout="hideTip(event, 'fs30', 50)" onmouseover="showTip(event, 'fs30', 50)" class="fn">json</span> <span class="k">with</span>
         <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs33', 51)" onmouseover="showTip(event, 'fs33', 51)" class="uc">JObject</span> <span onmouseout="hideTip(event, 'fs34', 52)" onmouseover="showTip(event, 'fs34', 52)" class="fn">o</span> <span class="k">-&gt;</span>
-            <span onmouseout="hideTip(event, 'fs35', 53)" onmouseover="showTip(event, 'fs35', 53)" class="k">monad</span> <span class="pn">{</span>
+            <span onmouseout="hideTip(event, 'fs35', 53)" onmouseover="showTip(event, 'fs35', 53)" class="id">monad</span><span class="pn">.</span><span class="id">strict</span> <span class="pn">{</span>
                 <span class="k">match!</span> <span onmouseout="hideTip(event, 'fs34', 54)" onmouseover="showTip(event, 'fs34', 54)" class="fn">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;type&quot;</span> <span class="k">with</span>
                 <span class="pn">|</span> <span class="s">&quot;Bike&quot;</span> <span class="k">-&gt;</span> <span class="k">return</span> <span onmouseout="hideTip(event, 'fs27', 55)" onmouseover="showTip(event, 'fs27', 55)" class="uc">Bike</span>
                 <span class="pn">|</span> <span class="s">&quot;Car&quot;</span> <span class="k">-&gt;</span>
@@ -207,7 +220,7 @@
 <div class="fsdocs-tip" id="fs13">val __ : User</div>
 <div class="fsdocs-tip" id="fs14">val userJson : string</div>
 <div class="fsdocs-tip" id="fs15">val user : User</div>
-<div class="fsdocs-tip" id="fs16">type JsonConvert =<br />&#160;&#160;static member DeserializeAnonymousType&lt;&#39;T&gt; : value: string * anonymousTypeObject: &#39;T -&gt; &#39;T + 1 overload<br />&#160;&#160;static member DeserializeObject : value: string -&gt; obj + 7 overloads<br />&#160;&#160;static member DeserializeXNode : value: string -&gt; XDocument + 3 overloads<br />&#160;&#160;static member DeserializeXmlNode : value: string -&gt; XmlDocument + 3 overloads<br />&#160;&#160;static member EnsureDecimalPlace : value: float * text: string -&gt; string + 1 overload<br />&#160;&#160;static member EnsureFloatFormat : value: float * text: string * floatFormatHandling: FloatFormatHandling * quoteChar: char * nullable: bool -&gt; string<br />&#160;&#160;static member PopulateObject : value: string * target: obj -&gt; unit + 1 overload<br />&#160;&#160;static member SerializeObject : value: obj -&gt; string + 7 overloads<br />&#160;&#160;static member SerializeObjectInternal : value: obj * type: Type * jsonSerializer: JsonSerializer -&gt; string<br />&#160;&#160;static member SerializeXNode : node: XObject -&gt; string + 2 overloads<br />&#160;&#160;...</div>
+<div class="fsdocs-tip" id="fs16">type JsonConvert =<br />&#160;&#160;static member DeserializeAnonymousType&lt;&#39;T&gt; : value: string * anonymousTypeObject: &#39;T -&gt; &#39;T + 1 overload<br />&#160;&#160;static member DeserializeObject : value: string -&gt; obj + 7 overloads<br />&#160;&#160;static member DeserializeXNode : value: string -&gt; XDocument + 2 overloads<br />&#160;&#160;static member DeserializeXmlNode : value: string -&gt; XmlDocument + 2 overloads<br />&#160;&#160;static member EnsureDecimalPlace : value: float * text: string -&gt; string + 1 overload<br />&#160;&#160;static member EnsureFloatFormat : value: float * text: string * floatFormatHandling: FloatFormatHandling * quoteChar: char * nullable: bool -&gt; string<br />&#160;&#160;static member PopulateObject : value: string * target: obj -&gt; unit + 1 overload<br />&#160;&#160;static member SerializeObject : value: obj -&gt; string + 7 overloads<br />&#160;&#160;static member SerializeObjectInternal : value: obj * type: Type * jsonSerializer: JsonSerializer -&gt; string<br />&#160;&#160;static member SerializeXNode : node: XObject -&gt; string + 2 overloads<br />&#160;&#160;...</div>
 <div class="fsdocs-tip" id="fs17">JsonConvert.DeserializeObject&lt;&#39;T&gt;(value: string) : &#39;T<br />JsonConvert.DeserializeObject(value: string) : obj<br />JsonConvert.DeserializeObject&lt;&#39;T&gt;(value: string, settings: JsonSerializerSettings) : &#39;T<br />JsonConvert.DeserializeObject&lt;&#39;T&gt;(value: string, [&lt;ParamArray&gt;] converters: JsonConverter []) : &#39;T<br />JsonConvert.DeserializeObject(value: string, type: Type) : obj<br />JsonConvert.DeserializeObject(value: string, settings: JsonSerializerSettings) : obj<br />JsonConvert.DeserializeObject(value: string, type: Type, settings: JsonSerializerSettings) : obj<br />JsonConvert.DeserializeObject(value: string, type: Type, [&lt;ParamArray&gt;] converters: JsonConverter []) : obj</div>
 <div class="fsdocs-tip" id="fs18">Multiple items<br />type CLIMutableAttribute =<br />&#160;&#160;inherit Attribute<br />&#160;&#160;new : unit -&gt; CLIMutableAttribute<br /><br />--------------------<br />new : unit -&gt; CLIMutableAttribute</div>
 <div class="fsdocs-tip" id="fs19">type UserR =<br />&#160;&#160;{ UserName: string<br />&#160;&#160;&#160;&#160;Enabled: bool }</div>
@@ -223,12 +236,12 @@
 <div class="fsdocs-tip" id="fs29">type OfJson =<br />&#160;&#160;inherit Default1<br />&#160;&#160;static member Invoke : x:JsonValue -&gt; &#39;t ParseResult (requires member OfJson)<br />&#160;&#160;static member OfJson : decimal * OfJson -&gt; (JToken -&gt; Result&lt;decimal,DecodeError&gt;) + 47 overloads</div>
 <div class="fsdocs-tip" id="fs30">val json : Linq.JToken</div>
 <div class="fsdocs-tip" id="fs31">Multiple items<br />namespace Newtonsoft.Json.Linq<br /><br />--------------------<br />namespace System.Linq<br /><br />--------------------<br />namespace Microsoft.FSharp.Linq</div>
-<div class="fsdocs-tip" id="fs32">type JToken =<br />&#160;&#160;interface IJEnumerable&lt;JToken&gt;<br />&#160;&#160;interface IEnumerable&lt;JToken&gt;<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IJsonLineInfo<br />&#160;&#160;interface ICloneable<br />&#160;&#160;interface IDynamicMetaObjectProvider<br />&#160;&#160;new : unit -&gt; unit<br />&#160;&#160;member AddAfterSelf : content: obj -&gt; unit<br />&#160;&#160;member AddAnnotation : annotation: obj -&gt; unit<br />&#160;&#160;member AddBeforeSelf : content: obj -&gt; unit<br />&#160;&#160;...</div>
+<div class="fsdocs-tip" id="fs32">type JToken =<br />&#160;&#160;interface IJEnumerable&lt;JToken&gt;<br />&#160;&#160;interface IEnumerable&lt;JToken&gt;<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IJsonLineInfo<br />&#160;&#160;interface IDynamicMetaObjectProvider<br />&#160;&#160;new : unit -&gt; unit<br />&#160;&#160;member AddAfterSelf : content: obj -&gt; unit<br />&#160;&#160;member AddAnnotation : annotation: obj -&gt; unit<br />&#160;&#160;member AddBeforeSelf : content: obj -&gt; unit<br />&#160;&#160;member AfterSelf : unit -&gt; IEnumerable&lt;JToken&gt;<br />&#160;&#160;...</div>
 <div class="fsdocs-tip" id="fs33">Multiple items<br />val JObject : x:Collections.Generic.IReadOnlyDictionary&lt;string,Linq.JToken&gt; -&gt; Linq.JToken<br /><br />--------------------<br />active recognizer JObject: Linq.JToken -&gt; Choice&lt;Collections.Generic.IReadOnlyList&lt;Linq.JToken&gt;,Collections.Generic.IReadOnlyDictionary&lt;string,Linq.JToken&gt;,Linq.JToken,bool,string,unit,Linq.JToken&gt;</div>
 <div class="fsdocs-tip" id="fs34">val o : Collections.Generic.IReadOnlyDictionary&lt;string,Linq.JToken&gt;</div>
-<div class="fsdocs-tip" id="fs35">val monad : MonadFxBuilder</div>
+<div class="fsdocs-tip" id="fs35">val monad&lt;&#39;monad&lt;&#39;t&gt;&gt; : MonadFxBuilder&lt;&#39;monad&lt;&#39;t&gt;&gt;</div>
 <div class="fsdocs-tip" id="fs36">val jobj : Linq.JObject</div>
-<div class="fsdocs-tip" id="fs37">Multiple items<br />type JObject =<br />&#160;&#160;inherit JContainer<br />&#160;&#160;interface IDictionary&lt;string,JToken&gt;<br />&#160;&#160;interface ICollection&lt;KeyValuePair&lt;string,JToken&gt;&gt;<br />&#160;&#160;interface IEnumerable&lt;KeyValuePair&lt;string,JToken&gt;&gt;<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface INotifyPropertyChanged<br />&#160;&#160;interface ICustomTypeDescriptor<br />&#160;&#160;interface INotifyPropertyChanging<br />&#160;&#160;new : unit -&gt; unit + 3 overloads<br />&#160;&#160;member &lt;WriteToAsync&gt;g__AwaitProperties|0_0 : task: Task * i: int * Writer: JsonWriter * CancellationToken: CancellationToken * Converters: JsonConverter [] -&gt; Task<br />&#160;&#160;...<br /><br />--------------------<br />Linq.JObject() : Linq.JObject<br />Linq.JObject(other: Linq.JObject) : Linq.JObject<br />Linq.JObject([&lt;ParamArray&gt;] content: obj []) : Linq.JObject<br />Linq.JObject(content: obj) : Linq.JObject</div>
+<div class="fsdocs-tip" id="fs37">Multiple items<br />type JObject =<br />&#160;&#160;inherit JContainer<br />&#160;&#160;interface IDictionary&lt;string,JToken&gt;<br />&#160;&#160;interface ICollection&lt;KeyValuePair&lt;string,JToken&gt;&gt;<br />&#160;&#160;interface IEnumerable&lt;KeyValuePair&lt;string,JToken&gt;&gt;<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface INotifyPropertyChanged<br />&#160;&#160;new : unit -&gt; unit + 3 overloads<br />&#160;&#160;member Add : propertyName: string * value: JToken -&gt; unit<br />&#160;&#160;member CloneToken : unit -&gt; JToken<br />&#160;&#160;member DeepEquals : node: JToken -&gt; bool<br />&#160;&#160;...<br /><br />--------------------<br />Linq.JObject() : Linq.JObject<br />Linq.JObject(other: Linq.JObject) : Linq.JObject<br />Linq.JObject([&lt;ParamArray&gt;] content: obj []) : Linq.JObject<br />Linq.JObject(content: obj) : Linq.JObject</div>
 <div class="fsdocs-tip" id="fs38">val info : CarInfo</div>
 <div class="fsdocs-tip" id="fs39">Linq.JToken.ToObject&lt;&#39;T&gt;() : &#39;T<br />Linq.JToken.ToObject&lt;&#39;T&gt;(jsonSerializer: JsonSerializer) : &#39;T<br />Linq.JToken.ToObject(objectType: Type) : obj<br />Linq.JToken.ToObject(objectType: Type, jsonSerializer: JsonSerializer) : obj</div>
 <div class="fsdocs-tip" id="fs40">val e : exn</div>

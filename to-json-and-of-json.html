@@ -34,7 +34,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -63,6 +63,26 @@
   </a>
 </li>             
 <li class="nav-item">
+  <a class="nav-link" href="/Fleece/combinators.html">
+    combinators
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
+    comparison-with-json-net
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/further-techniques.html">
+    further-techniques
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/giraffe.html">
+    giraffe
+  </a>
+</li>             
+<li class="nav-item">
   <a class="nav-link" href="/Fleece/license.html">
     license
   </a>
@@ -73,23 +93,8 @@
   </a>
 </li>             
 <li class="nav-item">
-  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
-    comparison-with-json-net
-  </a>
-</li>             
-<li class="nav-item">
-  <a class="nav-link" href="/Fleece/giraffe.html">
-    giraffe
-  </a>
-</li>             
-<li class="nav-item">
   <a class="nav-link" href="/Fleece/suave.html">
     suave
-  </a>
-</li>             
-<li class="nav-item">
-  <a class="nav-link" href="/Fleece/combinators.html">
-    combinators
   </a>
 </li>             
 <li class="nav-item">
@@ -207,7 +212,7 @@
     <span class="k">static</span> <span class="k">member</span> <span onmouseout="hideTip(event, 'fs19', 120)" onmouseover="showTip(event, 'fs19', 120)" class="fn">OfJson</span> <span onmouseout="hideTip(event, 'fs20', 121)" onmouseover="showTip(event, 'fs20', 121)" class="fn">json</span> <span class="o">=</span>
         <span class="k">match</span> <span onmouseout="hideTip(event, 'fs20', 122)" onmouseover="showTip(event, 'fs20', 122)" class="fn">json</span> <span class="k">with</span>
         <span class="pn">|</span> <span onmouseout="hideTip(event, 'fs21', 123)" onmouseover="showTip(event, 'fs21', 123)" class="uc">JObject</span> <span onmouseout="hideTip(event, 'fs22', 124)" onmouseover="showTip(event, 'fs22', 124)" class="fn">o</span> <span class="k">-&gt;</span>
-            <span onmouseout="hideTip(event, 'fs52', 125)" onmouseover="showTip(event, 'fs52', 125)" class="k">monad</span> <span class="pn">{</span>
+            <span onmouseout="hideTip(event, 'fs52', 125)" onmouseover="showTip(event, 'fs52', 125)" class="id">monad</span> <span class="pn">{</span>
                 <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs28', 126)" onmouseover="showTip(event, 'fs28', 126)" class="fn">name</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 127)" onmouseover="showTip(event, 'fs22', 127)" class="fn">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;name&quot;</span>
                 <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs29', 128)" onmouseover="showTip(event, 'fs29', 128)" class="fn">age</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 129)" onmouseover="showTip(event, 'fs22', 129)" class="fn">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;age&quot;</span>
                 <span class="k">let!</span> <span onmouseout="hideTip(event, 'fs30', 130)" onmouseover="showTip(event, 'fs30', 130)" class="fn">children</span> <span class="o">=</span> <span onmouseout="hideTip(event, 'fs22', 131)" onmouseover="showTip(event, 'fs22', 131)" class="fn">o</span> <span class="o">.</span><span class="id">@</span> <span class="s">&quot;children&quot;</span>
@@ -273,7 +278,7 @@
 <div class="fsdocs-tip" id="fs49">PersonM.Name: string</div>
 <div class="fsdocs-tip" id="fs50">PersonM.Age: int</div>
 <div class="fsdocs-tip" id="fs51">PersonM.Children: PersonM list</div>
-<div class="fsdocs-tip" id="fs52">val monad : MonadFxBuilder</div>
+<div class="fsdocs-tip" id="fs52">val monad&lt;&#39;monad&lt;&#39;t&gt;&gt; : MonadFxBuilder&lt;&#39;monad&lt;&#39;t&gt;&gt;</div>
 
         </div>
 

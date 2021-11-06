@@ -34,7 +34,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -63,6 +63,26 @@
   </a>
 </li>             
 <li class="nav-item">
+  <a class="nav-link" href="/Fleece/combinators.html">
+    combinators
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
+    comparison-with-json-net
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/further-techniques.html">
+    further-techniques
+  </a>
+</li>             
+<li class="nav-item">
+  <a class="nav-link" href="/Fleece/giraffe.html">
+    giraffe
+  </a>
+</li>             
+<li class="nav-item">
   <a class="nav-link" href="/Fleece/license.html">
     license
   </a>
@@ -73,23 +93,8 @@
   </a>
 </li>             
 <li class="nav-item">
-  <a class="nav-link" href="/Fleece/comparison-with-json-net.html">
-    comparison-with-json-net
-  </a>
-</li>             
-<li class="nav-item">
-  <a class="nav-link" href="/Fleece/giraffe.html">
-    giraffe
-  </a>
-</li>             
-<li class="nav-item">
   <a class="nav-link" href="/Fleece/suave.html">
     suave
-  </a>
-</li>             
-<li class="nav-item">
-  <a class="nav-link" href="/Fleece/combinators.html">
-    combinators
   </a>
 </li>             
 <li class="nav-item">
@@ -114,7 +119,10 @@
         </div>
         <hr />
         <div class="container" id="fsdocs-content">
-            <h2><a name="Combinators" class="anchor" href="#Combinators">Combinators</a></h2>
+            <table class="pre"><tr><td class="snippet"><pre class="fssnip"><code lang="f#">#r "nuget: Fleece.SystemJson"
+open Fleece.SystemJson
+</code></pre></td></tr></table>
+<h2><a name="Combinators" class="anchor" href="#Combinators">Combinators</a></h2>
 <p>So far we've seen how Fleece is capable of encoding/decoding by deriving automatically a codec from static members in the type.</p>
 <p>But for those cases where we don't have control over the types (extension members won't be taken into account) we can explicitly specify combinators.</p>
 <p>To do so, a set of the available functions exists, ending with the <code>With</code> suffix, which accepts a combinator as first parameter:</p>
