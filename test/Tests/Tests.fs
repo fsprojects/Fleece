@@ -372,9 +372,9 @@ let tests = [
             test "DateTime" {
                 let expected = 
                 #if NEWTONSOFT
-                    "2000-03-01T16:23:34.0000000Z"
+                    "2000-03-01T16:23:34.000Z"
                 #else
-                    "\"2000-03-01T16:23:34.0000000Z\""
+                    "\"2000-03-01T16:23:34.000Z\""
                 #endif
                 Assert.JSON(expected, DateTime(2000, 3, 1, 16, 23, 34))
             }
@@ -382,9 +382,9 @@ let tests = [
             test "DateTime with milliseconds" {
                 let expected = 
                 #if NEWTONSOFT
-                    "2000-03-01T16:23:34.1230000Z"
+                    "2000-03-01T16:23:34.123Z"
                 #else
-                    "\"2000-03-01T16:23:34.1230000Z\""
+                    "\"2000-03-01T16:23:34.123Z\""
                 #endif
                 Assert.JSON(expected, DateTime(2000, 3, 1, 16, 23, 34, 123))
             }
@@ -392,16 +392,16 @@ let tests = [
             test "DateTimeOffset" {
                 let expected = 
                 #if NEWTONSOFT
-                    "2000-03-01T16:23:34.0000000+03:00"
+                    "2000-03-01T16:23:34.000+03:00"
                 #endif
                 #if FSHARPDATA
-                    "\"2000-03-01T16:23:34.0000000+03:00\""
+                    "\"2000-03-01T16:23:34.000+03:00\""
                 #endif
                 #if SYSTEMJSON
-                    "\"2000-03-01T16:23:34.0000000+03:00\""
+                    "\"2000-03-01T16:23:34.000+03:00\""
                 #endif
                 #if SYSTEMTEXTJSON
-                    "\"2000-03-01T16:23:34.0000000\u002B03:00\""
+                    "\"2000-03-01T16:23:34.000\u002B03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
             }
@@ -409,16 +409,16 @@ let tests = [
             test "DateTimeOffset with milliseconds" {
                 let expected = 
                 #if NEWTONSOFT
-                    "2000-03-01T16:23:34.0780000+03:00"
+                    "2000-03-01T16:23:34.078+03:00"
                 #endif
                 #if FSHARPDATA
-                    "\"2000-03-01T16:23:34.0780000+03:00\""
+                    "\"2000-03-01T16:23:34.078+03:00\""
                 #endif
                 #if SYSTEMJSON
-                    "\"2000-03-01T16:23:34.0780000+03:00\""
+                    "\"2000-03-01T16:23:34.078+03:00\""
                 #endif
                 #if SYSTEMTEXTJSON
-                    "\"2000-03-01T16:23:34.0780000\u002B03:00\""
+                    "\"2000-03-01T16:23:34.078\u002B03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
             }
@@ -443,19 +443,19 @@ let tests = [
                           Children = [] }
                       ] }
                 #if NEWTONSOFT
-                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.0000000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.0000000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.0000000Z","children":[]}]}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
-                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.0000000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.0000000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.0000000Z","children":[]}]}"""
+                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMJSON
-                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Male","name":"John"}"""
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
-                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.0000000Z","gender":"Male","name":"John"}"""
+                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
                 Assert.JSON(expected, p)
                 #endif
             }
