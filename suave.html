@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
 
-    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/materia/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
 
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
-    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-left.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
     <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
@@ -29,12 +29,12 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-left" id="fsdocs-nav">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
+        <div class="collapse navbar-collapse navbar-nav-scroll" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -51,7 +51,7 @@
             <!-- END SEARCH BOX: this adds support for the search box -->
             <ul class="navbar-nav">
                 <li class="nav-header">Links</li>
-                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License</a></li>
                 <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
                 <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
                 <li class="nav-header">
@@ -164,48 +164,150 @@
 
             <div class="fsdocs-tip" id="fs1">module Suave</div>
 <div class="fsdocs-tip" id="fs2">namespace Suave</div>
-<div class="fsdocs-tip" id="fs3">module Http<br /><br />from Suave</div>
-<div class="fsdocs-tip" id="fs4">module Operators<br /><br />from Suave</div>
+<div class="fsdocs-tip" id="fs3">module Http
+
+from Suave</div>
+<div class="fsdocs-tip" id="fs4">module Operators
+
+from Suave</div>
 <div class="fsdocs-tip" id="fs5">namespace System</div>
 <div class="fsdocs-tip" id="fs6">namespace System.IO</div>
 <div class="fsdocs-tip" id="fs7">namespace System.Text</div>
 <div class="fsdocs-tip" id="fs8">namespace System.Json</div>
 <div class="fsdocs-tip" id="fs9">namespace Fleece</div>
-<div class="fsdocs-tip" id="fs10">module SystemJson<br /><br />from Fleece</div>
-<div class="fsdocs-tip" id="fs11">module Operators<br /><br />from Fleece.SystemJson</div>
-<div class="fsdocs-tip" id="fs12">Multiple items<br />type RequireQualifiedAccessAttribute =<br />&#160;&#160;inherit Attribute<br />&#160;&#160;new : unit -&gt; RequireQualifiedAccessAttribute<br /><br />--------------------<br />new : unit -&gt; RequireQualifiedAccessAttribute</div>
-<div class="fsdocs-tip" id="fs13">Multiple items<br />module Json<br /><br />from Suave.BusinessApp<br /><br />--------------------<br />namespace System.Text.Json<br /><br />--------------------<br />module Json<br /><br />from Suave</div>
+<div class="fsdocs-tip" id="fs10">module SystemJson
+
+from Fleece</div>
+<div class="fsdocs-tip" id="fs11">module Operators
+
+from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs12">Multiple items<br />type RequireQualifiedAccessAttribute =
+  inherit Attribute
+  new : unit -&gt; RequireQualifiedAccessAttribute<br /><em>&lt;summary&gt;This attribute is used to indicate that references to the elements of a module, record or union 
+ type require explicit qualified access.&lt;/summary&gt;<br />&lt;category&gt;Attributes&lt;/category&gt;</em><br /><br />--------------------<br />new : unit -&gt; RequireQualifiedAccessAttribute</div>
+<div class="fsdocs-tip" id="fs13">Multiple items<br />module Json
+
+from Suave.BusinessApp<br /><br />--------------------<br />namespace System.Text.Json<br /><br />--------------------<br />module Json
+
+from Suave</div>
 <div class="fsdocs-tip" id="fs14">val OK : dataObj:&#39;a -&gt; WebPart (requires member ToJson)</div>
 <div class="fsdocs-tip" id="fs15">val dataObj : &#39;a (requires member ToJson)</div>
-<div class="fsdocs-tip" id="fs16">Multiple items<br />module WebPart<br /><br />from Suave<br /><br />--------------------<br />type WebPart = WebPart&lt;HttpContext&gt;<br /><br />--------------------<br />type WebPart&lt;&#39;a&gt; = &#39;a -&gt; Async&lt;&#39;a option&gt;</div>
+<div class="fsdocs-tip" id="fs16">Multiple items<br />module WebPart
+
+from Suave<br /><br />--------------------<br />type WebPart = WebPart&lt;HttpContext&gt;<br /><br />--------------------<br />type WebPart&lt;&#39;a&gt; = &#39;a -&gt; Async&lt;&#39;a option&gt;<br /><em>&lt;summary&gt;
+ Takes &#39;a and returns SuaveTask of &#39;a
+ SuaveTask is also known as AsyncOption
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs17">val str : string</div>
-<div class="fsdocs-tip" id="fs18">val toJson : x:&#39;t -&gt; JsonValue (requires member ToJson)</div>
-<div class="fsdocs-tip" id="fs19">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
-<div class="fsdocs-tip" id="fs20">module Successful<br /><br />from Suave</div>
-<div class="fsdocs-tip" id="fs21">val OK : body:string -&gt; WebPart</div>
-<div class="fsdocs-tip" id="fs22">module Writers<br /><br />from Suave</div>
-<div class="fsdocs-tip" id="fs23">val setMimeType : mimeType:string -&gt; WebPart</div>
+<div class="fsdocs-tip" id="fs18">val toJson : x:&#39;t -&gt; JsonValue (requires member ToJson)<br /><em>&lt;summary&gt;
+ Maps a value to Json
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs19">Multiple items<br />val string : value:&#39;T -&gt; string<br /><em>&lt;summary&gt;Converts the argument to a string using &lt;c&gt;ToString&lt;/c&gt;.&lt;/summary&gt;<br />&lt;remarks&gt;For standard integer and floating point values the and any type that implements &lt;c&gt;IFormattable&lt;/c&gt;&lt;c&gt;ToString&lt;/c&gt; conversion uses &lt;c&gt;CultureInfo.InvariantCulture&lt;/c&gt;. &lt;/remarks&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted string.&lt;/returns&gt;</em><br /><br />--------------------<br />type string = System.String<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.String&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs20">module Successful
+
+from Suave<br /><em>&lt;summary&gt;&lt;para&gt;
+ 2xx successful responses
+ &lt;/para&gt;&lt;para&gt;
+ Functions have signature &lt;code&gt;f :: params... -&amp;gt; HttpContext -&amp;gt; Async&amp;lt;unit&amp;gt; option&lt;/code&gt;.
+ &lt;/para&gt;&lt;para&gt;
+ Functions from here are &#39;end routes&#39; in that they don&#39;t require you to keep
+ returning applicatives, but can end up in an async monad/workflow that writes
+ the data to the client in the end.
+ &lt;/para&gt;&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs21">val OK : body:string -&gt; WebPart<br /><em>&lt;summary&gt;&lt;para&gt;
+ 200
+ &lt;/para&gt;&lt;para&gt;
+ Write the string to the body as UTF-8
+ &lt;/para&gt;&lt;/summary&gt;<br />&lt;remarks&gt;&lt;/remarks&gt;</em></div>
+<div class="fsdocs-tip" id="fs22">module Writers
+
+from Suave<br /><em>&lt;summary&gt;
+ Module that allows changing the output response in different ways.
+ Functions have signature f :: params... -&amp;gt; HttpContext -&amp;gt; HttpContext.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs23">val setMimeType : mimeType:string -&gt; WebPart<br /><em>&lt;summary&gt;&lt;para&gt;
+ Set the Content-Type header to the mime type given. Remember that it should
+ include the encoding of your content. So for example, specifying a mimeType
+ value of &#39;application/json; charset=utf-8&#39; is strongly recommended (but
+ replace &#39;json&#39; with your own MIME type, of course ;))
+ &lt;/para&gt;&lt;para&gt;&lt;/para&gt;&lt;para&gt;&lt;/para&gt;&lt;/summary&gt;<br />&lt;remarks&gt;&lt;/remarks&gt;</em></div>
 <div class="fsdocs-tip" id="fs24">val parseRequestForm : ctx:HttpContext -&gt; &#39;a ParseResult (requires member OfJson)</div>
 <div class="fsdocs-tip" id="fs25">val ctx : HttpContext</div>
-<div class="fsdocs-tip" id="fs26">Multiple items<br />module HttpContext<br /><br />from Suave.Http<br /><br />--------------------<br />type HttpContext =<br />&#160;&#160;{ request: HttpRequest<br />&#160;&#160;&#160;&#160;runtime: HttpRuntime<br />&#160;&#160;&#160;&#160;connection: Connection<br />&#160;&#160;&#160;&#160;userState: Map&lt;string,obj&gt;<br />&#160;&#160;&#160;&#160;response: HttpResult }<br />&#160;&#160;&#160;&#160;member clientIp : trustProxy:bool -&gt; sources:string list -&gt; IPAddress<br />&#160;&#160;&#160;&#160;member clientPort : trustProxy:bool -&gt; sources:string list -&gt; Port<br />&#160;&#160;&#160;&#160;member clientProto : trustProxy:bool -&gt; sources:string list -&gt; string<br />&#160;&#160;&#160;&#160;member clientIpTrustProxy : IPAddress<br />&#160;&#160;&#160;&#160;member clientPortTrustProxy : Port<br />&#160;&#160;&#160;&#160;member clientProtoTrustProxy : string<br />&#160;&#160;&#160;&#160;member isLocal : bool<br />&#160;&#160;&#160;&#160;static member clientIp_ : Property&lt;HttpContext,IPAddress&gt;<br />&#160;&#160;&#160;&#160;static member clientPort_ : Property&lt;HttpContext,Port&gt;<br />&#160;&#160;&#160;&#160;static member clientProto_ : Property&lt;HttpContext,string&gt;<br />&#160;&#160;&#160;&#160;...</div>
+<div class="fsdocs-tip" id="fs26">Multiple items<br />module HttpContext
+
+from Suave.Http<br /><em>&lt;summary&gt;
+ A module that provides functions to create a new HttpContext.
+&lt;/summary&gt;</em><br /><br />--------------------<br />type HttpContext =
+  { request: HttpRequest
+    runtime: HttpRuntime
+    connection: Connection
+    userState: Map&lt;string,obj&gt;
+    response: HttpResult }
+    member clientIp : trustProxy:bool -&gt; sources:string list -&gt; IPAddress
+    member clientPort : trustProxy:bool -&gt; sources:string list -&gt; Port
+    member clientProto : trustProxy:bool -&gt; sources:string list -&gt; string
+    member clientIpTrustProxy : IPAddress
+    member clientPortTrustProxy : Port
+    member clientProtoTrustProxy : string
+    member isLocal : bool
+    static member clientIp_ : Property&lt;HttpContext,IPAddress&gt;
+    static member clientPort_ : Property&lt;HttpContext,Port&gt;
+    static member clientProto_ : Property&lt;HttpContext,string&gt;
+    ...<br /><em>&lt;summary&gt;
+ The HttpContext is the container of the request, runtime, user-state and
+ response.
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs27">val body : string</div>
-<div class="fsdocs-tip" id="fs28">HttpContext.request: HttpRequest</div>
+<div class="fsdocs-tip" id="fs28">HttpContext.request: HttpRequest<br /><em>&lt;summary&gt;
+ The HTTP request being processed
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs29">HttpRequest.rawForm: byte []</div>
-<div class="fsdocs-tip" id="fs30">type Encoding =<br />&#160;&#160;interface ICloneable<br />&#160;&#160;new : unit -&gt; unit + 2 overloads<br />&#160;&#160;member Clone : unit -&gt; obj<br />&#160;&#160;member Equals : value: obj -&gt; bool<br />&#160;&#160;member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads<br />&#160;&#160;member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads<br />&#160;&#160;member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads<br />&#160;&#160;member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads<br />&#160;&#160;member GetDecoder : unit -&gt; Decoder<br />&#160;&#160;member GetEncoder : unit -&gt; Encoder<br />&#160;&#160;...</div>
-<div class="fsdocs-tip" id="fs31">property Encoding.UTF8: Encoding with get</div>
+<div class="fsdocs-tip" id="fs30">type Encoding =
+  interface ICloneable
+  new : unit -&gt; unit + 2 overloads
+  member Clone : unit -&gt; obj
+  member Equals : value: obj -&gt; bool
+  member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads
+  member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads
+  member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads
+  member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads
+  member GetDecoder : unit -&gt; Decoder
+  member GetEncoder : unit -&gt; Encoder
+  ...<br /><em>&lt;summary&gt;Represents a character encoding.&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs31">property Encoding.UTF8: Encoding with get<br /><em>&lt;summary&gt;Gets an encoding for the UTF-8 format.&lt;/summary&gt;<br />&lt;returns&gt;An encoding for the UTF-8 format.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs32">(extension) Encoding.GetString(bytes: inref&lt;System.Buffers.ReadOnlySequence&lt;byte&gt;&gt;) : string<br />Encoding.GetString(bytes: System.ReadOnlySpan&lt;byte&gt;) : string<br />Encoding.GetString(bytes: byte []) : string<br />Encoding.GetString(bytes: nativeptr&lt;byte&gt;, byteCount: int) : string<br />Encoding.GetString(bytes: byte [], index: int, count: int) : string</div>
-<div class="fsdocs-tip" id="fs33">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)</div>
-<div class="fsdocs-tip" id="fs34">module BusinessApp<br /><br />from Suave</div>
+<div class="fsdocs-tip" id="fs33">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)<br /><em>&lt;summary&gt;
+ Parses a Json Text and maps to a type
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs34">module BusinessApp
+
+from Suave</div>
 <div class="fsdocs-tip" id="fs35">Person.Name: string</div>
 <div class="fsdocs-tip" id="fs36">val name : string</div>
-<div class="fsdocs-tip" id="fs37">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)</div>
-<div class="fsdocs-tip" id="fs38">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs37">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;
+ Derives a concrete field codec for a required field
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs38">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The representation of &quot;Value of type &#39;T&quot;&lt;/summary&gt;<br />&lt;param name=&quot;Value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;An option representing the value.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs39">val x : Person</div>
 <div class="fsdocs-tip" id="fs40">val personHandler : WebPart</div>
-<div class="fsdocs-tip" id="fs41">val warbler : f:(&#39;t -&gt; &#39;t -&gt; &#39;u) -&gt; &#39;t -&gt; &#39;u</div>
-<div class="fsdocs-tip" id="fs42">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;</div>
+<div class="fsdocs-tip" id="fs41">val warbler : f:(&#39;t -&gt; &#39;t -&gt; &#39;u) -&gt; &#39;t -&gt; &#39;u<br /><em>&lt;summary&gt;
+ Which bird? A Warbler!
+
+ Pipe the request through to a bird that can peck at it.
+
+ Put another way, using &#39;warbler&#39; lets you look at the first parameter and
+ then make a decision about what thing to return (it&#39;s most likely a
+ WebPart you&#39;ll be returning). (Remember, WebPart is
+ HttpContext -&amp;gt; Async&amp;lt;HttpContext option&amp;gt;) where HttpContext is &#39;a and
+ Async&amp;lt;_&amp;gt; is &#39;b.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs42">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;<br /><em>&lt;summary&gt;
+ Represents an OK or a Successful result. The code succeeded with a value of &#39;T.
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs43">val person : Person</div>
-<div class="fsdocs-tip" id="fs44">type Person =<br />&#160;&#160;{ Name: string }<br />&#160;&#160;&#160;&#160;static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
+<div class="fsdocs-tip" id="fs44">type Person =
+  { Name: string }
+    static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
 
         </div>
 
@@ -220,4 +322,3 @@
 </body>
 
 </html>
-

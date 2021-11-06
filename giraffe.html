@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
 
-    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/materia/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
 
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
-    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-left.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
     <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
@@ -29,12 +29,12 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-left" id="fsdocs-nav">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
+        <div class="collapse navbar-collapse navbar-nav-scroll" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -51,7 +51,7 @@
             <!-- END SEARCH BOX: this adds support for the search box -->
             <ul class="navbar-nav">
                 <li class="nav-header">Links</li>
-                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License</a></li>
                 <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
                 <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
                 <li class="nav-header">
@@ -180,62 +180,162 @@
 <div class="fsdocs-tip" id="fs3">namespace System.Threading</div>
 <div class="fsdocs-tip" id="fs4">namespace System.Threading.Tasks</div>
 <div class="fsdocs-tip" id="fs5">namespace System.IO</div>
-<div class="fsdocs-tip" id="fs6">Multiple items<br />type Request =<br />&#160;&#160;new : unit -&gt; Request<br />&#160;&#160;member Body : Stream<br /><em>&#160;fake definition</em><br /><br />--------------------<br />new : unit -&gt; Request</div>
-<div class="fsdocs-tip" id="fs7">type Stream =<br />&#160;&#160;inherit MarshalByRefObject<br />&#160;&#160;interface IAsyncDisposable<br />&#160;&#160;interface IDisposable<br />&#160;&#160;new : unit -&gt; unit<br />&#160;&#160;member BeginRead : buffer: byte [] * offset: int * count: int * callback: AsyncCallback * state: obj -&gt; IAsyncResult<br />&#160;&#160;member BeginWrite : buffer: byte [] * offset: int * count: int * callback: AsyncCallback * state: obj -&gt; IAsyncResult<br />&#160;&#160;member Close : unit -&gt; unit<br />&#160;&#160;member CopyTo : destination: Stream -&gt; unit + 1 overload<br />&#160;&#160;member CopyToAsync : destination: Stream -&gt; Task + 3 overloads<br />&#160;&#160;member CreateWaitHandle : unit -&gt; WaitHandle<br />&#160;&#160;...</div>
-<div class="fsdocs-tip" id="fs8">val failwith : message:string -&gt; &#39;T</div>
-<div class="fsdocs-tip" id="fs9">Multiple items<br />type HttpContext =<br />&#160;&#160;new : unit -&gt; HttpContext<br />&#160;&#160;member SetContentType : s:string -&gt; &#39;a<br />&#160;&#160;member WriteBytesAsync : b:byte array -&gt; Task&lt;HttpContext option&gt;<br />&#160;&#160;member Request : Request<br /><br />--------------------<br />new : unit -&gt; HttpContext</div>
+<div class="fsdocs-tip" id="fs6">Multiple items<br />type Request =
+  new : unit -&gt; Request
+  member Body : Stream<br /><em>&#160;fake definition</em><br /><br />--------------------<br />new : unit -&gt; Request</div>
+<div class="fsdocs-tip" id="fs7">type Stream =
+  inherit MarshalByRefObject
+  interface IAsyncDisposable
+  interface IDisposable
+  new : unit -&gt; unit
+  member BeginRead : buffer: byte [] * offset: int * count: int * callback: AsyncCallback * state: obj -&gt; IAsyncResult
+  member BeginWrite : buffer: byte [] * offset: int * count: int * callback: AsyncCallback * state: obj -&gt; IAsyncResult
+  member Close : unit -&gt; unit
+  member CopyTo : destination: Stream -&gt; unit + 1 overload
+  member CopyToAsync : destination: Stream -&gt; Task + 3 overloads
+  member CreateWaitHandle : unit -&gt; WaitHandle
+  ...<br /><em>&lt;summary&gt;Provides a generic view of a sequence of bytes. This is an abstract class.&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs8">val failwith : message:string -&gt; &#39;T<br /><em>&lt;summary&gt;Throw a &lt;see cref=&quot;T:System.Exception&quot; /&gt; exception.&lt;/summary&gt;<br />&lt;param name=&quot;message&quot;&gt;The exception message.&lt;/param&gt;<br />&lt;returns&gt;The result value.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs9">Multiple items<br />type HttpContext =
+  new : unit -&gt; HttpContext
+  member SetContentType : s:string -&gt; &#39;a
+  member WriteBytesAsync : b:byte array -&gt; Task&lt;HttpContext option&gt;
+  member Request : Request<br /><br />--------------------<br />new : unit -&gt; HttpContext</div>
 <div class="fsdocs-tip" id="fs10">val __ : HttpContext</div>
 <div class="fsdocs-tip" id="fs11">val s : string</div>
-<div class="fsdocs-tip" id="fs12">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
+<div class="fsdocs-tip" id="fs12">Multiple items<br />val string : value:&#39;T -&gt; string<br /><em>&lt;summary&gt;Converts the argument to a string using &lt;c&gt;ToString&lt;/c&gt;.&lt;/summary&gt;<br />&lt;remarks&gt;For standard integer and floating point values the and any type that implements &lt;c&gt;IFormattable&lt;/c&gt;&lt;c&gt;ToString&lt;/c&gt; conversion uses &lt;c&gt;CultureInfo.InvariantCulture&lt;/c&gt;. &lt;/remarks&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted string.&lt;/returns&gt;</em><br /><br />--------------------<br />type string = System.String<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.String&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs13">val b : byte array</div>
-<div class="fsdocs-tip" id="fs14">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type byte = System.Byte<br /><br />--------------------<br />type byte&lt;&#39;Measure&gt; =<br />&#160;&#160;byte</div>
-<div class="fsdocs-tip" id="fs15">type &#39;T array = &#39;T []</div>
-<div class="fsdocs-tip" id="fs16">Multiple items<br />type Task =<br />&#160;&#160;interface IAsyncResult<br />&#160;&#160;interface IDisposable<br />&#160;&#160;new : action: Action -&gt; unit + 7 overloads<br />&#160;&#160;member ConfigureAwait : continueOnCapturedContext: bool -&gt; ConfiguredTaskAwaitable<br />&#160;&#160;member ContinueWith : continuationAction: Action&lt;Task,obj&gt; * state: obj -&gt; Task + 19 overloads<br />&#160;&#160;member Dispose : unit -&gt; unit + 1 overload<br />&#160;&#160;member GetAwaiter : unit -&gt; TaskAwaiter<br />&#160;&#160;member RunSynchronously : unit -&gt; unit + 1 overload<br />&#160;&#160;member Start : unit -&gt; unit + 1 overload<br />&#160;&#160;member Wait : unit -&gt; unit + 4 overloads<br />&#160;&#160;...<br /><br />--------------------<br />type Task&lt;&#39;TResult&gt; =<br />&#160;&#160;inherit Task<br />&#160;&#160;new : function: Func&lt;obj,&#39;TResult&gt; * state: obj -&gt; unit + 7 overloads<br />&#160;&#160;member ConfigureAwait : continueOnCapturedContext: bool -&gt; ConfiguredTaskAwaitable&lt;&#39;TResult&gt;<br />&#160;&#160;member ContinueWith : continuationAction: Action&lt;Task&lt;&#39;TResult&gt;,obj&gt; * state: obj -&gt; Task + 19 overloads<br />&#160;&#160;member GetAwaiter : unit -&gt; TaskAwaiter&lt;&#39;TResult&gt;<br />&#160;&#160;member Result : &#39;TResult<br />&#160;&#160;static member Factory : TaskFactory&lt;&#39;TResult&gt;<br /><br />--------------------<br />Task(action: System.Action) : Task<br />Task(action: System.Action, cancellationToken: System.Threading.CancellationToken) : Task<br />Task(action: System.Action, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj) : Task<br />Task(action: System.Action, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, cancellationToken: System.Threading.CancellationToken) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task<br /><br />--------------------<br />Task(function: System.Func&lt;&#39;TResult&gt;) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, cancellationToken: System.Threading.CancellationToken) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, cancellationToken: System.Threading.CancellationToken) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;</div>
-<div class="fsdocs-tip" id="fs17">type &#39;T option = Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs14">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><em>&lt;summary&gt;Converts the argument to byte. This is a direct conversion for all 
+ primitive numeric types. For strings, the input is converted using &lt;c&gt;Byte.Parse()&lt;/c&gt; 
+ with InvariantCulture settings. Otherwise the operation requires an appropriate
+ static conversion method on the input type.&lt;/summary&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted byte&lt;/returns&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type byte = System.Byte<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.Byte&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em><br /><br />--------------------<br />type byte&lt;&#39;Measure&gt; =
+  byte<br /><em>&lt;summary&gt;The type of 8-bit unsigned integer numbers, annotated with a unit of measure. 
+ The unit of measure is erased in compiled code and when values of this type
+ are analyzed using reflection. The type is representationally equivalent to 
+ &lt;see cref=&quot;T:System.Byte&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types with Units of Measure&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs15">type &#39;T array = &#39;T []<br /><em>&lt;summary&gt;Single dimensional, zero-based arrays, written &lt;c&gt;int[]&lt;/c&gt;, &lt;c&gt;string[]&lt;/c&gt; etc.&lt;/summary&gt;<br />&lt;remarks&gt;Use the values in the &lt;see cref=&quot;T:Microsoft.FSharp.Collections.ArrayModule&quot; /&gt; module to manipulate values 
+ of this type, or the notation &lt;c&gt;arr.[x]&lt;/c&gt; to get/set array
+ values.&lt;/remarks&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs16">Multiple items<br />type Task =
+  interface IAsyncResult
+  interface IDisposable
+  new : action: Action -&gt; unit + 7 overloads
+  member ConfigureAwait : continueOnCapturedContext: bool -&gt; ConfiguredTaskAwaitable
+  member ContinueWith : continuationAction: Action&lt;Task,obj&gt; * state: obj -&gt; Task + 19 overloads
+  member Dispose : unit -&gt; unit + 1 overload
+  member GetAwaiter : unit -&gt; TaskAwaiter
+  member RunSynchronously : unit -&gt; unit + 1 overload
+  member Start : unit -&gt; unit + 1 overload
+  member Wait : unit -&gt; unit + 4 overloads
+  ...<br /><em>&lt;summary&gt;Represents an asynchronous operation.&lt;/summary&gt;</em><br /><br />--------------------<br />type Task&lt;&#39;TResult&gt; =
+  inherit Task
+  new : function: Func&lt;obj,&#39;TResult&gt; * state: obj -&gt; unit + 7 overloads
+  member ConfigureAwait : continueOnCapturedContext: bool -&gt; ConfiguredTaskAwaitable&lt;&#39;TResult&gt;
+  member ContinueWith : continuationAction: Action&lt;Task&lt;&#39;TResult&gt;,obj&gt; * state: obj -&gt; Task + 19 overloads
+  member GetAwaiter : unit -&gt; TaskAwaiter&lt;&#39;TResult&gt;
+  member Result : &#39;TResult
+  static member Factory : TaskFactory&lt;&#39;TResult&gt;<br /><em>&lt;summary&gt;Represents an asynchronous operation that can return a value.&lt;/summary&gt;<br />&lt;typeparam name=&quot;TResult&quot;&gt;The type of the result produced by this &lt;see cref=&quot;T:System.Threading.Tasks.Task`1&quot; /&gt;.&lt;/typeparam&gt;</em><br /><br />--------------------<br />Task(action: System.Action) : Task<br />Task(action: System.Action, cancellationToken: System.Threading.CancellationToken) : Task<br />Task(action: System.Action, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj) : Task<br />Task(action: System.Action, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, cancellationToken: System.Threading.CancellationToken) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, creationOptions: TaskCreationOptions) : Task<br />Task(action: System.Action&lt;obj&gt;, state: obj, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task<br /><br />--------------------<br />Task(function: System.Func&lt;&#39;TResult&gt;) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, cancellationToken: System.Threading.CancellationToken) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, cancellationToken: System.Threading.CancellationToken) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;&#39;TResult&gt;, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;<br />Task(function: System.Func&lt;obj,&#39;TResult&gt;, state: obj, cancellationToken: System.Threading.CancellationToken, creationOptions: TaskCreationOptions) : Task&lt;&#39;TResult&gt;</div>
+<div class="fsdocs-tip" id="fs17">type &#39;T option = Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The type of optional values. When used from other CLI languages the
+ empty option is the &lt;c&gt;null&lt;/c&gt; value. &lt;/summary&gt;<br />&lt;remarks&gt;Use the constructors &lt;c&gt;Some&lt;/c&gt; and &lt;c&gt;None&lt;/c&gt; to create values of this type.
+ Use the values in the &lt;c&gt;Option&lt;/c&gt; module to manipulate values of this type,
+ or pattern match against the values directly.
+
+ &#39;None&#39; values will appear as the value &lt;c&gt;null&lt;/c&gt; to other CLI languages.
+ Instance methods on this type will appear as static methods to other CLI languages
+ due to the use of &lt;c&gt;null&lt;/c&gt; as a value representation.&lt;/remarks&gt;<br />&lt;category index=&quot;3&quot;&gt;Options&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs18">type HttpFuncResult = Task&lt;HttpContext option&gt;</div>
 <div class="fsdocs-tip" id="fs19">type HttpFunc = HttpContext -&gt; HttpFuncResult</div>
 <div class="fsdocs-tip" id="fs20">type HttpHandler = HttpFunc -&gt; HttpFunc</div>
-<div class="fsdocs-tip" id="fs21">module Giraffe<br /><br />from Giraffe</div>
+<div class="fsdocs-tip" id="fs21">module Giraffe
+
+from Giraffe</div>
 <div class="fsdocs-tip" id="fs22">namespace System.Text</div>
 <div class="fsdocs-tip" id="fs23">Multiple items<br />namespace FSharp<br /><br />--------------------<br />namespace Microsoft.FSharp</div>
 <div class="fsdocs-tip" id="fs24">Multiple items<br />namespace FSharp.Control<br /><br />--------------------<br />namespace Microsoft.FSharp.Control</div>
 <div class="fsdocs-tip" id="fs25">namespace FSharp.Control.Tasks</div>
-<div class="fsdocs-tip" id="fs26">module V2<br /><br />from FSharp.Control.Tasks</div>
-<div class="fsdocs-tip" id="fs27">module ContextInsensitive<br /><br />from FSharp.Control.Tasks.V2</div>
+<div class="fsdocs-tip" id="fs26">module V2
+
+from FSharp.Control.Tasks</div>
+<div class="fsdocs-tip" id="fs27">module ContextInsensitive
+
+from FSharp.Control.Tasks.V2</div>
 <div class="fsdocs-tip" id="fs28">namespace Fleece</div>
-<div class="fsdocs-tip" id="fs29">module SystemJson<br /><br />from Fleece</div>
-<div class="fsdocs-tip" id="fs30">module Operators<br /><br />from Fleece.SystemJson</div>
-<div class="fsdocs-tip" id="fs31">Multiple items<br />module Json<br /><br />from Giraffe.BusinessApp<br /><br />--------------------<br />namespace System.Text.Json</div>
+<div class="fsdocs-tip" id="fs29">module SystemJson
+
+from Fleece</div>
+<div class="fsdocs-tip" id="fs30">module Operators
+
+from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs31">Multiple items<br />module Json
+
+from Giraffe.BusinessApp<br /><br />--------------------<br />namespace System.Text.Json</div>
 <div class="fsdocs-tip" id="fs32">val json : dataObj:&#39;a -&gt; HttpFunc -&gt; ctx:HttpContext -&gt; HttpFuncResult (requires member ToJson)</div>
 <div class="fsdocs-tip" id="fs33">val dataObj : &#39;a (requires member ToJson)</div>
 <div class="fsdocs-tip" id="fs34">val ctx : HttpContext</div>
 <div class="fsdocs-tip" id="fs35">member HttpContext.SetContentType : s:string -&gt; &#39;a</div>
-<div class="fsdocs-tip" id="fs36">val toJson : x:&#39;t -&gt; System.Json.JsonValue (requires member ToJson)</div>
-<div class="fsdocs-tip" id="fs37">type Encoding =<br />&#160;&#160;interface ICloneable<br />&#160;&#160;new : unit -&gt; unit + 2 overloads<br />&#160;&#160;member Clone : unit -&gt; obj<br />&#160;&#160;member Equals : value: obj -&gt; bool<br />&#160;&#160;member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads<br />&#160;&#160;member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads<br />&#160;&#160;member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads<br />&#160;&#160;member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads<br />&#160;&#160;member GetDecoder : unit -&gt; Decoder<br />&#160;&#160;member GetEncoder : unit -&gt; Encoder<br />&#160;&#160;...</div>
-<div class="fsdocs-tip" id="fs38">property Encoding.UTF8: Encoding with get</div>
+<div class="fsdocs-tip" id="fs36">val toJson : x:&#39;t -&gt; System.Json.JsonValue (requires member ToJson)<br /><em>&lt;summary&gt;
+ Maps a value to Json
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs37">type Encoding =
+  interface ICloneable
+  new : unit -&gt; unit + 2 overloads
+  member Clone : unit -&gt; obj
+  member Equals : value: obj -&gt; bool
+  member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads
+  member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads
+  member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads
+  member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads
+  member GetDecoder : unit -&gt; Decoder
+  member GetEncoder : unit -&gt; Encoder
+  ...<br /><em>&lt;summary&gt;Represents a character encoding.&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs38">property Encoding.UTF8: Encoding with get<br /><em>&lt;summary&gt;Gets an encoding for the UTF-8 format.&lt;/summary&gt;<br />&lt;returns&gt;An encoding for the UTF-8 format.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs39">(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(s: string) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: char []) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;, writer: System.Buffers.IBufferWriter&lt;byte&gt;) : int64<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;, bytes: System.Span&lt;byte&gt;) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: System.ReadOnlySpan&lt;char&gt;, writer: System.Buffers.IBufferWriter&lt;byte&gt;) : int64<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: System.ReadOnlySpan&lt;char&gt;, bytes: System.Span&lt;byte&gt;) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(s: string, index: int, count: int) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: char [], index: int, count: int) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: nativeptr&lt;char&gt;, charCount: int, bytes: nativeptr&lt;byte&gt;, byteCount: int) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
 <div class="fsdocs-tip" id="fs40">member HttpContext.WriteBytesAsync : b:byte array -&gt; System.Threading.Tasks.Task&lt;HttpContext option&gt;</div>
 <div class="fsdocs-tip" id="fs41">val bindJsonAsync : ctx:HttpContext -&gt; System.Threading.Tasks.Task&lt;&#39;a ParseResult&gt; (requires member OfJson)</div>
 <div class="fsdocs-tip" id="fs42">val task : FSharp.Control.Tasks.TaskBuilder.TaskBuilderV2</div>
 <div class="fsdocs-tip" id="fs43">val reader : StreamReader</div>
-<div class="fsdocs-tip" id="fs44">Multiple items<br />type StreamReader =<br />&#160;&#160;inherit TextReader<br />&#160;&#160;new : stream: Stream -&gt; unit + 10 overloads<br />&#160;&#160;member Close : unit -&gt; unit<br />&#160;&#160;member DiscardBufferedData : unit -&gt; unit<br />&#160;&#160;member Dispose : disposing: bool -&gt; unit<br />&#160;&#160;member Peek : unit -&gt; int<br />&#160;&#160;member Read : unit -&gt; int + 2 overloads<br />&#160;&#160;member ReadAsync : buffer: char [] * index: int * count: int -&gt; Task&lt;int&gt; + 1 overload<br />&#160;&#160;member ReadBlock : buffer: char [] * index: int * count: int -&gt; int + 1 overload<br />&#160;&#160;member ReadBlockAsync : buffer: char [] * index: int * count: int -&gt; Task&lt;int&gt; + 1 overload<br />&#160;&#160;...<br /><br />--------------------<br />StreamReader(stream: Stream) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding, detectEncodingFromByteOrderMarks: bool, bufferSize: int) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding, detectEncodingFromByteOrderMarks: bool, bufferSize: int) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
+<div class="fsdocs-tip" id="fs44">Multiple items<br />type StreamReader =
+  inherit TextReader
+  new : stream: Stream -&gt; unit + 10 overloads
+  member Close : unit -&gt; unit
+  member DiscardBufferedData : unit -&gt; unit
+  member Dispose : disposing: bool -&gt; unit
+  member Peek : unit -&gt; int
+  member Read : unit -&gt; int + 2 overloads
+  member ReadAsync : buffer: char [] * index: int * count: int -&gt; Task&lt;int&gt; + 1 overload
+  member ReadBlock : buffer: char [] * index: int * count: int -&gt; int + 1 overload
+  member ReadBlockAsync : buffer: char [] * index: int * count: int -&gt; Task&lt;int&gt; + 1 overload
+  ...<br /><em>&lt;summary&gt;Implements a &lt;see cref=&quot;T:System.IO.TextReader&quot; /&gt; that reads characters from a byte stream in a particular encoding.&lt;/summary&gt;</em><br /><br />--------------------<br />StreamReader(stream: Stream) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding, detectEncodingFromByteOrderMarks: bool) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(stream: Stream, encoding: Encoding, detectEncodingFromByteOrderMarks: bool, bufferSize: int) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />StreamReader(path: string, encoding: Encoding, detectEncodingFromByteOrderMarks: bool, bufferSize: int) : StreamReader<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
 <div class="fsdocs-tip" id="fs45">property HttpContext.Request: Request with get</div>
 <div class="fsdocs-tip" id="fs46">property Request.Body: Stream with get</div>
 <div class="fsdocs-tip" id="fs47">val body : string</div>
 <div class="fsdocs-tip" id="fs48">StreamReader.ReadToEndAsync() : System.Threading.Tasks.Task&lt;string&gt;</div>
-<div class="fsdocs-tip" id="fs49">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)</div>
-<div class="fsdocs-tip" id="fs50">module BusinessApp<br /><br />from Giraffe</div>
-<div class="fsdocs-tip" id="fs51">module Json<br /><br />from Giraffe.BusinessApp</div>
+<div class="fsdocs-tip" id="fs49">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)<br /><em>&lt;summary&gt;
+ Parses a Json Text and maps to a type
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs50">module BusinessApp
+
+from Giraffe</div>
+<div class="fsdocs-tip" id="fs51">module Json
+
+from Giraffe.BusinessApp</div>
 <div class="fsdocs-tip" id="fs52">Person.Name: string</div>
 <div class="fsdocs-tip" id="fs53">val name : string</div>
-<div class="fsdocs-tip" id="fs54">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)</div>
-<div class="fsdocs-tip" id="fs55">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs54">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;
+ Derives a concrete field codec for a required field
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs55">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The representation of &quot;Value of type &#39;T&quot;&lt;/summary&gt;<br />&lt;param name=&quot;Value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;An option representing the value.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs56">val x : Person</div>
 <div class="fsdocs-tip" id="fs57">val personHandler : next:HttpFunc -&gt; ctx:HttpContext -&gt; System.Threading.Tasks.Task&lt;HttpContext option&gt;</div>
 <div class="fsdocs-tip" id="fs58">val next : HttpFunc</div>
-<div class="fsdocs-tip" id="fs59">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;</div>
+<div class="fsdocs-tip" id="fs59">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;<br /><em>&lt;summary&gt;
+ Represents an OK or a Successful result. The code succeeded with a value of &#39;T.
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs60">val person : Person</div>
-<div class="fsdocs-tip" id="fs61">type Person =<br />&#160;&#160;{ Name: string }<br />&#160;&#160;&#160;&#160;static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
+<div class="fsdocs-tip" id="fs61">type Person =
+  { Name: string }
+    static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
 
         </div>
 
@@ -250,4 +350,3 @@
 </body>
 
 </html>
-

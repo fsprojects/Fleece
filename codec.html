@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
 
-    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/materia/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
 
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
-    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-left.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
     <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
@@ -29,12 +29,12 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-left" id="fsdocs-nav">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
+        <div class="collapse navbar-collapse navbar-nav-scroll" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -51,7 +51,7 @@
             <!-- END SEARCH BOX: this adds support for the search box -->
             <ul class="navbar-nav">
                 <li class="nav-header">Links</li>
-                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License</a></li>
                 <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
                 <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
                 <li class="nav-header">
@@ -309,43 +309,93 @@ For example:
 </code></pre>
 
             <div class="fsdocs-tip" id="fs1">namespace Fleece</div>
-<div class="fsdocs-tip" id="fs2">module SystemJson<br /><br />from Fleece</div>
-<div class="fsdocs-tip" id="fs3">module Operators<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs2">module SystemJson
+
+from Fleece</div>
+<div class="fsdocs-tip" id="fs3">module Operators
+
+from Fleece.SystemJson</div>
 <div class="fsdocs-tip" id="fs4">Person.name: string * string</div>
-<div class="fsdocs-tip" id="fs5">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
+<div class="fsdocs-tip" id="fs5">Multiple items<br />val string : value:&#39;T -&gt; string<br /><em>&lt;summary&gt;Converts the argument to a string using &lt;c&gt;ToString&lt;/c&gt;.&lt;/summary&gt;<br />&lt;remarks&gt;For standard integer and floating point values the and any type that implements &lt;c&gt;IFormattable&lt;/c&gt;&lt;c&gt;ToString&lt;/c&gt; conversion uses &lt;c&gt;CultureInfo.InvariantCulture&lt;/c&gt;. &lt;/remarks&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted string.&lt;/returns&gt;</em><br /><br />--------------------<br />type string = System.String<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.String&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs6">Person.age: int option</div>
-<div class="fsdocs-tip" id="fs7">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type int = int32<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; =<br />&#160;&#160;int</div>
-<div class="fsdocs-tip" id="fs8">type &#39;T option = Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs7">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><em>&lt;summary&gt;Converts the argument to signed 32-bit integer. This is a direct conversion for all 
+ primitive numeric types. For strings, the input is converted using &lt;c&gt;Int32.Parse()&lt;/c&gt;  
+ with InvariantCulture settings. Otherwise the operation requires an appropriate
+ static conversion method on the input type.&lt;/summary&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted int&lt;/returns&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type int = int32<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.Int32&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em><br /><br />--------------------<br />type int&lt;&#39;Measure&gt; =
+  int<br /><em>&lt;summary&gt;The type of 32-bit signed integer numbers, annotated with a unit of measure. The unit
+ of measure is erased in compiled code and when values of this type
+ are analyzed using reflection. The type is representationally equivalent to 
+ &lt;see cref=&quot;T:System.Int32&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types with Units of Measure&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs8">type &#39;T option = Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The type of optional values. When used from other CLI languages the
+ empty option is the &lt;c&gt;null&lt;/c&gt; value. &lt;/summary&gt;<br />&lt;remarks&gt;Use the constructors &lt;c&gt;Some&lt;/c&gt; and &lt;c&gt;None&lt;/c&gt; to create values of this type.
+ Use the values in the &lt;c&gt;Option&lt;/c&gt; module to manipulate values of this type,
+ or pattern match against the values directly.
+
+ &#39;None&#39; values will appear as the value &lt;c&gt;null&lt;/c&gt; to other CLI languages.
+ Instance methods on this type will appear as static methods to other CLI languages
+ due to the use of &lt;c&gt;null&lt;/c&gt; as a value representation.&lt;/remarks&gt;<br />&lt;category index=&quot;3&quot;&gt;Options&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs9">Person.children: Person list</div>
-<div class="fsdocs-tip" id="fs10">type Person =<br />&#160;&#160;{ name: string * string<br />&#160;&#160;&#160;&#160;age: int option<br />&#160;&#160;&#160;&#160;children: Person list }<br />&#160;&#160;&#160;&#160;static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
-<div class="fsdocs-tip" id="fs11">type &#39;T list = List&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs10">type Person =
+  { name: string * string
+    age: int option
+    children: Person list }
+    static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,Person,Person&gt;</div>
+<div class="fsdocs-tip" id="fs11">type &#39;T list = List&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The type of immutable singly-linked lists. &lt;/summary&gt;<br />&lt;remarks&gt;See the &lt;see cref=&quot;T:Microsoft.FSharp.Collections.ListModule&quot; /&gt; module for further operations related to lists.
+
+ Use the constructors &lt;c&gt;[]&lt;/c&gt; and &lt;c&gt;::&lt;/c&gt; (infix) to create values of this type, or
+ the notation &lt;c&gt;[1; 2; 3]&lt;/c&gt;. Use the values in the &lt;c&gt;List&lt;/c&gt; module to manipulate 
+ values of this type, or pattern match against the values directly.
+
+  See also &lt;a href=&quot;https://docs.microsoft.com/dotnet/fsharp/language-reference/lists&quot;&gt;F# Language Guide - Lists&lt;/a&gt;.
+ &lt;/remarks&gt;</em></div>
 <div class="fsdocs-tip" id="fs12">val f : string</div>
 <div class="fsdocs-tip" id="fs13">val l : string</div>
 <div class="fsdocs-tip" id="fs14">val a : int option</div>
 <div class="fsdocs-tip" id="fs15">val c : Person list</div>
-<div class="fsdocs-tip" id="fs16">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)</div>
-<div class="fsdocs-tip" id="fs17">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs16">val jreq : name:string -&gt; getter:(&#39;T -&gt; &#39;param option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;param,&#39;T&gt; (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;
+ Derives a concrete field codec for a required field
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs17">union case Option.Some: Value: &#39;T -&gt; Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The representation of &quot;Value of type &#39;T&quot;&lt;/summary&gt;<br />&lt;param name=&quot;Value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;An option representing the value.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs18">val x : Person</div>
-<div class="fsdocs-tip" id="fs19">val fst : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T1</div>
-<div class="fsdocs-tip" id="fs20">val snd : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T2</div>
-<div class="fsdocs-tip" id="fs21">val jopt : prop:string -&gt; getter:(&#39;a -&gt; &#39;b option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;b option,&#39;a&gt; (requires member OfJson and member ToJson)</div>
+<div class="fsdocs-tip" id="fs19">val fst : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T1<br /><em>&lt;summary&gt;Return the first element of a tuple, &lt;c&gt;fst (a,b) = a&lt;/c&gt;.&lt;/summary&gt;<br />&lt;param name=&quot;tuple&quot;&gt;The input tuple.&lt;/param&gt;<br />&lt;returns&gt;The first value.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs20">val snd : tuple:(&#39;T1 * &#39;T2) -&gt; &#39;T2<br /><em>&lt;summary&gt;Return the second element of a tuple, &lt;c&gt;snd (a,b) = b&lt;/c&gt;.&lt;/summary&gt;<br />&lt;param name=&quot;tuple&quot;&gt;The input tuple.&lt;/param&gt;<br />&lt;returns&gt;The second value.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs21">val jopt : prop:string -&gt; getter:(&#39;a -&gt; &#39;b option) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;b option,&#39;a&gt; (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;
+ Derives a concrete field codec for an optional field
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs22">val p : Person</div>
-<div class="fsdocs-tip" id="fs23">union case Option.None: Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs23">union case Option.None: Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The representation of &quot;No value&quot;&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs24">val john : Person ParseResult</div>
-<div class="fsdocs-tip" id="fs25">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)</div>
+<div class="fsdocs-tip" id="fs25">val parseJson : x:string -&gt; &#39;a ParseResult (requires member OfJson)<br /><em>&lt;summary&gt;
+ Parses a Json Text and maps to a type
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs26">PersonF.name: string * string</div>
 <div class="fsdocs-tip" id="fs27">PersonF.age: int option</div>
 <div class="fsdocs-tip" id="fs28">PersonF.children: PersonF list</div>
-<div class="fsdocs-tip" id="fs29">type PersonF =<br />&#160;&#160;{ name: string * string<br />&#160;&#160;&#160;&#160;age: int option<br />&#160;&#160;&#160;&#160;children: PersonF list }<br />&#160;&#160;&#160;&#160;static member JsonObjCodec : (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;PersonF,DecodeError&gt;) * (PersonF -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)</div>
+<div class="fsdocs-tip" id="fs29">type PersonF =
+  { name: string * string
+    age: int option
+    children: PersonF list }
+    static member JsonObjCodec : (IReadOnlyDictionary&lt;string,JsonValue&gt; -&gt; Result&lt;PersonF,DecodeError&gt;) * (PersonF -&gt; IReadOnlyDictionary&lt;string,JsonValue&gt;)</div>
 <div class="fsdocs-tip" id="fs30">val c : PersonF list</div>
-<div class="fsdocs-tip" id="fs31">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)</div>
-<div class="fsdocs-tip" id="fs32">val jfield : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member OfJson and member ToJson)</div>
+<div class="fsdocs-tip" id="fs31">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)<br /><em>&lt;summary&gt;Initialize the field mappings.&lt;/summary&gt;<br />&lt;param name=&quot;f&quot;&gt;An object constructor as a curried function.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs32">val jfield : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;Appends a field mapping to the codec.&lt;/summary&gt;<br />&lt;param name=&quot;fieldName&quot;&gt;A string that will be used as key to the field.&lt;/param&gt;<br />&lt;param name=&quot;getter&quot;&gt;The field getter function.&lt;/param&gt;<br />&lt;param name=&quot;rest&quot;&gt;The other mappings.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs33">val x : PersonF</div>
-<div class="fsdocs-tip" id="fs34">val jfieldOpt : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value option) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value option -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member ToJson and member OfJson)</div>
-<div class="fsdocs-tip" id="fs35">val jfieldWith : (System.Json.JsonValue -&gt; Result&lt;&#39;a,DecodeError&gt;) * (&#39;Value -&gt; System.Json.JsonValue) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;a -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;)</div>
-<div class="fsdocs-tip" id="fs36">val jsonValueCodec&lt;&#39;t (requires member OfJson and member ToJson)&gt; : Codec&lt;System.Json.JsonValue,&#39;t&gt; (requires member OfJson and member ToJson)</div>
+<div class="fsdocs-tip" id="fs34">val jfieldOpt : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value option) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value option -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member ToJson and member OfJson)<br /><em>&lt;summary&gt;Appends an optional field mapping to the codec.&lt;/summary&gt;<br />&lt;param name=&quot;fieldName&quot;&gt;A string that will be used as key to the field.&lt;/param&gt;<br />&lt;param name=&quot;getter&quot;&gt;The field getter function.&lt;/param&gt;<br />&lt;param name=&quot;rest&quot;&gt;The other mappings.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs35">val jfieldWith : (System.Json.JsonValue -&gt; Result&lt;&#39;a,DecodeError&gt;) * (&#39;Value -&gt; System.Json.JsonValue) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;a -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;)<br /><em>&lt;summary&gt;Appends a field mapping to the codec.&lt;/summary&gt;<br />&lt;param name=&quot;codec&quot;&gt;The codec to be used.&lt;/param&gt;<br />&lt;param name=&quot;fieldName&quot;&gt;A string that will be used as key to the field.&lt;/param&gt;<br />&lt;param name=&quot;getter&quot;&gt;The field getter function.&lt;/param&gt;<br />&lt;param name=&quot;rest&quot;&gt;The other mappings.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs36">val jsonValueCodec&lt;&#39;t (requires member OfJson and member ToJson)&gt; : Codec&lt;System.Json.JsonValue,&#39;t&gt; (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;
+ Derive automatically a JsonCodec, based of OfJson and ToJson static members
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs37">union case Shape.Rectangle: width: float * length: float -&gt; Shape</div>
-<div class="fsdocs-tip" id="fs38">Multiple items<br />val float : value:&#39;T -&gt; float (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type float = System.Double<br /><br />--------------------<br />type float&lt;&#39;Measure&gt; =<br />&#160;&#160;float</div>
+<div class="fsdocs-tip" id="fs38">Multiple items<br />val float : value:&#39;T -&gt; float (requires member op_Explicit)<br /><em>&lt;summary&gt;Converts the argument to 64-bit float. This is a direct conversion for all 
+ primitive numeric types. For strings, the input is converted using &lt;c&gt;Double.Parse()&lt;/c&gt;  
+ with InvariantCulture settings. Otherwise the operation requires an appropriate
+ static conversion method on the input type.&lt;/summary&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted float&lt;/returns&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type float = System.Double<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.Double&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em><br /><br />--------------------<br />type float&lt;&#39;Measure&gt; =
+  float<br /><em>&lt;summary&gt;The type of double-precision floating point numbers, annotated with a unit of measure. 
+ The unit of measure is erased in compiled code and when values of this type
+ are analyzed using reflection. The type is representationally equivalent to 
+ &lt;see cref=&quot;T:System.Double&quot; /&gt;.&lt;/summary&gt;<br />&lt;category index=&quot;6&quot;&gt;Basic Types with Units of Measure&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs39">union case Shape.Circle: radius: float -&gt; Shape</div>
 <div class="fsdocs-tip" id="fs40">union case Shape.Prism: width: float * float * height: float -&gt; Shape</div>
 <div class="fsdocs-tip" id="fs41">val x : float</div>
@@ -361,9 +411,13 @@ For example:
 <div class="fsdocs-tip" id="fs51">union case CompassDirection.West: CompassDirection</div>
 <div class="fsdocs-tip" id="fs52">val someShapes : string</div>
 <div class="fsdocs-tip" id="fs53">namespace FSharpPlus</div>
-<div class="fsdocs-tip" id="fs54">module Operators<br /><br />from FSharpPlus</div>
+<div class="fsdocs-tip" id="fs54">module Operators
+
+from FSharpPlus<br /><em>&lt;summary&gt;
+ Generic functions and operators
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs55">union case ShapeD.Rectangle: width: float * length: float -&gt; ShapeD</div>
-<div class="fsdocs-tip" id="fs56">val length : source:&#39;Foldable&lt;&#39;T&gt; -&gt; int (requires member Length)</div>
+<div class="fsdocs-tip" id="fs56">val length : source:&#39;Foldable&lt;&#39;T&gt; -&gt; int (requires member Length)<br /><em>&lt;summary&gt;Gets the number of elements in the foldable.&lt;/summary&gt;<br />&lt;category index=&quot;11&quot;&gt;Foldable&lt;/category&gt;<br />&lt;param name=&quot;source&quot;&gt;The input foldable.&lt;/param&gt;<br />&lt;returns&gt;The length of the foldable.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs57">union case ShapeD.Circle: radius: float -&gt; ShapeD</div>
 <div class="fsdocs-tip" id="fs58">union case ShapeD.Prism: width: float * float * height: float -&gt; ShapeD</div>
 <div class="fsdocs-tip" id="fs59">val jreqValue : (string -&gt; string -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;a,&#39;b&gt; -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;a,&#39;b&gt;)<br /><em>&#160;Derives a concrete field codec for a required field and value</em></div>
@@ -372,48 +426,120 @@ For example:
 <div class="fsdocs-tip" id="fs62">val codec : ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,System.Collections.Generic.KeyValuePair&lt;string,System.Json.JsonValue&gt; list,&#39;a,&#39;b&gt;</div>
 <div class="fsdocs-tip" id="fs63">val matchPropValue : (&#39;c -&gt; Result&lt;&#39;c,DecodeError&gt;) (requires &#39;c :&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;)</div>
 <div class="fsdocs-tip" id="fs64">val o : #System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;</div>
-<div class="fsdocs-tip" id="fs65">module IReadOnlyDictionary<br /><br />from FSharpPlus</div>
-<div class="fsdocs-tip" id="fs66">val tryGetValue : k:&#39;Key -&gt; dct:System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;Value&gt; -&gt; &#39;Value option</div>
+<div class="fsdocs-tip" id="fs65">module IReadOnlyDictionary
+
+from FSharpPlus<br /><em>&lt;summary&gt;
+ Additional operations on IReadOnlyDictionary&amp;lt;&#39;Key, &#39;Value&amp;gt;
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs66">val tryGetValue : k:&#39;Key -&gt; dct:System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;Value&gt; -&gt; &#39;Value option<br /><em>&lt;summary&gt;Tries to get the value of the given key.&lt;/summary&gt;<br />&lt;remarks&gt;This is a function wrapper for the IReadOnlyDictionary.TryGetValue method,
+ representing the result as an Option&amp;lt;value&amp;gt; instead of a bool plus an out-value.
+ &lt;/remarks&gt;<br />&lt;param name=&quot;k&quot;&gt;The key whose value you wish to find.&lt;/param&gt;<br />&lt;param name=&quot;dct&quot;&gt;The input IReadOnlyDictionary.&lt;/param&gt;<br />&lt;returns&gt;An option wrapped value.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs67">val a : System.Json.JsonValue</div>
-<div class="fsdocs-tip" id="fs68">val ofJson : x:System.Json.JsonValue -&gt; &#39;t ParseResult (requires member OfJson)</div>
-<div class="fsdocs-tip" id="fs69">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;</div>
-<div class="fsdocs-tip" id="fs70">module Decode<br /><br />from Fleece.SystemJson</div>
-<div class="fsdocs-tip" id="fs71">module Fail<br /><br />from Fleece.SystemJson.Decode</div>
+<div class="fsdocs-tip" id="fs68">val ofJson : x:System.Json.JsonValue -&gt; &#39;t ParseResult (requires member OfJson)<br /><em>&lt;summary&gt;
+ Maps Json to a type
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs69">union case Result.Ok: ResultValue: &#39;T -&gt; Result&lt;&#39;T,&#39;TError&gt;<br /><em>&lt;summary&gt;
+ Represents an OK or a Successful result. The code succeeded with a value of &#39;T.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs70">module Decode
+
+from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs71">module Fail
+
+from Fleece.SystemJson.Decode</div>
 <div class="fsdocs-tip" id="fs72">val invalidValue : v:System.Json.JsonValue -&gt; o:string -&gt; Result&lt;&#39;t,DecodeError&gt;</div>
 <div class="fsdocs-tip" id="fs73">val propertyNotFound : p:string -&gt; o:System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;d,DecodeError&gt;</div>
-<div class="fsdocs-tip" id="fs74">Multiple items<br />module Codec<br /><br />from Fleece.SystemJson<br /><br />--------------------<br />type Codec&lt;&#39;S,&#39;t&gt; = Codec&lt;&#39;S,&#39;S,&#39;t&gt;<br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t&gt; = Codec&lt;&#39;S1,&#39;S2,&#39;t,&#39;t&gt;<br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t1,&#39;t2&gt; = Decoder&lt;&#39;S1,&#39;t1&gt; * Encoder&lt;&#39;S2,&#39;t2&gt;</div>
-<div class="fsdocs-tip" id="fs75">val ofConcrete : ConcreteCodec&lt;&#39;c list,System.Collections.Generic.KeyValuePair&lt;&#39;d,&#39;e&gt; list,&#39;f,&#39;g&gt; -&gt; (&#39;h -&gt; &#39;f ParseResult) * (&#39;g -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;d,&#39;e&gt;) (requires equality and member ToList)</div>
-<div class="fsdocs-tip" id="fs76">val compose : (&#39;c -&gt; &#39;d) * (&#39;g -&gt; &#39;h) -&gt; (&#39;f -&gt; &#39;e) * (&#39;i -&gt; &#39;g) -&gt; (&#39;c -&gt; &#39;e) * (&#39;i -&gt; &#39;h) (requires member ( &gt;&gt;= ))</div>
+<div class="fsdocs-tip" id="fs74">Multiple items<br />module Codec
+
+from Fleece.SystemJson<br /><em>&lt;summary&gt;
+ Functions operating on Codecs (as pair of functions)
+&lt;/summary&gt;</em><br /><br />--------------------<br />type Codec&lt;&#39;S,&#39;t&gt; = Codec&lt;&#39;S,&#39;S,&#39;t&gt;<br /><em>&lt;summary&gt;
+ A codec for raw type &#39;S to strong type &#39;t.
+&lt;/summary&gt;</em><br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t&gt; = Codec&lt;&#39;S1,&#39;S2,&#39;t,&#39;t&gt;<br /><em>&lt;summary&gt;
+ A decoder from raw type &#39;S1 and encoder to raw type &#39;S2 for type &#39;t.
+&lt;/summary&gt;</em><br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t1,&#39;t2&gt; = Decoder&lt;&#39;S1,&#39;t1&gt; * Encoder&lt;&#39;S2,&#39;t2&gt;<br /><em>&lt;summary&gt;
+ A decoder from raw type &#39;S1 and encoder to raw type &#39;S2 for string types &#39;t1 and &#39;t2.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs75">val ofConcrete : ConcreteCodec&lt;&#39;c list,System.Collections.Generic.KeyValuePair&lt;&#39;d,&#39;e&gt; list,&#39;f,&#39;g&gt; -&gt; (&#39;h -&gt; &#39;f ParseResult) * (&#39;g -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;d,&#39;e&gt;) (requires equality and member ToList)<br /><em>&lt;summary&gt;
+ Extracts a pair of functions from a ConcreteCodec
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs76">val compose : (&#39;c -&gt; &#39;d) * (&#39;g -&gt; &#39;h) -&gt; (&#39;f -&gt; &#39;e) * (&#39;i -&gt; &#39;g) -&gt; (&#39;c -&gt; &#39;e) * (&#39;i -&gt; &#39;h) (requires member ( &gt;&gt;= ))<br /><em>&lt;summary&gt;
+ Creates a new codec which is the result of applying codec2 then codec1 for encoding
+ and codec1 then codec2 for decoding
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs77">val encoded : System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;</div>
-<div class="fsdocs-tip" id="fs78">property System.Collections.Generic.IReadOnlyCollection.Count: int with get</div>
-<div class="fsdocs-tip" id="fs79">val union : source:System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;T&gt; -&gt; altSource:System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;T&gt; -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;T&gt; (requires equality)</div>
-<div class="fsdocs-tip" id="fs80">module Dict<br /><br />from FSharpPlus</div>
-<div class="fsdocs-tip" id="fs81">val toIReadOnlyDictionary : source:System.Collections.Generic.IDictionary&lt;&#39;c,&#39;d&gt; -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;c,&#39;d&gt;</div>
-<div class="fsdocs-tip" id="fs82">val dict : keyValuePairs:seq&lt;&#39;Key * &#39;Value&gt; -&gt; System.Collections.Generic.IDictionary&lt;&#39;Key,&#39;Value&gt; (requires equality)</div>
-<div class="fsdocs-tip" id="fs83">val toJson : x:&#39;t -&gt; System.Json.JsonValue (requires member ToJson)</div>
-<div class="fsdocs-tip" id="fs84">val toConcrete : d:(System.Collections.Generic.IReadOnlyDictionary&lt;&#39;c,&#39;d&gt; -&gt; &#39;e ParseResult) * e:(&#39;f -&gt; &#39;g) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;&#39;c,&#39;d&gt; list,&#39;h list,&#39;e,&#39;f&gt; (requires equality and member ToList)</div>
+<div class="fsdocs-tip" id="fs78">property System.Collections.Generic.IReadOnlyCollection.Count: int with get<br /><em>&lt;summary&gt;Gets the number of elements in the collection.&lt;/summary&gt;<br />&lt;returns&gt;The number of elements in the collection.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs79">val union : source:System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;T&gt; -&gt; altSource:System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;T&gt; -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;Key,&#39;T&gt; (requires equality)<br /><em>&lt;summary&gt;
+ Returns the union of two read-only dictionaries, preferring values from the first in case of duplicate keys.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs80">module Dict
+
+from FSharpPlus<br /><em>&lt;summary&gt;
+ Additional operations on IDictionary&amp;lt;&#39;Key, &#39;Value&amp;gt;
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs81">val toIReadOnlyDictionary : source:System.Collections.Generic.IDictionary&lt;&#39;c,&#39;d&gt; -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;c,&#39;d&gt;<br /><em>&lt;summary&gt;
+ Converts an IDictionary to an IReadOnlyDictionary.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs82">val dict : keyValuePairs:seq&lt;&#39;Key * &#39;Value&gt; -&gt; System.Collections.Generic.IDictionary&lt;&#39;Key,&#39;Value&gt; (requires equality)<br /><em>&lt;summary&gt;Builds a read-only lookup table from a sequence of key/value pairs. The key objects are indexed using generic hashing and equality.&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs83">val toJson : x:&#39;t -&gt; System.Json.JsonValue (requires member ToJson)<br /><em>&lt;summary&gt;
+ Maps a value to Json
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs84">val toConcrete : d:(System.Collections.Generic.IReadOnlyDictionary&lt;&#39;c,&#39;d&gt; -&gt; &#39;e ParseResult) * e:(&#39;f -&gt; &#39;g) -&gt; ConcreteCodec&lt;System.Collections.Generic.KeyValuePair&lt;&#39;c,&#39;d&gt; list,&#39;h list,&#39;e,&#39;f&gt; (requires equality and member ToList)<br /><em>&lt;summary&gt;
+ Wraps a pair of functions into a ConcreteCodec
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs85">val w : float</div>
 <div class="fsdocs-tip" id="fs86">val l : float</div>
 <div class="fsdocs-tip" id="fs87">val r : float</div>
 <div class="fsdocs-tip" id="fs88">val w2 : float</div>
 <div class="fsdocs-tip" id="fs89">val h : float</div>
 <div class="fsdocs-tip" id="fs90">val parsedShapedD : ShapeD list ParseResult</div>
-<div class="fsdocs-tip" id="fs91">type ShapeD =<br />&#160;&#160;| Rectangle of width: float * length: float<br />&#160;&#160;| Circle of radius: float<br />&#160;&#160;| Prism of width: float * float * height: float<br />&#160;&#160;&#160;&#160;static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,ShapeD,ShapeD&gt;</div>
+<div class="fsdocs-tip" id="fs91">type ShapeD =
+  | Rectangle of width: float * length: float
+  | Circle of radius: float
+  | Prism of width: float * float * height: float
+    static member JsonObjCodec : ConcreteCodec&lt;KeyValuePair&lt;string,JsonValue&gt; list,KeyValuePair&lt;string,JsonValue&gt; list,ShapeD,ShapeD&gt;</div>
 <div class="fsdocs-tip" id="fs92">namespace System</div>
 <div class="fsdocs-tip" id="fs93">namespace System.Text</div>
 <div class="fsdocs-tip" id="fs94">val pf : PersonF</div>
 <div class="fsdocs-tip" id="fs95">val personBytesCodec : (byte array -&gt; Result&lt;PersonF,DecodeError&gt;) * (PersonF -&gt; byte array)</div>
 <div class="fsdocs-tip" id="fs96">val getString : (byte array -&gt; string)</div>
 <div class="fsdocs-tip" id="fs97">val bytes : byte array</div>
-<div class="fsdocs-tip" id="fs98">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type byte = System.Byte<br /><br />--------------------<br />type byte&lt;&#39;Measure&gt; =<br />&#160;&#160;byte</div>
-<div class="fsdocs-tip" id="fs99">type &#39;T array = &#39;T []</div>
-<div class="fsdocs-tip" id="fs100">type Encoding =<br />&#160;&#160;interface ICloneable<br />&#160;&#160;new : unit -&gt; unit + 2 overloads<br />&#160;&#160;member Clone : unit -&gt; obj<br />&#160;&#160;member Equals : value: obj -&gt; bool<br />&#160;&#160;member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads<br />&#160;&#160;member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads<br />&#160;&#160;member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads<br />&#160;&#160;member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads<br />&#160;&#160;member GetDecoder : unit -&gt; Decoder<br />&#160;&#160;member GetEncoder : unit -&gt; Encoder<br />&#160;&#160;...</div>
-<div class="fsdocs-tip" id="fs101">property Encoding.UTF8: Encoding with get</div>
+<div class="fsdocs-tip" id="fs98">Multiple items<br />val byte : value:&#39;T -&gt; byte (requires member op_Explicit)<br /><em>&lt;summary&gt;Converts the argument to byte. This is a direct conversion for all 
+ primitive numeric types. For strings, the input is converted using &lt;c&gt;Byte.Parse()&lt;/c&gt; 
+ with InvariantCulture settings. Otherwise the operation requires an appropriate
+ static conversion method on the input type.&lt;/summary&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted byte&lt;/returns&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type byte = System.Byte<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.Byte&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em><br /><br />--------------------<br />type byte&lt;&#39;Measure&gt; =
+  byte<br /><em>&lt;summary&gt;The type of 8-bit unsigned integer numbers, annotated with a unit of measure. 
+ The unit of measure is erased in compiled code and when values of this type
+ are analyzed using reflection. The type is representationally equivalent to 
+ &lt;see cref=&quot;T:System.Byte&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types with Units of Measure&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs99">type &#39;T array = &#39;T []<br /><em>&lt;summary&gt;Single dimensional, zero-based arrays, written &lt;c&gt;int[]&lt;/c&gt;, &lt;c&gt;string[]&lt;/c&gt; etc.&lt;/summary&gt;<br />&lt;remarks&gt;Use the values in the &lt;see cref=&quot;T:Microsoft.FSharp.Collections.ArrayModule&quot; /&gt; module to manipulate values 
+ of this type, or the notation &lt;c&gt;arr.[x]&lt;/c&gt; to get/set array
+ values.&lt;/remarks&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs100">type Encoding =
+  interface ICloneable
+  new : unit -&gt; unit + 2 overloads
+  member Clone : unit -&gt; obj
+  member Equals : value: obj -&gt; bool
+  member GetByteCount : chars: nativeptr&lt;char&gt; * count: int -&gt; int + 5 overloads
+  member GetBytes : chars: nativeptr&lt;char&gt; * charCount: int * bytes: nativeptr&lt;byte&gt; * byteCount: int -&gt; int + 7 overloads
+  member GetCharCount : bytes: nativeptr&lt;byte&gt; * count: int -&gt; int + 3 overloads
+  member GetChars : bytes: nativeptr&lt;byte&gt; * byteCount: int * chars: nativeptr&lt;char&gt; * charCount: int -&gt; int + 4 overloads
+  member GetDecoder : unit -&gt; Decoder
+  member GetEncoder : unit -&gt; Encoder
+  ...<br /><em>&lt;summary&gt;Represents a character encoding.&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs101">property Encoding.UTF8: Encoding with get<br /><em>&lt;summary&gt;Gets an encoding for the UTF-8 format.&lt;/summary&gt;<br />&lt;returns&gt;An encoding for the UTF-8 format.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs102">(extension) Encoding.GetString(bytes: inref&lt;System.Buffers.ReadOnlySequence&lt;byte&gt;&gt;) : string<br />Encoding.GetString(bytes: System.ReadOnlySpan&lt;byte&gt;) : string<br />Encoding.GetString(bytes: byte []) : string<br />Encoding.GetString(bytes: nativeptr&lt;byte&gt;, byteCount: int) : string<br />Encoding.GetString(bytes: byte [], index: int, count: int) : string</div>
 <div class="fsdocs-tip" id="fs103">property PersonF.JsonObjCodec: (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;PersonF,DecodeError&gt;) * (PersonF -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) with get</div>
-<div class="fsdocs-tip" id="fs104">val jsonObjToValueCodec : (#System.Json.JsonValue -&gt; Result&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,DecodeError&gt;) * (#System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; System.Json.JsonValue)</div>
-<div class="fsdocs-tip" id="fs105">val jsonValueToTextCodec : (string -&gt; Result&lt;System.Json.JsonValue,DecodeError&gt;) * (System.Json.JsonValue -&gt; string)</div>
-<div class="fsdocs-tip" id="fs106">val invmap : f:(&#39;T -&gt; &#39;U) -&gt; g:(&#39;U -&gt; &#39;T) -&gt; r:&#39;a * w:&#39;c -&gt; &#39;b * &#39;d (requires member Contramap and member Map)</div>
+<div class="fsdocs-tip" id="fs104">val jsonObjToValueCodec : (#System.Json.JsonValue -&gt; Result&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,DecodeError&gt;) * (#System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; System.Json.JsonValue)<br /><em>&lt;summary&gt;
+ A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs105">val jsonValueToTextCodec : (string -&gt; Result&lt;System.Json.JsonValue,DecodeError&gt;) * (System.Json.JsonValue -&gt; string)<br /><em>&lt;summary&gt;
+ A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs106">val invmap : f:(&#39;T -&gt; &#39;U) -&gt; g:(&#39;U -&gt; &#39;T) -&gt; r:&#39;a * w:&#39;c -&gt; &#39;b * &#39;d (requires member Contramap and member Map)<br /><em>&lt;summary&gt;
+ Turns a Codec into another Codec, by mapping it over an isomorphism.
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs107">(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(s: string) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: char []) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;, writer: System.Buffers.IBufferWriter&lt;byte&gt;) : int64<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: inref&lt;System.Buffers.ReadOnlySequence&lt;char&gt;&gt;, bytes: System.Span&lt;byte&gt;) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />(extension) Encoding.GetBytes(chars: System.ReadOnlySpan&lt;char&gt;, writer: System.Buffers.IBufferWriter&lt;byte&gt;) : int64<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: System.ReadOnlySpan&lt;char&gt;, bytes: System.Span&lt;byte&gt;) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(s: string, index: int, count: int) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: char [], index: int, count: int) : byte []<br />&#160;&#160;&#160;<em>(+0 other overloads)</em><br />Encoding.GetBytes(chars: nativeptr&lt;char&gt;, charCount: int, bytes: nativeptr&lt;byte&gt;, byteCount: int) : int<br />&#160;&#160;&#160;<em>(+0 other overloads)</em></div>
 <div class="fsdocs-tip" id="fs108">val bytePerson : byte array</div>
 <div class="fsdocs-tip" id="fs109">val encode : &#39;a * e:Encoder&lt;&#39;o,&#39;a0&gt; -&gt; a:&#39;a0 -&gt; &#39;o</div>
@@ -435,4 +561,3 @@ For example:
 </body>
 
 </html>
-

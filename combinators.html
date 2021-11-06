@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
 
-    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/materia/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
 
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
-    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-left.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
     <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
@@ -29,12 +29,12 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-left" id="fsdocs-nav">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
+        <div class="collapse navbar-collapse navbar-nav-scroll" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -51,7 +51,7 @@
             <!-- END SEARCH BOX: this adds support for the search box -->
             <ul class="navbar-nav">
                 <li class="nav-header">Links</li>
-                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License</a></li>
                 <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
                 <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
                 <li class="nav-header">
@@ -162,44 +162,87 @@ open Fleece.SystemJson
 </code></pre>
 
             <div class="fsdocs-tip" id="fs1">namespace Fleece</div>
-<div class="fsdocs-tip" id="fs2">module SystemJson<br /><br />from Fleece</div>
-<div class="fsdocs-tip" id="fs3">type Color =<br />&#160;&#160;| Red<br />&#160;&#160;| Blue<br />&#160;&#160;| White</div>
+<div class="fsdocs-tip" id="fs2">module SystemJson
+
+from Fleece</div>
+<div class="fsdocs-tip" id="fs3">type Color =
+  | Red
+  | Blue
+  | White</div>
 <div class="fsdocs-tip" id="fs4">union case Color.Red: Color</div>
 <div class="fsdocs-tip" id="fs5">union case Color.Blue: Color</div>
 <div class="fsdocs-tip" id="fs6">union case Color.White: Color</div>
-<div class="fsdocs-tip" id="fs7">type Car =<br />&#160;&#160;{ Id: string<br />&#160;&#160;&#160;&#160;Color: Color<br />&#160;&#160;&#160;&#160;Kms: int }</div>
+<div class="fsdocs-tip" id="fs7">type Car =
+  { Id: string
+    Color: Color
+    Kms: int }</div>
 <div class="fsdocs-tip" id="fs8">Car.Id: string</div>
-<div class="fsdocs-tip" id="fs9">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
-<div class="fsdocs-tip" id="fs10">Multiple items<br />Car.Color: Color<br /><br />--------------------<br />type Color =<br />&#160;&#160;| Red<br />&#160;&#160;| Blue<br />&#160;&#160;| White</div>
+<div class="fsdocs-tip" id="fs9">Multiple items<br />val string : value:&#39;T -&gt; string<br /><em>&lt;summary&gt;Converts the argument to a string using &lt;c&gt;ToString&lt;/c&gt;.&lt;/summary&gt;<br />&lt;remarks&gt;For standard integer and floating point values the and any type that implements &lt;c&gt;IFormattable&lt;/c&gt;&lt;c&gt;ToString&lt;/c&gt; conversion uses &lt;c&gt;CultureInfo.InvariantCulture&lt;/c&gt;. &lt;/remarks&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted string.&lt;/returns&gt;</em><br /><br />--------------------<br />type string = System.String<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.String&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs10">Multiple items<br />Car.Color: Color<br /><br />--------------------<br />type Color =
+  | Red
+  | Blue
+  | White</div>
 <div class="fsdocs-tip" id="fs11">Car.Kms: int</div>
-<div class="fsdocs-tip" id="fs12">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type int = int32<br /><br />--------------------<br />type int&lt;&#39;Measure&gt; =<br />&#160;&#160;int</div>
+<div class="fsdocs-tip" id="fs12">Multiple items<br />val int : value:&#39;T -&gt; int (requires member op_Explicit)<br /><em>&lt;summary&gt;Converts the argument to signed 32-bit integer. This is a direct conversion for all 
+ primitive numeric types. For strings, the input is converted using &lt;c&gt;Int32.Parse()&lt;/c&gt;  
+ with InvariantCulture settings. Otherwise the operation requires an appropriate
+ static conversion method on the input type.&lt;/summary&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted int&lt;/returns&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type int = int32<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.Int32&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em><br /><br />--------------------<br />type int&lt;&#39;Measure&gt; =
+  int<br /><em>&lt;summary&gt;The type of 32-bit signed integer numbers, annotated with a unit of measure. The unit
+ of measure is erased in compiled code and when values of this type
+ are analyzed using reflection. The type is representationally equivalent to 
+ &lt;see cref=&quot;T:System.Int32&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types with Units of Measure&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs13">val colorDecoder : _arg1:System.Json.JsonValue -&gt; Result&lt;Color,DecodeError&gt;</div>
 <div class="fsdocs-tip" id="fs14">Multiple items<br />val JString : x:string -&gt; System.Json.JsonValue<br /><br />--------------------<br />active recognizer JString: System.Json.JsonValue -&gt; Choice&lt;System.Collections.Generic.IReadOnlyList&lt;System.Json.JsonValue&gt;,System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,System.Json.JsonPrimitive,bool,string,unit&gt;</div>
-<div class="fsdocs-tip" id="fs15">module Decode<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs15">module Decode
+
+from Fleece.SystemJson</div>
 <div class="fsdocs-tip" id="fs16">Multiple items<br />val Success : x:&#39;a -&gt; Result&lt;&#39;a,&#39;b&gt;<br /><br />--------------------<br />active recognizer Success: Result&lt;&#39;a,&#39;b&gt; -&gt; Choice&lt;&#39;a,&#39;b&gt;</div>
 <div class="fsdocs-tip" id="fs17">val x : string</div>
 <div class="fsdocs-tip" id="fs18">val v : System.Json.JsonValue</div>
-<div class="fsdocs-tip" id="fs19">module Fail<br /><br />from Fleece.SystemJson.Decode</div>
+<div class="fsdocs-tip" id="fs19">module Fail
+
+from Fleece.SystemJson.Decode</div>
 <div class="fsdocs-tip" id="fs20">val invalidValue : v:System.Json.JsonValue -&gt; o:string -&gt; Result&lt;&#39;t,DecodeError&gt;</div>
 <div class="fsdocs-tip" id="fs21">val x : System.Json.JsonValue</div>
 <div class="fsdocs-tip" id="fs22">val strExpected : v:System.Json.JsonValue -&gt; Result&lt;&#39;t,DecodeError&gt;</div>
 <div class="fsdocs-tip" id="fs23">val colorEncoder : _arg1:Color -&gt; System.Json.JsonValue</div>
 <div class="fsdocs-tip" id="fs24">val colorCodec : (#System.Json.JsonValue -&gt; Result&lt;Color,DecodeError&gt;) * (Color -&gt; System.Json.JsonValue)</div>
-<div class="fsdocs-tip" id="fs25">Multiple items<br />type GeneralizableValueAttribute =<br />&#160;&#160;inherit Attribute<br />&#160;&#160;new : unit -&gt; GeneralizableValueAttribute<br /><br />--------------------<br />new : unit -&gt; GeneralizableValueAttribute</div>
+<div class="fsdocs-tip" id="fs25">Multiple items<br />type GeneralizableValueAttribute =
+  inherit Attribute
+  new : unit -&gt; GeneralizableValueAttribute<br /><em>&lt;summary&gt;Adding this attribute to a non-function value with generic parameters indicates that 
+ uses of the construct can give rise to generic code through type inference. &lt;/summary&gt;<br />&lt;category&gt;Attributes&lt;/category&gt;</em><br /><br />--------------------<br />new : unit -&gt; GeneralizableValueAttribute</div>
 <div class="fsdocs-tip" id="fs26">val carCodec&lt;&#39;t&gt; : (System.Json.JsonValue -&gt; Result&lt;Car,DecodeError&gt;) * (Car -&gt; System.Json.JsonValue)</div>
 <div class="fsdocs-tip" id="fs27">val i : string</div>
 <div class="fsdocs-tip" id="fs28">val c : Color</div>
 <div class="fsdocs-tip" id="fs29">val k : int</div>
-<div class="fsdocs-tip" id="fs30">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)</div>
-<div class="fsdocs-tip" id="fs31">val jfieldWith : (System.Json.JsonValue -&gt; Result&lt;&#39;a,DecodeError&gt;) * (&#39;Value -&gt; System.Json.JsonValue) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;a -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;)</div>
-<div class="fsdocs-tip" id="fs32">module JsonCodec<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs30">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)<br /><em>&lt;summary&gt;Initialize the field mappings.&lt;/summary&gt;<br />&lt;param name=&quot;f&quot;&gt;An object constructor as a curried function.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs31">val jfieldWith : (System.Json.JsonValue -&gt; Result&lt;&#39;a,DecodeError&gt;) * (&#39;Value -&gt; System.Json.JsonValue) -&gt; fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;a -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;)<br /><em>&lt;summary&gt;Appends a field mapping to the codec.&lt;/summary&gt;<br />&lt;param name=&quot;codec&quot;&gt;The codec to be used.&lt;/param&gt;<br />&lt;param name=&quot;fieldName&quot;&gt;A string that will be used as key to the field.&lt;/param&gt;<br />&lt;param name=&quot;getter&quot;&gt;The field getter function.&lt;/param&gt;<br />&lt;param name=&quot;rest&quot;&gt;The other mappings.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs32">module JsonCodec
+
+from Fleece.SystemJson</div>
 <div class="fsdocs-tip" id="fs33">val string : (#System.Json.JsonValue -&gt; Result&lt;string,DecodeError&gt;) * (string -&gt; System.Json.JsonValue)</div>
 <div class="fsdocs-tip" id="fs34">val x : Car</div>
 <div class="fsdocs-tip" id="fs35">Car.Color: Color</div>
 <div class="fsdocs-tip" id="fs36">val int : (#System.Json.JsonValue -&gt; Result&lt;int,DecodeError&gt;) * (int -&gt; System.Json.JsonValue)</div>
-<div class="fsdocs-tip" id="fs37">Multiple items<br />module Codec<br /><br />from Fleece.SystemJson<br /><br />--------------------<br />type Codec&lt;&#39;S,&#39;t&gt; = Codec&lt;&#39;S,&#39;S,&#39;t&gt;<br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t&gt; = Codec&lt;&#39;S1,&#39;S2,&#39;t,&#39;t&gt;<br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t1,&#39;t2&gt; = Decoder&lt;&#39;S1,&#39;t1&gt; * Encoder&lt;&#39;S2,&#39;t2&gt;</div>
-<div class="fsdocs-tip" id="fs38">val compose : (&#39;a -&gt; &#39;b) * (&#39;e -&gt; &#39;f) -&gt; (&#39;d -&gt; &#39;c) * (&#39;g -&gt; &#39;e) -&gt; (&#39;a -&gt; &#39;c) * (&#39;g -&gt; &#39;f) (requires member ( &gt;&gt;= ))</div>
-<div class="fsdocs-tip" id="fs39">val jsonObjToValueCodec : (#System.Json.JsonValue -&gt; Result&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,DecodeError&gt;) * (#System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; System.Json.JsonValue)</div>
+<div class="fsdocs-tip" id="fs37">Multiple items<br />module Codec
+
+from Fleece.SystemJson<br /><em>&lt;summary&gt;
+ Functions operating on Codecs (as pair of functions)
+&lt;/summary&gt;</em><br /><br />--------------------<br />type Codec&lt;&#39;S,&#39;t&gt; = Codec&lt;&#39;S,&#39;S,&#39;t&gt;<br /><em>&lt;summary&gt;
+ A codec for raw type &#39;S to strong type &#39;t.
+&lt;/summary&gt;</em><br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t&gt; = Codec&lt;&#39;S1,&#39;S2,&#39;t,&#39;t&gt;<br /><em>&lt;summary&gt;
+ A decoder from raw type &#39;S1 and encoder to raw type &#39;S2 for type &#39;t.
+&lt;/summary&gt;</em><br /><br />--------------------<br />type Codec&lt;&#39;S1,&#39;S2,&#39;t1,&#39;t2&gt; = Decoder&lt;&#39;S1,&#39;t1&gt; * Encoder&lt;&#39;S2,&#39;t2&gt;<br /><em>&lt;summary&gt;
+ A decoder from raw type &#39;S1 and encoder to raw type &#39;S2 for string types &#39;t1 and &#39;t2.
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs38">val compose : (&#39;a -&gt; &#39;b) * (&#39;e -&gt; &#39;f) -&gt; (&#39;d -&gt; &#39;c) * (&#39;g -&gt; &#39;e) -&gt; (&#39;a -&gt; &#39;c) * (&#39;g -&gt; &#39;f) (requires member ( &gt;&gt;= ))<br /><em>&lt;summary&gt;
+ Creates a new codec which is the result of applying codec2 then codec1 for encoding
+ and codec1 then codec2 for decoding
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs39">val jsonObjToValueCodec : (#System.Json.JsonValue -&gt; Result&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,DecodeError&gt;) * (#System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; System.Json.JsonValue)<br /><em>&lt;summary&gt;
+ A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs40">val car : Car</div>
 <div class="fsdocs-tip" id="fs41">val jsonCar : System.Json.JsonValue</div>
 <div class="fsdocs-tip" id="fs42">val encode : &#39;a * e:Encoder&lt;&#39;o,&#39;a0&gt; -&gt; a:&#39;a0 -&gt; &#39;o</div>
@@ -217,4 +260,3 @@ open Fleece.SystemJson
 </body>
 
 </html>
-

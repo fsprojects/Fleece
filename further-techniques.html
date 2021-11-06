@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon">
 
-    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.3.1/materia/bootstrap.min.css">
+    <link rel="stylesheet" id="theme_link" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.6.0/materia/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
 
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script> -->
+    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
 
-    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-right.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+    <link type="text/css" rel="stylesheet" href="/Fleece/content/navbar-fixed-left.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-default.css" />
     <link type="text/css" rel="stylesheet" href="/Fleece/content/fsdocs-custom.css" />
     <script type="text/javascript" src="/Fleece/content/fsdocs-tips.js"></script>
@@ -29,12 +29,12 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-right" id="fsdocs-menu">
+    <nav class="navbar navbar-expand-md navbar-light bg-secondary fixed-left" id="fsdocs-nav">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="/Fleece/img/logo.png" /></a>
+        <div class="collapse navbar-collapse navbar-nav-scroll" id="navbarsExampleDefault">
+            <a href="http://fsprojects.github.io/Fleece/"><img id="fsdocs-logo" src="https://raw.githubusercontent.com/fsprojects/Fleece/master/docsrc/files/img/logo-color.svg" /></a>
             <!-- BEGIN SEARCH BOX: this adds support for the search box -->
             <div id="header">
                 <div class="searchbox" id="fsdocs-searchbox">
@@ -51,7 +51,7 @@
             <!-- END SEARCH BOX: this adds support for the search box -->
             <ul class="navbar-nav">
                 <li class="nav-header">Links</li>
-                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License (Apache 2.0)</a></li>
+                <li class="nav-item" id="fsdocs-license-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/LICENSE.md">License</a></li>
                 <li class="nav-item" id="fsdocs-release-notes-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/blob/master/RELEASE_NOTES.md">Release Notes</a></li>
                 <li class="nav-item" id="fsdocs-repository-link"><a class="nav-link" href="https://github.com/fsprojects/Fleece/">Source Repository</a></li>
                 <li class="nav-header">
@@ -166,45 +166,100 @@ Second, the <code>"jsonrpc"</code> field is required using <code>jfield</code>; 
 Finally: the fields must be in the correct order -- that is, the field specs must follow the order of the arguments in the constructor.</p>
 
             <div class="fsdocs-tip" id="fs1">namespace Fleece</div>
-<div class="fsdocs-tip" id="fs2">module SystemJson<br /><br />from Fleece</div>
-<div class="fsdocs-tip" id="fs3">module Operators<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs2">module SystemJson
+
+from Fleece</div>
+<div class="fsdocs-tip" id="fs3">module Operators
+
+from Fleece.SystemJson</div>
 <div class="fsdocs-tip" id="fs4">Request.Method: string</div>
-<div class="fsdocs-tip" id="fs5">Multiple items<br />val string : value:&#39;T -&gt; string<br /><br />--------------------<br />type string = System.String</div>
+<div class="fsdocs-tip" id="fs5">Multiple items<br />val string : value:&#39;T -&gt; string<br /><em>&lt;summary&gt;Converts the argument to a string using &lt;c&gt;ToString&lt;/c&gt;.&lt;/summary&gt;<br />&lt;remarks&gt;For standard integer and floating point values the and any type that implements &lt;c&gt;IFormattable&lt;/c&gt;&lt;c&gt;ToString&lt;/c&gt; conversion uses &lt;c&gt;CultureInfo.InvariantCulture&lt;/c&gt;. &lt;/remarks&gt;<br />&lt;param name=&quot;value&quot;&gt;The input value.&lt;/param&gt;<br />&lt;returns&gt;The converted string.&lt;/returns&gt;</em><br /><br />--------------------<br />type string = System.String<br /><em>&lt;summary&gt;An abbreviation for the CLI type &lt;see cref=&quot;T:System.String&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Basic Types&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs6">Request.MethodParams: Map&lt;string,string&gt;</div>
-<div class="fsdocs-tip" id="fs7">Multiple items<br />module Map<br /><br />from Microsoft.FSharp.Collections<br /><br />--------------------<br />type Map&lt;&#39;Key,&#39;Value (requires comparison)&gt; =<br />&#160;&#160;interface IReadOnlyDictionary&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;interface IReadOnlyCollection&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;<br />&#160;&#160;interface IEnumerable<br />&#160;&#160;interface IComparable<br />&#160;&#160;interface IEnumerable&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;<br />&#160;&#160;interface ICollection&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;<br />&#160;&#160;interface IDictionary&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;new : elements:seq&lt;&#39;Key * &#39;Value&gt; -&gt; Map&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;member Add : key:&#39;Key * value:&#39;Value -&gt; Map&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;member Change : key:&#39;Key * f:(&#39;Value option -&gt; &#39;Value option) -&gt; Map&lt;&#39;Key,&#39;Value&gt;<br />&#160;&#160;...<br /><br />--------------------<br />new : elements:seq&lt;&#39;Key * &#39;Value&gt; -&gt; Map&lt;&#39;Key,&#39;Value&gt;</div>
-<div class="fsdocs-tip" id="fs8">type ToJson =<br />&#160;&#160;inherit Default1<br />&#160;&#160;static member Invoke : x:&#39;t -&gt; JsonValue (requires member ToJson)<br />&#160;&#160;static member ToJson : x:bool * ToJson -&gt; JsonValue + 44 overloads</div>
+<div class="fsdocs-tip" id="fs7">Multiple items<br />module Map
+
+from Microsoft.FSharp.Collections<br /><em>&lt;summary&gt;Contains operations for working with values of type &lt;see cref=&quot;T:Microsoft.FSharp.Collections.Map`2&quot; /&gt;.&lt;/summary&gt;</em><br /><br />--------------------<br />type Map&lt;&#39;Key,&#39;Value (requires comparison)&gt; =
+  interface IReadOnlyDictionary&lt;&#39;Key,&#39;Value&gt;
+  interface IReadOnlyCollection&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;
+  interface IEnumerable
+  interface IComparable
+  interface IEnumerable&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;
+  interface ICollection&lt;KeyValuePair&lt;&#39;Key,&#39;Value&gt;&gt;
+  interface IDictionary&lt;&#39;Key,&#39;Value&gt;
+  new : elements:seq&lt;&#39;Key * &#39;Value&gt; -&gt; Map&lt;&#39;Key,&#39;Value&gt;
+  member Add : key:&#39;Key * value:&#39;Value -&gt; Map&lt;&#39;Key,&#39;Value&gt;
+  member Change : key:&#39;Key * f:(&#39;Value option -&gt; &#39;Value option) -&gt; Map&lt;&#39;Key,&#39;Value&gt;
+  ...<br /><em>&lt;summary&gt;Immutable maps based on binary trees, where keys are ordered by F# generic comparison. By default
+ comparison is the F# structural comparison function or uses implementations of the IComparable interface on key values.&lt;/summary&gt;<br />&lt;remarks&gt;See the &lt;see cref=&quot;T:Microsoft.FSharp.Collections.MapModule&quot; /&gt; module for further operations on maps.
+
+ All members of this class are thread-safe and may be used concurrently from multiple threads.&lt;/remarks&gt;</em><br /><br />--------------------<br />new : elements:seq&lt;&#39;Key * &#39;Value&gt; -&gt; Map&lt;&#39;Key,&#39;Value&gt;</div>
+<div class="fsdocs-tip" id="fs8">type ToJson =
+  inherit Default1
+  static member Invoke : x:&#39;t -&gt; JsonValue (requires member ToJson)
+  static member ToJson : x:bool * ToJson -&gt; JsonValue + 44 overloads</div>
 <div class="fsdocs-tip" id="fs9">val r : Request</div>
-<div class="fsdocs-tip" id="fs10">type Request =<br />&#160;&#160;{ Method: string<br />&#160;&#160;&#160;&#160;MethodParams: Map&lt;string,string&gt; }<br />&#160;&#160;&#160;&#160;static member OfJson : json:JsonValue -&gt; Result&lt;Request,DecodeError&gt;<br />&#160;&#160;&#160;&#160;static member ToJson : r:Request -&gt; JsonValue</div>
-<div class="fsdocs-tip" id="fs11">val jobj : x:seq&lt;string * System.Json.JsonValue&gt; -&gt; System.Json.JsonValue</div>
-<div class="fsdocs-tip" id="fs12">type OfJson =<br />&#160;&#160;inherit Default1<br />&#160;&#160;static member Invoke : x:JsonValue -&gt; &#39;t ParseResult (requires member OfJson)<br />&#160;&#160;static member OfJson : decimal * OfJson -&gt; (JsonValue -&gt; Result&lt;decimal,DecodeError&gt;) + 47 overloads</div>
+<div class="fsdocs-tip" id="fs10">type Request =
+  { Method: string
+    MethodParams: Map&lt;string,string&gt; }
+    static member OfJson : json:JsonValue -&gt; Result&lt;Request,DecodeError&gt;
+    static member ToJson : r:Request -&gt; JsonValue</div>
+<div class="fsdocs-tip" id="fs11">val jobj : x:seq&lt;string * System.Json.JsonValue&gt; -&gt; System.Json.JsonValue<br /><em>&lt;summary&gt;
+ Creates a new Json object for serialization
+&lt;/summary&gt;</em></div>
+<div class="fsdocs-tip" id="fs12">type OfJson =
+  inherit Default1
+  static member Invoke : x:JsonValue -&gt; &#39;t ParseResult (requires member OfJson)
+  static member OfJson : decimal * OfJson -&gt; (JsonValue -&gt; Result&lt;decimal,DecodeError&gt;) + 47 overloads</div>
 <div class="fsdocs-tip" id="fs13">val json : System.Json.JsonValue</div>
 <div class="fsdocs-tip" id="fs14">Multiple items<br />val JObject : x:System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; System.Json.JsonValue<br /><br />--------------------<br />active recognizer JObject: System.Json.JsonValue -&gt; Choice&lt;System.Collections.Generic.IReadOnlyList&lt;System.Json.JsonValue&gt;,System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,System.Json.JsonPrimitive,bool,string,unit&gt;</div>
 <div class="fsdocs-tip" id="fs15">val o : System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;</div>
 <div class="fsdocs-tip" id="fs16">val method : Result&lt;string,DecodeError&gt;</div>
 <div class="fsdocs-tip" id="fs17">val methodParams : Result&lt;Map&lt;string,string&gt;,DecodeError&gt;</div>
 <div class="fsdocs-tip" id="fs18">val jsonrpc : Result&lt;string,DecodeError&gt;</div>
-<div class="fsdocs-tip" id="fs19">module Decode<br /><br />from Fleece.SystemJson</div>
+<div class="fsdocs-tip" id="fs19">module Decode
+
+from Fleece.SystemJson</div>
 <div class="fsdocs-tip" id="fs20">Multiple items<br />val Success : x:&#39;a -&gt; Result&lt;&#39;a,&#39;b&gt;<br /><br />--------------------<br />active recognizer Success: Result&lt;&#39;a,&#39;b&gt; -&gt; Choice&lt;&#39;a,&#39;b&gt;</div>
 <div class="fsdocs-tip" id="fs21">val m : string</div>
 <div class="fsdocs-tip" id="fs22">val p : Map&lt;string,string&gt;</div>
 <div class="fsdocs-tip" id="fs23">val x : Result&lt;string,DecodeError&gt; * Result&lt;Map&lt;string,string&gt;,DecodeError&gt; * Result&lt;string,DecodeError&gt;</div>
-<div class="fsdocs-tip" id="fs24">union case Result.Error: ErrorValue: &#39;TError -&gt; Result&lt;&#39;T,&#39;TError&gt;</div>
+<div class="fsdocs-tip" id="fs24">union case Result.Error: ErrorValue: &#39;TError -&gt; Result&lt;&#39;T,&#39;TError&gt;<br /><em>&lt;summary&gt;
+ Represents an Error or a Failure. The code failed with a value of &#39;TError representing what went wrong.
+&lt;/summary&gt;</em></div>
 <div class="fsdocs-tip" id="fs25">union case DecodeError.Uncategorized: string -&gt; DecodeError</div>
-<div class="fsdocs-tip" id="fs26">val sprintf : format:Printf.StringFormat&lt;&#39;T&gt; -&gt; &#39;T</div>
+<div class="fsdocs-tip" id="fs26">val sprintf : format:Printf.StringFormat&lt;&#39;T&gt; -&gt; &#39;T<br /><em>&lt;summary&gt;Print to a string using the given format.&lt;/summary&gt;<br />&lt;param name=&quot;format&quot;&gt;The formatter.&lt;/param&gt;<br />&lt;returns&gt;The formatted result.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs27">val x : System.Json.JsonValue</div>
-<div class="fsdocs-tip" id="fs28">module Fail<br /><br />from Fleece.SystemJson.Decode</div>
+<div class="fsdocs-tip" id="fs28">module Fail
+
+from Fleece.SystemJson.Decode</div>
 <div class="fsdocs-tip" id="fs29">val objExpected : v:System.Json.JsonValue -&gt; Result&lt;&#39;t,DecodeError&gt;</div>
-<div class="fsdocs-tip" id="fs30">Multiple items<br />Response.Result: string option<br /><br />--------------------<br />module Result<br /><br />from Microsoft.FSharp.Core<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type Result&lt;&#39;T,&#39;TError&gt; =<br />&#160;&#160;| Ok of ResultValue: &#39;T<br />&#160;&#160;| Error of ErrorValue: &#39;TError</div>
-<div class="fsdocs-tip" id="fs31">type &#39;T option = Option&lt;&#39;T&gt;</div>
+<div class="fsdocs-tip" id="fs30">Multiple items<br />Response.Result: string option<br /><br />--------------------<br />module Result
+
+from Microsoft.FSharp.Core<br /><em>&lt;summary&gt;Contains operations for working with values of type &lt;see cref=&quot;T:Microsoft.FSharp.Core.Result`2&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Choices and Results&lt;/category&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type Result&lt;&#39;T,&#39;TError&gt; =
+  | Ok of ResultValue: &#39;T
+  | Error of ErrorValue: &#39;TError<br /><em>&lt;summary&gt;Helper type for error handling without exceptions.&lt;/summary&gt;<br />&lt;category&gt;Choices and Results&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs31">type &#39;T option = Option&lt;&#39;T&gt;<br /><em>&lt;summary&gt;The type of optional values. When used from other CLI languages the
+ empty option is the &lt;c&gt;null&lt;/c&gt; value. &lt;/summary&gt;<br />&lt;remarks&gt;Use the constructors &lt;c&gt;Some&lt;/c&gt; and &lt;c&gt;None&lt;/c&gt; to create values of this type.
+ Use the values in the &lt;c&gt;Option&lt;/c&gt; module to manipulate values of this type,
+ or pattern match against the values directly.
+
+ &#39;None&#39; values will appear as the value &lt;c&gt;null&lt;/c&gt; to other CLI languages.
+ Instance methods on this type will appear as static methods to other CLI languages
+ due to the use of &lt;c&gt;null&lt;/c&gt; as a value representation.&lt;/remarks&gt;<br />&lt;category index=&quot;3&quot;&gt;Options&lt;/category&gt;</em></div>
 <div class="fsdocs-tip" id="fs32">Response.Error: string option</div>
 <div class="fsdocs-tip" id="fs33">val r : string option</div>
 <div class="fsdocs-tip" id="fs34">val e : string option</div>
-<div class="fsdocs-tip" id="fs35">Multiple items<br />module Result<br /><br />from Microsoft.FSharp.Core<br /><br />--------------------<br />[&lt;Struct&gt;]<br />type Result&lt;&#39;T,&#39;TError&gt; =<br />&#160;&#160;| Ok of ResultValue: &#39;T<br />&#160;&#160;| Error of ErrorValue: &#39;TError</div>
-<div class="fsdocs-tip" id="fs36">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)</div>
-<div class="fsdocs-tip" id="fs37">val jfieldOpt : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value option) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value option -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member ToJson and member OfJson)</div>
+<div class="fsdocs-tip" id="fs35">Multiple items<br />module Result
+
+from Microsoft.FSharp.Core<br /><em>&lt;summary&gt;Contains operations for working with values of type &lt;see cref=&quot;T:Microsoft.FSharp.Core.Result`2&quot; /&gt;.&lt;/summary&gt;<br />&lt;category&gt;Choices and Results&lt;/category&gt;</em><br /><br />--------------------<br />[&lt;Struct&gt;]
+type Result&lt;&#39;T,&#39;TError&gt; =
+  | Ok of ResultValue: &#39;T
+  | Error of ErrorValue: &#39;TError<br /><em>&lt;summary&gt;Helper type for error handling without exceptions.&lt;/summary&gt;<br />&lt;category&gt;Choices and Results&lt;/category&gt;</em></div>
+<div class="fsdocs-tip" id="fs36">val withFields : f:&#39;a -&gt; (&#39;b -&gt; Result&lt;&#39;a,&#39;c&gt;) * (&#39;d -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;&#39;e,&#39;f&gt;) (requires equality)<br /><em>&lt;summary&gt;Initialize the field mappings.&lt;/summary&gt;<br />&lt;param name=&quot;f&quot;&gt;An object constructor as a curried function.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
+<div class="fsdocs-tip" id="fs37">val jfieldOpt : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value option) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value option -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member ToJson and member OfJson)<br /><em>&lt;summary&gt;Appends an optional field mapping to the codec.&lt;/summary&gt;<br />&lt;param name=&quot;fieldName&quot;&gt;A string that will be used as key to the field.&lt;/param&gt;<br />&lt;param name=&quot;getter&quot;&gt;The field getter function.&lt;/param&gt;<br />&lt;param name=&quot;rest&quot;&gt;The other mappings.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
 <div class="fsdocs-tip" id="fs38">val r : Response</div>
 <div class="fsdocs-tip" id="fs39">Response.Result: string option</div>
-<div class="fsdocs-tip" id="fs40">val jfield : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member OfJson and member ToJson)</div>
+<div class="fsdocs-tip" id="fs40">val jfield : fieldName:string -&gt; getter:(&#39;T -&gt; &#39;Value) -&gt; Decoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,(&#39;Value -&gt; &#39;Rest)&gt; * Encoder&lt;System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;,&#39;T&gt; -&gt; (System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt; -&gt; Result&lt;&#39;Rest,DecodeError&gt;) * (&#39;T -&gt; System.Collections.Generic.IReadOnlyDictionary&lt;string,System.Json.JsonValue&gt;) (requires member OfJson and member ToJson)<br /><em>&lt;summary&gt;Appends a field mapping to the codec.&lt;/summary&gt;<br />&lt;param name=&quot;fieldName&quot;&gt;A string that will be used as key to the field.&lt;/param&gt;<br />&lt;param name=&quot;getter&quot;&gt;The field getter function.&lt;/param&gt;<br />&lt;param name=&quot;rest&quot;&gt;The other mappings.&lt;/param&gt;<br />&lt;returns&gt;The resulting object codec.&lt;/returns&gt;</em></div>
 
         </div>
 
@@ -219,4 +274,3 @@ Finally: the fields must be in the correct order -- that is, the field specs mus
 </body>
 
 </html>
-
