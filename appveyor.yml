@@ -14,10 +14,10 @@ build_script:
   - cmd: echo vs %VersionSuffix%"
   - cmd: build.bat
 test_script:
-  - cmd: dotnet run -p .\test\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
-  - cmd: dotnet run -p .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f netcoreapp3.1
-  - cmd: dotnet run -p .\test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f netcoreapp3.1
-  - cmd: dotnet run -p .\test\Tests.SystemTextJson\Tests.SystemTextJson.fsproj -c Release -f netcoreapp3.1
+  - cmd: dotnet run --project .\test\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
+  - cmd: dotnet run --project .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net5
+  - cmd: dotnet run --project .\test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net5
+  - cmd: dotnet run --project .\test\Tests.SystemTextJson\Tests.SystemTextJson.fsproj -c Release -f net5
 
 artifacts:
   # pushing all *.nupkg files in build directory recursively
