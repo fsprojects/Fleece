@@ -1,15 +1,15 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r "nuget: FSharpPlus, 1.1.7"
-#r "nuget: System.Json"
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.2.2"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 
 open System.Json
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 #if FSHARPDATA
-#r "nuget: FSharp.Data"
+#r "nuget: FSharp.Data, 3.0.0"
 #r @"../../src/Fleece.FSharpData/bin/Release/netstandard2.1/Fleece.FSharpData.dll"
 
 open FSharp.Data

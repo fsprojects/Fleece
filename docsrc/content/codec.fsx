@@ -1,18 +1,24 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r "nuget: FSharpPlus"
-#r "nuget: System.Json"
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.2.2"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
-
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 
+
 (**
+
 ## CODEC
 
-For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values.
+```f#
+#r "nuget: Fleece.SystemJson"
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+```
 
+For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values.
 *)
 
 type Person = {
@@ -60,6 +66,12 @@ type PersonF = {
         |> jfieldWith jsonValueCodec "children"  (fun x -> x.children)
 
 (**
+Both approaches build a codec from the same pieces:
+
+- A constructor function that builds a new record from deserialized pieces
+- A sequence of field specifications with `jfield/jfieldOpt` or `jreq/jot`.
+  These specs take a field name and a function for getting that fields value from a record instance.
+
 Discriminated unions can be modeled with alternatives:
 *)
 
@@ -92,7 +104,96 @@ type ShapeC =
 (**
 What's happening here is that we're getting a Codec to/from a Json Object (not neccesarily a JsonValue) which Fleece is able to take it and fill the gap by composing it with a codec from JsonObject to/from JsonValue.
 
-We can also do that by hand, we can manipulate codecs by using functions in the Codec module. Here's an example:
+For DUs that carry no data, a function is still necessary:
+*)
+
+type CompassDirection =
+    | North
+    | East
+    | South
+    | West
+    with
+        static member JsonObjCodec =
+            jchoice
+                [
+                    (fun () -> North) <!> jreq "north" (function North -> Some () | _ -> None)
+                    (fun () -> South) <!> jreq "south" (function South -> Some () | _ -> None)
+                    (fun () -> East) <!> jreq "east" (function East -> Some () | _ -> None)
+                    (fun () -> West) <!> jreq "west" (function West -> Some () | _ -> None)
+                ]
+
+
+(**
+A common way to represent algebraic data types in JSON is to use a type tag.
+For example:
+**)
+
+let someShapes = """
+[
+    {
+        "type": "rectangle",
+        "width": 8.8,
+        "length": 12.0
+    },
+    {
+        "type": "circle",
+        "radius": 37.8
+    },
+    {
+        "type": "prism",
+        "width": [10.0, 23.0],
+        "height": 9.10
+    }
+]
+"""
+
+open FSharpPlus
+open FSharpPlus.Operators
+
+type ShapeD =
+    | Rectangle of width : float * length : float
+    | Circle of radius : float
+    | Prism of width : float * float * height : float
+    with
+        static member JsonObjCodec =
+            /// Derives a concrete field codec for a required field and value
+            let inline jreqValue prop value codec =
+                let matchPropValue o =
+                     match IReadOnlyDictionary.tryGetValue prop o with
+                     | Some a when (ofJson a) = Ok value -> Ok o
+                     | Some a -> Decode.Fail.invalidValue a value
+                     | None -> Decode.Fail.propertyNotFound prop o
+                Codec.ofConcrete codec
+                |> Codec.compose (
+                                    matchPropValue,
+                                    fun encoded ->
+                                      if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
+                                      else IReadOnlyDictionary.union (Dict.toIReadOnlyDictionary (dict [prop, toJson value])) encoded
+                                 )
+                |> Codec.toConcrete
+
+
+            jchoice
+                [
+                    fun w l -> Rectangle (w,l)
+                    <!> jreq "width" (function Rectangle(w, _) -> Some w | _ -> None)
+                    <*> jreq "length" (function Rectangle(_, l) -> Some l | _ -> None)
+                    |> jreqValue "type" "rectangle"
+
+                    Circle
+                    <!> jreq "radius" (function Circle (r) -> Some r | _ -> None)
+                    |> jreqValue "type" "circle"
+
+                    fun (w,w2) h -> Prism (w,w2,h)
+                    <!> jreq "width" (function Prism (x, y, _) -> Some (x, y) | _ -> None)
+                    <*> jreq "height" (function Prism (_, _, h) -> Some h | _ -> None)
+                    |> jreqValue "type" "prism"
+                ]
+
+let parsedShapedD = parseJson<ShapeD list> someShapes
+
+(**
+We can manipulate codecs by using functions in the Codec module. Here's an example:
 *)
 open System.Text
 let pf : PersonF= {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}

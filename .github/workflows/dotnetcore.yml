@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core
+    - name: Setup .NET Core 5
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.402
@@ -29,3 +29,25 @@ jobs:
       run: dotnet run --no-build --project ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f net5
     - name: Test SystemTextJson
       run: dotnet run --no-build --project ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f net5
+
+  docs:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core 5
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.402
+    - name: Restore dotnet tools
+      run: dotnet tool restore
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build -c Release
+    - name: Build Doc src
+      run: dotnet build -c Release ./docsrc/docs
+    - name: Render Docs
+      run: dotnet run --project ./docsrc/tool
+

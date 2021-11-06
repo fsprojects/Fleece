@@ -1,10 +1,15 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r @"nuget: Newtonsoft.Json"
-#r "nuget: FSharpPlus, 1.1.7"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r "nuget: Newtonsoft.Json, 10.0.2"
+#r "nuget: FSharpPlus, 1.2.2"
 #r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/Fleece.NewtonsoftJson.dll"
+
+(**
+```f#
+#r "nuget: Fleece.NewtonsoftJson"
+```
+*)
 
 open System
 open Newtonsoft.Json
@@ -55,7 +60,7 @@ with
     static member OfJson (json:Linq.JToken) =
         match json with
         | JObject o ->
-            monad {
+            monad.strict {
                 match! o .@ "type" with
                 | "Bike" -> return Bike
                 | "Car" ->

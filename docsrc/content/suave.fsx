@@ -1,9 +1,9 @@
 (*** hide ***)
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
-#r "nuget: FSharpPlus, 1.1.7"
-#r "nuget: System.Json"
-#r "nuget: Suave,2.5.6"
+#r "nuget: System.Json, 4.7.1"
+#r "nuget: FSharpPlus, 1.2.2"
+#r "nuget: Suave, 2.5.6"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 
 (**
