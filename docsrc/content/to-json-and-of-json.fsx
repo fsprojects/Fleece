@@ -2,7 +2,7 @@
 // This block of code is omitted in the generated HTML documentation. Use
 // it to define helpers that you do not want to show in the documentation.
 #r "nuget: System.Json, 4.7.1"
-#r "nuget: FSharpPlus, 1.2.1"
+#r "nuget: FSharpPlus, 1.2.2"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
 
 open System.Json
