@@ -465,9 +465,10 @@ module SystemTextJson =
     // Backwards compatibility functions
     module Operators =
 
-        let inline parseJson (x: string) : ParseResult<'T> =
-            let (x: JsonValue) = parse x
-            ofJson x
+        /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
+        let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
+
+        let inline parseJson (x: string) : ParseResult<'T> = fst jsonValueToTextCodec x >>= ofJson
 
         let inline jreq name getter = req name getter : Codec<MultiObj<StjEncoding>,_,_,_>
         let inline jopt name getter = opt name getter : Codec<MultiObj<StjEncoding>,_,_,_>
