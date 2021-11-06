@@ -187,6 +187,35 @@ with
                 address = address } }
         | x -> Decode.Fail.objExpected x
 
+type Color = Red | Blue | White
+
+type Car = {
+    Id : string
+    Color : Color
+    Kms : int }
+/// Combinators using a more verbose syntax
+module CB =
+    let colorDecoder = function
+        | JString "red"   -> Decode.Success Red  
+        | JString "blue"  -> Decode.Success Blue 
+        | JString "white" -> Decode.Success White
+        | JString  x as v -> Decode.Fail.invalidValue v ("Wrong color: " + x)
+        | x               -> Decode.Fail.strExpected  x
+
+    let colorEncoder = function
+        | Red   -> JString "red"
+        | Blue  -> JString "blue"
+        | White -> JString "white"
+
+    let colorCodec = colorDecoder, colorEncoder
+
+    let [<GeneralizableValue>]carCodec<'t> =
+        fun i c k -> { Id = i; Color = c; Kms = k }
+        |> withFields
+        |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
+        |> jfieldWith colorCodec       "color" (fun x -> x.Color)
+        |> jfieldWith JsonCodec.int    "kms"   (fun x -> x.Kms)
+        |> Codec.compose jsonObjToValueCodec
 
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
 let strCleanUpAll x = System.Text.RegularExpressions.Regex.Replace(x, "\s|\r\n?|\n|\"|\\\\", "")
@@ -646,6 +675,13 @@ let tests = [
             yield test "nullable with value" {
                 let a = Nullable 2
                 if not (roundtrip a) then failtest ""
+            }
+        ]
+        testList "Combinators" [
+            let car = { Id = "xyz"; Color = Red; Kms = 0 }
+
+            yield test "verbose syntax" {
+                Assert.Equal("car", """{"id": "xyz", "color": "red", "kms": 0}""" |> strCleanUp, Codec.encode CB.carCodec car |> string |> strCleanUp)
             }
         ]
     ]
