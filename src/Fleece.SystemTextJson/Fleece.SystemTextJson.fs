@@ -280,7 +280,7 @@ module SystemTextJson =
             match x with
             | JString null -> Decode.Fail.nullString
             | JString s    ->
-                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffffffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Ok t
                 | _       -> Decode.Fail.invalidValue (StjEncoding x) ""
             | a -> Decode.Fail.strExpected (StjEncoding a)
@@ -289,7 +289,7 @@ module SystemTextJson =
             match x with
             | JString null -> Decode.Fail.nullString
             | JString s    ->
-                match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffffffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+                match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
                 | true, t -> Ok t
                 | _       -> Decode.Fail.invalidValue (StjEncoding x) ""
             | a -> Decode.Fail.strExpected (StjEncoding a)
@@ -339,8 +339,8 @@ module SystemTextJson =
 
         static member booleanE        (x: bool          ) = JBool x
         static member stringE         (x: string        ) = JString x
-        static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffffffZ")) // JsonPrimitive is incorrect for DateTime
-        static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffffffK")) // JsonPrimitive is incorrect for DateTimeOffset
+        static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
+        static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
         static member timeSpanE       (x: TimeSpan) = JsonHelpers.create x.Ticks
 
         static member decimalE        (x: decimal       ) = JsonHelpers.create x
