@@ -184,8 +184,11 @@ module Operators =
 
 open Operators
 
-/// Functions operating on Codecs (as pair of functions)
+/// Functions operating on Codecs
 module Codec =
+
+    let decode (Codec (d, _)) = d
+    let encode (Codec (_, e)) = e
 
     /// Turns a Codec into another Codec, by mapping it over an isomorphism.
     let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) c =
@@ -693,7 +696,7 @@ module MainFunctions =
     /// <param name="name">A string that will be used as key to the field.</param>
     /// <param name="getter">The field getter function.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline req (name: string) (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param, 'T> = reqWith (getRawCodec<'Encoding, 'param> ()) name getter
+    let inline req (name: string) (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param, 'T> = reqWithLazy (getRawCodec<'Encoding, 'param>) name getter
 
 
 

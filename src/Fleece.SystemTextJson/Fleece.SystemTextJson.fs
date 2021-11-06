@@ -465,10 +465,43 @@ module SystemTextJson =
     // Backwards compatibility functions
     module Operators =
 
-        /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
-        let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
+        let jobj (x: list<string * 'value>) : 'value =            
+            let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
+            multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
+            |> enc
 
-        let inline parseJson (x: string) : ParseResult<'T> = fst jsonValueToTextCodec x >>= ofJson
+        let JString x = StjEncoding (JString x)
+
+        let JObject x =
+            (Codecs.multiMap (Ok <-> id)
+            |> Codec.encode) x
+
+        let (|JObject|_|) (x: StjEncoding) =
+            (Codecs.multiMap (Ok <-> id)
+            |> Codec.decode) x
+            |> Option.ofResult
+
+        let (|JNull|_|) (x: StjEncoding) =
+            let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
+            match dec x with
+            | Ok x when Nullable.isNull x -> Some ()
+            | _ -> None
+
+        let (|JString|_|) (x: StjEncoding) =
+            let (Codec (dec, _)) = Codecs.string
+            dec x |> Option.ofResult
+
+        /// A pair of functions representing a codec to encode a MultiMap into a Json value and the other way around.
+        let jsonObjToEncodingCodec : Codec<StjEncoding, MultiObj<_>> = ((  function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
+
+        let unwrapperCodec : Codec<JsonValue, StjEncoding> = (StjEncoding.Wrap >> (fun x -> x :?> _) >> Ok) <-> StjEncoding.Unwrap
+
+        let jsonObjToValueCodec : Codec<JsonValue, MultiObj<_>> = Codec.compose unwrapperCodec jsonObjToEncodingCodec
+
+        /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
+        let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: JsonValue) -> string x)
+
+        let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= ofJson
 
         let inline jreq name getter = req name getter : Codec<MultiObj<StjEncoding>,_,_,_>
         let inline jopt name getter = opt name getter : Codec<MultiObj<StjEncoding>,_,_,_>
@@ -480,26 +513,7 @@ module SystemTextJson =
             let head, tail = Seq.head codecs, Seq.tail codecs
             foldBack (<|>) tail head
 
-        let jobj (x: list<string * 'value>) : 'value =            
-            let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
-            multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
-            |> enc
-
-        let JString x = StjEncoding (JString x)
-
-        let (|JObject|_|) (x: StjEncoding) =
-            let (Codec (dec, _)) = Codecs.multiMap (Ok <-> id)
-            dec x |> Option.ofResult
-
-        let (|JNull|_|) (x: StjEncoding) =
-            let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
-            match dec x with
-            | Ok x when Nullable.isNull x -> Some ()
-            | _ -> None
-
-        let (|JString|_|) (x: StjEncoding) =
-            let (Codec (dec, _)) = Codecs.string
-            dec x |> Option.ofResult
+        
 
         /// Gets a value from a Json object
         let jgetWith ofJson (o: MultiObj<StjEncoding>) key =
@@ -540,3 +554,25 @@ module SystemTextJson =
         let inline (.=) key value = jpair key value
 
         let jsonObjectGetValues x = id x
+
+
+        // Verbose syntax
+
+        /// <summary>Initialize the field mappings.</summary>
+        /// <param name="f">An object constructor as a curried function.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline withFields f : Codec<'s,'s,_,_> = result f //(fun _ -> Ok f) <-> (fun _ -> multiMap [])
+        
+        /// <summary>Appends a field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline jfield    fieldName getter rest = rest <*> jreq fieldName (getter >> Some)
+        
+        /// <summary>Appends an optional field mapping to the codec.</summary>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline jfieldOpt fieldName getter rest = rest <*> jopt fieldName getter
