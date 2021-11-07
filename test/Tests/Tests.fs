@@ -681,7 +681,11 @@ let tests = [
             let car = { Id = "xyz"; Color = Red; Kms = 0 }
 
             yield test "verbose syntax" {
+                #if SYSTEMJSON
+                Assert.Equal("car", """{"color":"red","id":"xyz","kms":0}""" |> strCleanUp, Codec.encode CB.carCodec car |> string |> strCleanUp)
+                #else
                 Assert.Equal("car", """{"id": "xyz", "color": "red", "kms": 0}""" |> strCleanUp, Codec.encode CB.carCodec car |> string |> strCleanUp)
+                #endif
             }
         ]
     ]
