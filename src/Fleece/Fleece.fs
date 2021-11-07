@@ -237,6 +237,13 @@ module Codec =
             Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
         }
 
+    
+    [<Obsolete("This function is no longer needed. You can safely remove it.")>]
+    let ofConcrete x = id x
+
+    [<Obsolete("This function is no longer needed. You can safely remove it.")>]
+    let toConcrete x = id x
+
 
 type Codec<'S1, 'S2, 't1, 't2> with
 

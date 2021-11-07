@@ -101,7 +101,7 @@ type Item with
         <!> jreq  "id"          (fun x -> Some x.Id     )
         <*> jreq  "brand"       (fun x -> Some x.Brand  )
         <*> jopt "availability" (fun x -> x.Availability)
-        // |> Codec.ofConcrete
+        |> Codec.ofConcrete
 
 type NestedItem = NestedItem of Item
 
