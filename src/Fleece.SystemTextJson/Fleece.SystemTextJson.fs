@@ -590,3 +590,19 @@ module SystemTextJson =
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
         let inline jfieldOpt fieldName getter rest = rest <*> jopt fieldName getter
+
+        /// <summary>Appends a field mapping to the codec.</summary>
+        /// <param name="codec">The codec to be used.</param>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) = rest <*> jreqWith codec fieldName (getter >> Some)
+
+        /// <summary>Appends an optional field mapping to the codec.</summary>
+        /// <param name="codec">The codec to be used.</param>
+        /// <param name="fieldName">A string that will be used as key to the field.</param>
+        /// <param name="getter">The field getter function.</param>
+        /// <param name="rest">The other mappings.</param>
+        /// <returns>The resulting object codec.</returns>
+        let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) = rest <*> joptWith codec fieldName getter
