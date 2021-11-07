@@ -509,7 +509,6 @@ let tests = [
             
             }
 
-            (* toJson also unwraps, maybe it should be tested with toEncoding
             test "Map roundtrips as JsonValue and JsonObject" {
                 let p = Map.ofList [ ("1", "one"); ("2", "two")]
                 let x = p |> toJson |> toJson |> ofJson<Map<string,string>>
@@ -518,7 +517,6 @@ let tests = [
                 Assert.Equal("roundtrip through JsonValue", Option.ofResult x, Some p)
                 Assert.Equal("roundtrip through JsonObject", Option.ofResult y, Some p)
             }
-            *)
 
             test "Map with null key" {
                 let p: Map<string, _> = Map.ofList [null, "a"]
@@ -526,7 +524,7 @@ let tests = [
             }
 
             test "JObj with null key" {
-                let j = jobj [null, JString "a"] |> StjEncoding.Unwrap
+                let j = jobj [null, JString "a"]
                 Assert.Equal("json", expected = "{}", actual = strCleanUp(j.ToString()))
             }
         ]
@@ -576,7 +574,7 @@ let tests = [
                 Assert.Equal ("Expecting a PropertyNotFound (age)", "age", actual)
             }
             test "Uncategorized" {                
-                let x = ofJson<Name> (JString "aaa"|> StjEncoding.Unwrap)
+                let x = ofJson<Name> (JString "aaa")
                 let actual =
                     match x with
                     | Error (Uncategorized s) -> "Uncategorized:" + s

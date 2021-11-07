@@ -137,6 +137,10 @@ module SystemTextJson =
 
     type [<Struct>] StjEncoding = StjEncoding of JsonValue with
 
+        override this.ToString () = let (StjEncoding x) = this in x.ToString ()
+        
+        static member Parse (x: string) = StjEncoding (JsonValue.Parse x)
+        
         static member inline tryRead x =
             match x with
             | JNumber j ->
@@ -455,15 +459,29 @@ module SystemTextJson =
     // Main entry points //
     ///////////////////////
 
-    /// Get the json representation of the value, using its default codec.
-    let inline toJson (x: 'T) : JsonValue = toEncoding<StjEncoding, 'T> x |> StjEncoding.Unwrap
+    /// Get the json encoding representation of the value, using its default codec.
+    let inline toJson (x: 'T) : StjEncoding = toEncoding<StjEncoding, 'T> x
 
-    /// Attempts to decode the value from its json representation, using its default codec.
-    let inline ofJson (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (StjEncoding x)
+    /// Attempts to decode the value from its json encoding representation, using its default codec.
+    let inline ofJson (x: StjEncoding) : Result<'T, DecodeError> = ofEncoding x
+
+    /// Get the json value representation of the value, using its default codec.
+    let inline toJsonValue (x: 'T) : JsonValue = toEncoding<StjEncoding, 'T> x |> StjEncoding.Unwrap
+
+    /// Attempts to decode the value from its json value representation, using its default codec.
+    let inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (StjEncoding x)
+
+    /// Get the json text representation of the value, using its default codec.
+    let inline toJsonText (x: StjEncoding) = x |> toJson |> string
+
+    /// Attempts to decode the value from its json text representation, using its default codec.
+    let inline ofJsonText (x: string) = try Ok (StjEncoding.Parse x) with e -> Decode.Fail.parseError e x
 
     
     // Backwards compatibility functions
     module Operators =
+
+        type JsonObject = Map<string, StjEncoding>
 
         let jobj (x: list<string * 'value>) : 'value =            
             let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
@@ -491,15 +509,11 @@ module SystemTextJson =
             let (Codec (dec, _)) = Codecs.string
             dec x |> Option.ofResult
 
-        /// A pair of functions representing a codec to encode a MultiMap into a Json value and the other way around.
-        let jsonObjToEncodingCodec : Codec<StjEncoding, MultiObj<_>> = ((  function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
+        /// A codec to encode a collection of property/values into a Json encoding and the other way around.
+        let jsonObjToValueCodec : Codec<StjEncoding, MultiObj<StjEncoding>> = ((  function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
 
-        let unwrapperCodec : Codec<JsonValue, StjEncoding> = (StjEncoding.Wrap >> (fun x -> x :?> _) >> Ok) <-> StjEncoding.Unwrap
-
-        let jsonObjToValueCodec : Codec<JsonValue, MultiObj<_>> = Codec.compose unwrapperCodec jsonObjToEncodingCodec
-
-        /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
-        let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: JsonValue) -> string x)
+        /// A codec to encode a Json value to a Json text and the other way around.
+        let jsonValueToTextCodec = (fun x -> try Ok (StjEncoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: StjEncoding) -> string x)
 
         let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= ofJson
 
