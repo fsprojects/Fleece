@@ -126,9 +126,9 @@ let inline tag prop (codec: Codec<MultiObj<'Encoding>, 't>) : Codec<MultiObj<'En
     let (Codec (d, e)) = Codecs.multiMap (Ok <-> id)
     codec
     |> Codec.compose (
-            (fun (o: FSharpPlus.Data.MultiMap<string, _>) -> match map d o.[prop] with [Ok a] -> Ok a | [] -> Decode.Fail.propertyNotFound prop Unchecked.defaultof<_> | _ -> Error <| Uncategorized "Multiple props")
+            (fun (o: MultiObj<_>) -> match map d o.[prop] with [Ok a] -> Ok a | [] -> Decode.Fail.propertyNotFound prop Unchecked.defaultof<_> | _ -> Error <| Uncategorized "Multiple props.")
             <->
-            (fun (x: FSharpPlus.Data.MultiMap<string, _>) -> if Seq.isEmpty x then zero else Fleece.Helpers.multiMap (dict [prop, e x]))   
+            (fun (x: MultiObj<_>) -> if Seq.isEmpty x then zero else Fleece.Helpers.multiMap (dict [prop, e x]))   
             )
 
 type Vehicle =
@@ -661,9 +661,9 @@ let tests = [
             yield testProperty "int option array" (roundtrip<int option array>)
             //yield testProperty "int Nullable array" (roundtrip<int Nullable array>) // not handled by FsCheck
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
-            // yield testProperty "8-tuple"  (roundtrip<int * int * decimal * decimal * string * string * byte * byte>) // FsCheck fails now
+            yield testProperty "8-tuple"  (roundtrip<int * int * decimal * decimal * string * string * byte * byte>)
             yield testProperty "9-tuple"  (roundtrip<int * int * decimal * decimal * string * string * byte * byte * bool>)
-            // yield testProperty "15-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte>) // FsCheck fails now
+            yield testProperty "15-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte>)
             yield testProperty "16-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte * byte>)
             yield testProperty "17-tuple" (roundtrip<int * int * decimal * decimal * string * string * byte * byte * int * int * decimal * decimal * string * string * byte * byte * bool>)
             yield testProperty "Choice<(int * string) list, Choice<decimal option, string>>" (roundtrip<Choice<(int * string) list, Choice<decimal option, string>>>)

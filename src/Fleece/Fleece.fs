@@ -485,7 +485,7 @@ type GetCodec with
                 let (tr: 'tr ParseResult) = (dec cr) (toArray (a.[7..]))
                 match tr with
                 | Error (IndexOutOfRange (i, _)) -> Error (IndexOutOfRange (i + 8, x))
-                | _ -> Result.map ((fun fn a b c d e f g h -> fn (a, b, c, d, e, f, g, h)) (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple)) t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
+                | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
             | Error e -> Error e)
         <->
         fun (t: 'tuple) ->
