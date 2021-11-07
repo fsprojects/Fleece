@@ -212,14 +212,14 @@ module CB =
         | Blue  -> JString "blue"
         | White -> JString "white"
 
-    let colorCodec = colorDecoder, colorEncoder
+    let colorCodec = colorDecoder <-> colorEncoder
 
     let [<GeneralizableValue>]carCodec<'t> =
-        fun i c k -> { Id = i; Color = c; Kms = k }
+        fun i c k  -> { Id = i; Color = c; Kms = k }
         |> withFields
-        |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
-        |> jfieldWith colorCodec       "color" (fun x -> x.Color)
-        |> jfieldWith JsonCodec.int    "kms"   (fun x -> x.Kms)
+        |> jfieldWith Codecs.string "id"    (fun x -> x.Id)
+        |> jfieldWith colorCodec    "color" (fun x -> x.Color)
+        |> jfieldWith Codecs.int    "kms"   (fun x -> x.Kms)
         |> Codec.compose jsonObjToValueCodec
 
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")

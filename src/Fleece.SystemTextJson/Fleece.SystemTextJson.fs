@@ -520,7 +520,7 @@ module SystemTextJson =
         let inline jreq name getter = req name getter : Codec<MultiObj<StjEncoding>,_,_,_>
         let inline jopt name getter = opt name getter : Codec<MultiObj<StjEncoding>,_,_,_>
     
-        let inline jreqWith codec name getter = optWith codec name getter : Codec<MultiObj<StjEncoding>,_,_,_>
+        let inline jreqWith codec name getter = reqWith codec name getter : Codec<MultiObj<StjEncoding>,_,_,_>
         let inline joptWith codec name getter = optWith codec name getter : Codec<MultiObj<StjEncoding>,_,_,_>
 
         let inline jchoice (codecs: seq<Codec<MultiObj<StjEncoding>, MultiObj<StjEncoding>, 't1, 't2>>) =
@@ -597,7 +597,7 @@ module SystemTextJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) = rest <*> jreqWith codec fieldName (getter >> Some)
+        let inline jfieldWith codec fieldName getter rest = rest <*> jreqWith codec fieldName (getter >> Some)
 
         /// <summary>Appends an optional field mapping to the codec.</summary>
         /// <param name="codec">The codec to be used.</param>
@@ -605,4 +605,4 @@ module SystemTextJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) = rest <*> joptWith codec fieldName getter
+        let inline jfieldOptWith codec fieldName getter rest = rest <*> joptWith codec fieldName getter
