@@ -162,7 +162,6 @@ type Name = {FirstName: string; LastName: string} with
         | JString x when String.contains ',' x -> Ok { FirstName = (split [|","|] x).[0]; LastName = (split [|","|] x).[1] }
         | JString _ -> Error "Expected a ',' separator"
         | _ -> Error "Invalid Json Type"
-        |> Result.mapError Uncategorized
 
 type Address = { 
     country: string }

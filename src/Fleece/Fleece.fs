@@ -20,12 +20,14 @@ type Id2<'t> (v: 't) =
 type OvCodecError = interface end
 type OvDecEncError = interface inherit OvCodecError end
 
-type IDefault5 = interface inherit OvDecEncError end
+type IDefault8 = interface inherit OvDecEncError end
+type IDefault7 = interface inherit IDefault8 end
+type IDefault6 = interface inherit IDefault7 end
+type IDefault5 = interface inherit IDefault6 end
 type IDefault4 = interface inherit IDefault5 end
 type IDefault3 = interface inherit IDefault4 end
 type IDefault2 = interface inherit IDefault3 end
 type IDefault1 = interface inherit IDefault2 end
-type IDefault0 = interface inherit IDefault1 end
 
 type OpCodec = OpCodec
 type OpEncode = OpEncode
@@ -98,10 +100,10 @@ and Codec<'S, 't> = Codec<'S, 'S, 't>
 /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
 and Decoder<'S, 't> = 'S -> Result<'t, DecodeError>
 
-and ParseResult<'t> = Result<'t,DecodeError>
+and ParseResult<'t> = Result<'t, DecodeError>
 
 and IEncoding =
-    inherit IDefault0
+    inherit IDefault1
 
     abstract unit           : Codec<IEncoding, unit>
     abstract boolean        : Codec<IEncoding, bool>
@@ -370,7 +372,7 @@ module Codecs =
 
 
 type GetCodec =
-    interface IDefault0
+    interface IDefault1
 
     static member GetCodec (_: bool          , _: GetCodec, _: 'Operation) = Codecs.boolean        : Codec<'Encoding, 'Encoding, _>
     static member GetCodec (_: string        , _: GetCodec, _: 'Operation) = Codecs.string         : Codec<'Encoding, 'Encoding, _>
@@ -578,7 +580,7 @@ type GetCodec with
     static member inline GetCodec (_: 't when 't : struct, _: OvCodecError, _: OpCodec) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Co)"
 
 type GetCodec with
-    static member inline GetCodec (_: 'Base when 'Base :> IInterfaceCodec<'Base>, _: IDefault4, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
+    static member inline GetCodec (_: 'Base when 'Base :> IInterfaceCodec<'Base>, _: IDefault7, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
         let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<MultiObj<'Encoding>, _> =
 
             let head, tail = Seq.head codecs, Seq.tail codecs
@@ -600,46 +602,55 @@ type GetCodec with
 type GetCodec with
 
     // Overload to "passthrough" an IEncoding
-    static member GetCodec (_: 'Encoding when 'Encoding :> IEncoding and 'Encoding : struct, _: IDefault3, _: 'Operation) = Ok <-> id : Codec<'Encoding, 'Encoding>
+    static member GetCodec (_: 'Encoding when 'Encoding :> IEncoding and 'Encoding : struct, _: IDefault6, _: 'Operation) = Ok <-> id : Codec<'Encoding, 'Encoding>
 
-    static member inline GetCodec (_: 'T, _: IDefault3, _: 'Operation) : Codec<'Encoding, 'T> = // when 'Encoding :> IEncoding and 'Encoding : struct =
+    static member inline GetCodec (_: 'T, _: IDefault6, _: 'Operation) : Codec<'Encoding, 'T> = // when 'Encoding :> IEncoding and 'Encoding : struct =
         // let c = (^T : (static member Codec: Codec< MultiObj<'Encoding>, 'T>) ())
         // (c |> Codec.compose (GetCodec.Invoke<'Encoding, _> (Unchecked.defaultof<MultiObj<'Encoding>>, Unchecked.defaultof<'Encoding>)))
         let c : Codec< 'Encoding, 'T> = (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
         c
 
     // For backwards compatibility
-    static member inline GetCodec (_: 'T, _: IDefault5, _: 'Operation) : Codec<'Encoding, 'T> =
+    static member inline GetCodec (_: 'T, _: IDefault8, _: 'Operation) : Codec<'Encoding, 'T> =
         let c : Codec<MultiObj<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<MultiObj<'Encoding>, 'T>) ())
         ofObjCodec c
 
 
     // Overload for Maps where the Key is not a string
-    static member inline GetCodec (_: Map<'K,'V>, _: IDefault2, _: 'Operation) : Codec<'Encoding, Map<'K,'V>> =
+    static member inline GetCodec (_: Map<'K,'V>, _: IDefault5, _: 'Operation) : Codec<'Encoding, Map<'K,'V>> =
         Codecs.gmap (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'K>) (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>)
 
 
 
-    static member inline GetCodec (_: 't , _: IDefault1, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
+    static member inline GetCodec (_: 't , _: IDefault4, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
         Unchecked.defaultof<_> <-> e
 
-    static member inline GetCodec (_: 't , _: IDefault1, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
+    static member inline GetCodec (_: 't , _: IDefault4, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> (^t : (static member OfJson: 'Encoding -> ^t ParseResult) js) : ^t ParseResult
+        d <-> Unchecked.defaultof<_>
+
+    [<Obsolete("This function resolves to a deprecated OfJson overload, returning a string as an error and it won't be supported in future versions of this library. Please update the OfJson method, using the Fail module to create a DecodeError.")>]
+    static member inline GetCodec (_: 't , _: IDefault3, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
+        let d = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) js)
         d <-> Unchecked.defaultof<_>
 
 
 type GetEnc with
-    static member inline GetCodec (_: 't , _: IDefault0, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
+    static member inline GetCodec (_: 't , _: IDefault2, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
         Unchecked.defaultof<_> <-> e
 
 type GetDec with
-    static member inline GetCodec (_: 't , _: IDefault0, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
+    static member inline GetCodec (_: 't , _: IDefault2, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> (^t : (static member OfJson: 'Encoding -> ^t ParseResult) js) : ^t ParseResult
         d <-> Unchecked.defaultof<_>
 
-
+type GetDec with
+    [<Obsolete("This function resolves to a deprecated OfJson overload, returning a string as an error and it won't be supported in future versions of this library. Please update the OfJson method, using the Fail module to create a DecodeError.")>]
+    static member inline GetCodec (_: 't , _: IDefault1, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
+        let d = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) js)
+        d <-> Unchecked.defaultof<_>
 
 
 type CodecCache<'Encoding, 'T when 'Encoding :> IEncoding and 'Encoding : struct> () =
