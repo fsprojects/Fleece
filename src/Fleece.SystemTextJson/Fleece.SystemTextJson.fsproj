@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Fleece.SystemTextJson.fs" />
+  <Compile Include="../Fleece/Compatibility.fs" />
   </ItemGroup>
 
   <ItemGroup>
