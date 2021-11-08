@@ -74,7 +74,7 @@ module SystemTextJson =
             | JsonValueKind.Null
             | JsonValueKind.Undefined -> JNull
             | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> {Value = Choice1Of2 x} ] |> Seq.toList)
-            | JsonValueKind.Object    -> JObject ( Map.ofList [for x in o.EnumerateObject () -> (x.Name, {Value = Choice1Of2 x.Value})] :> IReadOnlyDictionary<_,_>)
+            | JsonValueKind.Object    -> JObject (Map.ofList [for x in o.EnumerateObject () -> (x.Name, {Value = Choice1Of2 x.Value})] :> IReadOnlyDictionary<_,_>)
             | JsonValueKind.Number    -> JNumber j
             | JsonValueKind.False     -> JBool false
             | JsonValueKind.True      -> JBool true
@@ -104,8 +104,8 @@ module SystemTextJson =
             static member create (x: int16  ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
             static member create (x: uint16 ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
             static member create (x: byte   ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-            static member create (x: sbyte  ) = writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))        
-            static member create (x: char   ) = writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))        
+            static member create (x: sbyte  ) = writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))
+            static member create (x: char   ) = writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
 
         type TryGet = TryGet with                
             static member ($) (TryGet, _: decimal) = fun (x: JsonValue) -> x.getValue().GetDecimal ()
@@ -163,7 +163,7 @@ module SystemTextJson =
             | JObject x -> Ok (dictAsJsonObject x)
             | a -> Decode.Fail.objExpected (StjEncoding a)
 
-        static member jsonOfJsonObject (o: JsonObject) = JObject o       
+        static member jsonOfJsonObject (o: JsonObject) = JObject o
 
         static member createTuple c t = function 
             | JArray a as x -> if List.length a <> c then Decode.Fail.count c (StjEncoding x) else t a
@@ -483,7 +483,7 @@ module SystemTextJson =
 
         type JsonObject = Map<string, StjEncoding>
 
-        let jobj (x: list<string * 'value>) : 'value =            
+        let jobj (x: list<string * 'value>) : 'value =
             let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
             multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
             |> enc
@@ -510,7 +510,7 @@ module SystemTextJson =
             dec x |> Option.ofResult
 
         /// A codec to encode a collection of property/values into a Json encoding and the other way around.
-        let jsonObjToValueCodec : Codec<StjEncoding, MultiObj<StjEncoding>> = ((  function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
+        let jsonObjToValueCodec : Codec<StjEncoding, MultiObj<StjEncoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
 
         /// A codec to encode a Json value to a Json text and the other way around.
         let jsonValueToTextCodec = (fun x -> try Ok (StjEncoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: StjEncoding) -> string x)
@@ -582,7 +582,7 @@ module SystemTextJson =
         /// <param name="getter">The field getter function.</param>
         /// <param name="rest">The other mappings.</param>
         /// <returns>The resulting object codec.</returns>
-        let inline jfield    fieldName getter rest = rest <*> jreq fieldName (getter >> Some)
+        let inline jfield fieldName getter rest = rest <*> jreq fieldName (getter >> Some)
         
         /// <summary>Appends an optional field mapping to the codec.</summary>
         /// <param name="fieldName">A string that will be used as key to the field.</param>
