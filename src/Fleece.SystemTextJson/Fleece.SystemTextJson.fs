@@ -132,9 +132,6 @@ module SystemTextJson =
     open JsonValue
 
 
-    // This is here because of an F# compiler regression which might affect us depending on the specific F# version: https://github.com/dotnet/fsharp/issues/11344
-    let nullableE (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
-
     type [<Struct>] StjEncoding = StjEncoding of JsonValue with
 
         override this.ToString () = let (StjEncoding x) = this in x.ToString ()
@@ -325,6 +322,8 @@ module SystemTextJson =
         static member optionE (encoder: _ -> JsonValue) = function
             | None   -> JNull
             | Some a -> encoder a
+
+        static member nullableE (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
     
         static member arrayE    (encoder: _ -> JsonValue) (x: 'a [])        = JArray ((Array.map encoder x) |> Array.toList)
         static member multiMapE (encoder: _ -> JsonValue) (x: MultiObj<'a>) = x |> MultiMap.toList |> Seq.filter (fun (k, _) -> not (isNull k)) |> Seq.map (fun (k, v) -> k, encoder v) |> Map.ofSeq |> JObject
@@ -371,7 +370,7 @@ module SystemTextJson =
         static member choice  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = StjEncoding.choiceD (dec codec1) (dec codec2) <-> StjEncoding.choiceE (enc codec1) (enc codec2)
         static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = StjEncoding.choice3D (dec codec1) (dec codec2) (dec codec3) <-> StjEncoding.choice3E (enc codec1) (enc codec2) (enc codec3)
         static member option (codec: Codec<_,_>) = StjEncoding.optionD (dec codec) <-> StjEncoding.optionE (enc codec)
-        static member nullable (codec: Codec<JsonValue, 't>) = StjEncoding.nullableD (dec codec) <-> nullableE (enc codec) : Codec<JsonValue, Nullable<'t>>
+        static member nullable (codec: Codec<JsonValue, 't>) = StjEncoding.nullableD (dec codec) <-> StjEncoding.nullableE (enc codec) : Codec<JsonValue, Nullable<'t>>
         static member array    (codec: Codec<_,_>) = StjEncoding.arrayD  (dec codec) <-> StjEncoding.arrayE    (enc codec)
         static member multiMap (codec: Codec<_,_>) = StjEncoding.multiMapD (dec codec) <-> StjEncoding.multiMapE (enc codec)
 
