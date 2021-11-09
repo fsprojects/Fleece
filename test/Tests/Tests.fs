@@ -323,19 +323,7 @@ let tests = [
                     { Item.Id = 1; Brand = "Sony"; Availability = None }
                     |> toJson
                     |> string
-            #if NEWTONSOFT
-                let expected = """{"id": 1, "brand": "Sony"}"""
-            #endif
-            #if FSHARPDATA
-                let expected = """{"id": 1, "brand": "Sony"}"""
-            #endif
-            #if SYSTEMJSON
-                let expected = """{"brand": "Sony", "id": 1}"""
-            #endif
-            #if SYSTEMTEXTJSON
                 let expected = """{"brand":"Sony","id":1}"""
-            #endif
-                    
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
             }
 
@@ -441,22 +429,9 @@ let tests = [
                           Gender = Gender.Male
                           Children = [] }
                       ] }
-                #if NEWTONSOFT
-                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
-                Assert.JSON(expected, p)
-                #endif
-                #if FSHARPDATA
-                let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
-                Assert.JSON(expected, p)
-                #endif
-                #if SYSTEMJSON
+                
                 let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
-                Assert.JSON(expected, p)
-                #endif
-                #if SYSTEMTEXTJSON
-                let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
-                Assert.JSON(expected, p)
-                #endif
+                Assert.JSON (expected, p)
             }
 
             test "Vehicle" {
@@ -467,23 +442,14 @@ let tests = [
                 let y = [ Truck ("Ford", 20.0)       ] |> toJson |> string |> strCleanUpAll
                 let z = [ Aircraft ("Airbus", 200.0) ] |> toJson |> string |> strCleanUpAll
             
-                #if FSHARPDATA
-                let expectedU = "\"[{bike:[]}]\""
-                let expectedV = "\"[{motorBike:[]}]\""
-                let expectedW = "\"[{car:Renault}]\""
-                let expectedX = "\"[{van:[Fiat,5.8]}]\""
-                let expectedY = "\"[{truck:{make:Ford,capacity:20}}]\""
-                let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
-                #endif
                 #if NEWTONSOFT
                 let expectedU = "[{bike:[]}]"
                 let expectedV = "[{motorBike:[]}]"
                 let expectedW = "[{car:Renault}]"
                 let expectedX = "[{van:[Fiat,5.8]}]"
-                let expectedY = "[{truck:{make:Ford,capacity:20.0}}]"
-                let expectedZ = "[{aircraft:{make:Airbus,capacity:200.0}}]"
-                #endif
-                #if SYSTEMJSON
+                let expectedY = "[{truck:{capacity:20.0,make:Ford}}]"
+                let expectedZ = "[{aircraft:{capacity:200.0,make:Airbus}}]"
+                #else
                 let expectedU = "\"[{bike:[]}]\""
                 let expectedV = "\"[{motorBike:[]}]\""
                 let expectedW = "\"[{car:Renault}]\""
@@ -491,20 +457,13 @@ let tests = [
                 let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
                 let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
                 #endif
-                #if SYSTEMTEXTJSON
-                let expectedU = "\"[{bike:[]}]\""
-                let expectedV = "\"[{motorBike:[]}]\""
-                let expectedW = "\"[{car:Renault}]\""
-                let expectedX = "\"[{van:[Fiat,5.8]}]\""
-                let expectedY = "\"[{truck:{capacity:20,make:Ford}}]\""
-                let expectedZ = "\"[{aircraft:{capacity:200,make:Airbus}}]\""
-                #endif
-                Assert.JSON(expectedU, u)
-                Assert.JSON(expectedV, v)
-                Assert.JSON(expectedW, w)
-                Assert.JSON(expectedX, x)
-                Assert.JSON(expectedY, y)
-                Assert.JSON(expectedZ, z)
+
+                Assert.JSON (expectedU, u)
+                Assert.JSON (expectedV, v)
+                Assert.JSON (expectedW, w)
+                Assert.JSON (expectedX, x)
+                Assert.JSON (expectedY, y)
+                Assert.JSON (expectedZ, z)
             
             }
 
