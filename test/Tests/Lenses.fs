@@ -19,19 +19,28 @@ open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 open Fleece.SystemJson.Lens
 #endif
+
 #if SYSTEMTEXTJSON
 open Fleece.SystemTextJson
 open Fleece.SystemTextJson.Operators
 open System.Text.Json
 open Fleece.SystemTextJson.Lens
+
+let JString = (JString >> StjEncoding.Unwrap)
+
 #endif
+
 #if NEWTONSOFT
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
+
+let JString = (JString >> NsjEncoding.Unwrap)
+
 #endif
+
 let tests = [
         testList "key" [
             test "example 1: read first key" {
@@ -49,7 +58,7 @@ let tests = [
                 Assert.Equal("item", None, actual)
             }
             test "example 4.1: write with missing key" {
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" ) .-> (JString >> StjEncoding.Unwrap) "a"
+                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" ) .-> JString "a"
                 let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
                 Assert.Equal("item", string expected, string actual)
             }
@@ -81,8 +90,8 @@ let tests = [
                 Assert.Equal("item", None, actual)
             }
             test "example 3" {
-                let actual = (JString >> StjEncoding.Unwrap) "a" |>  _JString .-> "b"
-                let expected = (JString >> StjEncoding.Unwrap) "b" 
+                let actual = JString "a" |>  _JString .-> "b"
+                let expected = JString "b" 
                 Assert.Equal("item", string expected, string actual)
             }
         ]

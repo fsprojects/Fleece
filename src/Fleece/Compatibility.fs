@@ -1,4 +1,9 @@
-﻿namespace Fleece.SystemTextJson
+﻿#if NEWTONSOFT
+namespace Fleece.Newtonsoft
+#endif
+#if SYSTEMTEXTJSON
+namespace Fleece.SystemTextJson
+#endif
 
 open System.Globalization
 open FSharpPlus
@@ -6,79 +11,91 @@ open FSharpPlus.Data
 open Fleece
 open Fleece.Helpers
 open Fleece.Operators
-open JsonValue
+open Internals
+
+
+
 
 // Backwards compatibility functions
 module Operators =
 
-    type JsonObject = Map<string, StjEncoding>
+    #if NEWTONSOFT
+    type Encoding = NsjEncoding
+    let encoding = NsjEncoding
+    #endif
+    #if SYSTEMTEXTJSON
+    type Encoding = StjEncoding
+    let encoding = StjEncoding
+    #endif
+
+    type JsonObject = Map<string, Encoding>
 
     let jobj (x: list<string * 'value>) : 'value =
         let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
         |> enc
 
-    let JString x = StjEncoding (JString x)
+    let JString x = encoding (JString x)
 
     let JObject x =
         (Codecs.multiMap (Ok <-> id)
         |> Codec.encode) x
 
-    let (|JObject|_|) (x: StjEncoding) =
+    let (|JObject|_|) (x: Encoding) =
         (Codecs.multiMap (Ok <-> id)
         |> Codec.decode) x
         |> Option.ofResult
 
-    let (|JNull|_|) (x: StjEncoding) =
+    let (|JNull|_|) (x: Encoding) =
         let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
         match dec x with
         | Ok x when Nullable.isNull x -> Some ()
         | _ -> None
 
-    let (|JString|_|) (x: StjEncoding) =
+    let (|JString|_|) (x: Encoding) =
         let (Codec (dec, _)) = Codecs.string
         dec x |> Option.ofResult
 
     /// A codec to encode a collection of property/values into a Json encoding and the other way around.
-    let jsonObjToValueCodec : Codec<StjEncoding, MultiObj<StjEncoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
+    let jsonObjToValueCodec : Codec<Encoding, MultiObj<Encoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
 
     /// A codec to encode a Json value to a Json text and the other way around.
-    let jsonValueToTextCodec = (fun x -> try Ok (StjEncoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: StjEncoding) -> string x)
+    let jsonValueToTextCodec = (fun x -> try Ok (Encoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: Encoding) -> string x)
 
     let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= ofJson
 
-    let inline jreq name getter = req name getter : Codec<MultiObj<StjEncoding>,_,_,_>
-    let inline jopt name getter = opt name getter : Codec<MultiObj<StjEncoding>,_,_,_>
+    let inline jreq name getter = req name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline jopt name getter = opt name getter : Codec<MultiObj<Encoding>,_,_,_>
     
-    let inline jreqWith codec name getter = reqWith codec name getter : Codec<MultiObj<StjEncoding>,_,_,_>
-    let inline joptWith codec name getter = optWith codec name getter : Codec<MultiObj<StjEncoding>,_,_,_>
+    let inline jreqWith codec name getter = reqWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline joptWith codec name getter = optWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
 
-    let inline jchoice (codecs: seq<Codec<MultiObj<StjEncoding>, MultiObj<StjEncoding>, 't1, 't2>>) =
+    let inline jchoice (codecs: seq<Codec<MultiObj<Encoding>, MultiObj<Encoding>, 't1, 't2>>) =
         let head, tail = Seq.head codecs, Seq.tail codecs
         foldBack (<|>) tail head
 
         
 
     /// Gets a value from a Json object
-    let jgetWith ofJson (o: MultiObj<StjEncoding>) key =
+    let jgetWith ofJson (o: MultiObj<Encoding>) key =
         match o.[key] with
         | value::_ -> ofJson value
         | _ -> Decode.Fail.propertyNotFound key (o |> MultiMap.mapValues (fun x -> x :> IEncoding))
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let jgetOptWith ofJson (o: MultiObj<StjEncoding>) key =
+    let jgetOptWith ofJson (o: MultiObj<Encoding>) key =
         match o.[key] with
         | JNull _::_ -> Ok None
         | value  ::_ -> ofJson value |> Result.map Some
         | _ -> Ok None
 
     /// Gets a value from a Json object
-    let inline jget (o: MultiObj<StjEncoding>) key = jgetWith ofEncoding o key
+    let inline jget (o: MultiObj<Encoding>) key = jgetWith ofEncoding o key
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let inline jgetOpt (o: MultiObj<StjEncoding>) key = jgetOptWith ofEncoding o key
+    let inline jgetOpt (o: MultiObj<Encoding>) key = jgetOptWith ofEncoding o key
 
     /// Gets a value from a Json object
     let inline (.@) o key = jget o key

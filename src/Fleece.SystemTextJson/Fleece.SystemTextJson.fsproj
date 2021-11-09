@@ -2,6 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>JSON mapper for System.Text.Json</Description>
+    <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
+    <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>

@@ -44,7 +44,7 @@ type JsonValue = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string 
 
 type JsonObject = Map<string, JsonValue>
 
-module JsonValue =
+module Internals =
 
     let inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
 
@@ -127,7 +127,7 @@ open FSharpPlus.Data
 open Fleece
 open Fleece.Helpers
 open Fleece.Operators
-open JsonValue
+open Internals
 
 
 type [<Struct>] StjEncoding = StjEncoding of JsonValue with
@@ -160,7 +160,7 @@ type [<Struct>] StjEncoding = StjEncoding of JsonValue with
 
     static member jsonOfJsonObject (o: JsonObject) = JObject o
 
-    static member createTuple c t = function 
+    static member createTuple c t (x: 't) = x |> function 
         | JArray a as x -> if List.length a <> c then Decode.Fail.count c (StjEncoding x) else t a
         | a -> Decode.Fail.arrExpected (StjEncoding a)
 
