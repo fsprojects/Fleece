@@ -48,7 +48,7 @@ module JsonValue =
 
     let inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
 
-    let inline JArray (x: JsonValue list) =
+    let inline JArray (x: JsonValue IReadOnlyList) =
         let f w =
             for v in x do (v.getWriter ()) w None
             w.WriteEndArray ()

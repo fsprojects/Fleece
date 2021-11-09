@@ -136,3 +136,28 @@ module Operators =
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
     let inline jfieldOptWith codec fieldName getter rest = rest <*> joptWith codec fieldName getter
+
+
+module Lens =
+    open FSharpPlus.Lens
+    let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
+    let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
+    let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
+    let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
+    let inline _JNumber x = (prism' JNumber <| fun v -> match ofJsonValue v : decimal ParseResult with Ok s -> Some s | _ -> None) x
+    let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
+
+    /// Like '_jnth', but for 'Object' with Text indices.
+    let inline _jkey i =
+        let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
+        _JObject << dkey i
+
+    let inline _jnth i =
+        let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
+        _JArray << dnth i
+
+    // Reimport some basic Lens operations from F#+
+
+    let setl optic value   (source: 's) : 't = setl optic value source
+    let over optic updater (source: 's) : 't = over optic updater source
+    let preview (optic: ('a -> Const<_,'b>) -> _ -> Const<_,'t>) (source: 's) : 'a option = preview optic source
