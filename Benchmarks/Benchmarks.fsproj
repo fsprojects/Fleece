@@ -14,7 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-    <PackageReference Update="FSharp.Core" Version="4.6.2" />
+    <PackageReference Update="FSharp.Core" Version="5.0.1" />
     <ProjectReference Include="..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
     <ProjectReference Include="..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
     <ProjectReference Include="..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
