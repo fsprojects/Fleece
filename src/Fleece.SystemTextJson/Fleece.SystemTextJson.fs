@@ -160,7 +160,7 @@ type [<Struct>] StjEncoding = StjEncoding of JsonValue with
 
     static member jsonOfJsonObject (o: JsonObject) = JObject o
 
-    static member createTuple c t (x: 't) = x |> function 
+    static member createTuple c t = function
         | JArray a as x -> if List.length a <> c then Decode.Fail.count c (StjEncoding x) else t a
         | a -> Decode.Fail.arrExpected (StjEncoding a)
 
