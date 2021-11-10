@@ -1,4 +1,7 @@
-﻿#if NEWTONSOFT
+﻿#if FSHARPDATA
+namespace Fleece.FSharpData
+#endif
+#if NEWTONSOFT
 namespace Fleece.Newtonsoft
 #endif
 #if SYSTEMJSON
@@ -21,7 +24,10 @@ open Internals
 
 // Backwards compatibility functions
 module Operators =
-
+    #if FSHARPDATA
+    type Encoding = FdEncoding
+    let encoding = FdEncoding
+    #endif
     #if NEWTONSOFT
     type Encoding = NsjEncoding
     let encoding = NsjEncoding

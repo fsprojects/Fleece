@@ -28,3 +28,6 @@ jobs:
 
     - name: Test SystemJson
       run: dotnet run -p ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f net5
+
+    - name: Test FSharpData
+      run: dotnet run -p ./test/Tests.FSharpData/Tests.FSharpData.fsproj -c Release -f net5

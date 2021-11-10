@@ -12,6 +12,9 @@ open FSharp.Data
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 open Fleece.FSharpData.Lens
+
+let JString = (JString >> FdEncoding.Unwrap)
+
 #endif
 
 
