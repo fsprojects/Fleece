@@ -1,6 +1,9 @@
 ﻿#if NEWTONSOFT
 namespace Fleece.Newtonsoft
 #endif
+#if SYSTEMJSON
+namespace Fleece.SystemJson
+#endif
 #if SYSTEMTEXTJSON
 namespace Fleece.SystemTextJson
 #endif
@@ -22,6 +25,10 @@ module Operators =
     #if NEWTONSOFT
     type Encoding = NsjEncoding
     let encoding = NsjEncoding
+    #endif
+    #if SYSTEMJSON
+    type Encoding = SjEncoding
+    let encoding = SjEncoding
     #endif
     #if SYSTEMTEXTJSON
     type Encoding = StjEncoding

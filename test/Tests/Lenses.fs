@@ -20,15 +20,6 @@ open Fleece.SystemJson.Operators
 open Fleece.SystemJson.Lens
 #endif
 
-#if SYSTEMTEXTJSON
-open Fleece.SystemTextJson
-open Fleece.SystemTextJson.Operators
-open System.Text.Json
-open Fleece.SystemTextJson.Lens
-
-let JString = (JString >> StjEncoding.Unwrap)
-
-#endif
 
 #if NEWTONSOFT
 open Fleece.Newtonsoft
@@ -38,6 +29,26 @@ open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 
 let JString = (JString >> NsjEncoding.Unwrap)
+
+#endif
+
+#if SYSTEMJSON
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+open System.Json
+open Fleece.SystemJson.Lens
+
+let JString = (JString >> SjEncoding.Unwrap)
+
+#endif
+
+#if SYSTEMTEXTJSON
+open Fleece.SystemTextJson
+open Fleece.SystemTextJson.Operators
+open System.Text.Json
+open Fleece.SystemTextJson.Lens
+
+let JString = (JString >> StjEncoding.Unwrap)
 
 #endif
 

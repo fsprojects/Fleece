@@ -14,14 +14,14 @@ open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
+open System.Json
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
-open System.Json
 #endif
 #if SYSTEMTEXTJSON
+open System.Text.Json
 open Fleece.SystemTextJson
 open Fleece.SystemTextJson.Operators
-open System.Text.Json
 #endif
 #if NEWTONSOFT
 open Newtonsoft.Json
@@ -304,13 +304,13 @@ let tests = [
             }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
-                let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07.862Z")
+                let actual : DateTime ParseResult = ofJson (SjEncoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
                 let expected = new DateTime(2014,9,5,4,38,7,862)
                 Assert.Equal("DateTime", Ok expected, actual)
             }
 
             test "DateTime without milliseconds" {
-                let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07Z")
+                let actual : DateTime ParseResult = ofJson (SjEncoding (JsonPrimitive "2014-09-05T04:38:07Z"))
                 let expected = new DateTime(2014,9,5,4,38,7)
                 Assert.Equal("DateTime", Ok expected, actual)
             }

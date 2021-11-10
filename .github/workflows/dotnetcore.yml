@@ -25,3 +25,6 @@ jobs:
 
     - name: Test NewtonsoftJson
       run: dotnet run -p ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f net5
+
+    - name: Test SystemJson
+      run: dotnet run -p ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f net5
