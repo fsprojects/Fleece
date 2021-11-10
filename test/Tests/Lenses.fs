@@ -13,12 +13,6 @@ open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 open Fleece.FSharpData.Lens
 #endif
-#if SYSTEMJSON
-open System.Json
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
-open Fleece.SystemJson.Lens
-#endif
 
 
 #if NEWTONSOFT
@@ -33,9 +27,9 @@ let JString = (JString >> NsjEncoding.Unwrap)
 #endif
 
 #if SYSTEMJSON
+open System.Json
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
-open System.Json
 open Fleece.SystemJson.Lens
 
 let JString = (JString >> SjEncoding.Unwrap)
