@@ -12,4 +12,11 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Fleece.SystemTextJson\Fleece.SystemTextJson.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
+  </ItemGroup>
+
 </Project>
