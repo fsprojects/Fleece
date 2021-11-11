@@ -3,14 +3,16 @@
 // it to define helpers that you do not want to show in the documentation.
 #r "nuget: System.Json, 4.7.1"
 #r "nuget: FSharpPlus, 1.2.2"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.SystemJson.dll"
 
 open System.Json
+open Fleece
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 #if FSHARPDATA
 #r "nuget: FSharp.Data, 3.0.0"
-#r @"../../src/Fleece.FSharpData/bin/Release/netstandard2.1/Fleece.FSharpData.dll"
+#r @"../../src/Fleece.FSharpData/bin/Release/netstandard2.0/Fleece.FSharpData.dll"
 
 open FSharp.Data
 open Fleece.FSharpData

@@ -43,6 +43,8 @@ module Operators =
 
     type JsonObject = Map<string, Encoding>
 
+    let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
+
     let jobj (x: list<string * 'value>) : 'value =
         let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
@@ -158,6 +160,14 @@ module Operators =
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
     let inline jfieldWith codec fieldName getter rest = rest <*> jreqWith codec fieldName (getter >> Some)
+
+    /// <summary>Appends a field mapping to the codec.</summary>
+    /// <param name="codec">The codec thunk to be used.</param>
+    /// <param name="fieldName">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <param name="rest">The other mappings.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jfieldWithLazy codec fieldName getter rest = rest <*> reqWithLazy codec fieldName (getter >> Some)
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="codec">The codec to be used.</param>

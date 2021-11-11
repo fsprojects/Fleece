@@ -3,7 +3,10 @@
 // it to define helpers that you do not want to show in the documentation.
 #r "nuget: System.Json, 4.7.1"
 #r "nuget: FSharpPlus, 1.2.2"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.SystemJson.dll"
+
+open Fleece
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 
@@ -63,7 +66,7 @@ type PersonF = {
         |> jfield    "firstName" (fun x -> fst x.name)
         |> jfield    "lastName"  (fun x -> snd x.name)
         |> jfieldOpt "age"       (fun x -> x.age)
-        |> jfieldWith jsonValueCodec "children"  (fun x -> x.children)
+        |> jfieldWithLazy (fun () -> jsonValueCodec) "children"  (fun x -> x.children)
 
 (**
 Both approaches build a codec from the same pieces:
@@ -149,6 +152,9 @@ let someShapes = """
 
 open FSharpPlus
 open FSharpPlus.Operators
+open FSharpPlus.Data
+
+open Fleece.Operators
 
 type ShapeD =
     | Rectangle of width : float * length : float
@@ -158,17 +164,16 @@ type ShapeD =
         static member JsonObjCodec =
             /// Derives a concrete field codec for a required field and value
             let inline jreqValue prop value codec =
-                let matchPropValue o =
-                     match IReadOnlyDictionary.tryGetValue prop o with
-                     | Some a when (ofJson a) = Ok value -> Ok o
-                     | Some a -> Decode.Fail.invalidValue a value
-                     | None -> Decode.Fail.propertyNotFound prop o
+                let matchPropValue (o: MultiMap<_,Encoding>) =
+                     match o.[prop] with
+                     | [a] when (ofJson a) = Ok value -> Ok o
+                     | [a] -> Decode.Fail.invalidValue a value
+                     | _   -> Decode.Fail.propertyNotFound prop (o |> map (fun x -> x :> IEncoding))
                 Codec.ofConcrete codec
                 |> Codec.compose (
-                                    matchPropValue,
-                                    fun encoded ->
-                                      if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
-                                      else IReadOnlyDictionary.union (Dict.toIReadOnlyDictionary (dict [prop, toJson value])) encoded
+                                    matchPropValue
+                                    <->
+                                    fun (encoded: MultiMap<_,Encoding>) -> MultiMap.ofList ([prop, toJson value]) ++ encoded
                                  )
                 |> Codec.toConcrete
 

@@ -291,8 +291,8 @@ type Codec<'S1, 'S2, 't1, 't2> with
 
 
 module Decode =
-    let inline Success x = Ok x
-    let (|Success|Failure|) = function
+    let inline Success x = Ok x : ParseResult<_>
+    let (|Success|Failure|) (x: ParseResult<_>) = x |> function
         | Ok    x -> Success x
         | Error x -> Failure x
 

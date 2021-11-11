@@ -3,9 +3,13 @@
 // it to define helpers that you do not want to show in the documentation.
 #r "nuget: System.Json, 4.7.1"
 #r "nuget: FSharpPlus, 1.2.2"
-#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.1/Fleece.SystemJson.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.dll"
+#r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.SystemJson.dll"
 
+open Fleece
+open Fleece.Operators
 open Fleece.SystemJson
+open Fleece.SystemJson.Operators
 
 (**
 ```f#
@@ -43,14 +47,14 @@ let colorEncoder = function
     | Blue  -> JString "blue"
     | White -> JString "white"
 
-let colorCodec = colorDecoder, colorEncoder
+let colorCodec = colorDecoder <-> colorEncoder
 
 let [<GeneralizableValue>]carCodec<'t> =
     fun i c k -> { Id = i; Color = c; Kms = k }
     |> withFields
-    |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
-    |> jfieldWith colorCodec       "color" (fun x -> x.Color)
-    |> jfieldWith JsonCodec.int    "kms"   (fun x -> x.Kms)
+    |> jfieldWith Codecs.string "id"    (fun x -> x.Id)
+    |> jfieldWith colorCodec    "color" (fun x -> x.Color)
+    |> jfieldWith Codecs.int    "kms"   (fun x -> x.Kms)
     |> Codec.compose jsonObjToValueCodec
 
 let car = { Id = "xyz"; Color = Red; Kms = 0 }
