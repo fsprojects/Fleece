@@ -8,6 +8,7 @@ type Person (name: string, age: int, children: Person list) =
     member __.Children = children
 
 
+open Fleece
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 
