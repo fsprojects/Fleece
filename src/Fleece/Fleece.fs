@@ -590,6 +590,10 @@ type GetCodec with
         let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
         Unchecked.defaultof<_> <-> e
 
+    static member inline GetCodec (_: 't, _: IDefault3, _: OpEncode) : Codec<'Encoding, ^t> =
+        let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t * 'Encoding -> 'Encoding) (t, Unchecked.defaultof<'Encoding>))
+        Unchecked.defaultof<_> <-> e
+
     [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
     static member inline GetCodec (_: 't , _: IDefault4, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) js)
@@ -603,6 +607,11 @@ type GetCodec with
 type GetEnc with
     static member inline GetCodec (_: 't , _: IDefault2, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
+        Unchecked.defaultof<_> <-> e
+
+type GetEnc with
+    static member inline GetCodec (_: 't, _: IDefault1, _: OpEncode) : Codec<'Encoding, ^t> =
+        let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t * 'Encoding -> 'Encoding) (t, Unchecked.defaultof<'Encoding>))
         Unchecked.defaultof<_> <-> e
 
 type GetDec with
