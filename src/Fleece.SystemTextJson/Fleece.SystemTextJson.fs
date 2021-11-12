@@ -471,7 +471,7 @@ module Main =
     let inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (StjEncoding x)
 
     /// Get the json text representation of the value, using its default codec.
-    let inline toJsonText (x: StjEncoding) = x |> toJson |> string
+    let inline toJsonText (x: 'T) = x |> toJson |> string
 
     /// Attempts to decode the value from its json text representation, using its default codec.
-    let inline ofJsonText (x: string) = try Ok (StjEncoding.Parse x) with e -> Decode.Fail.parseError e x
+    let inline ofJsonText (x: string) : Result<'T, DecodeError> = try (StjEncoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
