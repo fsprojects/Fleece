@@ -73,3 +73,70 @@ with
             "age" .= x.Age
             "children" .= x.Children
         ]
+
+
+open Fleece.SystemTextJson
+
+module TestDifferentCodecsForEachJsonLibrary =
+    open System
+
+    type Gender =
+        | Male = 1
+        | Female = 2
+    
+    type Person = {
+        Name: string
+        Age: int
+        Gender: Gender
+        DoB: DateTime
+        // Children: Person list
+    }
+
+    with
+        static member NsjCodec : Codec<NsjEncoding, _> =
+            codec {
+                let! name     = req "Name"     (fun x -> Some x.Name)
+                and! age      = req "Age"      (fun x -> Some x.Age)
+                and! gender   = req "Gender"   (fun x -> Some x.Gender)
+                and! dob      = req "DoB"      (fun x -> Some x.DoB)
+                // and! children = req "Children" (fun x -> Some x.Children)
+                return { Name = name; Age = age; Gender = gender; DoB= dob; }//Children = children }
+            } |> ofObjCodec
+
+        static member StjCodec : Codec<StjEncoding, _> =
+            codec {
+                let! name     = req "Name"     (fun x -> Some x.Name)
+                and! age      = req "Age"      (fun x -> Some x.Age)
+                and! gender   = req "Gender"   (fun x -> Some x.Gender)
+                and! dob      = req "DoB"      (fun x -> Some x.DoB)
+                // and! children = req "Children" (fun x -> Some x.Children)
+                return { Name = name; Age = age; Gender = gender; DoB= dob; }//Children = children }
+            } |> ofObjCodec
+
+        static member Encode (x, r: byref<NsjEncoding>) = r <- Codec.encode Person.NsjCodec x
+        static member Encode (x, r: byref<StjEncoding>) = r <- Codec.encode Person.StjCodec x
+
+    let person =
+        { Person.Name = "John"
+          Age = 44
+          DoB = DateTime(1975, 01, 01)
+          Gender = Gender.Male
+          (* Children = 
+          [
+            { Person.Name = "Katy"
+              Age = 5
+              DoB = DateTime(1975, 01, 01)
+              Gender = Gender.Female
+              Children = [] }
+            { Person.Name = "Johnny"
+              Age = 7
+              DoB = DateTime(1975, 01, 01)
+              Gender = Gender.Male
+              Children = [] }
+          ]  *)
+          }
+    
+    let personText1 = person |> Fleece.Newtonsoft.Main.toJson |> string
+    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+
+    // Todo check field names
