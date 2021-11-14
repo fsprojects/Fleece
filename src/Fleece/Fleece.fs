@@ -525,7 +525,7 @@ module Functions =
 type GetCodec with
     [<CompilerMessage("No Encoder method found.", 10708, IsError = true)>]
     static member inline GetCodec (_: 't when 't : not struct, _: OvDecEncError, _: OpEncode) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (En)"
-     
+ 
     [<CompilerMessage("No Decoder method found.", 10708, IsError = true)>]
     static member inline GetCodec (_: 't when 't : not struct, _: OvDecEncError, _: OpDecode) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (De)"
 
@@ -566,11 +566,18 @@ type GetCodec with
     // Overload to "passthrough" an IEncoding
     static member GetCodec (_: 'Encoding when 'Encoding :> IEncoding and 'Encoding : struct, _: IDefault6, _: 'Operation) = Ok <-> id : Codec<'Encoding, 'Encoding>
 
+    
+
     static member inline GetCodec (_: 'T, _: IDefault6, _: 'Operation) : Codec<'Encoding, 'T> = // when 'Encoding :> IEncoding and 'Encoding : struct =
         // let c = (^T : (static member Codec: Codec< MultiObj<'Encoding>, 'T>) ())
         // (c |> Codec.compose (GetCodec.Invoke<'Encoding, _> (Unchecked.defaultof<MultiObj<'Encoding>>, Unchecked.defaultof<'Encoding>)))
         let c : Codec< 'Encoding, 'T> = (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
         c
+
+    static member inline GetCodec (_: 'T when 'T : not struct, _: IDefault7, _: 'Operation) =
+        let mutable r = Unchecked.defaultof<Codec< 'Encoding, 'T>>
+        let _ = (^T : (static member Codec : byref<Codec< 'Encoding, 'T>> -> unit) &r)
+        r
 
     // For backwards compatibility
     // [<Obsolete("This function resolves to a deprecated 'JsonObjCodec' method and it won't be supported in future versions of this library. Please rename it to 'Codec' or 'get_Codec ()' and convert the result by applying the 'ofObjCodec' function.")>]
