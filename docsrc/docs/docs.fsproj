@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
     <ProjectReference Include="..\..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
     <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
+    <ProjectReference Include="..\..\src\Fleece\Fleece.fsproj" />
   </ItemGroup>
 
 </Project>
