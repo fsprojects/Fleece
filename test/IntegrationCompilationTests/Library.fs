@@ -78,6 +78,62 @@ with
 open Fleece.SystemTextJson
 open Fuchu
 
+module TestSingleDecoderEncoderForAllJsonLibrary =
+    open System
+
+    type Gender =
+        | Male = 1
+        | Female = 2
+
+    type Person = {
+        Name: string
+        Age: int
+        Gender: Gender
+        DoB: DateTime
+        Children: Person list
+    } with
+        static member ToJson (x: Person) =
+            Fleece.Newtonsoft.Operators.jobj [ 
+                "Name"     .= x.Name
+                "Age"      .= x.Age
+                "Gender"   .= x.Gender
+                "DoB"      .= x.DoB
+                "Children" .= x.Children
+            ]
+
+    type Person with
+        static member OfJson (json: 'Encoding) = Ok { Name = "John"; Age = 44; DoB = DateTime(1975, 01, 01); Gender = Gender.Male; Children = []}
+
+    let person =
+        { Person.Name = "John"
+          Age = 44
+          DoB = DateTime(1975, 01, 01)
+          Gender = Gender.Male
+          Children = 
+          [
+            { Person.Name = "Katy"
+              Age = 5
+              DoB = DateTime(1975, 01, 01)
+              Gender = Gender.Female
+              Children = [] }
+            { Person.Name = "Johnny"
+              Age = 7
+              DoB = DateTime(1975, 01, 01)
+              Gender = Gender.Male
+              Children = [] }
+          ]
+          }
+
+    let personText1 = person |> Fleece.Newtonsoft.Main.toJson     |> string
+    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+
+    let person1: Person = personText1 |> Fleece.Newtonsoft.Main.ofJsonText     |> Result.get
+    let person2: Person = personText2 |> Fleece.SystemTextJson.Main.ofJsonText |> Result.get
+
+    Assert.StringContains ("", "DoB", personText1)
+    Assert.StringContains ("", "DoB", personText2)
+
+
 module TestDifferentDecoderEncoderForEachJsonLibrary =
     open System
 
