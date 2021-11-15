@@ -703,6 +703,32 @@ module MainFunctions =
 
 
 
+    let jobj (x: list<string * 'Encoding>) : 'Encoding =
+        let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
+        multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
+        |> enc
+
+    let JString x = (Codecs.string |> Codec.encode) x
+    
+    let JObject x =
+        (Codecs.multiMap (Ok <-> id)
+        |> Codec.encode) x
+    
+    let (|JObject|_|) (x: 'Encoding) =
+        (Codecs.multiMap (Ok <-> id)
+        |> Codec.decode) x
+        |> Option.ofResult
+    
+    let (|JNull|_|) (x: 'Encoding) =
+        let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
+        match dec x with
+        | Ok x when Nullable.isNull x -> Some ()
+        | _ -> None
+    
+    let (|JString|_|) (x: 'Encoding) =
+        let (Codec (dec, _)) = Codecs.string
+        dec x |> Option.ofResult
+
     /// <summary>Same as opt but using an explicit codec.</summary>
     let optWith c (prop: string) (getter: 'T -> 'Value option) =
         let getFromListOptWith decoder (m: MultiObj<_>) key =
@@ -717,7 +743,42 @@ module MainFunctions =
     /// Derives a concrete field codec for an optional field
     let inline opt prop (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param option, 'T> = optWith (getCodec<'Encoding, 'param> ()) prop getter
 
+    
+    /// Gets a value from an Encoding object.
+    let jgetWith decoder (o: MultiObj<'Encoding>) key =
+        match o.[key] with
+        | value::_ -> decoder value
+        | _ -> Decode.Fail.propertyNotFound key (o |> MultiMap.mapValues (fun x -> x :> IEncoding))
 
+    /// Tries to get a value from an Encoding object.
+    /// Returns None if key is not present in the object.
+    let jgetOptWith decoder (o: MultiObj<'Encoding>) key =
+        match o.[key] with
+        | JNull _::_ -> Ok None
+        | value  ::_ -> decoder value |> Result.map Some
+        | _ -> Ok None
+
+    /// Gets a value from an Encoding object.
+    let inline jget (o: MultiObj<' Encoding>) key = jgetWith ofEncoding o key
+
+    /// Tries to get a value from an Encoding object.
+    /// Returns None if key is not present in the object.
+    let inline jgetOpt (o: MultiObj<' Encoding>) key = jgetOptWith ofEncoding o key
+
+    /// Gets a value from an Encoding object.
+    let inline (.@) o key = jget o key
+
+    /// Tries to get a value from an Encoding object.
+    /// Returns None if key is not present in the object.
+    let inline (.@?) o key = jgetOpt o key
+
+    /// Creates a new Encoding key-value pair for an Encoding object.
+    let inline jpair (key: string) (value: 'T) = map toEncoding (key, value)
+
+    /// Creates a new Encoding key-value pair for an Encoding object.
+    let inline (.=) key value = jpair key value
+    
+    
 
 
 

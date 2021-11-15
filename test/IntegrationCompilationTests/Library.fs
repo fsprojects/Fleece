@@ -1,85 +1,86 @@
 namespace IntegrationCompilationTests
 open FSharpPlus
 
+module LegacyTests =
 
-type Person (name: string, age: int, children: Person list) =
-    member __.Name = name
-    member __.Age = age
-    member __.Children = children
-
-
-open Fleece
-open Fleece.FSharpData
-open Fleece.FSharpData.Operators
-
-type PersonFSharpData (name: string, age: int, children: PersonFSharpData list) =
-    inherit Person (name, age, children |> map (fun p -> p :> Person))
-    member __.Children = children
-with
-    static member Create name age children = PersonFSharpData (name, age, children)
-
-    static member OfJson json =
-        match json with
-        | JObject o -> PersonFSharpData.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Decode.Fail.objExpected x
-
-    static member ToJson (x:PersonFSharpData) =
-        jobj [ 
-            "name" .= x.Name
-            "age" .= x.Age
-            "children" .= x.Children
-        ]
+    type Person (name: string, age: int, children: Person list) =
+        member __.Name = name
+        member __.Age = age
+        member __.Children = children
 
 
-open Fleece.Newtonsoft
-open Fleece.Newtonsoft.Operators
+    open Fleece
+    open Fleece.FSharpData
+    open Fleece.FSharpData.Operators
 
-type PersonNewtonsoft (name: string, age: int, children: PersonNewtonsoft list) =
-    inherit Person (name, age, children |> map (fun p -> p :> Person))
-    member __.Children = children
-with
-    static member Create name age children = PersonNewtonsoft (name, age, children)
+    type PersonFSharpData (name: string, age: int, children: PersonFSharpData list) =
+        inherit Person (name, age, children |> map (fun p -> p :> Person))
+        member __.Children = children
+    with
+        static member Create name age children = PersonFSharpData (name, age, children)
 
-    static member OfJson json =
-        match json with
-        | JObject o -> PersonNewtonsoft.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Decode.Fail.objExpected x
+        static member OfJson json =
+            match json with
+            | JObject o -> PersonFSharpData.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+            | x -> Decode.Fail.objExpected x
 
-    static member ToJson (x: PersonNewtonsoft) =
-        jobj [ 
-            "name" .= x.Name
-            "age" .= x.Age
-            "children" .= x.Children
-        ]
-
-
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
-
-type PersonSystemJson (name: string, age: int, children: PersonSystemJson list) =
-    inherit Person (name, age, children |> map (fun p -> p :> Person))
-    member __.Children = children
-with
-    static member Create name age children = PersonSystemJson (name, age, children)
-
-    static member OfJson json =
-        match json with
-        | JObject o -> PersonSystemJson.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
-        | x -> Decode.Fail.objExpected x
-
-    static member ToJson (x: PersonSystemJson) =
-        jobj [ 
-            "name" .= x.Name
-            "age" .= x.Age
-            "children" .= x.Children
-        ]
+        static member ToJson (x:PersonFSharpData) =
+            jobj [ 
+                "name" .= x.Name
+                "age" .= x.Age
+                "children" .= x.Children
+            ]
 
 
-open Fleece.SystemTextJson
+    open Fleece.Newtonsoft
+    open Fleece.Newtonsoft.Operators
+
+    type PersonNewtonsoft (name: string, age: int, children: PersonNewtonsoft list) =
+        inherit Person (name, age, children |> map (fun p -> p :> Person))
+        member __.Children = children
+    with
+        static member Create name age children = PersonNewtonsoft (name, age, children)
+
+        static member OfJson json =
+            match json with
+            | JObject o -> PersonNewtonsoft.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+            | x -> Decode.Fail.objExpected x
+
+        static member ToJson (x: PersonNewtonsoft) =
+            jobj [ 
+                "name" .= x.Name
+                "age" .= x.Age
+                "children" .= x.Children
+            ]
+
+
+    open Fleece.SystemJson
+    open Fleece.SystemJson.Operators
+
+    type PersonSystemJson (name: string, age: int, children: PersonSystemJson list) =
+        inherit Person (name, age, children |> map (fun p -> p :> Person))
+        member __.Children = children
+    with
+        static member Create name age children = PersonSystemJson (name, age, children)
+
+        static member OfJson json =
+            match json with
+            | JObject o -> PersonSystemJson.Create <!> (o .@ "name") <*> (o .@ "age") <*> (o .@ "children")
+            | x -> Decode.Fail.objExpected x
+
+        static member ToJson (x: PersonSystemJson) =
+            jobj [ 
+                "name" .= x.Name
+                "age" .= x.Age
+                "children" .= x.Children
+            ]
+
+
 open Fuchu
 
 module TestSingleDecoderEncoderForAllJsonLibrary =
     open System
+    open Fleece
 
     type Gender =
         | Male = 1
@@ -93,7 +94,7 @@ module TestSingleDecoderEncoderForAllJsonLibrary =
         Children: Person list
     } with
         static member ToJson (x: Person) =
-            Fleece.Newtonsoft.Operators.jobj [ 
+            jobj [ 
                 "Name"     .= x.Name
                 "Age"      .= x.Age
                 "Gender"   .= x.Gender
@@ -135,6 +136,7 @@ module TestSingleDecoderEncoderForAllJsonLibrary =
 
 module TestSingleCodecForAllJsonLibrary =
     open System
+    open Fleece
 
     type Gender =
         | Male = 1
@@ -187,6 +189,9 @@ module TestSingleCodecForAllJsonLibrary =
 
 module TestDifferentDecoderEncoderForEachJsonLibrary =
     open System
+    open Fleece
+    open Fleece.Newtonsoft
+    open Fleece.SystemTextJson
 
     type Gender =
         | Male = 1
@@ -200,7 +205,7 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
         Children: Person list
     } with
         static member NsjToJson (x: Person) : NsjEncoding =
-            Fleece.Newtonsoft.Operators.jobj [ 
+            jobj [ 
                 "Name"     .= x.Name
                 "Age"      .= x.Age
                 "Gender"   .= x.Gender
@@ -209,7 +214,7 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
             ]
 
         static member StjToJson (x: Person) : StjEncoding =
-            Fleece.SystemTextJson.Operators.jobj [ 
+            jobj [ 
                 "name"     .= x.Name
                 "age"      .= x.Age
                 "gender"   .= x.Gender
@@ -222,9 +227,8 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
 
     type Person with
         static member OfJson (json: NsjEncoding) =
-            let inline (.@) x y = Fleece.Newtonsoft.Operators.(.@) x y
             match json with
-            | Fleece.Newtonsoft.Operators.JObject o ->
+            | JObject o ->
                 let name     = o .@ "Name"
                 let age      = o .@ "Age"
                 let gender   = o .@ "Gender"
@@ -243,9 +247,8 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
             | x -> Decode.Fail.objExpected x
 
         static member OfJson (json: StjEncoding) =
-            let inline (.@) x y = Fleece.SystemTextJson.Operators.(.@) x y
             match json with
-            | Fleece.SystemTextJson.Operators.JObject o ->
+            | JObject o ->
                 let name     = o .@ "name"
                 let age      = o .@ "age"
                 let gender   = o .@ "gender"
@@ -294,6 +297,9 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
 
 module TestDifferentCodecsForEachJsonLibrary =
     open System
+    open Fleece
+    open Fleece.Newtonsoft
+    open Fleece.SystemTextJson
 
     type Gender =
         | Male = 1
