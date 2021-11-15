@@ -153,11 +153,11 @@ module TestSingleCodecForAllJsonLibrary =
     with
         static member get_Codec () : Codec<'Encoding, _> =
             codec {
-                let! name     = req "Name"     (fun x -> Some x.Name)
-                and! age      = req "Age"      (fun x -> Some x.Age)
-                and! gender   = req "Gender"   (fun x -> Some x.Gender)
-                and! dob      = req "DoB"      (fun x -> Some x.DoB)
-                and! children = req "Children" (fun x -> Some x.Children)
+                let! name     = jreq "Name"     (fun x -> Some x.Name)
+                and! age      = jreq "Age"      (fun x -> Some x.Age)
+                and! gender   = jreq "Gender"   (fun x -> Some x.Gender)
+                and! dob      = jreq "DoB"      (fun x -> Some x.DoB)
+                and! children = jreq "Children" (fun x -> Some x.Children)
                 return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
             } |> ofObjCodec
 
@@ -316,21 +316,21 @@ module TestDifferentCodecsForEachJsonLibrary =
     with
         static member NsjCodec : Codec<NsjEncoding, _> =
             codec {
-                let! name     = req "Name"     (fun x -> Some x.Name)
-                and! age      = req "Age"      (fun x -> Some x.Age)
-                and! gender   = req "Gender"   (fun x -> Some x.Gender)
-                and! dob      = req "DoB"      (fun x -> Some x.DoB)
-                and! children = req "Children" (fun x -> Some x.Children)
+                let! name     = jreq "Name"     (fun x -> Some x.Name)
+                and! age      = jreq "Age"      (fun x -> Some x.Age)
+                and! gender   = jreq "Gender"   (fun x -> Some x.Gender)
+                and! dob      = jreq "DoB"      (fun x -> Some x.DoB)
+                and! children = jreq "Children" (fun x -> Some x.Children)
                 return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
             } |> ofObjCodec
 
         static member StjCodec : Codec<StjEncoding, _> =
             codec {
-                let! name     = req "name"     (fun x -> Some x.Name)
-                and! age      = req "age"      (fun x -> Some x.Age)
-                and! gender   = req "gender"   (fun x -> Some x.Gender)
-                and! dob      = req "dob"      (fun x -> Some x.DoB)
-                and! children = req "children" (fun x -> Some x.Children)
+                let! name     = jreq "name"     (fun x -> Some x.Name)
+                and! age      = jreq "age"      (fun x -> Some x.Age)
+                and! gender   = jreq "gender"   (fun x -> Some x.Gender)
+                and! dob      = jreq "dob"      (fun x -> Some x.DoB)
+                and! children = jreq "children" (fun x -> Some x.Children)
                 return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
             } |> ofObjCodec
 

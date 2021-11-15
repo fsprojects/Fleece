@@ -668,7 +668,7 @@ module MainFunctions =
 
 
 
-    let reqWith (c: Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
+    let jreqWith (c: Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
         let getFromListWith decoder (m: MultiObj<_>) key =
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
@@ -678,7 +678,7 @@ module MainFunctions =
             Encoder = fun x -> (match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, (enc (c)) x)] | _ -> zero)
         }
 
-    let reqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
+    let jreqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
         let getFromListWith decoder (m: MultiObj<_>) key =
 
             match m.[key] with
@@ -699,7 +699,21 @@ module MainFunctions =
     /// <param name="name">A string that will be used as key to the field.</param>
     /// <param name="getter">The field getter function.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline req (name: string) (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param, 'T> = reqWithLazy (getCodec<'Encoding, 'param>) name getter
+    let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param, 'T> = jreqWithLazy (getCodec<'Encoding, 'param>) name getter
+
+    /// <summary>Same as jopt but using an explicit codec.</summary>
+    let joptWith c (prop: string) (getter: 'T -> 'Value option) =
+        let getFromListOptWith decoder (m: MultiObj<_>) key =
+            match m.[key] with
+            | []        -> Ok None
+            | value:: _ -> decoder value |> Result.map Some
+        {
+            Decoder = fun (o: MultiObj<'S>) -> getFromListOptWith (dec c) o prop
+            Encoder = fun x -> (match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, (enc c) x)] | _ -> zero)
+        }
+
+    /// Derives a concrete field codec for an optional field
+    let inline jopt prop (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param option, 'T> = joptWith (getCodec<'Encoding, 'param> ()) prop getter
 
 
 
@@ -728,20 +742,6 @@ module MainFunctions =
     let (|JString|_|) (x: 'Encoding) =
         let (Codec (dec, _)) = Codecs.string
         dec x |> Option.ofResult
-
-    /// <summary>Same as opt but using an explicit codec.</summary>
-    let optWith c (prop: string) (getter: 'T -> 'Value option) =
-        let getFromListOptWith decoder (m: MultiObj<_>) key =
-            match m.[key] with
-            | []        -> Ok None
-            | value:: _ -> decoder value |> Result.map Some
-        {
-            Decoder = fun (o: MultiObj<'S>) -> getFromListOptWith (dec c) o prop
-            Encoder = fun x -> (match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, (enc c) x)] | _ -> zero)
-        }
-
-    /// Derives a concrete field codec for an optional field
-    let inline opt prop (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param option, 'T> = optWith (getCodec<'Encoding, 'param> ()) prop getter
 
     
     /// Gets a value from an Encoding object.

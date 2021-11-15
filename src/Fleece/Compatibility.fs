@@ -79,11 +79,11 @@ module Operators =
 
     let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= ofJson
 
-    let inline jreq name getter = req name getter : Codec<MultiObj<Encoding>,_,_,_>
-    let inline jopt name getter = opt name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline jreq name getter = jreq name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline jopt name getter = jopt name getter : Codec<MultiObj<Encoding>,_,_,_>
     
-    let inline jreqWith codec name getter = reqWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
-    let inline joptWith codec name getter = optWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline jreqWith codec name getter = jreqWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline joptWith codec name getter = joptWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
 
     let inline jchoice (codecs: seq<Codec<MultiObj<Encoding>, MultiObj<Encoding>, 't1, 't2>>) =
         let head, tail = Seq.head codecs, Seq.tail codecs
@@ -167,7 +167,7 @@ module Operators =
     /// <param name="getter">The field getter function.</param>
     /// <param name="rest">The other mappings.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jfieldWithLazy codec fieldName getter rest = rest <*> reqWithLazy codec fieldName (getter >> Some)
+    let inline jfieldWithLazy codec fieldName getter rest = rest <*> jreqWithLazy codec fieldName (getter >> Some)
 
     /// <summary>Appends an optional field mapping to the codec.</summary>
     /// <param name="codec">The codec to be used.</param>
