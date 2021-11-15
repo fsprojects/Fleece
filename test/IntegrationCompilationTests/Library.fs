@@ -91,9 +91,7 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
         Gender: Gender
         DoB: DateTime
         Children: Person list
-    }
-
-    with
+    } with
         static member NsjToJson (x: Person) : NsjEncoding =
             Fleece.Newtonsoft.Operators.jobj [ 
                 "Name"     .= x.Name
@@ -112,9 +110,51 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
                 "children" .= x.Children
             ]
 
-
         static member Encode (x, r: byref<NsjEncoding>) = r <- Person.NsjToJson x
         static member Encode (x, r: byref<StjEncoding>) = r <- Person.StjToJson x
+
+    type Person with
+        static member OfJson (json: NsjEncoding) =
+            let inline (.@) x y = Fleece.Newtonsoft.Operators.(.@) x y
+            match json with
+            | Fleece.Newtonsoft.Operators.JObject o ->
+                let name     = o .@ "Name"
+                let age      = o .@ "Age"
+                let gender   = o .@ "Gender"
+                let dob      = o .@ "DoB"
+                let children = o .@ "Children"
+                match name, age, gender, dob, children with
+                | Decode.Success name, Decode.Success age, Decode.Success gender, Decode.Success dob, Decode.Success children ->
+                    Decode.Success {
+                        Name     = name
+                        Age      = age
+                        Gender   = gender
+                        DoB      = dob
+                        Children = children
+                    }
+                | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
+            | x -> Decode.Fail.objExpected x
+
+        static member OfJson (json: StjEncoding) =
+            let inline (.@) x y = Fleece.SystemTextJson.Operators.(.@) x y
+            match json with
+            | Fleece.SystemTextJson.Operators.JObject o ->
+                let name     = o .@ "name"
+                let age      = o .@ "age"
+                let gender   = o .@ "gender"
+                let dob      = o .@ "dob"
+                let children = o .@ "children"
+                match name, age, gender, dob, children with
+                | Decode.Success name, Decode.Success age, Decode.Success gender, Decode.Success dob, Decode.Success children ->
+                    Decode.Success {
+                        Name     = name
+                        Age      = age
+                        Gender   = gender
+                        DoB      = dob
+                        Children = children
+                    }
+                | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
+            | x -> Decode.Fail.objExpected x
 
     let person =
         { Person.Name = "John"
@@ -136,8 +176,11 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
           ]
           }
 
-    let personText1 = person |> Fleece.Newtonsoft.Main.toJson |> string
-    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string    
+    let personText1 = person |> Fleece.Newtonsoft.Main.toJson     |> string
+    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+
+    let person1: Person = personText1 |> Fleece.Newtonsoft.Main.ofJsonText     |> Result.get
+    let person2: Person = personText2 |> Fleece.SystemTextJson.Main.ofJsonText |> Result.get
     
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "dob", personText2)
