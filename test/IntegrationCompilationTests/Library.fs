@@ -76,6 +76,7 @@ with
 
 
 open Fleece.SystemTextJson
+open Fuchu
 
 module TestDifferentDecoderEncoderForEachJsonLibrary =
     open System
@@ -136,9 +137,10 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
           }
 
     let personText1 = person |> Fleece.Newtonsoft.Main.toJson |> string
-    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
-
-    // Todo check field names
+    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string    
+    
+    Assert.StringContains ("", "DoB", personText1)
+    Assert.StringContains ("", "dob", personText2)
 
 module TestDifferentCodecsForEachJsonLibrary =
     open System
@@ -202,4 +204,5 @@ module TestDifferentCodecsForEachJsonLibrary =
     let personText1 = person |> Fleece.Newtonsoft.Main.toJson |> string
     let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
 
-    // Todo check field names
+    Assert.StringContains ("", "DoB", personText1)
+    Assert.StringContains ("", "dob", personText2)

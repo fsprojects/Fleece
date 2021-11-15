@@ -11,6 +11,9 @@
 
     <ItemGroup>
         <PackageReference Update="FSharp.Core" Version="5.0.1" />
+        <PackageReference Include="FsCheck" Version="2.14.2" />
+        <PackageReference Include="Fuchu" Version="1.1.0" />
+        <PackageReference Include="Fuchu.FsCheck" Version="1.1.0" />
         <ProjectReference Include="..\..\src\Fleece.SystemJson\Fleece.SystemJson.fsproj" />
         <ProjectReference Include="..\..\src\Fleece.FSharpData\Fleece.FSharpData.fsproj" />
         <ProjectReference Include="..\..\src\Fleece.NewtonsoftJson\Fleece.NewtonsoftJson.fsproj" />
