@@ -574,7 +574,7 @@ type GetCodec with
         let c : Codec< 'Encoding, 'T> = (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
         c
 
-    static member inline GetCodec (_: 'T when 'T : not struct, _: IDefault7, _: 'Operation) =
+    static member inline GetCodec (_: 'T, _: IDefault7, _: 'Operation) =
         let mutable r = Unchecked.defaultof<Codec< 'Encoding, 'T>>
         let _ = (^T : (static member Codec : byref<Codec< 'Encoding, 'T>> -> unit) &r)
         r
