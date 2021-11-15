@@ -724,13 +724,13 @@ module MainFunctions =
 
     // Applicative Codec operator and Computation Expression for specialized Codecs
 
-    let privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<MultiObj<'S>,MultiObj<'S>,_,_>
-    let privlift2 (f: 'x ->'y ->'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y:  Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+    let private privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<MultiObj<'S>,MultiObj<'S>,_,_>
+    let private privlift2 (f: 'x ->'y ->'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y:  Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
             {
                 Decoder = fun s -> lift2 f (x.Decoder s) (y.Decoder s)
                 Encoder = x.Encoder ++ y.Encoder
             }
-    let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y: Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) (z: Codec<MultiObj<'S>, MultiObj<'S>,'z,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+    let private privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y: Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) (z: Codec<MultiObj<'S>, MultiObj<'S>,'z,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
             {
                 Decoder = fun s -> lift3 f (x.Decoder s) (y.Decoder s) (z.Decoder s)
                 Encoder = x.Encoder ++ y.Encoder ++ z.Encoder
@@ -748,11 +748,6 @@ module MainFunctions =
         member _.BindReturn (x: Codec<MultiObj<'r>, MultiObj<'r>,_,_>, f) = f <!> x
         member _.Run x : Codec<MultiObj<_>,'t> = x
         member _.Combine (x: Codec<MultiObj<'S>, 't>, y: Codec<MultiObj<'S>, 't>) = x <|> y : Codec<MultiObj<'S>, 't>
-
-
-        // We can remove this with F# 5
-        [<CompilerMessage("A Codec doesn't support the Zero operation.", 10708, IsError = true)>]
-        member _.Zero () = raise <| new System.InvalidOperationException "This execution path is unreachable."
 
     /// Codec Applicative Computation Expression.
     let codec<'t> = CodecBuilder<'t> ()
