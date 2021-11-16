@@ -79,6 +79,7 @@ module LegacyTests =
 open Fuchu
 
 module TestSingleDecoderEncoderForAllJsonLibrary =
+
     open System
     open Fleece
 
@@ -95,31 +96,48 @@ module TestSingleDecoderEncoderForAllJsonLibrary =
     } with
         static member ToJson (x: Person) =
             jobj [ 
-                "Name"     .= x.Name
-                "Age"      .= x.Age
-                "Gender"   .= x.Gender
-                "DoB"      .= x.DoB
-                "Children" .= x.Children
+                "name"     .= x.Name
+                "age"      .= x.Age
+                "gender"   .= x.Gender
+                "dob"      .= x.DoB
+                "children" .= x.Children
             ]
 
-    type Person with
-        static member OfJson (json: 'Encoding) = Ok { Name = "John"; Age = 44; DoB = DateTime(1975, 01, 01); Gender = Gender.Male; Children = []}
+        static member OfJson (json: 'Encoding) =
+            match json with
+            | JObject o ->
+                let name     = o .@ "name"
+                let age      = o .@ "age"
+                let dob      = o .@ "dob"
+                let gender   = o .@ "gender"
+                let children = o .@ "children"
+                match name, age, dob, gender, children with
+                | Decode.Success name, Decode.Success age, Decode.Success dob, Decode.Success gender, Decode.Success children ->
+                    Decode.Success {
+                        Name     = name
+                        Age      = age
+                        DoB      = dob
+                        Gender   = gender
+                        Children = children
+                    }
+                | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
+            | x -> Decode.Fail.objExpected x
 
     let person =
         { Person.Name = "John"
           Age = 44
-          DoB = DateTime(1975, 01, 01)
+          DoB = DateTime (1975, 01, 01)
           Gender = Gender.Male
           Children = 
           [
             { Person.Name = "Katy"
               Age = 5
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Female
               Children = [] }
             { Person.Name = "Johnny"
               Age = 7
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Male
               Children = [] }
           ]
@@ -131,10 +149,12 @@ module TestSingleDecoderEncoderForAllJsonLibrary =
     let person1: Person = personText1 |> Fleece.Newtonsoft.Main.ofJsonText     |> Result.get
     let person2: Person = personText2 |> Fleece.SystemTextJson.Main.ofJsonText |> Result.get
 
-    Assert.StringContains ("", "DoB", personText1)
-    Assert.StringContains ("", "DoB", personText2)
+    Assert.StringContains ("", "dob", personText1)
+    Assert.StringContains ("", "dob", personText2)
+
 
 module TestSingleCodecForAllJsonLibrary =
+
     open System
     open Fleece
 
@@ -164,18 +184,18 @@ module TestSingleCodecForAllJsonLibrary =
     let person =
         { Person.Name = "John"
           Age = 44
-          DoB = DateTime(1975, 01, 01)
+          DoB = DateTime (1975, 01, 01)
           Gender = Gender.Male
           Children = 
           [
             { Person.Name = "Katy"
               Age = 5
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Female
               Children = [] }
             { Person.Name = "Johnny"
               Age = 7
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Male
               Children = [] }
           ]
@@ -187,7 +207,9 @@ module TestSingleCodecForAllJsonLibrary =
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "DoB", personText2)
 
+
 module TestDifferentDecoderEncoderForEachJsonLibrary =
+
     open System
     open Fleece
     open Fleece.Newtonsoft
@@ -269,18 +291,18 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
     let person =
         { Person.Name = "John"
           Age = 44
-          DoB = DateTime(1975, 01, 01)
+          DoB = DateTime (1975, 01, 01)
           Gender = Gender.Male
           Children = 
           [
             { Person.Name = "Katy"
               Age = 5
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Female
               Children = [] }
             { Person.Name = "Johnny"
               Age = 7
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Male
               Children = [] }
           ]
@@ -295,7 +317,9 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "dob", personText2)
 
+
 module TestDifferentCodecsForEachJsonLibrary =
+
     open System
     open Fleece
     open Fleece.Newtonsoft
@@ -340,18 +364,18 @@ module TestDifferentCodecsForEachJsonLibrary =
     let person =
         { Person.Name = "John"
           Age = 44
-          DoB = DateTime(1975, 01, 01)
+          DoB = DateTime (1975, 01, 01)
           Gender = Gender.Male
           Children = 
           [
             { Person.Name = "Katy"
               Age = 5
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Female
               Children = [] }
             { Person.Name = "Johnny"
               Age = 7
-              DoB = DateTime(1975, 01, 01)
+              DoB = DateTime (1975, 01, 01)
               Gender = Gender.Male
               Children = [] }
           ]
