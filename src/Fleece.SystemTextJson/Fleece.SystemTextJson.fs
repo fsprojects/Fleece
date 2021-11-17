@@ -3,9 +3,44 @@
 open System
 open System.Collections.Generic
 open System.Text.Json
+open System.Globalization
+open FSharpPlus
+open FSharpPlus.Data
+open Fleece
+open Fleece.Helpers
+open Fleece.Operators
+
+
+
+module Internals =
+    // pseudo-AST, wrapping Encoding subtypes:
+    let inline (|JArray|JObject|JNumber|JBool|JString|JNull|) (j: ^Encoding) =
+        // let o = j.getValue ()
+        let j = j
+        let o = (^Encoding : (member InnerValue : JsonElement) j)
+        let o = o
+        match o.ValueKind with
+        | JsonValueKind.Null
+        | JsonValueKind.Undefined -> JNull
+        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> (result x: ^Encoding) ] |> Seq.toList)
+        | JsonValueKind.Object    -> JObject (Map.ofList [for x in o.EnumerateObject () -> (x.Name, (result x.Value: ^Encoding))] :> IReadOnlyDictionary<_,_>)
+        | JsonValueKind.Number    -> JNumber j
+        | JsonValueKind.False     -> JBool false
+        | JsonValueKind.True      -> JBool true
+        | JsonValueKind.String    -> JString (o.GetString ())
+        | _                       -> failwithf "Invalid Encoding %A" o
+
+
+open Internals
+
+type JsonObject = Map<string, Encoding>
+
 
 /// Wrapper type for JsonElement
-type JsonValue = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit> } with
+// type [<Struct>] Encoding = Encoding of Encoding with
+and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit> } with
+
+    static member Return x = { Encoding.Value = Choice1Of2 x }
 
     member this.ToString (options: JsonWriterOptions) =
         use stream = new System.IO.MemoryStream ()
@@ -22,7 +57,7 @@ type JsonValue = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string 
 
     static member Parse (x: string) = let doc = JsonDocument.Parse x in { Value = Choice1Of2 doc.RootElement }
 
-    member this.getValue () =
+    member this.get_InnerValue () =
         match this with
         | { Value = Choice1Of2 value } -> value
         | { Value = Choice2Of2 _ } ->
@@ -42,196 +77,178 @@ type JsonValue = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string 
                 value.WriteTo writer
                     
 
-type JsonObject = Map<string, JsonValue>
 
-module Internals =
 
-    let inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
+// module Internals =
 
-    let inline JArray (x: JsonValue IReadOnlyList) =
+    static member inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
+
+    static member inline JArray (x: Encoding IReadOnlyList) =
         let f w =
             for v in x do (v.getWriter ()) w None
             w.WriteEndArray ()
-        writers (fun w k -> w.WriteStartArray k; f w) (fun w -> w.WriteStartArray (); f w)
+        Encoding.writers (fun w k -> w.WriteStartArray k; f w) (fun w -> w.WriteStartArray (); f w)
 
-    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) =
+    static member inline JObject (x: IReadOnlyDictionary<string, Encoding>) =
         let f w =
             for kv in x do kv.Value.getWriter () w (Some kv.Key)
             w.WriteEndObject ()
-        writers (fun w k -> w.WriteStartObject k; f w) (fun w -> w.WriteStartObject (); f w)
+        Encoding.writers (fun w k -> w.WriteStartObject k; f w) (fun w -> w.WriteStartObject (); f w)
 
-    let JBool (x: bool)      = writers (fun w k -> w.WriteBoolean (k, x)) (fun w -> w.WriteBooleanValue x)
-    let JNull                = writers (fun w k -> w.WriteNull k) (fun w -> w.WriteNullValue ())
-    let JString (x: string)  = if isNull x then JNull else writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-    let JNumber (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member JBool (x: bool)      = Encoding.writers (fun w k -> w.WriteBoolean (k, x)) (fun w -> w.WriteBooleanValue x)
+    static member JNull                = Encoding.writers (fun w k -> w.WriteNull k) (fun w -> w.WriteNullValue ())
+    static member JString (x: string)  = if isNull x then Encoding.JNull else Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+    static member JNumber (x: decimal) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
 
-    // pseudo-AST, wrapping JsonValue subtypes:
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (j: JsonValue) =
-        let o = j.getValue ()
-        match o.ValueKind with
-        | JsonValueKind.Null
-        | JsonValueKind.Undefined -> JNull
-        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> {Value = Choice1Of2 x} ] |> Seq.toList)
-        | JsonValueKind.Object    -> JObject (Map.ofList [for x in o.EnumerateObject () -> (x.Name, {Value = Choice1Of2 x.Value})] :> IReadOnlyDictionary<_,_>)
-        | JsonValueKind.Number    -> JNumber j
-        | JsonValueKind.False     -> JBool false
-        | JsonValueKind.True      -> JBool true
-        | JsonValueKind.String    -> JString (o.GetString ())
-        | _                       -> failwithf "Invalid JsonValue %A" o
 
-    let jsonObjectGetValues (o: JsonObject) = o :> IReadOnlyDictionary<string, JsonValue>
 
-    let dictAsJsonObject (x: IReadOnlyDictionary<string, JsonValue>) =
+    static member jsonObjectGetValues (o: JsonObject) = o :> IReadOnlyDictionary<string, Encoding>
+
+    static member dictAsJsonObject (x: IReadOnlyDictionary<string, Encoding>) =
         match x with
         | :? JsonObject as x' -> x'
         | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq |> JsonObject
 
     /// Creates a new Json object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
+    static member jobj (x: seq<string * Encoding>) : Encoding = Encoding.JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
 
-    type internal JsonHelpers () =
-        static member create (x: string ) = writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-        static member create (x: Guid   ) = writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-        static member create (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: Single ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: Double ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: int    ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: int64  ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: uint32 ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: uint64 ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: int16  ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-        static member create (x: uint16 ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-        static member create (x: byte   ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-        static member create (x: sbyte  ) = writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))
-        static member create (x: char   ) = writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
+    // type internal JsonHelpers () =
+    static member create (x: string ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+    static member create (x: Guid   ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+    static member create (x: decimal) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: Single ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: Double ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: int    ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: int64  ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: uint32 ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: uint64 ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
+    static member create (x: int16  ) = Encoding.writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
+    static member create (x: uint16 ) = Encoding.writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
+    static member create (x: byte   ) = Encoding.writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
+    static member create (x: sbyte  ) = Encoding.writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))
+    static member create (x: char   ) = Encoding.writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
 
-    type TryGet = TryGet with                
-        static member ($) (TryGet, _: decimal) = fun (x: JsonValue) -> x.getValue().GetDecimal ()
-        static member ($) (TryGet, _: int16  ) = fun (x: JsonValue) -> x.getValue().GetInt16 ()
-        static member ($) (TryGet, _: int    ) = fun (x: JsonValue) -> x.getValue().GetInt32 ()
-        static member ($) (TryGet, _: int64  ) = fun (x: JsonValue) -> x.getValue().GetInt64 ()
-        static member ($) (TryGet, _: uint16 ) = fun (x: JsonValue) -> x.getValue().GetUInt16 ()
-        static member ($) (TryGet, _: uint32 ) = fun (x: JsonValue) -> x.getValue().GetUInt32 ()
-        static member ($) (TryGet, _: uint64 ) = fun (x: JsonValue) -> x.getValue().GetUInt64 ()
-        static member ($) (TryGet, _: byte   ) = fun (x: JsonValue) -> x.getValue().GetByte ()
-        static member ($) (TryGet, _: sbyte  ) = fun (x: JsonValue) -> x.getValue().GetSByte ()
-        static member ($) (TryGet, _: float  ) = fun (x: JsonValue) -> x.getValue().GetDouble ()
-        static member ($) (TryGet, _: float32) = fun (x: JsonValue) -> x.getValue().GetSingle ()
+    // type TryGet = TryGet with
+    static member ($) (_:Encoding, _: decimal) = fun (x: Encoding) -> x.get_InnerValue().GetDecimal ()
+    static member ($) (_:Encoding, _: int16  ) = fun (x: Encoding) -> x.get_InnerValue().GetInt16 ()
+    static member ($) (_:Encoding, _: int    ) = fun (x: Encoding) -> x.get_InnerValue().GetInt32 ()
+    static member ($) (_:Encoding, _: int64  ) = fun (x: Encoding) -> x.get_InnerValue().GetInt64 ()
+    static member ($) (_:Encoding, _: uint16 ) = fun (x: Encoding) -> x.get_InnerValue().GetUInt16 ()
+    static member ($) (_:Encoding, _: uint32 ) = fun (x: Encoding) -> x.get_InnerValue().GetUInt32 ()
+    static member ($) (_:Encoding, _: uint64 ) = fun (x: Encoding) -> x.get_InnerValue().GetUInt64 ()
+    static member ($) (_:Encoding, _: byte   ) = fun (x: Encoding) -> x.get_InnerValue().GetByte ()
+    static member ($) (_:Encoding, _: sbyte  ) = fun (x: Encoding) -> x.get_InnerValue().GetSByte ()
+    static member ($) (_:Encoding, _: float  ) = fun (x: Encoding) -> x.get_InnerValue().GetDouble ()
+    static member ($) (_:Encoding, _: float32) = fun (x: Encoding) -> x.get_InnerValue().GetSingle ()
 
-    let inline tryGet (x: JsonValue) : 't = (TryGet $ Unchecked.defaultof<'t>) x
-
-
-open System.Globalization
-open FSharpPlus
-open FSharpPlus.Data
-open Fleece
-open Fleece.Helpers
-open Fleece.Operators
-open Internals
+    static member inline tryGet (x: Encoding) : 't = (Unchecked.defaultof<Encoding> $ Unchecked.defaultof<'t>) x
 
 
-type [<Struct>] Encoding = Encoding of JsonValue with
 
-    override this.ToString () = let (Encoding x) = this in x.ToString ()
-        
-    static member Parse (x: string) = Encoding (JsonValue.Parse x)
+//open Internals
+
+
+//type Encoding with
+
+    // override this.ToString () = let (Encoding x) = this in x.ToString ()        
+    // static member Parse (x: string) = Encoding (Encoding.Parse x)
         
     static member inline tryRead x =
         match x with
         | JNumber j ->
             try 
-                Ok (tryGet j)
-            with e -> Decode.Fail.invalidValue (Encoding x) (string e)
-        | js -> Decode.Fail.numExpected (Encoding js)
+                Ok (Encoding.tryGet j)
+            with e -> Decode.Fail.invalidValue x (string e)
+        | js -> Decode.Fail.numExpected js
 
-    /// Unwraps the JsonValue inside an IEncoding
-    static member Unwrap (x: IEncoding) = x :?> Encoding |> fun (Encoding s) -> s
+    /// Unwraps the Encoding inside an IEncoding
+    static member Unwrap (x: IEncoding) = x :?> Encoding
 
-    /// Wraps a JsonValue inside an IEncoding
-    static member Wrap x = Encoding x :> IEncoding
+    /// Wraps a Encoding inside an IEncoding
+    static member Wrap x = x :> IEncoding
 
-    static member toIRawCodec (c: Codec<JsonValue, 't>) : Codec<IEncoding, 't> = c |> Codec.compose ((Encoding.Unwrap >> Ok) <-> Encoding.Wrap)
-    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<JsonValue, 't> = c |> Codec.compose ((Encoding.Wrap >> Ok) <-> Encoding.Unwrap)
+    static member toIRawCodec (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.compose ((Encoding.Unwrap >> Ok) <-> Encoding.Wrap)
+    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.compose ((Encoding.Wrap >> Ok) <-> Encoding.Unwrap)
 
 
     static member jsonObjectOfJson = function
-        | JObject x -> Ok (dictAsJsonObject x)
-        | a -> Decode.Fail.objExpected (Encoding a)
+        | JObject x -> Ok (Encoding.dictAsJsonObject x)
+        | a -> Decode.Fail.objExpected a
 
-    static member jsonOfJsonObject (o: JsonObject) = JObject o
+    static member jsonOfJsonObject (o: JsonObject) = Encoding.JObject o
 
     static member createTuple c t = function
-        | JArray a as x -> if List.length a <> c then Decode.Fail.count c (Encoding x) else t a
-        | a -> Decode.Fail.arrExpected (Encoding a)
+        | JArray a as x -> if List.length a <> c then Decode.Fail.count c x else t a
+        | a -> Decode.Fail.arrExpected a
 
     
     //////////////
     // Decoders //
     //////////////
 
-    static member resultD (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Result<'a, 'b>> = function
+    static member resultD (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) : Encoding -> ParseResult<Result<'a, 'b>> = function
         | JObject o as jobj ->
             match Seq.toList o with
             | [KeyValue ("Ok", a)] -> a |> decoder1 |> Result.map Ok
             | [KeyValue ("Error", a)] -> a |> decoder2 |> Result.map Error
-            | _ -> Decode.Fail.invalidValue (Encoding jobj) ""
-        | a -> Decode.Fail.objExpected (Encoding a)
+            | _ -> Decode.Fail.invalidValue (jobj: Encoding) ""
+        | a -> Decode.Fail.objExpected a
 
-    static member choiceD (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> = function
+    static member choiceD (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) : Encoding -> ParseResult<Choice<'a, 'b>> = function
         | JObject o as jobj ->
             match Seq.toList o with
             | [KeyValue ("Choice1Of2", a)] -> a |> decoder1 |> Result.map Choice1Of2
             | [KeyValue ("Choice2Of2", a)] -> a |> decoder2 |> Result.map Choice2Of2
-            | _ -> Decode.Fail.invalidValue (Encoding jobj) ""
-        | a -> Decode.Fail.objExpected (Encoding a)
+            | _ -> Decode.Fail.invalidValue jobj ""
+        | a -> Decode.Fail.objExpected a
 
-    static member choice3D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
+    static member choice3D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) (decoder3: Encoding -> ParseResult<'c>) : Encoding -> ParseResult<Choice<'a, 'b, 'c>> = function
         | JObject o as jobj ->
             match Seq.toList o with
             | [KeyValue ("Choice1Of3", a)] -> a |> decoder1 |> Result.map Choice1Of3
             | [KeyValue ("Choice2Of3", a)] -> a |> decoder2 |> Result.map Choice2Of3
             | [KeyValue ("Choice3Of3", a)] -> a |> decoder3 |> Result.map Choice3Of3
-            | _ -> Decode.Fail.invalidValue (Encoding jobj) ""
-        | a     -> Decode.Fail.objExpected (Encoding a)
+            | _ -> Decode.Fail.invalidValue jobj ""
+        | a     -> Decode.Fail.objExpected a
 
-    static member optionD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
+    static member optionD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<'a option> = function
         | JNull _ -> Ok None
         | x       -> Result.map Some (decoder x)
 
-    static member nullableD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Nullable<'a>> = function
+    static member nullableD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<Nullable<'a>> = function
         | JNull _ -> Ok (Nullable ())
         | x       -> Result.map Nullable (decoder x)
 
-    static member arrayD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
+    static member arrayD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<'a array> = function
         | JArray a -> Seq.traverse decoder a |> Result.map Seq.toArray
-        | a        -> Decode.Fail.arrExpected (Encoding a)
+        | a        -> Decode.Fail.arrExpected a
         
-    static member multiMapD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<MultiObj<'a>> = function
+    static member multiMapD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<MultiObj<'a>> = function
         | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toList |> List.map KeyValuePair |> multiMap)
-        | a         -> Decode.Fail.objExpected (Encoding a)
+        | a         -> Decode.Fail.objExpected a
 
-    static member unitD : JsonValue -> ParseResult<unit> =
+    static member unitD : Encoding -> ParseResult<unit> =
         Encoding.createTuple 0 (fun _ -> (Ok ()))
 
-    static member tuple1D (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
+    static member tuple1D (decoder1: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<Tuple<'a>> =
         Encoding.createTuple 1 (fun a -> Result.map Tuple (decoder1 a.[0]))
 
-    static member tuple2D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
+    static member tuple2D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) : Encoding -> ParseResult<'a * 'b> =
         Encoding.createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
 
-    static member tuple3D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> =
+    static member tuple3D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) (decoder3: Encoding -> ParseResult<'c>) : Encoding -> ParseResult<'a * 'b * 'c> =
         Encoding.createTuple 3 (fun a -> Result.map (fun a b c -> (a, b, c)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2])
     
-    static member tuple4D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
+    static member tuple4D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) (decoder3: Encoding -> ParseResult<'c>) (decoder4: Encoding -> ParseResult<'d>) : Encoding -> ParseResult<'a * 'b * 'c * 'd> =
         Encoding.createTuple 4 (fun a -> Result.map (fun a b c d -> (a, b, c, d)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
     
-    static member tuple5D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
+    static member tuple5D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) (decoder3: Encoding -> ParseResult<'c>) (decoder4: Encoding -> ParseResult<'d>) (decoder5: Encoding -> ParseResult<'e>) : Encoding -> ParseResult<'a * 'b * 'c * 'd * 'e> =
         Encoding.createTuple 5 (fun a -> Result.map (fun a b c d e -> (a, b, c, d, e)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
     
-    static member tuple6D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
+    static member tuple6D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) (decoder3: Encoding -> ParseResult<'c>) (decoder4: Encoding -> ParseResult<'d>) (decoder5: Encoding -> ParseResult<'e>) (decoder6: Encoding -> ParseResult<'f>) : Encoding -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
         Encoding.createTuple 6 (fun a -> Result.map (fun a b c d e f -> (a, b, c, d, e, f)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
     
-    static member tuple7D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
+    static member tuple7D (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) (decoder3: Encoding -> ParseResult<'c>) (decoder4: Encoding -> ParseResult<'d>) (decoder5: Encoding -> ParseResult<'e>) (decoder6: Encoding -> ParseResult<'f>) (decoder7: Encoding -> ParseResult<'g>) : Encoding -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
         Encoding.createTuple 7 (fun a -> Result.map (fun a b c d e f g -> (a, b, c, d, e, f, g)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
 
     static member decimalD x = Encoding.tryRead<decimal> x
@@ -249,31 +266,31 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member enumD x : Result< 't, _> when 't: enum<_> =
         match x with
         | JString null -> Decode.Fail.nullString
-        | JString s    -> match Enum.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (Encoding x) s
-        | a -> Decode.Fail.strExpected (Encoding a)
+        | JString s    -> match Enum.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue x s
+        | a -> Decode.Fail.strExpected a
 
     static member booleanD x =
         match x with
         | JBool b -> Ok b
-        | a -> Decode.Fail.boolExpected (Encoding a)
+        | a -> Decode.Fail.boolExpected a
 
     static member stringD x =
         match x with
         | JString b -> Ok b
         | JNull     -> Ok null
-        | a -> Decode.Fail.strExpected (Encoding a)
+        | a -> Decode.Fail.strExpected a
 
     static member charD x =
         match x with
         | JString null -> Decode.Fail.nullString
         | JString s    -> Ok s.[0]
-        | a -> Decode.Fail.strExpected (Encoding a)
+        | a -> Decode.Fail.strExpected a
 
     static member guidD x =
         match x with
         | JString null -> Decode.Fail.nullString
-        | JString s    -> match Guid.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (Encoding x) s
-        | a -> Decode.Fail.strExpected (Encoding a)
+        | JString s    -> match Guid.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue x s
+        | a -> Decode.Fail.strExpected a
 
     static member dateTimeD x =
         match x with
@@ -281,8 +298,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    ->
             match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue (Encoding x) ""
-        | a -> Decode.Fail.strExpected (Encoding a)
+            | _       -> Decode.Fail.invalidValue x ""
+        | a -> Decode.Fail.strExpected a
 
     static member dateTimeOffsetD x =
         match x with
@@ -290,73 +307,73 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    ->
             match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue (Encoding x) ""
-        | a -> Decode.Fail.strExpected (Encoding a)
+            | _       -> Decode.Fail.invalidValue x ""
+        | a -> Decode.Fail.strExpected a
 
     static member timeSpanD x =
         match x with
         | JString null -> Decode.Fail.nullString
         | JNumber _ as j -> Encoding.int64D j |> Result.map TimeSpan
-        | a -> Decode.Fail.numExpected (Encoding a)
+        | a -> Decode.Fail.numExpected a
 
 
     //////////////
     // Encoders //
     //////////////
 
-    static member resultE (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
+    static member resultE (encoder1: _ -> Encoding) (encoder2: _ -> Encoding) = function
         | Ok    a -> jobj [ "Ok"   , encoder1 a ]
         | Error a -> jobj [ "Error", encoder2 a ]
 
-    static member choiceE (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
+    static member choiceE (encoder1: _ -> Encoding) (encoder2: _ -> Encoding) = function
         | Choice1Of2 a -> jobj [ "Choice1Of2", encoder1 a ]
         | Choice2Of2 a -> jobj [ "Choice2Of2", encoder2 a ]
 
-    static member choice3E (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) (encoder3: _ -> JsonValue) = function
+    static member choice3E (encoder1: _ -> Encoding) (encoder2: _ -> Encoding) (encoder3: _ -> Encoding) = function
         | Choice1Of3 a -> jobj [ "Choice1Of3", encoder1 a ]
         | Choice2Of3 a -> jobj [ "Choice2Of3", encoder2 a ]
         | Choice3Of3 a -> jobj [ "Choice3Of3", encoder3 a ]
 
-    static member optionE (encoder: _ -> JsonValue) = function
-        | None   -> JNull
+    static member optionE (encoder: _ -> Encoding) = function
+        | None   -> Encoding.JNull
         | Some a -> encoder a
 
-    static member nullableE (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
+    static member nullableE (encoder: _ -> Encoding) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else Encoding.JNull
     
-    static member arrayE    (encoder: _ -> JsonValue) (x: 'a [])        = JArray ((Array.map encoder x) |> Array.toList)
-    static member multiMapE (encoder: _ -> JsonValue) (x: MultiObj<'a>) = x |> MultiMap.toList |> Seq.filter (fun (k, _) -> not (isNull k)) |> Seq.map (fun (k, v) -> k, encoder v) |> Map.ofSeq |> JObject
+    static member arrayE    (encoder: _ -> Encoding) (x: 'a [])        = Encoding.JArray ((Array.map encoder x) |> Array.toList)
+    static member multiMapE (encoder: _ -> Encoding) (x: MultiObj<'a>) = x |> MultiMap.toList |> Seq.filter (fun (k, _) -> not (isNull k)) |> Seq.map (fun (k, v) -> k, encoder v) |> Map.ofSeq |> Encoding.JObject
 
-    static member tuple1E (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([|encoder1 a.Item1|] |> Seq.toList)
-    static member tuple2E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> Seq.toList)
-    static member tuple3E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> Seq.toList)
-    static member tuple4E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> Seq.toList)
-    static member tuple5E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|] |> Seq.toList)
-    static member tuple6E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|] |> Seq.toList)
-    static member tuple7E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> Seq.toList)
+    static member tuple1E (encoder1: 'a -> Encoding) (a: Tuple<_>) = Encoding.JArray ([|encoder1 a.Item1|] |> Seq.toList)
+    static member tuple2E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (a, b) = Encoding.JArray ([|encoder1 a; encoder2 b|] |> Seq.toList)
+    static member tuple3E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (a, b, c) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> Seq.toList)
+    static member tuple4E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (a, b, c, d) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> Seq.toList)
+    static member tuple5E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (encoder5: 'e -> Encoding) (a, b, c, d, e) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|] |> Seq.toList)
+    static member tuple6E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (encoder5: 'e -> Encoding) (encoder6: 'f -> Encoding) (a, b, c, d, e, f) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|] |> Seq.toList)
+    static member tuple7E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (encoder5: 'e -> Encoding) (encoder6: 'f -> Encoding) (encoder7: 'g -> Encoding) (a, b, c, d, e, f, g) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> Seq.toList)
     
     // requires F# 5 -->
     static member enumE (x: 't when 't: enum<_>) = JString (string x)
-    static member unitE () = JArray ([||] |> Seq.toList)
+    static member unitE () = Encoding.JArray ([||] |> Seq.toList)
 
-    static member booleanE        (x: bool          ) = JBool x
+    static member booleanE        (x: bool          ) = Encoding.JBool x
     static member stringE         (x: string        ) = JString x
     static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
     static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
-    static member timeSpanE       (x: TimeSpan) = JsonHelpers.create x.Ticks
+    static member timeSpanE       (x: TimeSpan) = Encoding.create x.Ticks
 
-    static member decimalE        (x: decimal       ) = JsonHelpers.create x
-    static member floatE          (x: Double        ) = JsonHelpers.create x
-    static member float32E        (x: Single        ) = JsonHelpers.create x
-    static member intE            (x: int           ) = JsonHelpers.create x
-    static member uint32E         (x: uint32        ) = JsonHelpers.create x
-    static member int64E          (x: int64         ) = JsonHelpers.create x
-    static member uint64E         (x: uint64        ) = JsonHelpers.create x
-    static member int16E          (x: int16         ) = JsonHelpers.create x
-    static member uint16E         (x: uint16        ) = JsonHelpers.create x
-    static member byteE           (x: byte          ) = JsonHelpers.create x
-    static member sbyteE          (x: sbyte         ) = JsonHelpers.create x
-    static member charE           (x: char          ) = JsonHelpers.create x
-    static member guidE           (x: Guid          ) = JsonHelpers.create x
+    static member decimalE        (x: decimal       ) = Encoding.create x
+    static member floatE          (x: Double        ) = Encoding.create x
+    static member float32E        (x: Single        ) = Encoding.create x
+    static member intE            (x: int           ) = Encoding.create x
+    static member uint32E         (x: uint32        ) = Encoding.create x
+    static member int64E          (x: int64         ) = Encoding.create x
+    static member uint64E         (x: uint64        ) = Encoding.create x
+    static member int16E          (x: int16         ) = Encoding.create x
+    static member uint16E         (x: uint16        ) = Encoding.create x
+    static member byteE           (x: byte          ) = Encoding.create x
+    static member sbyteE          (x: sbyte         ) = Encoding.create x
+    static member charE           (x: char          ) = Encoding.create x
+    static member guidE           (x: Guid          ) = Encoding.create x
 
     
     ////////////
@@ -368,7 +385,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member choice  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = Encoding.choiceD (dec codec1) (dec codec2) <-> Encoding.choiceE (enc codec1) (enc codec2)
     static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = Encoding.choice3D (dec codec1) (dec codec2) (dec codec3) <-> Encoding.choice3E (enc codec1) (enc codec2) (enc codec3)
     static member option (codec: Codec<_,_>) = Encoding.optionD (dec codec) <-> Encoding.optionE (enc codec)
-    static member nullable (codec: Codec<JsonValue, 't>) = Encoding.nullableD (dec codec) <-> Encoding.nullableE (enc codec) : Codec<JsonValue, Nullable<'t>>
+    static member nullable (codec: Codec<Encoding, 't>) = Encoding.nullableD (dec codec) <-> Encoding.nullableE (enc codec) : Codec<Encoding, Nullable<'t>>
     static member array    (codec: Codec<_,_>) = Encoding.arrayD  (dec codec) <-> Encoding.arrayE    (enc codec)
     static member multiMap (codec: Codec<_,_>) = Encoding.multiMapD (dec codec) <-> Encoding.multiMapE (enc codec)
 
@@ -381,7 +398,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member tuple6 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>)                      = Encoding.tuple6D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5) (dec codec6)              <-> Encoding.tuple6E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5) (enc codec6)
     static member tuple7 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>) (codec7: Codec<_,_>) = Encoding.tuple7D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5) (dec codec6) (dec codec7) <-> Encoding.tuple7E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5) (enc codec6) (enc codec7)
 
-    static member boolean  : Codec<JsonValue, bool>      =  Encoding.booleanD <-> Encoding.booleanE
+    static member boolean  : Codec<Encoding, bool>      =  Encoding.booleanD <-> Encoding.booleanE
     static member string         = Encoding.stringD         <-> Encoding.stringE
     static member dateTime       = Encoding.dateTimeD       <-> Encoding.dateTimeE
     static member dateTimeOffset = Encoding.dateTimeOffsetD <-> Encoding.dateTimeOffsetE
@@ -443,9 +460,11 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
         member x.getCase =
             match x with
-            | Encoding (JNull    ) -> "JNull"
-            | Encoding (JBool   _) -> "JBool" 
-            | Encoding (JNumber _) -> "JNumber"
-            | Encoding (JString _) -> "JString"
-            | Encoding (JArray  _) -> "JArray"
-            | Encoding (JObject _) -> "JObject"
+            | JNull     -> "JNull"
+            | JBool   _ -> "JBool" 
+            | JNumber _ -> "JNumber"
+            | JString _ -> "JString"
+            | JArray  _ -> "JArray"
+            | JObject _ -> "JObject"
+
+type JsonValue = Encoding
