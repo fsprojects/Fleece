@@ -14,14 +14,19 @@ type JsonValue = System.Json.JsonValue
 
 #if SYSTEMTEXTJSON
 namespace Fleece.SystemTextJson
+type JsonValue = Encoding
 #endif
 
+open Fleece
+open Internals
 open FSharpPlus
 open FSharpPlus.Data
-open Fleece
 open Fleece.Helpers
 open Fleece.Operators
-open Internals
+
+#if SYSTEMTEXTJSON
+open Internal
+#endif
 
 // Main + Backwards compatibility functions
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
