@@ -304,13 +304,13 @@ let tests = [
             }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
-                let actual : DateTime ParseResult = ofJson (SjEncoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
+                let actual : DateTime ParseResult = ofJson (SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
                 let expected = new DateTime(2014,9,5,4,38,7,862)
                 Assert.Equal("DateTime", Ok expected, actual)
             }
 
             test "DateTime without milliseconds" {
-                let actual : DateTime ParseResult = ofJson (SjEncoding (JsonPrimitive "2014-09-05T04:38:07Z"))
+                let actual : DateTime ParseResult = ofJson (SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07Z"))
                 let expected = new DateTime(2014,9,5,4,38,7)
                 Assert.Equal("DateTime", Ok expected, actual)
             }
