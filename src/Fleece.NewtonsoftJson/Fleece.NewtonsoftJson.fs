@@ -408,26 +408,26 @@ type [<Struct>] NsjEncoding = NsjEncoding of JsonValue with
 
 
 [<AutoOpen>]
-module Main =
+type Operators =
 
     ///////////////////////
     // Main entry points //
     ///////////////////////
 
     /// Get the json encoding representation of the value, using its default codec.
-    let inline toJson (x: 'T) : NsjEncoding = toEncoding<NsjEncoding, 'T> x
+    static member inline toJson (x: 'T) : NsjEncoding = toEncoding<NsjEncoding, 'T> x
 
     /// Attempts to decode the value from its json encoding representation, using its default codec.
-    let inline ofJson (x: NsjEncoding) : Result<'T, DecodeError> = ofEncoding x
+    static member inline ofJson (x: NsjEncoding) : Result<'T, DecodeError> = ofEncoding x
 
     /// Get the json value representation of the value, using its default codec.
-    let inline toJsonValue (x: 'T) : JsonValue = toEncoding<NsjEncoding, 'T> x |> NsjEncoding.Unwrap
+    static member inline toJsonValue (x: 'T) : JsonValue = toEncoding<NsjEncoding, 'T> x |> NsjEncoding.Unwrap
 
     /// Attempts to decode the value from its json value representation, using its default codec.
-    let inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (NsjEncoding x)
+    static member inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (NsjEncoding x)
 
     /// Get the json text representation of the value, using its default codec.
-    let inline toJsonText (x: 'T) = x |> toJson |> string
+    static member inline toJsonText (x: 'T) = x |> toJson |> string
 
     /// Attempts to decode the value from its json text representation, using its default codec.
-    let inline ofJsonText (x: string) : Result<'T, DecodeError> = try (NsjEncoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
+    static member inline ofJsonText (x: string) : Result<'T, DecodeError> = try (NsjEncoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x

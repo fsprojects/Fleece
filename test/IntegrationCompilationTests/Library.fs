@@ -143,11 +143,11 @@ module TestSingleDecoderEncoderForAllJsonLibrary =
           ]
           }
 
-    let personText1 = person |> Fleece.Newtonsoft.Main.toJson     |> string
-    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+    let personText1 = person |> Fleece.Newtonsoft.Operators.toJson     |> string
+    let personText2 = person |> Fleece.SystemTextJson.Operators.toJson |> string
 
-    let person1: Person = personText1 |> Fleece.Newtonsoft.Main.ofJsonText     |> Result.get
-    let person2: Person = personText2 |> Fleece.SystemTextJson.Main.ofJsonText |> Result.get
+    let person1: Person = personText1 |> Fleece.Newtonsoft.Operators.ofJsonText     |> Result.get
+    let person2: Person = personText2 |> Fleece.SystemTextJson.Operators.ofJsonText |> Result.get
 
     Assert.StringContains ("", "dob", personText1)
     Assert.StringContains ("", "dob", personText2)
@@ -201,8 +201,8 @@ module TestSingleCodecForAllJsonLibrary =
           ]
           }
     
-    let personText1 = person |> Fleece.Newtonsoft.Main.toJson |> string
-    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+    let personText1 = person |> Fleece.Newtonsoft.Operators.toJson |> string
+    let personText2 = person |> Fleece.SystemTextJson.Operators.toJson |> string
 
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "DoB", personText2)
@@ -308,11 +308,11 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
           ]
           }
 
-    let personText1 = person |> Fleece.Newtonsoft.Main.toJson     |> string
-    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+    let personText1 = person |> Fleece.Newtonsoft.Operators.toJson     |> string
+    let personText2 = person |> Fleece.SystemTextJson.Operators.toJson |> string
 
-    let person1: Person = personText1 |> Fleece.Newtonsoft.Main.ofJsonText     |> Result.get
-    let person2: Person = personText2 |> Fleece.SystemTextJson.Main.ofJsonText |> Result.get
+    let person1: Person = personText1 |> Fleece.Newtonsoft.Operators.ofJsonText     |> Result.get
+    let person2: Person = personText2 |> Fleece.SystemTextJson.Operators.ofJsonText |> Result.get
     
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "dob", personText2)
@@ -381,8 +381,8 @@ module TestDifferentCodecsForEachJsonLibrary =
           ]
           }
     
-    let personText1 = person |> Fleece.Newtonsoft.Main.toJson |> string
-    let personText2 = person |> Fleece.SystemTextJson.Main.toJson |> string
+    let personText1 = person |> Fleece.Newtonsoft.Operators.toJson |> string
+    let personText2 = person |> Fleece.SystemTextJson.Operators.toJson |> string
 
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "dob", personText2)

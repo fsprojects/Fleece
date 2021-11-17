@@ -23,6 +23,7 @@ open Internals
 
 
 // Backwards compatibility functions
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Operators =
     #if FSHARPDATA
     type Encoding = FdEncoding

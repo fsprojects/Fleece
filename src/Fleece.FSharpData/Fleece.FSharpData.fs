@@ -416,26 +416,26 @@ type [<Struct>] FdEncoding = FdEncoding of JsonValue with
 
 
 [<AutoOpen>]
-module Main =
+type Operators =
 
     ///////////////////////
     // Main entry points //
     ///////////////////////
 
     /// Get the json encoding representation of the value, using its default codec.
-    let inline toJson (x: 'T) : FdEncoding = toEncoding<FdEncoding, 'T> x
+    static member inline toJson (x: 'T) : FdEncoding = toEncoding<FdEncoding, 'T> x
 
     /// Attempts to decode the value from its json encoding representation, using its default codec.
-    let inline ofJson (x: FdEncoding) : Result<'T, DecodeError> = ofEncoding x
+    static member inline ofJson (x: FdEncoding) : Result<'T, DecodeError> = ofEncoding x
 
     /// Get the json value representation of the value, using its default codec.
-    let inline toJsonValue (x: 'T) : JsonValue = toEncoding<FdEncoding, 'T> x |> FdEncoding.Unwrap
+    static member inline toJsonValue (x: 'T) : JsonValue = toEncoding<FdEncoding, 'T> x |> FdEncoding.Unwrap
 
     /// Attempts to decode the value from its json value representation, using its default codec.
-    let inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (FdEncoding x)
+    static member inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (FdEncoding x)
 
     /// Get the json text representation of the value, using its default codec.
-    let inline toJsonText (x: 'T) = x |> toJson |> string
+    static member inline toJsonText (x: 'T) = x |> toJson |> string
     
     /// Attempts to decode the value from its json text representation, using its default codec.
-    let inline ofJsonText (x: string) : Result<'T, DecodeError> = try (FdEncoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
+    static member inline ofJsonText (x: string) : Result<'T, DecodeError> = try (FdEncoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
