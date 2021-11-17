@@ -1,17 +1,21 @@
 ﻿#if FSHARPDATA
 namespace Fleece.FSharpData
+type JsonValue = FSharp.Data.JsonValue
 #endif
+
 #if NEWTONSOFT
 namespace Fleece.Newtonsoft
 #endif
+
 #if SYSTEMJSON
 namespace Fleece.SystemJson
+type JsonValue = System.Json.JsonValue
 #endif
+
 #if SYSTEMTEXTJSON
 namespace Fleece.SystemTextJson
 #endif
 
-open System.Globalization
 open FSharpPlus
 open FSharpPlus.Data
 open Fleece
@@ -19,29 +23,37 @@ open Fleece.Helpers
 open Fleece.Operators
 open Internals
 
-
-
-
-// Backwards compatibility functions
+// Main + Backwards compatibility functions
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Operators =
-    #if FSHARPDATA
-    type Encoding = FdEncoding
-    let encoding = FdEncoding
-    #endif
-    #if NEWTONSOFT
-    type Encoding = NsjEncoding
-    let encoding = NsjEncoding
-    #endif
-    #if SYSTEMJSON
-    type Encoding = SjEncoding
-    let encoding = SjEncoding
-    #endif
-    #if SYSTEMTEXTJSON
-    type Encoding = StjEncoding
-    let encoding = StjEncoding
-    #endif
+    
+    ///////////////////////
+    // Main entry points //
+    ///////////////////////
+    
+    /// Gets the json encoding representation of the value, using its default codec.
+    let inline toJson (x: 'T) : Encoding = toEncoding<Encoding, 'T> x
+    
+    /// Attempts to decode the value from its json encoding representation, using its default codec.
+    let inline ofJson (x: Encoding) : Result<'T, DecodeError> = ofEncoding x
+    
+    /// Gets the json value representation of the value, using its default codec.
+    let inline toJsonValue (x: 'T) : JsonValue = toEncoding<Encoding, 'T> x |> Encoding.Unwrap
+    
+    /// Attempts to decode the value from its json value representation, using its default codec.
+    let inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (Encoding x)
+    
+    /// Gets the json text representation of the value, using its default codec.
+    let inline toJsonText (x: 'T) = x |> toJson |> string
+        
+    /// Attempts to decode the value from its json text representation, using its default codec.
+    let inline ofJsonText (x: string) : Result<'T, DecodeError> = try (Encoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
 
+    
+    ///////////////////
+    // Compatibility //
+    ///////////////////    
+    
     type JsonObject = Map<string, Encoding>
 
     let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
@@ -51,7 +63,7 @@ module Operators =
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
         |> enc
 
-    let JString x = encoding (JString x)
+    let JString x = Encoding (JString x)
 
     let JObject x =
         (Codecs.multiMap (Ok <-> id)
@@ -185,7 +197,7 @@ module Lens =
     let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
     let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
     let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
-    let inline _JNumber x = (prism' JNumber <| fun v -> match ofJsonValue v : decimal ParseResult with Ok s -> Some s | _ -> None) x
+    let inline _JNumber x = (prism' JNumber <| fun v -> match Operators.ofJsonValue v : decimal ParseResult with Ok s -> Some s | _ -> None) x
     let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
 
     /// Like '_jnth', but for 'Object' with Text indices.

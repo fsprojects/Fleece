@@ -65,40 +65,40 @@ open Fleece.Operators
 open Internals
 
 
-type [<Struct>] SjEncoding = SjEncoding of JsonValue with
+type [<Struct>] Encoding = Encoding of JsonValue with
 
-    override this.ToString () = let (SjEncoding x) = this in x.ToString ()
+    override this.ToString () = let (Encoding x) = this in x.ToString ()
         
-    static member Parse (x: string) = SjEncoding (JsonValue.Parse x)
+    static member Parse (x: string) = Encoding (JsonValue.Parse x)
         
     static member inline tryRead x =
         match x with
         | JNumber j ->
             try
                 Ok (implicit j)
-            with e -> Decode.Fail.invalidValue (SjEncoding j) (string e)
-        | js -> Decode.Fail.numExpected (SjEncoding js)
+            with e -> Decode.Fail.invalidValue (Encoding j) (string e)
+        | js -> Decode.Fail.numExpected (Encoding js)
 
     /// Unwraps the JsonValue inside an IEncoding
-    static member Unwrap (x: IEncoding) = x :?> SjEncoding |> fun (SjEncoding s) -> s
+    static member Unwrap (x: IEncoding) = x :?> Encoding |> fun (Encoding s) -> s
 
     /// Wraps a JsonValue inside an IEncoding
-    static member Wrap x = SjEncoding x :> IEncoding
+    static member Wrap x = Encoding x :> IEncoding
 
-    static member toIRawCodec (c: Codec<JsonValue, 't>) : Codec<IEncoding, 't> = c |> Codec.compose ((SjEncoding.Unwrap >> Ok) <-> SjEncoding.Wrap)
-    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<JsonValue, 't> = c |> Codec.compose ((SjEncoding.Wrap >> Ok) <-> SjEncoding.Unwrap)
+    static member toIRawCodec (c: Codec<JsonValue, 't>) : Codec<IEncoding, 't> = c |> Codec.compose ((Encoding.Unwrap >> Ok) <-> Encoding.Wrap)
+    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<JsonValue, 't> = c |> Codec.compose ((Encoding.Wrap >> Ok) <-> Encoding.Unwrap)
 
     static member inline jsonObjectOfJson =
         fun (o: JsonValue) ->
             match box o with
             | :? JsonObject as x -> Ok x
-            | _ -> Decode.Fail.objExpected (SjEncoding o)
+            | _ -> Decode.Fail.objExpected (Encoding o)
 
     static member jsonOfJsonObject (o: JsonObject) = o :> JsonValue
 
     static member createTuple c t = function 
-        | JArray a as x -> if length a <> c then Decode.Fail.count c (SjEncoding x) else t a
-        | a -> Decode.Fail.arrExpected (SjEncoding a)
+        | JArray a as x -> if length a <> c then Decode.Fail.count c (Encoding x) else t a
+        | a -> Decode.Fail.arrExpected (Encoding a)
 
     
     //////////////
@@ -110,16 +110,16 @@ type [<Struct>] SjEncoding = SjEncoding of JsonValue with
             match Seq.toList o with
             | [KeyValue ("Ok", a)] -> a |> decoder1 |> Result.map Ok
             | [KeyValue ("Error", a)] -> a |> decoder2 |> Result.map Error
-            | _ -> Decode.Fail.invalidValue (SjEncoding jobj) ""
-        | a -> Decode.Fail.objExpected (SjEncoding a)
+            | _ -> Decode.Fail.invalidValue (Encoding jobj) ""
+        | a -> Decode.Fail.objExpected (Encoding a)
 
     static member choiceD (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> = function
         | JObject o as jobj ->
             match Seq.toList o with
             | [KeyValue ("Choice1Of2", a)] -> a |> decoder1 |> Result.map Choice1Of2
             | [KeyValue ("Choice2Of2", a)] -> a |> decoder2 |> Result.map Choice2Of2
-            | _ -> Decode.Fail.invalidValue (SjEncoding jobj) ""
-        | a -> Decode.Fail.objExpected (SjEncoding a)
+            | _ -> Decode.Fail.invalidValue (Encoding jobj) ""
+        | a -> Decode.Fail.objExpected (Encoding a)
 
     static member choice3D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
         | JObject o as jobj ->
@@ -127,8 +127,8 @@ type [<Struct>] SjEncoding = SjEncoding of JsonValue with
             | [KeyValue ("Choice1Of3", a)] -> a |> decoder1 |> Result.map Choice1Of3
             | [KeyValue ("Choice2Of3", a)] -> a |> decoder2 |> Result.map Choice2Of3
             | [KeyValue ("Choice3Of3", a)] -> a |> decoder3 |> Result.map Choice3Of3
-            | _ -> Decode.Fail.invalidValue (SjEncoding jobj) ""
-        | a     -> Decode.Fail.objExpected (SjEncoding a)
+            | _ -> Decode.Fail.invalidValue (Encoding jobj) ""
+        | a     -> Decode.Fail.objExpected (Encoding a)
 
     static member optionD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
         | JNull _ -> Ok None
@@ -140,76 +140,76 @@ type [<Struct>] SjEncoding = SjEncoding of JsonValue with
 
     static member arrayD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
         | JArray a -> Seq.traverse decoder a |> Result.map Seq.toArray
-        | a        -> Decode.Fail.arrExpected (SjEncoding a)
+        | a        -> Decode.Fail.arrExpected (Encoding a)
         
     static member multiMapD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<MultiObj<'a>> = function
         | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toList |> List.map KeyValuePair |> multiMap)
-        | a         -> Decode.Fail.objExpected (SjEncoding a)
+        | a         -> Decode.Fail.objExpected (Encoding a)
 
     static member unitD : JsonValue -> ParseResult<unit> =
-        SjEncoding.createTuple 0 (fun _ -> (Ok ()))
+        Encoding.createTuple 0 (fun _ -> (Ok ()))
 
     static member tuple1D (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
-        SjEncoding.createTuple 1 (fun a -> Result.map Tuple (decoder1 a.[0]))
+        Encoding.createTuple 1 (fun a -> Result.map Tuple (decoder1 a.[0]))
 
     static member tuple2D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
-        SjEncoding.createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
+        Encoding.createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
 
     static member tuple3D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> =
-        SjEncoding.createTuple 3 (fun a -> Result.map (fun a b c -> (a, b, c)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2])
+        Encoding.createTuple 3 (fun a -> Result.map (fun a b c -> (a, b, c)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2])
     
     static member tuple4D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
-        SjEncoding.createTuple 4 (fun a -> Result.map (fun a b c d -> (a, b, c, d)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
+        Encoding.createTuple 4 (fun a -> Result.map (fun a b c d -> (a, b, c, d)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
     
     static member tuple5D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
-        SjEncoding.createTuple 5 (fun a -> Result.map (fun a b c d e -> (a, b, c, d, e)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
+        Encoding.createTuple 5 (fun a -> Result.map (fun a b c d e -> (a, b, c, d, e)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
     
     static member tuple6D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
-        SjEncoding.createTuple 6 (fun a -> Result.map (fun a b c d e f -> (a, b, c, d, e, f)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
+        Encoding.createTuple 6 (fun a -> Result.map (fun a b c d e f -> (a, b, c, d, e, f)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
     
     static member tuple7D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
-        SjEncoding.createTuple 7 (fun a -> Result.map (fun a b c d e f g -> (a, b, c, d, e, f, g)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
+        Encoding.createTuple 7 (fun a -> Result.map (fun a b c d e f g -> (a, b, c, d, e, f, g)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
 
-    static member decimalD x = SjEncoding.tryRead<decimal> x
-    static member int16D   x = SjEncoding.tryRead<int16>   x
-    static member intD     x = SjEncoding.tryRead<int>     x
-    static member int64D   x = SjEncoding.tryRead<int64>   x
-    static member uint16D  x = SjEncoding.tryRead<uint16>  x
-    static member uint32D  x = SjEncoding.tryRead<uint32>  x
-    static member uint64D  x = SjEncoding.tryRead<uint64>  x
-    static member byteD    x = SjEncoding.tryRead<byte>    x
-    static member sbyteD   x = SjEncoding.tryRead<sbyte>   x
-    static member floatD   x = SjEncoding.tryRead<double>  x
-    static member float32D x = SjEncoding.tryRead<single>  x
+    static member decimalD x = Encoding.tryRead<decimal> x
+    static member int16D   x = Encoding.tryRead<int16>   x
+    static member intD     x = Encoding.tryRead<int>     x
+    static member int64D   x = Encoding.tryRead<int64>   x
+    static member uint16D  x = Encoding.tryRead<uint16>  x
+    static member uint32D  x = Encoding.tryRead<uint32>  x
+    static member uint64D  x = Encoding.tryRead<uint64>  x
+    static member byteD    x = Encoding.tryRead<byte>    x
+    static member sbyteD   x = Encoding.tryRead<sbyte>   x
+    static member floatD   x = Encoding.tryRead<double>  x
+    static member float32D x = Encoding.tryRead<single>  x
 
     static member enumD x : Result< 't, _> when 't: enum<_> =
         match x with
         | JString null -> Decode.Fail.nullString
-        | JString s    -> match Enum.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (SjEncoding x) s
-        | a -> Decode.Fail.strExpected (SjEncoding a)
+        | JString s    -> match Enum.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (Encoding x) s
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member booleanD x =
         match x with
         | JBool b -> Ok b
-        | a -> Decode.Fail.boolExpected (SjEncoding a)
+        | a -> Decode.Fail.boolExpected (Encoding a)
 
     static member stringD x =
         match x with
         | JString b -> Ok b
         | JNull     -> Ok null
-        | a -> Decode.Fail.strExpected (SjEncoding a)
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member charD x =
         match x with
         | JString null -> Decode.Fail.nullString
         | JString s    -> Ok s.[0]
-        | a -> Decode.Fail.strExpected (SjEncoding a)
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member guidD x =
         match x with
         | JString null -> Decode.Fail.nullString
-        | JString s    -> match Guid.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (SjEncoding x) s
-        | a -> Decode.Fail.strExpected (SjEncoding a)
+        | JString s    -> match Guid.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (Encoding x) s
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member dateTimeD x =
         match x with
@@ -217,8 +217,8 @@ type [<Struct>] SjEncoding = SjEncoding of JsonValue with
         | JString s    ->
             match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue (SjEncoding x) ""
-        | a -> Decode.Fail.strExpected (SjEncoding a)
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member dateTimeOffsetD x =
         match x with
@@ -226,14 +226,14 @@ type [<Struct>] SjEncoding = SjEncoding of JsonValue with
         | JString s    ->
             match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue (SjEncoding x) ""
-        | a -> Decode.Fail.strExpected (SjEncoding a)
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member timeSpanD x =
         match x with
         | JString null -> Decode.Fail.nullString
-        | JNumber _ as j -> SjEncoding.int64D j |> Result.map TimeSpan
-        | a -> Decode.Fail.numExpected (SjEncoding a)
+        | JNumber _ as j -> Encoding.int64D j |> Result.map TimeSpan
+        | a -> Decode.Fail.numExpected (Encoding a)
 
 
     //////////////
@@ -299,115 +299,89 @@ type [<Struct>] SjEncoding = SjEncoding of JsonValue with
     // Codecs //
     ////////////
 
-    static member result  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = SjEncoding.resultD (dec codec1) (dec codec2) <-> SjEncoding.resultE (enc codec1) (enc codec2)
+    static member result  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = Encoding.resultD (dec codec1) (dec codec2) <-> Encoding.resultE (enc codec1) (enc codec2)
 
-    static member choice  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = SjEncoding.choiceD (dec codec1) (dec codec2) <-> SjEncoding.choiceE (enc codec1) (enc codec2)
-    static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = SjEncoding.choice3D (dec codec1) (dec codec2) (dec codec3) <-> SjEncoding.choice3E (enc codec1) (enc codec2) (enc codec3)
-    static member option (codec: Codec<_,_>) = SjEncoding.optionD (dec codec) <-> SjEncoding.optionE (enc codec)
-    static member nullable (codec: Codec<JsonValue, 't>) = SjEncoding.nullableD (dec codec) <-> SjEncoding.nullableE (enc codec) : Codec<JsonValue, Nullable<'t>>
-    static member array    (codec: Codec<_,_>) = SjEncoding.arrayD  (dec codec) <-> SjEncoding.arrayE    (enc codec)
-    static member multiMap (codec: Codec<_,_>) = SjEncoding.multiMapD (dec codec) <-> SjEncoding.multiMapE (enc codec)
+    static member choice  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = Encoding.choiceD (dec codec1) (dec codec2) <-> Encoding.choiceE (enc codec1) (enc codec2)
+    static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = Encoding.choice3D (dec codec1) (dec codec2) (dec codec3) <-> Encoding.choice3E (enc codec1) (enc codec2) (enc codec3)
+    static member option (codec: Codec<_,_>) = Encoding.optionD (dec codec) <-> Encoding.optionE (enc codec)
+    static member nullable (codec: Codec<JsonValue, 't>) = Encoding.nullableD (dec codec) <-> Encoding.nullableE (enc codec) : Codec<JsonValue, Nullable<'t>>
+    static member array    (codec: Codec<_,_>) = Encoding.arrayD  (dec codec) <-> Encoding.arrayE    (enc codec)
+    static member multiMap (codec: Codec<_,_>) = Encoding.multiMapD (dec codec) <-> Encoding.multiMapE (enc codec)
 
-    static member unit () = SjEncoding.unitD <-> SjEncoding.unitE
-    static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = SjEncoding.tuple1D (dec codec1)                                                                               <-> SjEncoding.tuple1E (enc codec1)
-    static member tuple2 (codec1: Codec<_,_>) (codec2: Codec<_,_>)                                                                                                          = SjEncoding.tuple2D (dec codec1) (dec codec2)                                                                  <-> SjEncoding.tuple2E (enc codec1) (enc codec2)
-    static member tuple3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>)                                                                                     = SjEncoding.tuple3D (dec codec1) (dec codec2) (dec codec3)                                                     <-> SjEncoding.tuple3E (enc codec1) (enc codec2) (enc codec3)
-    static member tuple4 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>)                                                                = SjEncoding.tuple4D (dec codec1) (dec codec2) (dec codec3) (dec codec4)                                        <-> SjEncoding.tuple4E (enc codec1) (enc codec2) (enc codec3) (enc codec4)
-    static member tuple5 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>)                                           = SjEncoding.tuple5D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5)                           <-> SjEncoding.tuple5E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5)
-    static member tuple6 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>)                      = SjEncoding.tuple6D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5) (dec codec6)              <-> SjEncoding.tuple6E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5) (enc codec6)
-    static member tuple7 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>) (codec7: Codec<_,_>) = SjEncoding.tuple7D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5) (dec codec6) (dec codec7) <-> SjEncoding.tuple7E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5) (enc codec6) (enc codec7)
+    static member unit () = Encoding.unitD <-> Encoding.unitE
+    static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = Encoding.tuple1D (dec codec1)                                                                               <-> Encoding.tuple1E (enc codec1)
+    static member tuple2 (codec1: Codec<_,_>) (codec2: Codec<_,_>)                                                                                                          = Encoding.tuple2D (dec codec1) (dec codec2)                                                                  <-> Encoding.tuple2E (enc codec1) (enc codec2)
+    static member tuple3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>)                                                                                     = Encoding.tuple3D (dec codec1) (dec codec2) (dec codec3)                                                     <-> Encoding.tuple3E (enc codec1) (enc codec2) (enc codec3)
+    static member tuple4 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>)                                                                = Encoding.tuple4D (dec codec1) (dec codec2) (dec codec3) (dec codec4)                                        <-> Encoding.tuple4E (enc codec1) (enc codec2) (enc codec3) (enc codec4)
+    static member tuple5 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>)                                           = Encoding.tuple5D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5)                           <-> Encoding.tuple5E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5)
+    static member tuple6 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>)                      = Encoding.tuple6D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5) (dec codec6)              <-> Encoding.tuple6E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5) (enc codec6)
+    static member tuple7 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>) (codec7: Codec<_,_>) = Encoding.tuple7D (dec codec1) (dec codec2) (dec codec3) (dec codec4) (dec codec5) (dec codec6) (dec codec7) <-> Encoding.tuple7E (enc codec1) (enc codec2) (enc codec3) (enc codec4) (enc codec5) (enc codec6) (enc codec7)
 
-    static member boolean  : Codec<JsonValue, bool>      =  SjEncoding.booleanD <-> SjEncoding.booleanE
-    static member string         = SjEncoding.stringD         <-> SjEncoding.stringE
-    static member dateTime       = SjEncoding.dateTimeD       <-> SjEncoding.dateTimeE
-    static member dateTimeOffset = SjEncoding.dateTimeOffsetD <-> SjEncoding.dateTimeOffsetE
-    static member timeSpan       = SjEncoding.timeSpanD       <-> SjEncoding.timeSpanE
-    static member decimal        = SjEncoding.decimalD        <-> SjEncoding.decimalE
-    static member float          = SjEncoding.floatD          <-> SjEncoding.floatE
-    static member float32        = SjEncoding.float32D        <-> SjEncoding.float32E
-    static member int            = SjEncoding.intD            <-> SjEncoding.intE
-    static member uint32         = SjEncoding.uint32D         <-> SjEncoding.uint32E
-    static member int64          = SjEncoding.int64D          <-> SjEncoding.int64E
-    static member uint64         = SjEncoding.uint64D         <-> SjEncoding.uint64E
-    static member int16          = SjEncoding.int16D          <-> SjEncoding.int16E
-    static member uint16         = SjEncoding.uint16D         <-> SjEncoding.uint16E
-    static member byte           = SjEncoding.byteD           <-> SjEncoding.byteE
-    static member sbyte          = SjEncoding.sbyteD          <-> SjEncoding.sbyteE
-    static member char           = SjEncoding.charD           <-> SjEncoding.charE
-    static member guid           = SjEncoding.guidD           <-> SjEncoding.guidE
+    static member boolean  : Codec<JsonValue, bool>      =  Encoding.booleanD <-> Encoding.booleanE
+    static member string         = Encoding.stringD         <-> Encoding.stringE
+    static member dateTime       = Encoding.dateTimeD       <-> Encoding.dateTimeE
+    static member dateTimeOffset = Encoding.dateTimeOffsetD <-> Encoding.dateTimeOffsetE
+    static member timeSpan       = Encoding.timeSpanD       <-> Encoding.timeSpanE
+    static member decimal        = Encoding.decimalD        <-> Encoding.decimalE
+    static member float          = Encoding.floatD          <-> Encoding.floatE
+    static member float32        = Encoding.float32D        <-> Encoding.float32E
+    static member int            = Encoding.intD            <-> Encoding.intE
+    static member uint32         = Encoding.uint32D         <-> Encoding.uint32E
+    static member int64          = Encoding.int64D          <-> Encoding.int64E
+    static member uint64         = Encoding.uint64D         <-> Encoding.uint64E
+    static member int16          = Encoding.int16D          <-> Encoding.int16E
+    static member uint16         = Encoding.uint16D         <-> Encoding.uint16E
+    static member byte           = Encoding.byteD           <-> Encoding.byteE
+    static member sbyte          = Encoding.sbyteD          <-> Encoding.sbyteE
+    static member char           = Encoding.charD           <-> Encoding.charE
+    static member guid           = Encoding.guidD           <-> Encoding.guidE
 
 
     interface IEncoding with
-        member _.unit           = SjEncoding.toIRawCodec (SjEncoding.unitD <-> SjEncoding.unitE)
-        member _.boolean        = SjEncoding.toIRawCodec SjEncoding.boolean
-        member _.string         = SjEncoding.toIRawCodec SjEncoding.string
-        member _.dateTime       = SjEncoding.toIRawCodec SjEncoding.dateTime
-        member _.dateTimeOffset = SjEncoding.toIRawCodec SjEncoding.dateTimeOffset
-        member _.timeSpan       = SjEncoding.toIRawCodec SjEncoding.timeSpan
-        member _.decimal        = SjEncoding.toIRawCodec SjEncoding.decimal
-        member _.float          = SjEncoding.toIRawCodec SjEncoding.float
-        member _.float32        = SjEncoding.toIRawCodec SjEncoding.float32
-        member _.int            = SjEncoding.toIRawCodec SjEncoding.int
-        member _.uint32         = SjEncoding.toIRawCodec SjEncoding.uint32
-        member _.int64          = SjEncoding.toIRawCodec SjEncoding.int64
-        member _.uint64         = SjEncoding.toIRawCodec SjEncoding.uint64
-        member _.int16          = SjEncoding.toIRawCodec SjEncoding.int16
-        member _.uint16         = SjEncoding.toIRawCodec SjEncoding.uint16
-        member _.byte           = SjEncoding.toIRawCodec SjEncoding.byte
-        member _.sbyte          = SjEncoding.toIRawCodec SjEncoding.sbyte
-        member _.char           = SjEncoding.toIRawCodec SjEncoding.char
-        member _.guid           = SjEncoding.toIRawCodec SjEncoding.guid
+        member _.unit           = Encoding.toIRawCodec (Encoding.unitD <-> Encoding.unitE)
+        member _.boolean        = Encoding.toIRawCodec Encoding.boolean
+        member _.string         = Encoding.toIRawCodec Encoding.string
+        member _.dateTime       = Encoding.toIRawCodec Encoding.dateTime
+        member _.dateTimeOffset = Encoding.toIRawCodec Encoding.dateTimeOffset
+        member _.timeSpan       = Encoding.toIRawCodec Encoding.timeSpan
+        member _.decimal        = Encoding.toIRawCodec Encoding.decimal
+        member _.float          = Encoding.toIRawCodec Encoding.float
+        member _.float32        = Encoding.toIRawCodec Encoding.float32
+        member _.int            = Encoding.toIRawCodec Encoding.int
+        member _.uint32         = Encoding.toIRawCodec Encoding.uint32
+        member _.int64          = Encoding.toIRawCodec Encoding.int64
+        member _.uint64         = Encoding.toIRawCodec Encoding.uint64
+        member _.int16          = Encoding.toIRawCodec Encoding.int16
+        member _.uint16         = Encoding.toIRawCodec Encoding.uint16
+        member _.byte           = Encoding.toIRawCodec Encoding.byte
+        member _.sbyte          = Encoding.toIRawCodec Encoding.sbyte
+        member _.char           = Encoding.toIRawCodec Encoding.char
+        member _.guid           = Encoding.toIRawCodec Encoding.guid
 
-        member _.result c1 c2     = SjEncoding.toIRawCodec (SjEncoding.result   (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2))
-        member _.choice c1 c2     = SjEncoding.toIRawCodec (SjEncoding.choice   (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2))
-        member _.choice3 c1 c2 c3 = SjEncoding.toIRawCodec (SjEncoding.choice3  (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2) (SjEncoding.ofIRawCodec c3))
-        member _.option c         = SjEncoding.toIRawCodec (SjEncoding.option   (SjEncoding.ofIRawCodec c))
-        member _.nullable c       = SjEncoding.toIRawCodec (SjEncoding.nullable (SjEncoding.ofIRawCodec c))
-        member _.array c          = SjEncoding.toIRawCodec (SjEncoding.array    (SjEncoding.ofIRawCodec c))
-        member _.multiMap c       = SjEncoding.toIRawCodec (SjEncoding.multiMap (SjEncoding.ofIRawCodec c))
+        member _.result c1 c2     = Encoding.toIRawCodec (Encoding.result   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
+        member _.choice c1 c2     = Encoding.toIRawCodec (Encoding.choice   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
+        member _.choice3 c1 c2 c3 = Encoding.toIRawCodec (Encoding.choice3  (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
+        member _.option c         = Encoding.toIRawCodec (Encoding.option   (Encoding.ofIRawCodec c))
+        member _.nullable c       = Encoding.toIRawCodec (Encoding.nullable (Encoding.ofIRawCodec c))
+        member _.array c          = Encoding.toIRawCodec (Encoding.array    (Encoding.ofIRawCodec c))
+        member _.multiMap c       = Encoding.toIRawCodec (Encoding.multiMap (Encoding.ofIRawCodec c))
 
-        member _.tuple1 c                    = SjEncoding.toIRawCodec (SjEncoding.tuple1 (SjEncoding.ofIRawCodec c))
-        member _.tuple2 c1 c2                = SjEncoding.toIRawCodec (SjEncoding.tuple2 (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2))
-        member _.tuple3 c1 c2 c3             = SjEncoding.toIRawCodec (SjEncoding.tuple3 (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2) (SjEncoding.ofIRawCodec c3))
-        member _.tuple4 c1 c2 c3 c4          = SjEncoding.toIRawCodec (SjEncoding.tuple4 (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2) (SjEncoding.ofIRawCodec c3) (SjEncoding.ofIRawCodec c4))
-        member _.tuple5 c1 c2 c3 c4 c5       = SjEncoding.toIRawCodec (SjEncoding.tuple5 (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2) (SjEncoding.ofIRawCodec c3) (SjEncoding.ofIRawCodec c4) (SjEncoding.ofIRawCodec c5))
-        member _.tuple6 c1 c2 c3 c4 c5 c6    = SjEncoding.toIRawCodec (SjEncoding.tuple6 (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2) (SjEncoding.ofIRawCodec c3) (SjEncoding.ofIRawCodec c4) (SjEncoding.ofIRawCodec c5) (SjEncoding.ofIRawCodec c6))
-        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = SjEncoding.toIRawCodec (SjEncoding.tuple7 (SjEncoding.ofIRawCodec c1) (SjEncoding.ofIRawCodec c2) (SjEncoding.ofIRawCodec c3) (SjEncoding.ofIRawCodec c4) (SjEncoding.ofIRawCodec c5) (SjEncoding.ofIRawCodec c6) (SjEncoding.ofIRawCodec c7))
+        member _.tuple1 c                    = Encoding.toIRawCodec (Encoding.tuple1 (Encoding.ofIRawCodec c))
+        member _.tuple2 c1 c2                = Encoding.toIRawCodec (Encoding.tuple2 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
+        member _.tuple3 c1 c2 c3             = Encoding.toIRawCodec (Encoding.tuple3 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
+        member _.tuple4 c1 c2 c3 c4          = Encoding.toIRawCodec (Encoding.tuple4 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4))
+        member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIRawCodec (Encoding.tuple5 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5))
+        member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIRawCodec (Encoding.tuple6 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6))
+        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIRawCodec (Encoding.tuple7 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6) (Encoding.ofIRawCodec c7))
 
         // Requires F# 5.0
-        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> (_: Codec<IEncoding, 'u>) : Codec<IEncoding, 't> = SjEncoding.toIRawCodec (SjEncoding.enumD <-> SjEncoding.enumE)
+        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> (_: Codec<IEncoding, 'u>) : Codec<IEncoding, 't> = Encoding.toIRawCodec (Encoding.enumD <-> Encoding.enumE)
 
         member x.getCase =
             match x with
-            | SjEncoding (JNull    ) -> "JNull"
-            | SjEncoding (JBool   _) -> "JBool" 
-            | SjEncoding (JNumber _) -> "JNumber"
-            | SjEncoding (JString _) -> "JString"
-            | SjEncoding (JArray  _) -> "JArray"
-            | SjEncoding (JObject _) -> "JObject"
-
-
-[<AutoOpen>]
-type Operators =
-
-    ///////////////////////
-    // Main entry points //
-    ///////////////////////
-
-    /// Get the json encoding representation of the value, using its default codec.
-    static member inline toJson (x: 'T) : SjEncoding = toEncoding<SjEncoding, 'T> x
-
-    /// Attempts to decode the value from its json encoding representation, using its default codec.
-    static member inline ofJson (x: SjEncoding) : Result<'T, DecodeError> = ofEncoding x
-
-    /// Get the json value representation of the value, using its default codec.
-    static member inline toJsonValue (x: 'T) : JsonValue = toEncoding<SjEncoding, 'T> x |> SjEncoding.Unwrap
-
-    /// Attempts to decode the value from its json value representation, using its default codec.
-    static member inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (SjEncoding x)
-
-    /// Get the json text representation of the value, using its default codec.
-    static member inline toJsonText (x: 'T) = x |> toJson |> string
-    
-    /// Attempts to decode the value from its json text representation, using its default codec.
-    static member inline ofJsonText (x: string) : Result<'T, DecodeError> = try (SjEncoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
+            | Encoding (JNull    ) -> "JNull"
+            | Encoding (JBool   _) -> "JBool" 
+            | Encoding (JNumber _) -> "JNumber"
+            | Encoding (JString _) -> "JString"
+            | Encoding (JArray  _) -> "JArray"
+            | Encoding (JObject _) -> "JObject"

@@ -13,6 +13,7 @@ open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 open Fleece.FSharpData.Lens
 
+type FdEncoding = Fleece.FSharpData.Encoding
 let JString = (JString >> FdEncoding.Unwrap)
 
 #endif
@@ -25,6 +26,7 @@ open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 
+type NsjEncoding = Fleece.Newtonsoft.Encoding
 let JString = (JString >> NsjEncoding.Unwrap)
 
 #endif
@@ -35,6 +37,7 @@ open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 open Fleece.SystemJson.Lens
 
+type SjEncoding = Fleece.SystemJson.Encoding
 let JString = (JString >> SjEncoding.Unwrap)
 
 #endif
@@ -45,6 +48,7 @@ open Fleece.SystemTextJson.Operators
 open System.Text.Json
 open Fleece.SystemTextJson.Lens
 
+type StjEncoding = Fleece.SystemTextJson.Encoding
 let JString = (JString >> StjEncoding.Unwrap)
 
 #endif

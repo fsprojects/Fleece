@@ -226,7 +226,7 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
         DoB: DateTime
         Children: Person list
     } with
-        static member NsjToJson (x: Person) : NsjEncoding =
+        static member NsjToJson (x: Person) : Newtonsoft.Encoding =
             jobj [ 
                 "Name"     .= x.Name
                 "Age"      .= x.Age
@@ -235,7 +235,7 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
                 "Children" .= x.Children
             ]
 
-        static member StjToJson (x: Person) : StjEncoding =
+        static member StjToJson (x: Person) : SystemTextJson.Encoding =
             jobj [ 
                 "name"     .= x.Name
                 "age"      .= x.Age
@@ -244,11 +244,11 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
                 "children" .= x.Children
             ]
 
-        static member Encode (x, r: byref<NsjEncoding>) = r <- Person.NsjToJson x
-        static member Encode (x, r: byref<StjEncoding>) = r <- Person.StjToJson x
+        static member Encode (x, r: byref<Newtonsoft.Encoding>) = r <- Person.NsjToJson x
+        static member Encode (x, r: byref<SystemTextJson.Encoding>) = r <- Person.StjToJson x
 
     type Person with
-        static member OfJson (json: NsjEncoding) =
+        static member OfJson (json: Newtonsoft.Encoding) =
             match json with
             | JObject o ->
                 let name     = o .@ "Name"
@@ -268,7 +268,7 @@ module TestDifferentDecoderEncoderForEachJsonLibrary =
                 | x -> Error <| Uncategorized (sprintf "Error parsing person: %A" x)
             | x -> Decode.Fail.objExpected x
 
-        static member OfJson (json: StjEncoding) =
+        static member OfJson (json: SystemTextJson.Encoding) =
             match json with
             | JObject o ->
                 let name     = o .@ "name"
@@ -338,7 +338,7 @@ module TestDifferentCodecsForEachJsonLibrary =
     }
 
     with
-        static member NsjCodec : Codec<NsjEncoding, _> =
+        static member NsjCodec : Codec<Newtonsoft.Encoding, _> =
             codec {
                 let! name     = jreq "Name"     (fun x -> Some x.Name)
                 and! age      = jreq "Age"      (fun x -> Some x.Age)
@@ -348,7 +348,7 @@ module TestDifferentCodecsForEachJsonLibrary =
                 return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
             } |> ofObjCodec
 
-        static member StjCodec : Codec<StjEncoding, _> =
+        static member StjCodec : Codec<SystemTextJson.Encoding, _> =
             codec {
                 let! name     = jreq "name"     (fun x -> Some x.Name)
                 and! age      = jreq "age"      (fun x -> Some x.Age)
@@ -358,8 +358,8 @@ module TestDifferentCodecsForEachJsonLibrary =
                 return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
             } |> ofObjCodec
 
-        static member Codec (r: byref<Codec<NsjEncoding, _>>) = r <- Person.NsjCodec
-        static member Codec (r: byref<Codec<StjEncoding, _>>) = r <- Person.StjCodec
+        static member Codec (r: byref<Codec<Newtonsoft.Encoding, _>>) = r <- Person.NsjCodec
+        static member Codec (r: byref<Codec<SystemTextJson.Encoding, _>>) = r <- Person.StjCodec
 
     let person =
         { Person.Name = "John"
