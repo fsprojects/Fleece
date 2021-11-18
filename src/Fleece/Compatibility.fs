@@ -14,6 +14,11 @@ type JsonValue = System.Json.JsonValue
 
 #if SYSTEMTEXTJSON
 namespace Fleece.SystemTextJson
+[<AutoOpen>]type X = static member Encoding x = x
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Encoding =
+    let Parse x = Fleece.SystemTextJson.Encoding.Parse x
+
 type JsonValue = Encoding
 #endif
 
@@ -80,9 +85,9 @@ module Operators =
         |> Option.ofResult
 
     let (|JNull|_|) (x: Encoding) =
-        let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
+        let (Codec (dec, _)) = Codecs.option (Ok <-> id)
         match dec x with
-        | Ok x when Nullable.isNull x -> Some ()
+        | Ok x when Option.isNone x -> Some ()
         | _ -> None
 
     let (|JString|_|) (x: Encoding) =

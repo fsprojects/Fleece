@@ -34,17 +34,9 @@ type JsonObject = Map<string, Encoding>
 
 
 /// Wrapper type for JsonElement
-and [<Struct>]Encoding =
-    
-    [<DefaultValue(false)>]
-    val mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit>
+and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit>  } with
 
-    new (x: Encoding) = Encoding x.Value
-    new (x: Choice<JsonElement, Utf8JsonWriter -> string option-> unit>) = Encoding x
-
-    static member Return x = Encoding (Choice1Of2 x)
-
-    
+    static member Return x = { Encoding.Value = Choice1Of2 x }
 
     member this.ToString (options: JsonWriterOptions) =
         use stream = new System.IO.MemoryStream ()
@@ -59,7 +51,7 @@ and [<Struct>]Encoding =
 
     override this.ToString () = this.ToString (new JsonWriterOptions (Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
 
-    static member Parse (x: string) = let doc = JsonDocument.Parse x in Encoding (Choice1Of2 doc.RootElement)
+    static member Parse (x: string) = let doc = JsonDocument.Parse x in { Value = Choice1Of2 doc.RootElement }
 
     member this.get_InnerValue () =
         match this with
@@ -85,7 +77,7 @@ and [<Struct>]Encoding =
 
 // module Internals =
 
-    static member inline private writers keyValueWriter valueWriter = Encoding (Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer))
+    static member inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
 
     static member inline JArray (x: Encoding IReadOnlyList) =
         let f w =
@@ -148,15 +140,6 @@ and [<Struct>]Encoding =
     static member inline tryGet (x: Encoding) : 't = (Unchecked.defaultof<Encoding> $ Unchecked.defaultof<'t>) x
 
 
-
-//open Internals
-
-
-//type Encoding with
-
-    // override this.ToString () = let (Encoding x) = this in x.ToString ()        
-    // static member Parse (x: string) = Encoding (Encoding.Parse x)
-        
     static member inline tryRead x =
         match x with
         | JNumber j ->
@@ -318,56 +301,6 @@ and [<Struct>]Encoding =
         | a -> Decode.Fail.numExpected a
 
 
-    interface IEncoding with
-        member _.unit           = Encoding.toIRawCodec (Encoding.unitD <-> Encoding.unitE)
-        member _.boolean        = Encoding.toIRawCodec Encoding.boolean
-        member _.string         = Encoding.toIRawCodec Encoding.string
-        member _.dateTime       = Encoding.toIRawCodec Encoding.dateTime
-        member _.dateTimeOffset = Encoding.toIRawCodec Encoding.dateTimeOffset
-        member _.timeSpan       = Encoding.toIRawCodec Encoding.timeSpan
-        member _.decimal        = Encoding.toIRawCodec Encoding.decimal
-        member _.float          = Encoding.toIRawCodec Encoding.float
-        member _.float32        = Encoding.toIRawCodec Encoding.float32
-        member _.int            = Encoding.toIRawCodec Encoding.int
-        member _.uint32         = Encoding.toIRawCodec Encoding.uint32
-        member _.int64          = Encoding.toIRawCodec Encoding.int64
-        member _.uint64         = Encoding.toIRawCodec Encoding.uint64
-        member _.int16          = Encoding.toIRawCodec Encoding.int16
-        member _.uint16         = Encoding.toIRawCodec Encoding.uint16
-        member _.byte           = Encoding.toIRawCodec Encoding.byte
-        member _.sbyte          = Encoding.toIRawCodec Encoding.sbyte
-        member _.char           = Encoding.toIRawCodec Encoding.char
-        member _.guid           = Encoding.toIRawCodec Encoding.guid
-
-        member _.result c1 c2     = Encoding.toIRawCodec (Encoding.result   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
-        member _.choice c1 c2     = Encoding.toIRawCodec (Encoding.choice   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
-        member _.choice3 c1 c2 c3 = Encoding.toIRawCodec (Encoding.choice3  (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
-        member _.option c         = Encoding.toIRawCodec (Encoding.option   (Encoding.ofIRawCodec c))
-        member _.nullable c       = Encoding.toIRawCodec (Encoding.nullable (Encoding.ofIRawCodec c))
-        member _.array c          = Encoding.toIRawCodec (Encoding.array    (Encoding.ofIRawCodec c))
-        member _.multiMap c       = Encoding.toIRawCodec (Encoding.multiMap (Encoding.ofIRawCodec c))
-
-        member _.tuple1 c                    = Encoding.toIRawCodec (Encoding.tuple1 (Encoding.ofIRawCodec c))
-        member _.tuple2 c1 c2                = Encoding.toIRawCodec (Encoding.tuple2 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
-        member _.tuple3 c1 c2 c3             = Encoding.toIRawCodec (Encoding.tuple3 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
-        member _.tuple4 c1 c2 c3 c4          = Encoding.toIRawCodec (Encoding.tuple4 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4))
-        member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIRawCodec (Encoding.tuple5 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5))
-        member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIRawCodec (Encoding.tuple6 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6))
-        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIRawCodec (Encoding.tuple7 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6) (Encoding.ofIRawCodec c7))
-
-        // Requires F# 5.0
-        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> (_: Codec<IEncoding, 'u>) : Codec<IEncoding, 't> = Encoding.toIRawCodec (Encoding.enumD <-> Encoding.enumE)
-
-        member x.getCase =
-            match x with
-            | JNull     -> "JNull"
-            | JBool   _ -> "JBool" 
-            | JNumber _ -> "JNumber"
-            | JString _ -> "JString"
-            | JArray  _ -> "JArray"
-            | JObject _ -> "JObject"
-
-
     //////////////
     // Encoders //
     //////////////
@@ -468,6 +401,55 @@ and [<Struct>]Encoding =
     static member char           = Encoding.charD           <-> Encoding.charE
     static member guid           = Encoding.guidD           <-> Encoding.guidE
 
+
+    interface IEncoding with
+        member _.unit           = Encoding.toIRawCodec (Encoding.unitD <-> Encoding.unitE)
+        member _.boolean        = Encoding.toIRawCodec Encoding.boolean
+        member _.string         = Encoding.toIRawCodec Encoding.string
+        member _.dateTime       = Encoding.toIRawCodec Encoding.dateTime
+        member _.dateTimeOffset = Encoding.toIRawCodec Encoding.dateTimeOffset
+        member _.timeSpan       = Encoding.toIRawCodec Encoding.timeSpan
+        member _.decimal        = Encoding.toIRawCodec Encoding.decimal
+        member _.float          = Encoding.toIRawCodec Encoding.float
+        member _.float32        = Encoding.toIRawCodec Encoding.float32
+        member _.int            = Encoding.toIRawCodec Encoding.int
+        member _.uint32         = Encoding.toIRawCodec Encoding.uint32
+        member _.int64          = Encoding.toIRawCodec Encoding.int64
+        member _.uint64         = Encoding.toIRawCodec Encoding.uint64
+        member _.int16          = Encoding.toIRawCodec Encoding.int16
+        member _.uint16         = Encoding.toIRawCodec Encoding.uint16
+        member _.byte           = Encoding.toIRawCodec Encoding.byte
+        member _.sbyte          = Encoding.toIRawCodec Encoding.sbyte
+        member _.char           = Encoding.toIRawCodec Encoding.char
+        member _.guid           = Encoding.toIRawCodec Encoding.guid
+
+        member _.result c1 c2     = Encoding.toIRawCodec (Encoding.result   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
+        member _.choice c1 c2     = Encoding.toIRawCodec (Encoding.choice   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
+        member _.choice3 c1 c2 c3 = Encoding.toIRawCodec (Encoding.choice3  (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
+        member _.option c         = Encoding.toIRawCodec (Encoding.option   (Encoding.ofIRawCodec c))
+        member _.nullable c       = Encoding.toIRawCodec (Encoding.nullable (Encoding.ofIRawCodec c))
+        member _.array c          = Encoding.toIRawCodec (Encoding.array    (Encoding.ofIRawCodec c))
+        member _.multiMap c       = Encoding.toIRawCodec (Encoding.multiMap (Encoding.ofIRawCodec c))
+
+        member _.tuple1 c                    = Encoding.toIRawCodec (Encoding.tuple1 (Encoding.ofIRawCodec c))
+        member _.tuple2 c1 c2                = Encoding.toIRawCodec (Encoding.tuple2 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
+        member _.tuple3 c1 c2 c3             = Encoding.toIRawCodec (Encoding.tuple3 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
+        member _.tuple4 c1 c2 c3 c4          = Encoding.toIRawCodec (Encoding.tuple4 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4))
+        member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIRawCodec (Encoding.tuple5 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5))
+        member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIRawCodec (Encoding.tuple6 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6))
+        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIRawCodec (Encoding.tuple7 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6) (Encoding.ofIRawCodec c7))
+
+        // Requires F# 5.0
+        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> (_: Codec<IEncoding, 'u>) : Codec<IEncoding, 't> = Encoding.toIRawCodec (Encoding.enumD <-> Encoding.enumE)
+
+        member x.getCase =
+            match x with
+            | JNull     -> "JNull"
+            | JBool   _ -> "JBool" 
+            | JNumber _ -> "JNumber"
+            | JString _ -> "JString"
+            | JArray  _ -> "JArray"
+            | JObject _ -> "JObject"
 
 module Internal =
     let inline JArray x  = Encoding.JArray x
