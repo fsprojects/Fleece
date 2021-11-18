@@ -165,14 +165,11 @@ and [<Struct>]Encoding =
             with e -> Decode.Fail.invalidValue x (string e)
         | js -> Decode.Fail.numExpected js
 
-    /// Unwraps the Encoding inside an IEncoding
+    // /// Unwraps the Encoding inside an IEncoding
     static member Unwrap (x: IEncoding) = x :?> Encoding
 
-    /// Wraps a Encoding inside an IEncoding
-    static member Wrap x = x :> IEncoding
-
-    static member toIRawCodec (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.compose ((Encoding.Unwrap >> Ok) <-> Encoding.Wrap)
-    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.compose ((Encoding.Wrap >> Ok) <-> Encoding.Unwrap)
+    static member toIRawCodec (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.upCast
+    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.downCast
 
 
     static member jsonObjectOfJson = function
