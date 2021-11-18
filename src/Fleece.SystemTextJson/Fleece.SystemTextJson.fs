@@ -148,7 +148,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
             with e -> Decode.Fail.invalidValue x (string e)
         | js -> Decode.Fail.numExpected js
 
-    // /// Unwraps the Encoding inside an IEncoding
+    /// Downcasts IEncoding to a SystemTextJson.Encoding
     static member Unwrap (x: IEncoding) = x :?> Encoding
 
     static member toIRawCodec (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.upCast
