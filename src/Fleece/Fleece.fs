@@ -83,7 +83,7 @@ type Encoder<'S, 't> = 't -> 'S
 /// An alias for a MultimMap with string keys
 type MultiObj<'t> = MultiMap<string, 't>
 
-/// A decoder from raw type 'S1 and encoder to raw type 'S2 for string types 't1 and 't2.
+/// A decoder from raw type 'S1 and encoder to raw type 'S2 for strong types 't1 and 't2.
 type Codec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
     static member inline Return f = { Decoder = (fun _ -> Ok f); Encoder = zero }
 
@@ -178,7 +178,7 @@ with
 module Operators =
     // Creates a Codec from a pair of decoder and encoder functions, used mainly internally and in Encoding implementations.
     [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
-    let (<->) decoder encoder : Codec<_,_> = { Decoder = decoder ; Encoder = encoder }
+    let (<->) decoder encoder : Codec<_,_,_,_> = { Decoder = decoder ; Encoder = encoder }
 
     let (|Codec|) { Decoder = x ; Encoder = y } = (x, y)
     let dec (Codec (d, _)) = d
@@ -249,6 +249,9 @@ module Codec =
 
 type Codec<'S1, 'S2, 't1, 't2> with
 
+    static member (<.<) (c1, c2) = Codec.compose c1 c2
+    static member (>.>) (c1, c2) = Codec.compose c2 c1
+    
     static member (<*>) (remainderFields: Codec<MultiObj<'S>, MultiObj<'S>, 'f ->'r, 'T>, currentField: Codec<MultiObj<'S>, MultiObj<'S>, 'f, 'T>) =
         {
             Decoder = fun x ->
@@ -337,12 +340,12 @@ module Codecs =
     let dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
     let timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
     let array       (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
-    let list        (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << Array.toList <-> Array.ofList)
+    let list        (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec    
+    let set         (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
     let resizeArray (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
-    let set         (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << Set <-> Array.ofSeq)
     let multiMap    (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.multiMap (Codec.upCast codec) |> Codec.downCast   : Codec<'Encoding, MultiObj<'a>>
-    let map         (codec: Codec<'Encoding, 'a>) = Codec.compose (multiMap codec) (Ok << Map.ofSeq << MultiMap.toSeq <-> (Map.toSeq >> MultiMap.ofSeq))
-    let dictionary  (codec: Codec<'Encoding, 'a>) = Codec.compose (multiMap codec) (Ok << Dictionary.ofSeq << MultiMap.toSeq <-> (Dictionary.toSeq >> MultiMap.ofSeq))
+    let map         (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq        << MultiMap.toSeq <-> (Map.toSeq        >> MultiMap.ofSeq)) >.> multiMap codec
+    let dictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << MultiMap.toSeq <-> (Dictionary.toSeq >> MultiMap.ofSeq)) >.> multiMap codec
     let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option   (Codec.upCast codec) |> Codec.downCast  : Codec<'Encoding, option<'a>>
     let nullable (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.nullable (Codec.upCast codec) |> Codec.downCast  : Codec<'Encoding, Nullable<'a>>
     let result  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.result (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Result<'a,'b>>
@@ -355,17 +358,17 @@ module Codecs =
     let tuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = instance<'Encoding>.tuple5 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) |> Codec.downCast : Codec<'Encoding, _>
     let tuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = instance<'Encoding>.tuple6 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) |> Codec.downCast : Codec<'Encoding, _>
     let tuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = instance<'Encoding>.tuple7 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) (Codec.upCast codec7) |> Codec.downCast : Codec<'Encoding, _>
-    let base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = (Codec.compose instance<'Encoding>.string (Ok << Convert.FromBase64String <-> Convert.ToBase64String)) |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
+    let base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
 
     let enum (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.enum (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, 'u>
 
     #if !FABLE_COMPILER
-    let arraySegment (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ArraySegment<_> << Seq.toArray <-> ArraySegment.toArray)
+    let arraySegment (codec: Codec<'Encoding, 'a>) = (Ok << ArraySegment<_> << Seq.toArray <-> ArraySegment.toArray) >.> array codec
     #endif
 
     let gmap (keyCodec: Codec<'Encoding, 'a>) (valueCodec: Codec<'Encoding, 'b>) =
         let c = list (tuple2 keyCodec valueCodec)
-        ((Ok << Map.ofList) <-> Map.toList) |> Codec.compose c
+        ((Ok << Map.ofList) <-> Map.toList) >.> c
 
 
 
@@ -515,10 +518,10 @@ type CodecCollection<'Encoding, 'Interface> () =
 
 [<AutoOpen>]
 module Functions =
-    /// Creates a codec from/to IEncoding from an Object-Codec.
+    /// Creates a codec from/to 'Encoding from an Object-Codec.
     /// <param name="objCodec">A codec of MultiMap from/to a strong type.</param>
     /// <returns>A codec of IEncoding from/to a strong type.</returns>
-    let ofObjCodec (objCodec: Codec<MultiObj<'Encoding>, 't>) : Codec<_, 't> = (objCodec |> Codec.compose (Codecs.multiMap ((Ok <-> id))))
+    let ofObjCodec (objCodec: Codec<MultiObj<'Encoding>, 't>) : Codec<_, 't> = objCodec >.> Codecs.multiMap (Ok <-> id)
 
 
 
@@ -552,7 +555,7 @@ type GetCodec with
             let codecs = CodecCollection<'Encoding, 'Base>.GetSubtypes
             match toList codecs with
             | [] -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
-            | _  -> (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) |> Codec.compose (Codecs.multiMap (Ok <-> id))
+            | _  -> (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.multiMap (Ok <-> id)
         )
 
 
