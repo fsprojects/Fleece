@@ -427,7 +427,6 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
         member _.choice c1 c2     = Encoding.toIRawCodec (Encoding.choice   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
         member _.choice3 c1 c2 c3 = Encoding.toIRawCodec (Encoding.choice3  (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
         member _.option c         = Encoding.toIRawCodec (Encoding.option   (Encoding.ofIRawCodec c))
-        member _.nullable c       = Encoding.toIRawCodec (Encoding.nullable (Encoding.ofIRawCodec c))
         member _.array c          = Encoding.toIRawCodec (Encoding.array    (Encoding.ofIRawCodec c))
         member _.multiMap c       = Encoding.toIRawCodec (Encoding.multiMap (Encoding.ofIRawCodec c))
 
