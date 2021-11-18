@@ -336,13 +336,13 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member tuple7E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (encoder5: 'e -> Encoding) (encoder6: 'f -> Encoding) (encoder7: 'g -> Encoding) (a, b, c, d, e, f, g) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> Seq.toList)
     
     // requires F# 5 -->
-    static member enumE (x: 't when 't: enum<_>) = JString (string x)
+    static member enumE (x: 't when 't: enum<_>) = Encoding.JString (string x)
     static member unitE () = Encoding.JArray ([||] |> Seq.toList)
 
     static member booleanE        (x: bool          ) = Encoding.JBool x
-    static member stringE         (x: string        ) = JString x
-    static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
-    static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
+    static member stringE         (x: string        ) = Encoding.JString x
+    static member dateTimeE       (x: DateTime      ) = Encoding.JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
+    static member dateTimeOffsetE (x: DateTimeOffset) = Encoding.JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
     static member timeSpanE       (x: TimeSpan) = Encoding.create x.Ticks
 
     static member decimalE        (x: decimal       ) = Encoding.create x
