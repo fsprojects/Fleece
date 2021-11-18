@@ -228,13 +228,13 @@ module Codec =
 
     let downCast<'t,'S when 'S :> IEncoding> (x: Codec<IEncoding, IEncoding, 't,'t> ) : Codec<'S, 'S, 't, 't>=
         {
-            Decoder = fun (p: 'S) -> (x).Decoder (p :> IEncoding)
+            Decoder = fun (p: 'S) -> x.Decoder (p :> IEncoding)
             Encoder = fun (p: 't) -> x.Encoder p :?> 'S
         }
 
     let upCast<'t,'S when 'S :> IEncoding> (x: Codec<'S, 'S, 't, 't>) : Codec<IEncoding, IEncoding, 't,'t> =
         {
-            Decoder = fun (p: IEncoding) -> (x).Decoder (p :?> 'S)
+            Decoder = fun (p: IEncoding) -> x.Decoder (p :?> 'S)
             Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
         }
 
@@ -804,8 +804,8 @@ module MainFunctions =
 
         member _.Delay x = x ()
         member _.ReturnFrom expr = expr
-        member _.Return (x) = privReturn x
-        member _.Yield  (x) : Codec<MultiObj<'r>, 't> = x
+        member _.Return x = privReturn x
+        member _.Yield  x : Codec<MultiObj<'r>, 't> = x
         member _.MergeSources  (t1, t2)     = privlift2 tuple2 t1 t2
         member _.MergeSources3 (t1, t2, t3) = privlift3 tuple3 t1 t2 t3
         member _.BindReturn (x: Codec<MultiObj<'r>, MultiObj<'r>,_,_>, f) = f <!> x
