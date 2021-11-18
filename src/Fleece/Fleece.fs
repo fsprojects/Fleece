@@ -173,27 +173,21 @@ with
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
 
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+module Internal =
+    let (<->) decoder encoder : Codec<_,_,_,_> = { Decoder = decoder; Encoder = encoder }
 
-module Operators =
-    // Creates a Codec from a pair of decoder and encoder functions, used mainly internally and in Encoding implementations.
-    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
-    let (<->) decoder encoder : Codec<_,_,_,_> = { Decoder = decoder ; Encoder = encoder }
-
-    let (|Codec|) { Decoder = x ; Encoder = y } = (x, y)
-    let dec (Codec (d, _)) = d
-    let enc (Codec (_, e)) = e
-
-open Operators
+open Internal
 
 /// Functions operating on Codecs
 module Codec =
 
-    let decode (Codec (d, _)) = d
-    let encode (Codec (_, e)) = e
+    let decode { Decoder = d } = d
+    let encode { Encoder = e } = e
 
     /// Turns a Codec into another Codec, by mapping it over an isomorphism.
     let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) c =
-        let (Codec (r, w)) = c
+        let { Decoder = r ; Encoder = w } = c
         contramap f r <-> map g w
 
     let inline lift2 (f: 'x1 -> 'x2 -> 'r) (x1: Codec<'S, 'S, 'x1, 'T>) (x2: Codec<'S, 'S, 'x2, 'T>) : Codec<'S, 'S, 'r, 'T> =
@@ -211,8 +205,8 @@ module Codec =
     /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
     /// and codec1 then codec2 for decoding
     let inline compose codec1 codec2 =
-        let (Codec (dec1, enc1)) = codec1
-        let (Codec (dec2, enc2)) = codec2
+        let { Decoder = dec1 ; Encoder = enc1 } = codec1
+        let { Decoder = dec2 ; Encoder = enc2 } = codec2
         (dec1 >> (=<<) dec2) <-> (enc1 << enc2)
 
     /// Maps a function over the decoder.
@@ -429,7 +423,7 @@ type GetCodec with
 
 type GetCodec with
     static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, _> =
-        let (Codec (ofArray, toArray)) = Codecs.array (Ok <-> id)
+        let { Decoder = ofArray; Encoder = toArray } = Codecs.array (Ok <-> id)
         let c1 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t1>
         let c2 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t2>
         let c3 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t3>
@@ -441,28 +435,28 @@ type GetCodec with
         (fun x ->
             match ofArray x with
             | Ok a ->
-                let (t1: 't1 ParseResult) = (dec c1) (a.[0])
-                let (t2: 't2 ParseResult) = (dec c2) (a.[1])
-                let (t3: 't3 ParseResult) = (dec c3) (a.[2])
-                let (t4: 't4 ParseResult) = (dec c4) (a.[3])
-                let (t5: 't5 ParseResult) = (dec c5) (a.[4])
-                let (t6: 't6 ParseResult) = (dec c6) (a.[5])
-                let (t7: 't7 ParseResult) = (dec c7) (a.[6])
-                let (tr: 'tr ParseResult) = (dec cr) (toArray (a.[7..]))
+                let (t1: 't1 ParseResult) = (Codec.decode c1) (a.[0])
+                let (t2: 't2 ParseResult) = (Codec.decode c2) (a.[1])
+                let (t3: 't3 ParseResult) = (Codec.decode c3) (a.[2])
+                let (t4: 't4 ParseResult) = (Codec.decode c4) (a.[3])
+                let (t5: 't5 ParseResult) = (Codec.decode c5) (a.[4])
+                let (t6: 't6 ParseResult) = (Codec.decode c6) (a.[5])
+                let (t7: 't7 ParseResult) = (Codec.decode c7) (a.[6])
+                let (tr: 'tr ParseResult) = (Codec.decode cr) (toArray (a.[7..]))
                 match tr with
                 | Error (IndexOutOfRange (i, _)) -> Error (IndexOutOfRange (i + 8, x))
                 | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
             | Error e -> Error e)
         <->
         fun (t: 'tuple) ->
-            let t1 = (enc c1) (^tuple: (member Item1: 't1) t)
-            let t2 = (enc c2) (^tuple: (member Item2: 't2) t)
-            let t3 = (enc c3) (^tuple: (member Item3: 't3) t)
-            let t4 = (enc c4) (^tuple: (member Item4: 't4) t)
-            let t5 = (enc c5) (^tuple: (member Item5: 't5) t)
-            let t6 = (enc c6) (^tuple: (member Item6: 't6) t)
-            let t7 = (enc c7) (^tuple: (member Item7: 't7) t)
-            let tr = (enc cr) (^tuple: (member Rest : 'tr) t) |> ofArray
+            let t1 = (Codec.encode c1) (^tuple: (member Item1: 't1) t)
+            let t2 = (Codec.encode c2) (^tuple: (member Item2: 't2) t)
+            let t3 = (Codec.encode c3) (^tuple: (member Item3: 't3) t)
+            let t4 = (Codec.encode c4) (^tuple: (member Item4: 't4) t)
+            let t5 = (Codec.encode c5) (^tuple: (member Item5: 't5) t)
+            let t6 = (Codec.encode c6) (^tuple: (member Item6: 't6) t)
+            let t7 = (Codec.encode c7) (^tuple: (member Item7: 't7) t)
+            let tr = (Codec.encode cr) (^tuple: (member Rest : 'tr) t) |> ofArray
             match tr with
             | Error _ -> failwith "Nested tuple didn't decompose as list, check your `list` and your `tupleX` encoder implementations."
             | Ok tr -> toArray ([|t1; t2; t3; t4; t5; t6; t7|] ++ tr)
@@ -654,19 +648,24 @@ type CodecCache<'Encoding, 'T when 'Encoding :> IEncoding and 'Encoding : struct
             c
 
 [<AutoOpen>]
-module MainFunctions =
+module Operators =
+
+    // Creates a Codec from a pair of decoder and encoder functions, used mainly internally and in Encoding implementations.
+    let (<->) decoder encoder : Codec<_,_,_,_> = { Decoder = decoder; Encoder = encoder }
+
+    let (|Codec|) { Decoder = x; Encoder = y } = (x, y)
 
     let inline toEncoding< 'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't) : 'Encoding =
         // let codec = CodecCache.Run<'Encoding,'t> (fun () -> GetCodec.InvokeEnc<'Encoding, _> x)
         // (codec |> enc) x
         // GetCodec.InvokeDec.Invoke<'Encoding, _> Unchecked.defaultof<'t> x
-        (GetEnc.Invoke<'Encoding, OpEncode, _> x |> enc) x
+        (GetEnc.Invoke<'Encoding, OpEncode, _> x |> Codec.encode) x
 
     let inline ofEncoding (x: 'Encoding when 'Encoding :> IEncoding and 'Encoding : struct) : Result<'t, _> =
         // let codec = CodecCache.Run<'Encoding,'t> (fun () -> GetCodec.InvokeDec<'Encoding, _> Unchecked.defaultof<'t>)
         // (codec |> dec) x
         // GetDecoder.Invoke<'Encoding, _> Unchecked.defaultof<'t> x
-        (GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t> |> dec) x
+        (GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t> |> Codec.decode) x
 
 
 
@@ -676,8 +675,8 @@ module MainFunctions =
             | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
             | value:: _ -> decoder value
         {
-            Decoder = fun (o: MultiObj<'Encoding>) -> getFromListWith (dec (c)) o prop
-            Encoder = fun x -> (match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, (enc (c)) x)] | _ -> zero)
+            Decoder = fun (o: MultiObj<'Encoding>) -> getFromListWith (Codec.decode c) o prop
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode c x)] | _ -> zero
         }
 
     let jreqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
@@ -687,8 +686,8 @@ module MainFunctions =
             | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
             | value:: _ -> decoder value
         {
-            Decoder = fun (o: MultiObj<'Encoding>) -> getFromListWith (dec (c ())) o prop
-            Encoder = fun x -> (match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, (enc (c ())) x)] | _ -> zero)
+            Decoder = fun (o: MultiObj<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode (c ()) x)] | _ -> zero
         }
 
     /// Derive automatically a RawCodec, based on GetCodec / Codec static members
@@ -710,8 +709,8 @@ module MainFunctions =
             | []        -> Ok None
             | value:: _ -> decoder value |> Result.map Some
         {
-            Decoder = fun (o: MultiObj<'S>) -> getFromListOptWith (dec c) o prop
-            Encoder = fun x -> (match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, (enc c) x)] | _ -> zero)
+            Decoder = fun (o: MultiObj<'S>) -> getFromListOptWith (Codec.decode c) o prop
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode c x)] | _ -> zero
         }
 
     /// Derives a concrete field codec for an optional field

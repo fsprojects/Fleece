@@ -27,7 +27,7 @@ open Internals
 open FSharpPlus
 open FSharpPlus.Data
 open Fleece.Helpers
-open Fleece.Operators
+
 
 #if SYSTEMTEXTJSON
 open Internal
