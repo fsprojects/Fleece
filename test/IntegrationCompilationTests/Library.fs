@@ -386,3 +386,136 @@ module TestDifferentCodecsForEachJsonLibrary =
 
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "dob", personText2)
+
+
+module TestMixedCases =
+
+    open System
+    open Fleece
+
+    type Age = Age of int with
+        static member ToJson (Age x) = toEncoding x
+        static member OfJson json = ofEncoding json |> Result.map Age
+
+    type Gender =
+        | Male = 1
+        | Female = 2
+    
+    type Person = {
+        Name: string
+        Age: Age
+        Gender: Gender
+        DoB: DateTime
+        Children: Person list
+    }
+
+    with
+        static member get_Codec () : Codec<'Encoding, _> =
+            codec {
+                let! name     = jreq "Name"     (fun x -> Some x.Name)
+                and! age      = jreq "Age"      (fun x -> Some x.Age)
+                and! gender   = jreq "Gender"   (fun x -> Some x.Gender)
+                and! dob      = jreq "DoB"      (fun x -> Some x.DoB)
+                and! children = jreq "Children" (fun x -> Some x.Children)
+                return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
+            } |> ofObjCodec
+
+    let person =
+        { Person.Name = "John"
+          Age = Age 44
+          DoB = DateTime (1975, 01, 01)
+          Gender = Gender.Male
+          Children = 
+          [
+            { Person.Name = "Katy"
+              Age = Age 5
+              DoB = DateTime (1975, 01, 01)
+              Gender = Gender.Female
+              Children = [] }
+            { Person.Name = "Johnny"
+              Age = Age 7
+              DoB = DateTime (1975, 01, 01)
+              Gender = Gender.Male
+              Children = [] }
+          ]
+          }
+    
+    let personText1 = person |> Fleece.Newtonsoft.Operators.toJson |> string
+    let personText2 = person |> Fleece.SystemTextJson.Operators.toJson |> string
+
+    Assert.StringContains ("", "DoB", personText1)
+    Assert.StringContains ("", "DoB", personText2)
+
+
+module TestDifferentCodecsForEachJsonLibraryMixedCases =
+
+    open System
+    open Fleece
+
+    type Age = Age of int with
+        static member Encode (Age x, r: byref<_>) = r <- Fleece.Newtonsoft.Operators.toJson x
+        static member OfJson json = Fleece.Newtonsoft.Operators.ofJson json |> Result.map Age
+        static member Encode (Age x, r: byref<_>) = r <- Fleece.SystemTextJson.Operators.toJson x
+        static member OfJson json = Fleece.SystemTextJson.Operators.ofJson json |> Result.map Age
+
+    type Gender =
+        | Male = 1
+        | Female = 2
+    
+    type Person = {
+        Name: string
+        Age: Age
+        Gender: Gender
+        DoB: DateTime
+        Children: Person list
+    }
+
+    with
+        static member NsjCodec : Codec<Newtonsoft.Encoding, _> =
+            codec {
+                let! name     = jreq "Name"     (fun x -> Some x.Name)
+                and! age      = jreq "Age"      (fun x -> Some x.Age)
+                and! gender   = jreq "Gender"   (fun x -> Some x.Gender)
+                and! dob      = jreq "DoB"      (fun x -> Some x.DoB)
+                and! children = jreq "Children" (fun x -> Some x.Children)
+                return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
+            } |> ofObjCodec
+
+        static member StjCodec : Codec<SystemTextJson.Encoding, _> =
+            codec {
+                let! name     = jreq "name"     (fun x -> Some x.Name)
+                and! age      = jreq "age"      (fun x -> Some x.Age)
+                and! gender   = jreq "gender"   (fun x -> Some x.Gender)
+                and! dob      = jreq "dob"      (fun x -> Some x.DoB)
+                and! children = jreq "children" (fun x -> Some x.Children)
+                return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
+            } |> ofObjCodec
+
+        static member Codec (r: byref<Codec<Newtonsoft.Encoding, _>>) = r <- Person.NsjCodec
+        static member Codec (r: byref<Codec<SystemTextJson.Encoding, _>>) = r <- Person.StjCodec
+
+    let person =
+        { Person.Name = "John"
+          Age = Age 44
+          DoB = DateTime (1975, 01, 01)
+          Gender = Gender.Male
+          Children = 
+          [
+            { Person.Name = "Katy"
+              Age = Age 5
+              DoB = DateTime (1975, 01, 01)
+              Gender = Gender.Female
+              Children = [] }
+            { Person.Name = "Johnny"
+              Age = Age 7
+              DoB = DateTime (1975, 01, 01)
+              Gender = Gender.Male
+              Children = [] }
+          ]
+          }
+    
+    let personText1 = person |> Fleece.Newtonsoft.Operators.toJson |> string
+    let personText2 = person |> Fleece.SystemTextJson.Operators.toJson |> string
+
+    Assert.StringContains ("", "DoB", personText1)
+    Assert.StringContains ("", "dob", personText2)

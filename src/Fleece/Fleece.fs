@@ -19,7 +19,9 @@ type Id2<'t> (v: 't) =
 type OvCodecError = interface end
 type OvDecEncError = interface inherit OvCodecError end
 
-type IDefault8 = interface inherit OvDecEncError end
+type IDefaultA = interface inherit OvDecEncError end
+type IDefault9 = interface inherit IDefaultA end
+type IDefault8 = interface inherit IDefault9 end
 type IDefault7 = interface inherit IDefault8 end
 type IDefault6 = interface inherit IDefault7 end
 type IDefault5 = interface inherit IDefault6 end
@@ -576,6 +578,19 @@ type GetCodec with
         let c : Codec<MultiObj<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<MultiObj<'Encoding>, 'T>) ())
         ofObjCodec c
 
+    static member inline GetCodec (_: 'T, _: IDefaultA, _: 'Operation) : Codec<'Encoding, 'T> =
+        let d = fun js -> (^T : (static member OfJson: 'Encoding -> ^T ParseResult) js) : ^T ParseResult
+        let e: 'T -> 'Encoding = fun t -> (^T : (static member ToJson : ^T -> 'Encoding) t)
+        d <-> e
+
+    static member inline GetCodec (_: 'T, _: IDefault9, _: 'Operation) : Codec<'Encoding, 'T> =
+        let d = fun js -> (^T : (static member OfJson: 'Encoding -> ^T ParseResult) js) : ^T ParseResult
+        let e =
+            fun t ->
+                let mutable r = Unchecked.defaultof<'Encoding>
+                let _ = (^T : (static member Encode : ^T * byref<'Encoding> -> unit) (t, &r))
+                r
+        d <-> e
 
     // Overload for Maps where the Key is not a string
     static member inline GetCodec (_: Map<'K,'V>, _: IDefault5, _: 'Operation) : Codec<'Encoding, Map<'K,'V>> =
