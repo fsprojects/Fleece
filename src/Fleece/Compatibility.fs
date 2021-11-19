@@ -64,7 +64,7 @@ type Operators =
 // Compatibility //
 ///////////////////
 
-[<CompiledName("Compatibility")>]
+[<CompiledName("Compatibility"); System.Obsolete("It will open the compatibility portion of the Operators module. Functions here will be removed in future versions. To use current functions, try removing this 'open' and make sure Fleece namespace is opened.", false)>]
 module Operators =
     
     type JsonObject = Map<string, Encoding>
