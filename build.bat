@@ -7,6 +7,12 @@ if ERRORLEVEL 1 (
 	exit /b 1
 ) 
 
+dotnet pack src\Fleece -c Release
+if ERRORLEVEL 1 (
+	echo Error creating package for Fleece
+	exit /b 1
+)
+
 dotnet pack src\Fleece.SystemJson -c Release
 if ERRORLEVEL 1 (
 	echo Error creating package for Fleece.SystemJson
