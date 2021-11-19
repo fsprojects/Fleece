@@ -5,8 +5,6 @@ open System.Collections.Generic
 open System.Linq
 open Fuchu
 open FSharpPlus
-open Fleece
-open Fleece.Operators
 
 #if FSHARPDATA
 open FSharp.Data
@@ -19,9 +17,9 @@ open Fleece.SystemJson
 open Fleece.SystemJson.Operators
 #endif
 #if SYSTEMTEXTJSON
-open System.Text.Json
 open Fleece.SystemTextJson
 open Fleece.SystemTextJson.Operators
+open System.Text.Json
 #endif
 #if NEWTONSOFT
 open Newtonsoft.Json
@@ -122,14 +120,17 @@ type NestedItem with
             }
         | x -> Decode.Fail.objExpected x
 
-let inline tag prop (codec: Codec<MultiObj<'Encoding>, 't>) : Codec<MultiObj<'Encoding>, 't> =
-    let (Codec (d, e)) = Codecs.multiMap (Ok <-> id)
-    codec
-    |> Codec.compose (
-            (fun (o: MultiObj<_>) -> match map d o.[prop] with [Ok a] -> Ok a | [] -> Decode.Fail.propertyNotFound prop Unchecked.defaultof<_> | _ -> Error <| Uncategorized "Multiple props.")
-            <->
-            (fun (x: MultiObj<_>) -> if Seq.isEmpty x then zero else Fleece.Helpers.multiMap (dict [prop, e x]))   
-            )
+[<AutoOpen>]
+module AdditionalCombinator =
+    open Fleece
+    let inline tag prop (codec: Codec<MultiObj<'Encoding>, 't>) : Codec<MultiObj<'Encoding>, 't> =
+        let (Codec (d, e)) = Codecs.multiMap (Ok <-> id)
+        codec
+        |> Codec.compose (
+                (fun (o: MultiObj<_>) -> match map d o.[prop] with [Ok a] -> Ok a | [] -> Decode.Fail.propertyNotFound prop Unchecked.defaultof<_> | _ -> Error <| Uncategorized "Multiple props.")
+                <->
+                (fun (x: MultiObj<_>) -> if Seq.isEmpty x then zero else Fleece.Helpers.multiMap (dict [prop, e x]))   
+                )
 
 type Vehicle =
    | Bike
@@ -199,6 +200,7 @@ type Car = {
     Kms : int }
 /// Combinators using a more verbose syntax
 module CB =
+    open Fleece
     let colorDecoder = function
         | JString "red"   -> Decode.Success Red  
         | JString "blue"  -> Decode.Success Blue 
@@ -216,9 +218,9 @@ module CB =
     let [<GeneralizableValue>]carCodec<'t> =
         fun i c k  -> { Id = i; Color = c; Kms = k }
         |> withFields
-        |> jfieldWith Codecs.string "id"    (fun x -> x.Id)
-        |> jfieldWith colorCodec    "color" (fun x -> x.Color)
-        |> jfieldWith Codecs.int    "kms"   (fun x -> x.Kms)
+        |> jfieldWith JsonCodec.string "id"    (fun x -> x.Id)
+        |> jfieldWith colorCodec       "color" (fun x -> x.Color)
+        |> jfieldWith JsonCodec.int    "kms"   (fun x -> x.Kms)
         |> Codec.compose jsonObjToValueCodec
 
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
@@ -304,13 +306,13 @@ let tests = [
             }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
-                let actual : DateTime ParseResult = ofJson (SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
+                let actual : DateTime ParseResult = ofJson (Fleece.SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
                 let expected = new DateTime(2014,9,5,4,38,7,862)
                 Assert.Equal("DateTime", Ok expected, actual)
             }
 
             test "DateTime without milliseconds" {
-                let actual : DateTime ParseResult = ofJson (SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07Z"))
+                let actual : DateTime ParseResult = ofJson (Fleece.SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07Z"))
                 let expected = new DateTime(2014,9,5,4,38,7)
                 Assert.Equal("DateTime", Ok expected, actual)
             }

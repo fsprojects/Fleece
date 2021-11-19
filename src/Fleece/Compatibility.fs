@@ -33,39 +33,175 @@ open Fleece.Helpers
 open Internal
 #endif
 
-// Main + Backwards compatibility functions
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Operators =
-    
-    ///////////////////////
-    // Main entry points //
-    ///////////////////////
+
+///////////////////////
+// Main entry points //
+///////////////////////
+
+[<AutoOpen>]
+type Operators =
     
     /// Gets the json encoding representation of the value, using its default codec.
-    let inline toJson (x: 'T) : Encoding = toEncoding<Encoding, 'T> x
+    static member inline toJson (x: 'T) : Encoding = toEncoding<Encoding, 'T> x
     
     /// Attempts to decode the value from its json encoding representation, using its default codec.
-    let inline ofJson (x: Encoding) : Result<'T, DecodeError> = ofEncoding x
+    static member inline ofJson (x: Encoding) : Result<'T, DecodeError> = ofEncoding x
     
     /// Gets the json value representation of the value, using its default codec.
-    let inline toJsonValue (x: 'T) : JsonValue = toEncoding<Encoding, 'T> x |> Encoding.Unwrap
+    static member inline toJsonValue (x: 'T) : JsonValue = toEncoding<Encoding, 'T> x |> Encoding.Unwrap
     
     /// Attempts to decode the value from its json value representation, using its default codec.
-    let inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (Encoding x)
+    static member inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (Encoding x)
     
     /// Gets the json text representation of the value, using its default codec.
-    let inline toJsonText (x: 'T) = x |> toJson |> string
+    static member inline toJsonText (x: 'T) = x |> Operators.toJson |> string
         
     /// Attempts to decode the value from its json text representation, using its default codec.
-    let inline ofJsonText (x: string) : Result<'T, DecodeError> = try (Encoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
+    static member inline ofJsonText (x: string) : Result<'T, DecodeError> = try (Encoding.Parse x |> ofEncoding) with e -> Decode.Fail.parseError e x
 
     
-    ///////////////////
-    // Compatibility //
-    ///////////////////    
+///////////////////
+// Compatibility //
+///////////////////
+
+[<CompiledName("Compatibility")>]
+module Operators =
     
     type JsonObject = Map<string, Encoding>
+    type ParseResult<'t> = Result<'t, DecodeError>
 
+    type Codec<'S1, 'S2, 't1, 't2> = Fleece.Codec<'S1, 'S2, 't1, 't2>
+    type Codec<'S, 't> = Fleece.Codec<'S, 't>
+
+    type DecodeError = Fleece.DecodeError
+
+    let (|JsonTypeMismatch|_|) = function
+        | Fleece.DecodeError.EncodingCaseMismatch (destinationType, encodedValue, expectedCase, actualCase) -> Some (destinationType, encodedValue, expectedCase, actualCase)
+        | _ -> None
+
+    let (|NullString|_|) = function
+        | Fleece.DecodeError.NullString destinationType -> Some destinationType
+        | _ -> None
+
+    let (|IndexOutOfRange|_|) = function
+        | Fleece.DecodeError.IndexOutOfRange (int, iEncoding) -> Some (int, iEncoding)
+        | _ -> None
+
+    let (|InvalidValue|_|) = function
+        | Fleece.DecodeError.InvalidValue (destinationType, iEncoding, additionalInformation) -> Some (destinationType, iEncoding, additionalInformation)
+        | _ -> None
+    
+    let (|PropertyNotFound|_|) = function
+        | Fleece.DecodeError.PropertyNotFound (string, obj) -> Some (string, obj)
+        | _ -> None
+
+    let (|ParseError|_|) = function
+        | Fleece.DecodeError.ParseError (destinationType, exn, string) -> Some (destinationType, exn, string)
+        | _ -> None
+
+    let (|Uncategorized|_|) = function
+       | Fleece.DecodeError.Uncategorized string -> Some string
+       | _ -> None
+
+    let (|Multiple|_|) = function
+        | Fleece.DecodeError.Multiple list -> Some list
+        | _ -> None
+
+    
+    module Decode =
+        let inline Success x = Ok x : ParseResult<_>
+        let (|Success|Failure|) (x: ParseResult<_>) = x |> function
+            | Ok    x -> Success x
+            | Error x -> Failure x
+    
+        module Fail =
+            let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Object", a))
+            let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
+            let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Number", a))
+            let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "String", a))
+            let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
+            let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
+            let inline count e a = Error (IndexOutOfRange (e, a))
+            let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
+            let propertyNotFound p o = Error (PropertyNotFound (p, o))
+            let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+
+    
+    /// Functions operating on Codecs
+    module Codec =
+    
+        let decode { Decoder = d } = d
+        let encode { Encoder = e } = e
+    
+        /// Turns a Codec into another Codec, by mapping it over an isomorphism.
+        let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) c =
+            let { Decoder = r ; Encoder = w } = c
+            contramap f r <-> map g w
+    
+    
+        /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
+        /// and codec1 then codec2 for decoding
+        let inline compose codec1 codec2 =
+            let { Decoder = dec1 ; Encoder = enc1 } = codec1
+            let { Decoder = dec2 ; Encoder = enc2 } = codec2
+            (dec1 >> (=<<) dec2) <-> (enc1 << enc2)
+    
+        /// Maps a function over the decoder.
+        let map (f: 't1 -> 'u1) (field: Codec<MultiObj<'S>, MultiObj<'S>, 't1, 't2>) =
+            {
+                Decoder = fun x ->
+                    match field.Decoder x with
+                    | Error e -> Error e
+                    | Ok a    -> Ok (f a)
+    
+                Encoder = field.Encoder
+            }
+    
+        
+        let ofConcrete x = id x
+    
+        let toConcrete x = id x    
+    
+    [<RequireQualifiedAccess>]
+    module JsonCodec =
+        let result (x: Codec<Encoding, _>) = Codecs.result x
+        let choice (x: Codec<Encoding, _>) = Codecs.choice x
+        let choice3 (x: Codec<Encoding, _>) = Codecs.choice3 x
+        let option (x: Codec<Encoding, _>) = Codecs.option x
+        let nullable (x: Codec<Encoding, _>) = Codecs.nullable x
+        let array (x: Codec<Encoding, _>) = Codecs.array x
+        let arraySegment (x: Codec<Encoding, _>) = Codecs.arraySegment x
+        let list (x: Codec<Encoding, _>) = Codecs.list x
+        let set (x: Codec<Encoding, _>) = Codecs.set x
+        let resizeArray (x: Codec<Encoding, _>) = Codecs.resizeArray x
+        let map         (x: Codec<Encoding, _>) = Codecs.map x
+        let dictionary  (x: Codec<Encoding, _>) = Codecs.dictionary x
+        let unit  () : Codec<Encoding, _> = Codecs.unit
+        let tuple2 (x: Codec<Encoding, _>) = Codecs.tuple2 x
+        let tuple3 (x: Codec<Encoding, _>) = Codecs.tuple3 x
+        let tuple4 (x: Codec<Encoding, _>) = Codecs.tuple4 x
+        let tuple5 (x: Codec<Encoding, _>) = Codecs.tuple5 x
+        let tuple6 (x: Codec<Encoding, _>) = Codecs.tuple6 x
+        let tuple7 (x: Codec<Encoding, _>) = Codecs.tuple7 x
+        let boolean        : Codec<Encoding, _> = Codecs.boolean
+        let string         : Codec<Encoding, _> = Codecs.string
+        let dateTime       : Codec<Encoding, _> = Codecs.dateTime
+        let dateTimeOffset : Codec<Encoding, _> = Codecs.dateTimeOffset
+        let decimal        : Codec<Encoding, _> = Codecs.decimal
+        let float          : Codec<Encoding, _> = Codecs.float
+        let float32        : Codec<Encoding, _> = Codecs.float32
+        let int            : Codec<Encoding, _> = Codecs.int
+        let uint32         : Codec<Encoding, _> = Codecs.uint32
+        let int64          : Codec<Encoding, _> = Codecs.int64
+        let uint64         : Codec<Encoding, _> = Codecs.uint64
+        let int16          : Codec<Encoding, _> = Codecs.int16
+        let uint16         : Codec<Encoding, _> = Codecs.uint16
+        let byte           : Codec<Encoding, _> = Codecs.byte
+        let sbyte          : Codec<Encoding, _> = Codecs.sbyte
+        let char           : Codec<Encoding, _> = Codecs.char
+        let guid           : Codec<Encoding, _> = Codecs.guid
+    
+    
     let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
     let jobj (x: list<string * Encoding>) : Encoding =
@@ -100,7 +236,7 @@ module Operators =
     /// A codec to encode a Json value to a Json text and the other way around.
     let jsonValueToTextCodec = (fun x -> try Ok (Encoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: Encoding) -> string x)
 
-    let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= ofJson
+    let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= Operators.ofJson
 
     let inline jreq name getter = jreq name getter : Codec<MultiObj<Encoding>,_,_,_>
     let inline jopt name getter = jopt name getter : Codec<MultiObj<Encoding>,_,_,_>
