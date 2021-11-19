@@ -88,14 +88,8 @@ type Codec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encode
     static member inline Return f = { Decoder = (fun _ -> Ok f); Encoder = zero }
 
 
-/// A codec for raw type 'S decoding to strong type 't1 and encoding to strong type 't2.
-and SplitCodec<'S, 't1, 't2> = Codec<'S, 'S, 't1, 't2>
-
-/// A decoder from raw type 'S1 and encoder to raw type 'S2 for type 't.
-and Codec<'S1, 'S2, 't> = Codec<'S1, 'S2, 't, 't>
-
 /// A codec for raw type 'S to strong type 't.
-and Codec<'S, 't> = Codec<'S, 'S, 't>
+and Codec<'S, 't> = Codec<'S, 'S, 't, 't>
 
 /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
 and Decoder<'S, 't> = 'S -> Result<'t, DecodeError>
@@ -220,13 +214,13 @@ module Codec =
             Encoder = field.Encoder
         }
 
-    let downCast<'t,'S when 'S :> IEncoding> (x: Codec<IEncoding, IEncoding, 't,'t> ) : Codec<'S, 'S, 't, 't>=
+    let downCast<'t,'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't>=
         {
             Decoder = fun (p: 'S) -> x.Decoder (p :> IEncoding)
             Encoder = fun (p: 't) -> x.Encoder p :?> 'S
         }
 
-    let upCast<'t,'S when 'S :> IEncoding> (x: Codec<'S, 'S, 't, 't>) : Codec<IEncoding, IEncoding, 't,'t> =
+    let upCast<'t,'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding,'t> =
         {
             Decoder = fun (p: IEncoding) -> x.Decoder (p :?> 'S)
             Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
@@ -313,25 +307,25 @@ module Codecs =
 
     let private instance<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = Unchecked.defaultof<'Encoding>
 
-    let unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let char<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let sbyte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.sbyte          |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let uint16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint16         |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let uint32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint32         |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let uint64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint64         |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let int16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int16          |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let int<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>            = instance<'Encoding>.int            |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let int64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int64          |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let decimal<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.decimal        |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let float<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let string<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
-    let timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
+    let unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, _>
+    let boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
+    let guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, _>
+    let char<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, _>
+    let byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, _>
+    let sbyte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.sbyte          |> Codec.downCast : Codec<'Encoding, _>
+    let uint16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint16         |> Codec.downCast : Codec<'Encoding, _>
+    let uint32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint32         |> Codec.downCast : Codec<'Encoding, _>
+    let uint64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint64         |> Codec.downCast : Codec<'Encoding, _>
+    let int16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int16          |> Codec.downCast : Codec<'Encoding, _>
+    let int<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>            = instance<'Encoding>.int            |> Codec.downCast : Codec<'Encoding, _>
+    let int64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int64          |> Codec.downCast : Codec<'Encoding, _>
+    let decimal<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.decimal        |> Codec.downCast : Codec<'Encoding, _>
+    let float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, _>
+    let float<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, _>
+    let string<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, _>
+    let dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, _>
+    let dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
+    let timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
     let array       (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
     let list        (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec    
     let set         (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
@@ -351,7 +345,7 @@ module Codecs =
     let tuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = instance<'Encoding>.tuple5 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) |> Codec.downCast : Codec<'Encoding, _>
     let tuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = instance<'Encoding>.tuple6 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) |> Codec.downCast : Codec<'Encoding, _>
     let tuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = instance<'Encoding>.tuple7 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) (Codec.upCast codec7) |> Codec.downCast : Codec<'Encoding, _>
-    let base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, 'Encoding, _>
+    let base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, _>
 
     let enum (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.enum (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, 'u>
 
@@ -369,29 +363,29 @@ module Codecs =
 type GetCodec =
     interface IDefault1
 
-    static member GetCodec (_: bool          , _: GetCodec, _: 'Operation) = Codecs.boolean        : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: string        , _: GetCodec, _: 'Operation) = Codecs.string         : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: DateTime      , _: GetCodec, _: 'Operation) = Codecs.dateTime       : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: DateTimeOffset, _: GetCodec, _: 'Operation) = Codecs.dateTimeOffset : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: TimeSpan      , _: GetCodec, _: 'Operation) = Codecs.timeSpan       : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: decimal       , _: GetCodec, _: 'Operation) = Codecs.decimal        : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: Double        , _: GetCodec, _: 'Operation) = Codecs.float          : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: Single        , _: GetCodec, _: 'Operation) = Codecs.float32        : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: int           , _: GetCodec, _: 'Operation) = Codecs.int            : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: uint32        , _: GetCodec, _: 'Operation) = Codecs.uint32         : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: int64         , _: GetCodec, _: 'Operation) = Codecs.int64          : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: uint64        , _: GetCodec, _: 'Operation) = Codecs.uint64         : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: int16         , _: GetCodec, _: 'Operation) = Codecs.int16          : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: uint16        , _: GetCodec, _: 'Operation) = Codecs.uint16         : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: byte          , _: GetCodec, _: 'Operation) = Codecs.byte           : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: sbyte         , _: GetCodec, _: 'Operation) = Codecs.sbyte          : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: char          , _: GetCodec, _: 'Operation) = Codecs.char           : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (_: Guid          , _: GetCodec, _: 'Operation) = Codecs.guid           : Codec<'Encoding, 'Encoding, _>
-    static member GetCodec (()               , _: GetCodec, _: 'Operation) = Codecs.unit           : Codec<'Encoding, 'Encoding, _>
+    static member GetCodec (_: bool          , _: GetCodec, _: 'Operation) = Codecs.boolean        : Codec<'Encoding, _>
+    static member GetCodec (_: string        , _: GetCodec, _: 'Operation) = Codecs.string         : Codec<'Encoding, _>
+    static member GetCodec (_: DateTime      , _: GetCodec, _: 'Operation) = Codecs.dateTime       : Codec<'Encoding, _>
+    static member GetCodec (_: DateTimeOffset, _: GetCodec, _: 'Operation) = Codecs.dateTimeOffset : Codec<'Encoding, _>
+    static member GetCodec (_: TimeSpan      , _: GetCodec, _: 'Operation) = Codecs.timeSpan       : Codec<'Encoding, _>
+    static member GetCodec (_: decimal       , _: GetCodec, _: 'Operation) = Codecs.decimal        : Codec<'Encoding, _>
+    static member GetCodec (_: Double        , _: GetCodec, _: 'Operation) = Codecs.float          : Codec<'Encoding, _>
+    static member GetCodec (_: Single        , _: GetCodec, _: 'Operation) = Codecs.float32        : Codec<'Encoding, _>
+    static member GetCodec (_: int           , _: GetCodec, _: 'Operation) = Codecs.int            : Codec<'Encoding, _>
+    static member GetCodec (_: uint32        , _: GetCodec, _: 'Operation) = Codecs.uint32         : Codec<'Encoding, _>
+    static member GetCodec (_: int64         , _: GetCodec, _: 'Operation) = Codecs.int64          : Codec<'Encoding, _>
+    static member GetCodec (_: uint64        , _: GetCodec, _: 'Operation) = Codecs.uint64         : Codec<'Encoding, _>
+    static member GetCodec (_: int16         , _: GetCodec, _: 'Operation) = Codecs.int16          : Codec<'Encoding, _>
+    static member GetCodec (_: uint16        , _: GetCodec, _: 'Operation) = Codecs.uint16         : Codec<'Encoding, _>
+    static member GetCodec (_: byte          , _: GetCodec, _: 'Operation) = Codecs.byte           : Codec<'Encoding, _>
+    static member GetCodec (_: sbyte         , _: GetCodec, _: 'Operation) = Codecs.sbyte          : Codec<'Encoding, _>
+    static member GetCodec (_: char          , _: GetCodec, _: 'Operation) = Codecs.char           : Codec<'Encoding, _>
+    static member GetCodec (_: Guid          , _: GetCodec, _: 'Operation) = Codecs.guid           : Codec<'Encoding, _>
+    static member GetCodec (()               , _: GetCodec, _: 'Operation) = Codecs.unit           : Codec<'Encoding, _>
 
     // Dummy overloads
-    static member GetCodec (_: OpCodec  , _: GetCodec, _: OpEncode) =  Unchecked.defaultof<_>      : Codec<'Encoding, 'Encoding, OpCodec>
-    static member GetCodec (_: OpEncode , _: GetCodec, _: OpEncode) =  Unchecked.defaultof<_>      : Codec<'Encoding, 'Encoding, OpEncode>
+    static member GetCodec (_: OpCodec  , _: GetCodec, _: OpEncode) =  Unchecked.defaultof<_>      : Codec<'Encoding, OpCodec>
+    static member GetCodec (_: OpEncode , _: GetCodec, _: OpEncode) =  Unchecked.defaultof<_>      : Codec<'Encoding, OpEncode>
 
 
     /// Invoker for Codec
