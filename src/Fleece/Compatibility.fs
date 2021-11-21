@@ -147,7 +147,7 @@ module Operators =
             (dec1 >> (=<<) dec2) <-> (enc1 << enc2)
     
         /// Maps a function over the decoder.
-        let map (f: 't1 -> 'u1) (field: Codec<MultiObj<'S>, MultiObj<'S>, 't1, 't2>) =
+        let map (f: 't1 -> 'u1) (field: Codec<PropertyList<'S>, PropertyList<'S>, 't1, 't2>) =
             {
                 Decoder = fun x ->
                     match field.Decoder x with
@@ -214,7 +214,7 @@ module Operators =
     let JNumber x : Encoding = (Codecs.decimal |> Codec.encode) x
     let JString x : Encoding = (Codecs.string  |> Codec.encode) x
     let JArray (x: System.Collections.Generic.IReadOnlyList<Encoding>) : Encoding = (Codecs.array (Ok <-> id) |> Codec.encode) (toArray x)
-    let JObject (x: MultiObj<Encoding>) : Encoding = (Codecs.multiMap (Ok <-> id) |> Codec.encode) x
+    let JObject (x: PropertyList<Encoding>) : Encoding = (Codecs.multiMap (Ok <-> id) |> Codec.encode) x
     
     let (|JNull|_|)   (x: Encoding) = match (Codecs.option (Ok <-> id) |> Codec.decode) x with | Ok None -> Some () | _ -> None    
     let (|JBool|_|)   (x: Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
@@ -224,45 +224,45 @@ module Operators =
     let (|JObject|_|) (x: Encoding) = (Codecs.multiMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
 
     /// A codec to encode a collection of property/values into a Json encoding and the other way around.
-    let jsonObjToValueCodec : Codec<Encoding, MultiObj<Encoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
+    let jsonObjToValueCodec : Codec<Encoding, PropertyList<Encoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
 
     /// A codec to encode a Json value to a Json text and the other way around.
     let jsonValueToTextCodec = (fun x -> try Ok (Encoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: Encoding) -> string x)
 
     let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= Operators.ofJson
 
-    let inline jreq name getter = jreq name getter : Codec<MultiObj<Encoding>,_,_,_>
-    let inline jopt name getter = jopt name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline jreq name getter = jreq name getter : Codec<PropertyList<Encoding>,_,_,_>
+    let inline jopt name getter = jopt name getter : Codec<PropertyList<Encoding>,_,_,_>
     
-    let inline jreqWith codec name getter = jreqWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
-    let inline joptWith codec name getter = joptWith codec name getter : Codec<MultiObj<Encoding>,_,_,_>
+    let inline jreqWith codec name getter = jreqWith codec name getter : Codec<PropertyList<Encoding>,_,_,_>
+    let inline joptWith codec name getter = joptWith codec name getter : Codec<PropertyList<Encoding>,_,_,_>
 
-    let inline jchoice (codecs: seq<Codec<MultiObj<Encoding>, MultiObj<Encoding>, 't1, 't2>>) =
+    let inline jchoice (codecs: seq<Codec<PropertyList<Encoding>, PropertyList<Encoding>, 't1, 't2>>) =
         let head, tail = Seq.head codecs, Seq.tail codecs
         foldBack (<|>) tail head
 
         
 
     /// Gets a value from a Json object
-    let jgetWith ofJson (o: MultiObj<Encoding>) key =
+    let jgetWith ofJson (o: PropertyList<Encoding>) key =
         match o.[key] with
         | value::_ -> ofJson value
         | _ -> Decode.Fail.propertyNotFound key (o |> MultiMap.mapValues (fun x -> x :> IEncoding))
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let jgetOptWith ofJson (o: MultiObj<Encoding>) key =
+    let jgetOptWith ofJson (o: PropertyList<Encoding>) key =
         match o.[key] with
         | JNull _::_ -> Ok None
         | value  ::_ -> ofJson value |> Result.map Some
         | _ -> Ok None
 
     /// Gets a value from a Json object
-    let inline jget (o: MultiObj<Encoding>) key = jgetWith ofEncoding o key
+    let inline jget (o: PropertyList<Encoding>) key = jgetWith ofEncoding o key
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.
-    let inline jgetOpt (o: MultiObj<Encoding>) key = jgetOptWith ofEncoding o key
+    let inline jgetOpt (o: PropertyList<Encoding>) key = jgetOptWith ofEncoding o key
 
     /// Gets a value from a Json object
     let inline (.@) o key = jget o key

@@ -83,7 +83,7 @@ type Encoder<'S, 't> = 't -> 'S
 
 
 /// An alias for a MultimMap with string keys
-type MultiObj<'t> = MultiMap<string, 't>
+type PropertyList<'t> = MultiMap<string, 't>
 
 /// A decoder from raw type 'S1 and encoder to raw type 'S2 for strong types 't1 and 't2.
 type Codec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
@@ -125,7 +125,7 @@ and IEncoding =
     abstract choice3        : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, Choice<'t1,'t2,'t3>>
     abstract option         : Codec<IEncoding, 't>  -> Codec<IEncoding, option<'t>>
     abstract array          : Codec<IEncoding, 't>  -> Codec<IEncoding, 't []>
-    abstract multiMap       : Codec<IEncoding, 't>  -> Codec<IEncoding, MultiObj<'t>>
+    abstract multiMap       : Codec<IEncoding, 't>  -> Codec<IEncoding, PropertyList<'t>>
     abstract tuple1         : Codec<IEncoding, 't>  -> Codec<IEncoding, Tuple<'t>>
     abstract tuple2         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't1 * 't2>
     abstract tuple3         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't1 * 't2 * 't3>
@@ -146,7 +146,7 @@ and DecodeError =
     | NullString of DestinationType: Type
     | IndexOutOfRange of int * IEncoding
     | InvalidValue of DestinationType:  Type * EncodedValue: IEncoding * AdditionalInformation: string
-    | PropertyNotFound of string * MultiObj<IEncoding>
+    | PropertyNotFound of string * PropertyList<IEncoding>
     | ParseError of DestinationType: Type * exn * string
     | Uncategorized of string
     | Multiple of DecodeError list
@@ -206,7 +206,7 @@ module Codec =
         (dec1 >> (=<<) dec2) <-> (enc1 << enc2)
 
     /// Maps a function over the decoder.
-    let map (f: 't1 -> 'u1) (field: Codec<MultiObj<'S>, MultiObj<'S>, 't1, 't2>) =
+    let map (f: 't1 -> 'u1) (field: Codec<PropertyList<'S>, PropertyList<'S>, 't1, 't2>) =
         {
             Decoder = fun x ->
                 match field.Decoder x with
@@ -241,7 +241,7 @@ type Codec<'S1, 'S2, 't1, 't2> with
     static member (<.<) (c1, c2) = Codec.compose c1 c2
     static member (>.>) (c1, c2) = Codec.compose c2 c1
     
-    static member (<*>) (remainderFields: Codec<MultiObj<'S>, MultiObj<'S>, 'f ->'r, 'T>, currentField: Codec<MultiObj<'S>, MultiObj<'S>, 'f, 'T>) =
+    static member (<*>) (remainderFields: Codec<PropertyList<'S>, PropertyList<'S>, 'f ->'r, 'T>, currentField: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
         {
             Decoder = fun x ->
                 match remainderFields.Decoder x, lazy (currentField.Decoder x) with
@@ -252,15 +252,15 @@ type Codec<'S1, 'S2, 't1, 't2> with
         }
 
     /// Apply two codecs in such a way that the field values are ignored when decoding.
-    static member ( *>) (f: Codec<MultiObj<'S>, MultiObj<'S>, 't, 'u>, x) = f *> x : Codec<MultiObj<'S>, 'u>
+    static member ( *>) (f: Codec<PropertyList<'S>, PropertyList<'S>, 't, 'u>, x) = f *> x : Codec<PropertyList<'S>, 'u>
 
     /// Apply two codecs in such a way that the field values are ignored when decoding.
-    static member (<* )  (x, f: Codec<MultiObj<'S>, MultiObj<'S>, 't, 'u>) = x <* f : Codec<MultiObj<'S>, 'u>
+    static member (<* )  (x, f: Codec<PropertyList<'S>, PropertyList<'S>, 't, 'u>) = x <* f : Codec<PropertyList<'S>, 'u>
 
-    static member (<!>) (f, field: Codec<MultiObj<'S>, MultiObj<'S>, 'f, 'T>) = Codec.map f field
-    static member Map   (field: Codec<MultiObj<'S>, MultiObj<'S>, 'f, 'T>, f) = Codec.map f field
+    static member (<!>) (f, field: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) = Codec.map f field
+    static member Map   (field: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>, f) = Codec.map f field
 
-    static member (<|>) (source: Codec<MultiObj<'S>, MultiObj<'S>, 'f, 'T>, alternative: Codec<MultiObj<'S>, MultiObj<'S>, 'f, 'T>) =
+    static member (<|>) (source: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>, alternative: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
         {
             Decoder = fun r ->
                 match source.Decoder r, lazy (alternative.Decoder r) with
@@ -271,7 +271,7 @@ type Codec<'S1, 'S2, 't1, 't2> with
             Encoder = fun t -> source.Encoder t ++ alternative.Encoder t
         }
 
-    static member Lift2 (f: 'x ->'y ->'r, x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>, y: Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+    static member Lift2 (f: 'x ->'y ->'r, x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>, y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
         {
             Decoder = fun s -> ( (f <!> x.Decoder s : ParseResult<'y -> 'r>) <*> y.Decoder s : ParseResult<'r> )
             Encoder = x.Encoder ++ y.Encoder
@@ -332,7 +332,7 @@ module Codecs =
     let list        (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec    
     let set         (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
     let resizeArray (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
-    let multiMap    (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.multiMap (Codec.upCast codec) |> Codec.downCast   : Codec<'Encoding, MultiObj<'a>>
+    let multiMap    (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.multiMap (Codec.upCast codec) |> Codec.downCast   : Codec<'Encoding, PropertyList<'a>>
     let map         (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq        << MultiMap.toSeq <-> (Map.toSeq        >> MultiMap.ofSeq)) >.> multiMap codec
     let dictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << MultiMap.toSeq <-> (Dictionary.toSeq >> MultiMap.ofSeq)) >.> multiMap codec
     let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option   (Codec.upCast codec) |> Codec.downCast  : Codec<'Encoding, option<'a>>
@@ -478,7 +478,7 @@ type GetCodec with static member inline GetCodec (_: list<'a>  when 'Encoding :>
 type GetCodec with static member inline GetCodec (_: Set<'a>   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding,Set<'a>>    = Codecs.set    (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 type GetCodec with static member inline GetCodec (_: Map<string, 'a>   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, Map<string, 'a>>    = Codecs.map (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 
-type GetCodec with static member inline GetCodec (_: MultiObj<'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, MultiObj<'a>> = Codecs.multiMap (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+type GetCodec with static member inline GetCodec (_: PropertyList<'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, PropertyList<'a>> = Codecs.multiMap (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 
 type GetCodec with
     static member inline GetCodec (_: Dictionary<string, 'a>   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, Dictionary<string, 'a>>    = Codecs.dictionary (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
@@ -496,8 +496,8 @@ type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c * 'd * 'e * 'f
 type GetCodec with static member inline GetCodec (_: 't when 't : enum<_> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType, _: GetCodec, _: 'Operation) = Codecs.enum (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'u>)
 
 type CodecCollection<'Encoding, 'Interface> () =
-    static let mutable subtypes : Dictionary<Type, unit -> Codec<MultiObj<'Encoding>, 'Interface>> = new Dictionary<_,_> ()
-    static member GetSubtypes   : Dictionary<Type, unit -> Codec<MultiObj<'Encoding>, 'Interface>> = subtypes
+    static let mutable subtypes : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = new Dictionary<_,_> ()
+    static member GetSubtypes   : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = subtypes
     static member AddSubtype ty x =
         match Dictionary.tryGetValue ty subtypes with
         | Some _ -> ()
@@ -510,7 +510,7 @@ module Functions =
     /// Creates a codec from/to 'Encoding from an Object-Codec.
     /// <param name="objCodec">A codec of MultiMap from/to a strong type.</param>
     /// <returns>A codec of IEncoding from/to a strong type.</returns>
-    let ofObjCodec (objCodec: Codec<MultiObj<'Encoding>, 't>) : Codec<_, 't> = objCodec >.> Codecs.multiMap (Ok <-> id)
+    let ofObjCodec (objCodec: Codec<PropertyList<'Encoding>, 't>) : Codec<_, 't> = objCodec >.> Codecs.multiMap (Ok <-> id)
 
 
 
@@ -535,7 +535,7 @@ type GetCodec with
 
 type GetCodec with
     static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault7, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
-        let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<MultiObj<'Encoding>, _> =
+        let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<PropertyList<'Encoding>, _> =
 
             let head, tail = Seq.head codecs, Seq.tail codecs
             let r = foldBack (<|>) tail head
@@ -561,8 +561,8 @@ type GetCodec with
     
 
     static member inline GetCodec (_: 'T, _: IDefault6, _: 'Operation) : Codec<'Encoding, 'T> = // when 'Encoding :> IEncoding and 'Encoding : struct =
-        // let c = (^T : (static member Codec: Codec< MultiObj<'Encoding>, 'T>) ())
-        // (c |> Codec.compose (GetCodec.Invoke<'Encoding, _> (Unchecked.defaultof<MultiObj<'Encoding>>, Unchecked.defaultof<'Encoding>)))
+        // let c = (^T : (static member Codec: Codec< PropertyList<'Encoding>, 'T>) ())
+        // (c |> Codec.compose (GetCodec.Invoke<'Encoding, _> (Unchecked.defaultof<PropertyList<'Encoding>>, Unchecked.defaultof<'Encoding>)))
         let c : Codec< 'Encoding, 'T> = (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
         c
 
@@ -575,7 +575,7 @@ type GetCodec with
     // [<Obsolete("This function resolves to a deprecated 'JsonObjCodec' method and it won't be supported in future versions of this library. Please rename it to 'Codec' or 'get_Codec ()' and convert the result by applying the 'ofObjCodec' function.")>]
     // But adding the warning changes overload resolution.
     static member inline GetCodec (_: 'T, _: IDefault8, _: 'Operation) : Codec<'Encoding, 'T> =
-        let c : Codec<MultiObj<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<MultiObj<'Encoding>, 'T>) ())
+        let c : Codec<PropertyList<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<PropertyList<'Encoding>, 'T>) ())
         ofObjCodec c
 
     static member inline GetCodec (_: 'T, _: IDefaultA, _: 'Operation) : Codec<'Encoding, 'T> =
@@ -679,23 +679,23 @@ module Operators =
 
 
     let jreqWith (c: Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
-        let getFromListWith decoder (m: MultiObj<_>) key =
+        let getFromListWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
             | value:: _ -> decoder value
         {
-            Decoder = fun (o: MultiObj<'Encoding>) -> getFromListWith (Codec.decode c) o prop
+            Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode c) o prop
             Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode c x)] | _ -> zero
         }
 
     let jreqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
-        let getFromListWith decoder (m: MultiObj<_>) key =
+        let getFromListWith decoder (m: PropertyList<_>) key =
 
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
             | value:: _ -> decoder value
         {
-            Decoder = fun (o: MultiObj<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop
+            Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop
             Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode (c ()) x)] | _ -> zero
         }
 
@@ -709,21 +709,21 @@ module Operators =
     /// <param name="name">A string that will be used as key to the field.</param>
     /// <param name="getter">The field getter function.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param, 'T> = jreqWithLazy (getCodec<'Encoding, 'param>) name getter
+    let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param, 'T> = jreqWithLazy (getCodec<'Encoding, 'param>) name getter
 
     /// <summary>Same as jopt but using an explicit codec.</summary>
     let joptWith c (prop: string) (getter: 'T -> 'Value option) =
-        let getFromListOptWith decoder (m: MultiObj<_>) key =
+        let getFromListOptWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Ok None
             | value:: _ -> decoder value |> Result.map Some
         {
-            Decoder = fun (o: MultiObj<'S>) -> getFromListOptWith (Codec.decode c) o prop
+            Decoder = fun (o: PropertyList<'S>) -> getFromListOptWith (Codec.decode c) o prop
             Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode c x)] | _ -> zero
         }
 
     /// Derives a concrete field codec for an optional field
-    let inline jopt prop (getter: 'T -> 'param option) : Codec<MultiObj<'Encoding>, MultiObj<'Encoding>, 'param option, 'T> = joptWith (getCodec<'Encoding, 'param> ()) prop getter
+    let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith (getCodec<'Encoding, 'param> ()) prop getter
 
 
 
@@ -748,25 +748,25 @@ module Operators =
 
     
     /// Gets a value from an Encoding object.
-    let jgetWith decoder (o: MultiObj<'Encoding>) key =
+    let jgetWith decoder (o: PropertyList<'Encoding>) key =
         match o.[key] with
         | value::_ -> decoder value
         | _ -> Decode.Fail.propertyNotFound key (o |> MultiMap.mapValues (fun x -> x :> IEncoding))
 
     /// Tries to get a value from an Encoding object.
     /// Returns None if key is not present in the object.
-    let jgetOptWith decoder (o: MultiObj<'Encoding>) key =
+    let jgetOptWith decoder (o: PropertyList<'Encoding>) key =
         match o.[key] with
         | JNull _::_ -> Ok None
         | value  ::_ -> decoder value |> Result.map Some
         | _ -> Ok None
 
     /// Gets a value from an Encoding object.
-    let inline jget (o: MultiObj<' Encoding>) key = jgetWith ofEncoding o key
+    let inline jget (o: PropertyList<' Encoding>) key = jgetWith ofEncoding o key
 
     /// Tries to get a value from an Encoding object.
     /// Returns None if key is not present in the object.
-    let inline jgetOpt (o: MultiObj<' Encoding>) key = jgetOptWith ofEncoding o key
+    let inline jgetOpt (o: PropertyList<' Encoding>) key = jgetOptWith ofEncoding o key
 
     /// Gets a value from an Encoding object.
     let inline (.@) o key = jget o key
@@ -786,7 +786,7 @@ module Operators =
 module CodecInterfaceExtensions =
     type ICodecInterface<'Base> with
         /// This is the entry point to register codecs for interface implementations.
-        static member RegisterCodec<'Encoding, 'Type> (codec: unit -> Codec<MultiObj<'Encoding>, 'Type>) =
+        static member RegisterCodec<'Encoding, 'Type> (codec: unit -> Codec<PropertyList<'Encoding>, 'Type>) =
             let codec () =
                 let objCodec = codec ()
                 let (d, e) = objCodec.Decoder, objCodec.Encoder
@@ -803,13 +803,13 @@ module CodecInterfaceExtensions =
 module CodecComputationExpression =
     type CodecBuilder<'t> () =
 
-        let privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<MultiObj<'S>,MultiObj<'S>,_,_>
-        let privlift2 (f: 'x ->'y ->'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y:  Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+        let privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<PropertyList<'S>, PropertyList<'S>,_,_>
+        let privlift2 (f: 'x ->'y ->'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y:  Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
                 {
                     Decoder = fun s -> lift2 f (x.Decoder s) (y.Decoder s)
                     Encoder = x.Encoder ++ y.Encoder
                 }
-        let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y: Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) (z: Codec<MultiObj<'S>, MultiObj<'S>,'z,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+        let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) (z: Codec<PropertyList<'S>, PropertyList<'S>,'z,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
                 {
                     Decoder = fun s -> lift3 f (x.Decoder s) (y.Decoder s) (z.Decoder s)
                     Encoder = x.Encoder ++ y.Encoder ++ z.Encoder
@@ -818,12 +818,12 @@ module CodecComputationExpression =
         member _.Delay x = x ()
         member _.ReturnFrom expr = expr
         member _.Return x = privReturn x
-        member _.Yield  x : Codec<MultiObj<'r>, 't> = x
+        member _.Yield  x : Codec<PropertyList<'r>, 't> = x
         member _.MergeSources  (t1, t2)     = privlift2 tuple2 t1 t2
         member _.MergeSources3 (t1, t2, t3) = privlift3 tuple3 t1 t2 t3
-        member _.BindReturn (x: Codec<MultiObj<'r>, MultiObj<'r>,_,_>, f) = f <!> x
-        member _.Run x : Codec<MultiObj<_>,'t> = x
-        member _.Combine (x: Codec<MultiObj<'S>, 't>, y: Codec<MultiObj<'S>, 't>) = x <|> y : Codec<MultiObj<'S>, 't>
+        member _.BindReturn (x: Codec<PropertyList<'r>, PropertyList<'r>,_,_>, f) = f <!> x
+        member _.Run x : Codec<PropertyList<_>,'t> = x
+        member _.Combine (x: Codec<PropertyList<'S>, 't>, y: Codec<PropertyList<'S>, 't>) = x <|> y : Codec<PropertyList<'S>, 't>
 
     /// Codec Applicative Computation Expression.
     let codec<'t> = CodecBuilder<'t> ()
