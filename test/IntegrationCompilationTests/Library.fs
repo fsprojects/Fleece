@@ -519,3 +519,56 @@ module TestDifferentCodecsForEachJsonLibraryMixedCases =
 
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "dob", personText2)
+
+
+module TestInterfaces =
+    
+    open Fleece
+    
+    type IVehicle =
+        abstract member MaxSpeed : unit -> float
+        inherit ICodecInterface<IVehicle>
+    
+    
+    type Car = Car of Brand: string * MaxSpeed : float with
+        interface IVehicle with
+            member x.MaxSpeed () = let (Car (_, s)) = x in s
+    
+        static member ObjCodec () = codec {
+                let! _        = jreq "type-Car" (fun _ -> Some ())
+                and! brand    = jreq "brand"    (fun (Car (brand, _)) -> Some brand)
+                and! maxSpeed = jreq "maxSpeed" (fun (Car (_, maxSpeed)) -> Some maxSpeed)
+                return Car (Brand = brand, MaxSpeed = maxSpeed)
+            }
+            
+    
+    type Truck = { Brand: string; MaxSpeed : float; MaxLoad : float } with
+        interface IVehicle with
+            member x.MaxSpeed () = let { MaxSpeed = s } = x in s
+    
+        static member ObjCodec () = codec {
+            let! _        = jreq "type-Truck" (fun _ -> Some ())
+            and! brand    = jreq "brand"    (fun { Brand = x } -> Some x)
+            and! maxSpeed = jreq "maxSpeed" (fun { MaxSpeed = x } -> Some x)
+            and! maxLoad = jreq "maxLoad" (fun {MaxLoad = x } -> Some x)
+            return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad }
+        }
+    
+    
+    open Fleece.SystemJson
+    
+    do
+        ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Car>      Car.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Truck> Truck.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Car>      Car.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Truck> Truck.ObjCodec
+
+    let x = { Brand = "Ford"; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
+    let json = toJson x
+    let x': ParseResult<IVehicle> = ofJson json
+    
+    let json2 = Fleece.SystemTextJson.Operators.toJson x
+
+    // todo add checks
+    
+    ()

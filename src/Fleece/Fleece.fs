@@ -37,7 +37,7 @@ type OpDecode = OpDecode
 
 
 /// Marker interface for all interfaces whose derived classes will support codecs
-type IInterfaceCodec<'Base> = interface end
+type ICodecInterface<'Base> = interface end
 
 module Helpers =
 
@@ -216,13 +216,13 @@ module Codec =
             Encoder = field.Encoder
         }
 
-    let downCast<'t,'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't>=
+    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> =
         {
             Decoder = fun (p: 'S) -> x.Decoder (p :> IEncoding)
             Encoder = fun (p: 't) -> x.Encoder p :?> 'S
         }
 
-    let upCast<'t,'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding,'t> =
+    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> =
         {
             Decoder = fun (p: IEncoding) -> x.Decoder (p :?> 'S)
             Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
@@ -534,7 +534,7 @@ type GetCodec with
     static member inline GetCodec (_: 't when 't : struct, _: OvCodecError, _: OpCodec) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Co)"
 
 type GetCodec with
-    static member inline GetCodec (_: 'Base when 'Base :> IInterfaceCodec<'Base>, _: IDefault7, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
+    static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault7, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
         let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<MultiObj<'Encoding>, _> =
 
             let head, tail = Seq.head codecs, Seq.tail codecs
@@ -789,26 +789,38 @@ module Operators =
     let inline (.=) key value = jpair key value
     
     
+[<AutoOpen>]
+module CodecInterfaceExtensions =
+    type ICodecInterface<'Base> with
+        /// This is the entry point to register codecs for interface implementations.
+        static member RegisterCodec<'Encoding, 'Type> (codec: unit -> Codec<MultiObj<'Encoding>, 'Type>) =
+            let codec () =
+                let objCodec = codec ()
+                let (d, e) = objCodec.Decoder, objCodec.Encoder
+                let nd = d >> Result.map (fun (x: 'Type) -> retype x : 'Base)
+                let ne =
+                    fun (x: 'Base) ->
+                        match box x with
+                            | :? 'Type as t -> e t
+                            | _ -> zero
+                { Decoder = nd; Encoder = ne }
+            codec |> CodecCollection<'Encoding, 'Base>.AddSubtype typeof<'Type>
 
-
-
-
-    // Applicative Codec operator and Computation Expression for specialized Codecs
-
-    let private privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<MultiObj<'S>,MultiObj<'S>,_,_>
-    let private privlift2 (f: 'x ->'y ->'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y:  Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
-            {
-                Decoder = fun s -> lift2 f (x.Decoder s) (y.Decoder s)
-                Encoder = x.Encoder ++ y.Encoder
-            }
-    let private privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y: Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) (z: Codec<MultiObj<'S>, MultiObj<'S>,'z,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
-            {
-                Decoder = fun s -> lift3 f (x.Decoder s) (y.Decoder s) (z.Decoder s)
-                Encoder = x.Encoder ++ y.Encoder ++ z.Encoder
-            }
-
-
+[<AutoOpen>]
+module CodecComputationExpression =
     type CodecBuilder<'t> () =
+
+        let privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<MultiObj<'S>,MultiObj<'S>,_,_>
+        let privlift2 (f: 'x ->'y ->'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y:  Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+                {
+                    Decoder = fun s -> lift2 f (x.Decoder s) (y.Decoder s)
+                    Encoder = x.Encoder ++ y.Encoder
+                }
+        let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<MultiObj<'S>, MultiObj<'S>,'x,'T>) (y: Codec<MultiObj<'S>, MultiObj<'S>,'y,'T>) (z: Codec<MultiObj<'S>, MultiObj<'S>,'z,'T>) : Codec<MultiObj<'S>, MultiObj<'S>,'r,'T> =
+                {
+                    Decoder = fun s -> lift3 f (x.Decoder s) (y.Decoder s) (z.Decoder s)
+                    Encoder = x.Encoder ++ y.Encoder ++ z.Encoder
+                }
 
         member _.Delay x = x ()
         member _.ReturnFrom expr = expr
@@ -825,19 +837,7 @@ module Operators =
 
 
 
-    /// This is the entry point to register codecs for interface implementations.
-    let initializeInterfaceImplementation<'Encoding, 'Interface, 'Type when 'Encoding :> IEncoding and 'Encoding : struct> (codec: unit -> Codec<MultiObj<'Encoding>, 'Type>) =
-        let codec () =
-            let objCodec = codec ()
-            let (d, e) = objCodec.Decoder, objCodec.Encoder
-            let nd = d >> Result.map (fun (x: 'Type) -> retype x : 'Interface)
-            let ne =
-                fun (x: 'Interface) ->
-                    match box x with
-                        | :? 'Type as t -> e t
-                        | _ -> zero
-            { Decoder = nd; Encoder = ne }
-        codec |> CodecCollection<'Encoding, 'Interface>.AddSubtype typeof<'Type>
+
 
 (* 
 
