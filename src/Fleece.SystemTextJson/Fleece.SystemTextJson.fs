@@ -8,7 +8,6 @@ open FSharpPlus
 open FSharpPlus.Data
 open Fleece
 open Fleece.Helpers
-open Fleece.Operators
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -71,11 +70,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
             fun (writer: Utf8JsonWriter) (name: string option) ->
                 name |> Option.iter writer.WritePropertyName
                 value.WriteTo writer
-                    
 
-
-
-// module Internals =
 
     static member inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
 

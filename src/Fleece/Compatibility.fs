@@ -209,26 +209,19 @@ module Operators =
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
         |> enc
 
-    let JString x = Encoding (JString x)
-
-    let JObject x =
-        (Codecs.multiMap (Ok <-> id)
-        |> Codec.encode) x
-
-    let (|JObject|_|) (x: Encoding) =
-        (Codecs.multiMap (Ok <-> id)
-        |> Codec.decode) x
-        |> Option.ofResult
-
-    let (|JNull|_|) (x: Encoding) =
-        let (Codec (dec, _)) = Codecs.option (Ok <-> id)
-        match dec x with
-        | Ok x when Option.isNone x -> Some ()
-        | _ -> None
-
-    let (|JString|_|) (x: Encoding) =
-        let (Codec (dec, _)) = Codecs.string
-        dec x |> Option.ofResult
+    let JNull     : Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
+    let JBool   x : Encoding = (Codecs.boolean |> Codec.encode) x
+    let JNumber x : Encoding = (Codecs.decimal |> Codec.encode) x
+    let JString x : Encoding = (Codecs.string  |> Codec.encode) x
+    let JArray (x: System.Collections.Generic.IReadOnlyList<Encoding>) : Encoding = (Codecs.array (Ok <-> id) |> Codec.encode) (toArray x)
+    let JObject (x: MultiObj<Encoding>) : Encoding = (Codecs.multiMap (Ok <-> id) |> Codec.encode) x
+    
+    let (|JNull|_|)   (x: Encoding) = match (Codecs.option (Ok <-> id) |> Codec.decode) x with | Ok None -> Some () | _ -> None    
+    let (|JBool|_|)   (x: Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
+    let (|JNumber|_|) (x: Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
+    let (|JString|_|) (x: Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
+    let (|JArray|_|)  (x: Encoding) = (Codecs.array    (Ok <-> id) |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
+    let (|JObject|_|) (x: Encoding) = (Codecs.multiMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
 
     /// A codec to encode a collection of property/values into a Json encoding and the other way around.
     let jsonObjToValueCodec : Codec<Encoding, MultiObj<Encoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)

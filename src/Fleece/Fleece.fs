@@ -732,26 +732,19 @@ module Operators =
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
         |> enc
 
-    let JString x = (Codecs.string |> Codec.encode) x
+    let JNull<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> : 'Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
+    let JBool   x = (Codecs.boolean |> Codec.encode) x
+    let JNumber x = (Codecs.decimal |> Codec.encode) x
+    let JString x = (Codecs.string  |> Codec.encode) x
+    let JArray (x: IReadOnlyList<'Encoding>) = (Codecs.array (Ok <-> id) |> Codec.encode) (toArray x)
+    let JObject x = (Codecs.multiMap (Ok <-> id) |> Codec.encode) x
     
-    let JObject x =
-        (Codecs.multiMap (Ok <-> id)
-        |> Codec.encode) x
-    
-    let (|JObject|_|) (x: 'Encoding) =
-        (Codecs.multiMap (Ok <-> id)
-        |> Codec.decode) x
-        |> Option.ofResult
-    
-    let (|JNull|_|) (x: 'Encoding) =
-        let (Codec (dec, _)) = Codecs.nullable (Ok <-> id)
-        match dec x with
-        | Ok x when Nullable.isNull x -> Some ()
-        | _ -> None
-    
-    let (|JString|_|) (x: 'Encoding) =
-        let (Codec (dec, _)) = Codecs.string
-        dec x |> Option.ofResult
+    let (|JNull|_|)   (x: 'Encoding) = match (Codecs.option (Ok <-> id) |> Codec.decode) x with | Ok None -> Some () | _ -> None    
+    let (|JBool|_|)   (x: 'Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
+    let (|JNumber|_|) (x: 'Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
+    let (|JString|_|) (x: 'Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
+    let (|JArray|_|)  (x: 'Encoding) = (Codecs.array    (Ok <-> id) |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
+    let (|JObject|_|) (x: 'Encoding) = (Codecs.multiMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
 
     
     /// Gets a value from an Encoding object.
@@ -836,11 +829,26 @@ module CodecComputationExpression =
     let codec<'t> = CodecBuilder<'t> ()
 
 
+module Lens =
+    open FSharpPlus.Lens
+    let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
+    let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
+    let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
+    let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
+    let inline _JNumber x = (prism' JNumber <| fun v -> match Operators.ofEncoding v : decimal ParseResult with Ok s -> Some s | _ -> None) x
+    let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
 
+    /// Like '_jnth', but for 'Object' with Text indices.
+    let inline _jkey i =
+        let inline dkey i f t = map (fun x -> MultiMap.add i x t) (f (t.[i] |> function [] -> JNull | x::_ -> x))
+        _JObject << dkey i
 
+    let inline _jnth i =
+        let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
+        _JArray << dnth i
 
-(* 
+    // Reimport some basic Lens operations from F#+
 
-What should we do with lenses? Should we add a generic implementation?
-
-*)
+    let setl optic value   (source: 's) : 't = setl optic value source
+    let over optic updater (source: 's) : 't = over optic updater source
+    let preview (optic: ('a -> Const<_,'b>) -> _ -> Const<_,'t>) (source: 's) : 'a option = preview optic source
