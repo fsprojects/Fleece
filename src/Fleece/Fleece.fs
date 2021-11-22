@@ -295,9 +295,9 @@ module Decode =
         let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "String", a))
         let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
-        let inline count e a = Error (IndexOutOfRange (e, a))
-        let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
-        let propertyNotFound p o = Error (PropertyNotFound (p, o))
+        let inline count e (a: 'Encoding) = Error (IndexOutOfRange (e, a))
+        let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
+        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
         let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
 
 
@@ -681,7 +681,7 @@ module Operators =
     let jreqWith (c: Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
         let getFromListWith decoder (m: PropertyList<_>) key =
             match m.[key] with
-            | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
+            | []        -> Decode.Fail.propertyNotFound key m
             | value:: _ -> decoder value
         {
             Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode c) o prop
@@ -692,7 +692,7 @@ module Operators =
         let getFromListWith decoder (m: PropertyList<_>) key =
 
             match m.[key] with
-            | []        -> Decode.Fail.propertyNotFound key (m |> MultiMap.mapValues (fun x -> x :> IEncoding))
+            | []        -> Decode.Fail.propertyNotFound key m
             | value:: _ -> decoder value
         {
             Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop
@@ -751,7 +751,7 @@ module Operators =
     let jgetWith decoder (o: PropertyList<'Encoding>) key =
         match o.[key] with
         | value::_ -> decoder value
-        | _ -> Decode.Fail.propertyNotFound key (o |> MultiMap.mapValues (fun x -> x :> IEncoding))
+        | _ -> Decode.Fail.propertyNotFound key o
 
     /// Tries to get a value from an Encoding object.
     /// Returns None if key is not present in the object.

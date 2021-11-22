@@ -168,7 +168,7 @@ type ShapeD =
                      match o.[prop] with
                      | [a] when (ofJson a) = Ok value -> Ok o
                      | [a] -> Decode.Fail.invalidValue a value
-                     | _   -> Decode.Fail.propertyNotFound prop (o |> map (fun x -> x :> IEncoding))
+                     | _   -> Decode.Fail.propertyNotFound prop o
                 Codec.ofConcrete codec
                 |> Codec.compose (
                                     matchPropValue
