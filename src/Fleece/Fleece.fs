@@ -648,7 +648,23 @@ type GetDec with
 
 type CodecCache<'Encoding, 'T when 'Encoding :> IEncoding and 'Encoding : struct> () =
     static let mutable cachedCodec : option<Codec<'Encoding, 'T>> = None
-    static member Run<'Encoding,'T> (f: unit -> Codec<'Encoding, 'T>) =
+    static member Run<'Encoding,'T> (_: OpDecode, f: unit -> Codec<'Encoding, 'T>) =
+        match cachedCodec with
+        | Some c -> c
+        | None   ->
+            let c = f ()
+            if not (isNull (box c.Encoder)) then
+                cachedCodec <- Some c
+            c
+    static member Run<'Encoding,'T> (_: OpEncode, f: unit -> Codec<'Encoding, 'T>) =
+        match cachedCodec with
+        | Some c -> c
+        | None   ->
+            let c = f ()
+            if not (isNull (box c.Decoder)) then
+                cachedCodec <- Some c
+            c
+    static member Run<'Encoding,'T> (_: OpCodec, f: unit -> Codec<'Encoding, 'T>) =
         match cachedCodec with
         | Some c -> c
         | None   ->
@@ -665,16 +681,13 @@ module Operators =
     let (|Codec|) { Decoder = x; Encoder = y } = (x, y)
 
     let inline toEncoding< 'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't) : 'Encoding =
-        // let codec = CodecCache.Run<'Encoding,'t> (fun () -> GetCodec.InvokeEnc<'Encoding, _> x)
-        // (codec |> enc) x
-        // GetCodec.InvokeDec.Invoke<'Encoding, _> Unchecked.defaultof<'t> x
-        (GetEnc.Invoke<'Encoding, OpEncode, _> x |> Codec.encode) x
+        let codec = CodecCache.Run<'Encoding,'t> (OpEncode, fun () -> GetEnc.Invoke<'Encoding, OpEncode, _> x)
+        (codec |> Codec.encode) x
 
     let inline ofEncoding (x: 'Encoding when 'Encoding :> IEncoding and 'Encoding : struct) : Result<'t, _> =
-        // let codec = CodecCache.Run<'Encoding,'t> (fun () -> GetCodec.InvokeDec<'Encoding, _> Unchecked.defaultof<'t>)
-        // (codec |> dec) x
-        // GetDecoder.Invoke<'Encoding, _> Unchecked.defaultof<'t> x
-        (GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t> |> Codec.decode) x
+        let codec = CodecCache.Run<'Encoding,'t> (OpDecode, fun () -> GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t>)
+        (codec |> Codec.decode) x
+            
 
 
 
@@ -701,7 +714,7 @@ module Operators =
 
     /// Derive automatically a RawCodec, based on GetCodec / Codec static members
     let inline getCodec<'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : struct> () : Codec<'Encoding, 't> =
-        GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>
+        CodecCache.Run<'Encoding,'t> (OpCodec, fun () -> GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>)
 
 
 
