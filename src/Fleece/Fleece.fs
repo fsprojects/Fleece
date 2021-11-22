@@ -78,6 +78,9 @@ module Helpers =
             for (KeyValue (k, v)) in source do
                 yield (k, v) }
 
+    let decoderNotAvailable (_: 'Encoding) : Result<'T, _> = failwithf "Fleece internal error: this codec has no decoder from encoding %A to type %A." typeof<'Encoding> typeof<'T>
+    let encoderNotAvailable (_: 'T) : 'Encoding            = failwithf "Fleece internal error: this codec has no encoder from type %A to encoding %A." typeof<'T> typeof<'Encoding>
+
 open Helpers
 
 
@@ -389,8 +392,8 @@ type GetCodec =
     static member GetCodec (()               , _: GetCodec, _: 'Operation) = Codecs.unit           : Codec<'Encoding, _>
 
     // Dummy overloads
-    static member GetCodec (_: OpCodec  , _: GetCodec, _: OpEncode) =  Unchecked.defaultof<_>      : Codec<'Encoding, OpCodec>
-    static member GetCodec (_: OpEncode , _: GetCodec, _: OpEncode) =  Unchecked.defaultof<_>      : Codec<'Encoding, OpEncode>
+    static member GetCodec (_: OpCodec , _: GetCodec, _: OpEncode) = failwithf "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpCodec>
+    static member GetCodec (_: OpEncode, _: GetCodec, _: OpEncode) = failwithf "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpEncode>
 
 
     /// Invoker for Codec
@@ -607,20 +610,20 @@ type GetCodec with
                 let mutable r = Unchecked.defaultof<'Encoding>
                 let _ = (^t : (static member Encode : ^t * byref<'Encoding> -> unit) (t, &r))
                 r
-        Unchecked.defaultof<_> <-> e
+        decoderNotAvailable <-> e
     
     static member inline GetCodec (_: 't , _: IDefault3, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
-        Unchecked.defaultof<_> <-> e
+        decoderNotAvailable <-> e
 
     [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
     static member inline GetCodec (_: 't , _: IDefault4, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) js)
-        d <-> Unchecked.defaultof<_>
+        d <-> encoderNotAvailable
 
     static member inline GetCodec (_: 't , _: IDefault3, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> (^t : (static member OfJson: 'Encoding -> ^t ParseResult) js) : ^t ParseResult
-        d <-> Unchecked.defaultof<_>
+        d <-> encoderNotAvailable
 
 
 type GetEnc with
@@ -630,23 +633,23 @@ type GetEnc with
                 let mutable r = Unchecked.defaultof<'Encoding>
                 let _ = (^t : (static member Encode : ^t * byref<'Encoding> -> unit) (t, &r))
                 r
-        Unchecked.defaultof<_> <-> e
+        decoderNotAvailable <-> e
 
 type GetEnc with
     static member inline GetCodec (_: 't , _: IDefault1, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
-        Unchecked.defaultof<_> <-> e
+        decoderNotAvailable <-> e
 
 type GetDec with
     [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
     static member inline GetCodec (_: 't , _: IDefault2, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) js)
-        d <-> Unchecked.defaultof<_>
+        d <-> encoderNotAvailable
 
 type GetDec with
     static member inline GetCodec (_: 't , _: IDefault1, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
         let d = fun js -> (^t : (static member OfJson: 'Encoding -> ^t ParseResult) js) : ^t ParseResult
-        d <-> Unchecked.defaultof<_>
+        d <-> encoderNotAvailable
 
 
 type CodecCache<'Operation, 'Encoding, 'T when 'Encoding :> IEncoding and 'Encoding : struct> () =
