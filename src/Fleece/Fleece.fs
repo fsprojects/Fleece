@@ -646,38 +646,6 @@ type GetDec with
         d <-> Unchecked.defaultof<_>
 
 
-// type DecoderCache<'Encoding1, 'T when 'Encoding1 :> IEncoding and 'Encoding1 : struct> () =
-//     static let mutable cachedCodec : option<Codec<'Encoding1, 'T1>> = None
-//     static member getCache () = cachedCodec
-//     static member Run<'Encoding1, 'T1> (f: unit -> Codec<'Encoding1, 'T1>) =
-//         match cachedCodec with
-//         | Some c -> c
-//         | None   ->
-//             match CodecCache<'Encoding1, 'T1>.getCache () with
-//             | Some c -> c
-//             | None   ->
-//                 let c = f ()
-//                 if not (isNull (box c.Encoder)) then
-//                     printfn "caching (De) %A" typeof<'T1>
-//                     cachedCodec <- Some c
-//                 c
-// 
-// and EncoderCache<'Encoding2, 'T2 when 'Encoding2 :> IEncoding and 'Encoding2 : struct> () =
-//     static let mutable cachedCodec : option<Codec<'Encoding2, 'T2>> = None
-//     static member getCache () = cachedCodec
-//     static member Run<'Encoding2, 'T2> (f: unit -> Codec<'Encoding2, 'T2>) =
-//         match cachedCodec with
-//         | Some c -> c
-//         | None   ->
-//             match CodecCache<'Encoding2, 'T2>.getCache () with
-//             | Some c -> c
-//             | None   ->
-//                 let c = f ()
-//                 if not (isNull (box c.Decoder)) then
-//                     printfn "caching (En) %A" typeof<'T2>
-//                     cachedCodec <- Some c
-//                 c
-
 type CodecCache<'Operation, 'Encoding, 'T when 'Encoding :> IEncoding and 'Encoding : struct> () =
     static let mutable cachedCodec : option<Codec<'Encoding, 'T>> = None
     static member getCache () = cachedCodec
@@ -689,7 +657,6 @@ type CodecCache<'Operation, 'Encoding, 'T when 'Encoding :> IEncoding and 'Encod
             | Some d, Some e -> d.Decoder <-> e.Encoder
             | _ ->
                 let c = f ()
-                printfn "caching (Co) %A" typeof<'T>
                 cachedCodec <- Some c
                 c
 
@@ -701,7 +668,6 @@ type CodecCache<'Operation, 'Encoding, 'T when 'Encoding :> IEncoding and 'Encod
             | Some c -> c
             | _ ->
                 let c = f ()
-                printfn "caching (%A) %A"  typeof<'Operation> typeof<'T>
                 cachedCodec <- Some c
                 c
 
