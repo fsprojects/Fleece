@@ -39,6 +39,9 @@ type OpDecode = OpDecode
 /// Marker interface for all interfaces whose derived classes will support codecs
 type ICodecInterface<'Base> = interface end
 
+module Config =
+    let mutable codecCacheEnabled = true
+
 module Helpers =
 
     let inline retype (a: 'a) : 'b =
@@ -650,26 +653,30 @@ type CodecCache<'Operation, 'Encoding, 'T when 'Encoding :> IEncoding and 'Encod
     static let mutable cachedCodec : option<Codec<'Encoding, 'T>> = None
     static member getCache () = cachedCodec
     static member Run<'Encoding, 'T> (f: unit -> Codec<'Encoding, 'T>) =
-        match cachedCodec with
-        | Some c -> c
-        | None   ->
-            match CodecCache<OpDecode, 'Encoding, 'T>.getCache (), CodecCache<OpEncode, 'Encoding, 'T>.getCache () with
-            | Some d, Some e -> d.Decoder <-> e.Encoder
-            | _ ->
-                let c = f ()
-                cachedCodec <- Some c
-                c
+        if not Config.codecCacheEnabled then f ()
+            else
+            match cachedCodec with
+            | Some c -> c
+            | None   ->
+                match CodecCache<OpDecode, 'Encoding, 'T>.getCache (), CodecCache<OpEncode, 'Encoding, 'T>.getCache () with
+                | Some d, Some e -> d.Decoder <-> e.Encoder
+                | _ ->
+                    let c = f ()
+                    cachedCodec <- Some c
+                    c
 
     static member Run<'Operation, 'Encoding, 'T> (f: unit -> Codec<'Encoding, 'T>) =
-        match cachedCodec with
-        | Some c -> c
-        | None   ->
-            match CodecCache<OpCodec, 'Encoding, 'T>.getCache () with
+        if not Config.codecCacheEnabled then f ()
+        else
+            match cachedCodec with
             | Some c -> c
-            | _ ->
-                let c = f ()
-                cachedCodec <- Some c
-                c
+            | None   ->
+                match CodecCache<OpCodec, 'Encoding, 'T>.getCache () with
+                | Some c -> c
+                | _ ->
+                    let c = f ()
+                    cachedCodec <- Some c
+                    c
 
 [<AutoOpen>]
 module Operators =
