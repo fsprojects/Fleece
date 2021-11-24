@@ -828,8 +828,8 @@ module CodecInterfaceExtensions =
             codec |> CodecCollection<'Encoding, 'Base>.AddSubtype typeof<'Type>
 
 [<AutoOpen>]
-module CodecComputationExpression =
-    type CodecBuilder<'t> () =
+module ComputationExpressions =
+    type CodecApplicativeBuilder () =
 
         let privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<PropertyList<'S>, PropertyList<'S>,_,_>
         let privlift2 (f: 'x ->'y ->'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y:  Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
@@ -854,7 +854,7 @@ module CodecComputationExpression =
         member _.Combine (x: Codec<PropertyList<'S>, 't>, y: Codec<PropertyList<'S>, 't>) = x <|> y : Codec<PropertyList<'S>, 't>
 
     /// Codec Applicative Computation Expression.
-    let codec<'t> = CodecBuilder<'t> ()
+    let codec= CodecApplicativeBuilder ()
 
 
 module Lens =
