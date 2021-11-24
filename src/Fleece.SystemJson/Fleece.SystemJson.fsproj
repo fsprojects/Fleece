@@ -14,8 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.7.2" />
-    <PackageReference Include="FSharpPlus" Version="1.2.2" />
     <PackageReference Include="System.Json" Version="4.7.1" />
   </ItemGroup>
 
