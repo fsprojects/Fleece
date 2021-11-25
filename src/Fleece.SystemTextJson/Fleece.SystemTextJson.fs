@@ -18,8 +18,8 @@ module Internals =
         match o.ValueKind with
         | JsonValueKind.Null
         | JsonValueKind.Undefined -> JNull
-        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> (result x: ^Encoding) ] |> Seq.toList)
-        | JsonValueKind.Object    -> JObject (Map.ofList [for x in o.EnumerateObject () -> (x.Name, (result x.Value: ^Encoding))] :> IReadOnlyDictionary<_,_>)
+        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> (^Encoding : (static member Wrap: _ -> ^Encoding) x) ] |> Seq.toList)
+        | JsonValueKind.Object    -> JObject (Map.ofList [for x in o.EnumerateObject () -> (x.Name, (^Encoding : (static member Wrap: _ -> ^Encoding) x.Value))] :> IReadOnlyDictionary<_,_>)
         | JsonValueKind.Number    -> JNumber j
         | JsonValueKind.False     -> JBool false
         | JsonValueKind.True      -> JBool true
@@ -35,7 +35,7 @@ type JsonObject = Map<string, Encoding>
 /// Wrapper type for JsonElement
 and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit>  } with
 
-    static member Return x = { Encoding.Value = Choice1Of2 x }
+    static member Wrap x = { Encoding.Value = Choice1Of2 x }
 
     member this.ToString (options: JsonWriterOptions) =
         use stream = new System.IO.MemoryStream ()
@@ -71,7 +71,6 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
                 name |> Option.iter writer.WritePropertyName
                 value.WriteTo writer
 
-
     static member inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
 
     static member inline JArray (x: Encoding IReadOnlyList) =
@@ -91,8 +90,6 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member JString (x: string)  = if isNull x then Encoding.JNull else Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
     static member JNumber (x: decimal) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
 
-
-
     static member jsonObjectGetValues (o: JsonObject) = o :> IReadOnlyDictionary<string, Encoding>
 
     static member dictAsJsonObject (x: IReadOnlyDictionary<string, Encoding>) =
@@ -103,7 +100,6 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     /// Creates a new Json object for serialization
     static member jobj (x: seq<string * Encoding>) : Encoding = Encoding.JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
 
-    // type internal JsonHelpers () =
     static member create (x: string ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
     static member create (x: Guid   ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
     static member create (x: decimal) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
@@ -119,7 +115,6 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member create (x: sbyte  ) = Encoding.writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))
     static member create (x: char   ) = Encoding.writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
 
-    // type TryGet = TryGet with
     static member ($) (_:Encoding, _: decimal) = fun (x: Encoding) -> x.get_InnerValue().GetDecimal ()
     static member ($) (_:Encoding, _: int16  ) = fun (x: Encoding) -> x.get_InnerValue().GetInt16 ()
     static member ($) (_:Encoding, _: int    ) = fun (x: Encoding) -> x.get_InnerValue().GetInt32 ()
@@ -134,7 +129,6 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
 
     static member inline tryGet (x: Encoding) : 't = (Unchecked.defaultof<Encoding> $ Unchecked.defaultof<'t>) x
 
-
     static member inline tryRead x =
         match x with
         | JNumber j ->
@@ -146,8 +140,8 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     /// Downcasts IEncoding to a SystemTextJson.Encoding
     static member Unwrap (x: IEncoding) = x :?> Encoding
 
-    static member toIRawCodec (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.upCast
-    static member ofIRawCodec (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.downCast
+    static member toIEncoding (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.upCast
+    static member ofIEncoding (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.downCast
 
 
     static member jsonObjectOfJson = function
@@ -168,7 +162,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member resultD (decoder1: Encoding -> ParseResult<'a>) (decoder2: Encoding -> ParseResult<'b>) : Encoding -> ParseResult<Result<'a, 'b>> = function
         | JObject o as jobj ->
             match Seq.toList o with
-            | [KeyValue ("Ok", a)] -> a |> decoder1 |> Result.map Ok
+            | [KeyValue ("Ok", a)]    -> a |> decoder1 |> Result.map Ok
             | [KeyValue ("Error", a)] -> a |> decoder2 |> Result.map Error
             | _ -> Decode.Fail.invalidValue (jobj: Encoding) ""
         | a -> Decode.Fail.objExpected a
@@ -330,9 +324,8 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member tuple6E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (encoder5: 'e -> Encoding) (encoder6: 'f -> Encoding) (a, b, c, d, e, f) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|] |> Seq.toList)
     static member tuple7E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (encoder3: 'c -> Encoding) (encoder4: 'd -> Encoding) (encoder5: 'e -> Encoding) (encoder6: 'f -> Encoding) (encoder7: 'g -> Encoding) (a, b, c, d, e, f, g) = Encoding.JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> Seq.toList)
     
-    // requires F# 5 -->
     static member enumE (x: 't when 't: enum<_>) = Encoding.JString (string x)
-    static member unitE () = Encoding.JArray ([||] |> Seq.toList)
+    static member unitE () = Encoding.JArray []
 
     static member booleanE        (x: bool          ) = Encoding.JBool x
     static member stringE         (x: string        ) = Encoding.JString x
@@ -363,12 +356,12 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
 
     static member choice  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = Encoding.choiceD (Codec.decode codec1) (Codec.decode codec2) <-> Encoding.choiceE (Codec.encode codec1) (Codec.encode codec2)
     static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = Encoding.choice3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) <-> Encoding.choice3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
-    static member option (codec: Codec<_,_>) = Encoding.optionD (Codec.decode codec) <-> Encoding.optionE (Codec.encode codec)
+    static member option   (codec: Codec<_,_>) = Encoding.optionD (Codec.decode codec) <-> Encoding.optionE (Codec.encode codec)
     static member nullable (codec: Codec<Encoding, 't>) = Encoding.nullableD (Codec.decode codec) <-> Encoding.nullableE (Codec.encode codec) : Codec<Encoding, Nullable<'t>>
     static member array    (codec: Codec<_,_>) = Encoding.arrayD  (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
     static member multiMap (codec: Codec<_,_>) = Encoding.multiMapD (Codec.decode codec) <-> Encoding.multiMapE (Codec.encode codec)
 
-    static member unit () = Encoding.unitD <-> Encoding.unitE
+    static member unit = Encoding.unitD <-> Encoding.unitE
     static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = Encoding.tuple1D (Codec.decode codec1)                                                                                                                                     <-> Encoding.tuple1E (Codec.encode codec1)
     static member tuple2 (codec1: Codec<_,_>) (codec2: Codec<_,_>)                                                                                                          = Encoding.tuple2D (Codec.decode codec1) (Codec.decode codec2)                                                                                                               <-> Encoding.tuple2E (Codec.encode codec1) (Codec.encode codec2)
     static member tuple3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>)                                                                                     = Encoding.tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3)                                                                                         <-> Encoding.tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
@@ -377,7 +370,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member tuple6 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>)                      = Encoding.tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6)                       <-> Encoding.tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6)
     static member tuple7 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>) (codec7: Codec<_,_>) = Encoding.tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7) <-> Encoding.tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7)
 
-    static member boolean  : Codec<Encoding, bool>      =  Encoding.booleanD <-> Encoding.booleanE
+    static member boolean        = Encoding.booleanD        <-> Encoding.booleanE
     static member string         = Encoding.stringD         <-> Encoding.stringE
     static member dateTime       = Encoding.dateTimeD       <-> Encoding.dateTimeE
     static member dateTimeOffset = Encoding.dateTimeOffsetD <-> Encoding.dateTimeOffsetE
@@ -398,43 +391,42 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
 
 
     interface IEncoding with
-        member _.unit           = Encoding.toIRawCodec (Encoding.unitD <-> Encoding.unitE)
-        member _.boolean        = Encoding.toIRawCodec Encoding.boolean
-        member _.string         = Encoding.toIRawCodec Encoding.string
-        member _.dateTime       = Encoding.toIRawCodec Encoding.dateTime
-        member _.dateTimeOffset = Encoding.toIRawCodec Encoding.dateTimeOffset
-        member _.timeSpan       = Encoding.toIRawCodec Encoding.timeSpan
-        member _.decimal        = Encoding.toIRawCodec Encoding.decimal
-        member _.float          = Encoding.toIRawCodec Encoding.float
-        member _.float32        = Encoding.toIRawCodec Encoding.float32
-        member _.int            = Encoding.toIRawCodec Encoding.int
-        member _.uint32         = Encoding.toIRawCodec Encoding.uint32
-        member _.int64          = Encoding.toIRawCodec Encoding.int64
-        member _.uint64         = Encoding.toIRawCodec Encoding.uint64
-        member _.int16          = Encoding.toIRawCodec Encoding.int16
-        member _.uint16         = Encoding.toIRawCodec Encoding.uint16
-        member _.byte           = Encoding.toIRawCodec Encoding.byte
-        member _.sbyte          = Encoding.toIRawCodec Encoding.sbyte
-        member _.char           = Encoding.toIRawCodec Encoding.char
-        member _.guid           = Encoding.toIRawCodec Encoding.guid
+        member _.unit           = Encoding.toIEncoding Encoding.unit
+        member _.boolean        = Encoding.toIEncoding Encoding.boolean
+        member _.string         = Encoding.toIEncoding Encoding.string
+        member _.dateTime       = Encoding.toIEncoding Encoding.dateTime
+        member _.dateTimeOffset = Encoding.toIEncoding Encoding.dateTimeOffset
+        member _.timeSpan       = Encoding.toIEncoding Encoding.timeSpan
+        member _.decimal        = Encoding.toIEncoding Encoding.decimal
+        member _.float          = Encoding.toIEncoding Encoding.float
+        member _.float32        = Encoding.toIEncoding Encoding.float32
+        member _.int            = Encoding.toIEncoding Encoding.int
+        member _.uint32         = Encoding.toIEncoding Encoding.uint32
+        member _.int64          = Encoding.toIEncoding Encoding.int64
+        member _.uint64         = Encoding.toIEncoding Encoding.uint64
+        member _.int16          = Encoding.toIEncoding Encoding.int16
+        member _.uint16         = Encoding.toIEncoding Encoding.uint16
+        member _.byte           = Encoding.toIEncoding Encoding.byte
+        member _.sbyte          = Encoding.toIEncoding Encoding.sbyte
+        member _.char           = Encoding.toIEncoding Encoding.char
+        member _.guid           = Encoding.toIEncoding Encoding.guid
 
-        member _.result c1 c2     = Encoding.toIRawCodec (Encoding.result   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
-        member _.choice c1 c2     = Encoding.toIRawCodec (Encoding.choice   (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
-        member _.choice3 c1 c2 c3 = Encoding.toIRawCodec (Encoding.choice3  (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
-        member _.option c         = Encoding.toIRawCodec (Encoding.option   (Encoding.ofIRawCodec c))
-        member _.array c          = Encoding.toIRawCodec (Encoding.array    (Encoding.ofIRawCodec c))
-        member _.multiMap c       = Encoding.toIRawCodec (Encoding.multiMap (Encoding.ofIRawCodec c))
+        member _.result c1 c2     = Encoding.toIEncoding (Encoding.result   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
+        member _.choice c1 c2     = Encoding.toIEncoding (Encoding.choice   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
+        member _.choice3 c1 c2 c3 = Encoding.toIEncoding (Encoding.choice3  (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
+        member _.option c         = Encoding.toIEncoding (Encoding.option   (Encoding.ofIEncoding c))
+        member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
+        member _.multiMap c       = Encoding.toIEncoding (Encoding.multiMap (Encoding.ofIEncoding c))
 
-        member _.tuple1 c                    = Encoding.toIRawCodec (Encoding.tuple1 (Encoding.ofIRawCodec c))
-        member _.tuple2 c1 c2                = Encoding.toIRawCodec (Encoding.tuple2 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2))
-        member _.tuple3 c1 c2 c3             = Encoding.toIRawCodec (Encoding.tuple3 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3))
-        member _.tuple4 c1 c2 c3 c4          = Encoding.toIRawCodec (Encoding.tuple4 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4))
-        member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIRawCodec (Encoding.tuple5 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5))
-        member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIRawCodec (Encoding.tuple6 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6))
-        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIRawCodec (Encoding.tuple7 (Encoding.ofIRawCodec c1) (Encoding.ofIRawCodec c2) (Encoding.ofIRawCodec c3) (Encoding.ofIRawCodec c4) (Encoding.ofIRawCodec c5) (Encoding.ofIRawCodec c6) (Encoding.ofIRawCodec c7))
+        member _.tuple1 c                    = Encoding.toIEncoding (Encoding.tuple1 (Encoding.ofIEncoding c))
+        member _.tuple2 c1 c2                = Encoding.toIEncoding (Encoding.tuple2 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
+        member _.tuple3 c1 c2 c3             = Encoding.toIEncoding (Encoding.tuple3 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
+        member _.tuple4 c1 c2 c3 c4          = Encoding.toIEncoding (Encoding.tuple4 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4))
+        member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIEncoding (Encoding.tuple5 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5))
+        member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIEncoding (Encoding.tuple6 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6))
+        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIEncoding (Encoding.tuple7 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6) (Encoding.ofIEncoding c7))
 
-        // Requires F# 5.0
-        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> (_: Codec<IEncoding, 'u>) : Codec<IEncoding, 't> = Encoding.toIRawCodec (Encoding.enumD <-> Encoding.enumE)
+        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> (_: Codec<IEncoding, 'u>) : Codec<IEncoding, 't> = Encoding.toIEncoding (Encoding.enumD <-> Encoding.enumE)
 
         member x.getCase =
             match x with
