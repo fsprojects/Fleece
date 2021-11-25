@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "FSharp.Formatting.CommandTool": {
-      "version": "9.0.1",
+      "version": "11.5.1",
       "commands": [
         "fsdocs"
       ]
