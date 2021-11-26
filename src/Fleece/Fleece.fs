@@ -291,16 +291,16 @@ module Codecs =
     let dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, _>
     let dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
     let timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
-    let array       (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
-    let list        (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec
-    let nelist      (codec: Codec<'Encoding, 'a>) = (Array.toList >> NonEmptyList.tryOfList >> Option.toResultWith (DecodeError.Uncategorized "List is empty") <-> Array.ofSeq) >.> array codec
-    let set         (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
-    let neset       (codec: Codec<'Encoding, 'a>) = (Set >> NonEmptySet.tryOfSet >> Option.toResultWith (DecodeError.Uncategorized "Set is empty") <-> Array.ofSeq) >.> array codec
-    let resizeArray (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
-    let multiMap    (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.multiMap (Codec.upCast codec) |> Codec.downCast   : Codec<'Encoding, PropertyList<'a>>
-    let map         (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq        << MultiMap.toSeq <-> (Map.toSeq        >> MultiMap.ofSeq)) >.> multiMap codec
-    let dictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << MultiMap.toSeq <-> (Dictionary.toSeq >> MultiMap.ofSeq)) >.> multiMap codec
-    let nemap       (codec: Codec<'Encoding, 'a>) = (MultiMap.toSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toSeq >> MultiMap.ofSeq)) >.> multiMap codec
+    let array        (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
+    let list         (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec
+    let set          (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
+    let nonEmptyList (codec: Codec<'Encoding, 'a>) = (Array.toList >> NonEmptyList.tryOfList >> Option.toResultWith (DecodeError.Uncategorized "List is empty") <-> Array.ofSeq) >.> array codec
+    let nonEmptySet  (codec: Codec<'Encoding, 'a>) = (Set >> NonEmptySet.tryOfSet >> Option.toResultWith (DecodeError.Uncategorized "Set is empty") <-> Array.ofSeq) >.> array codec
+    let resizeArray  (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
+    let multiPropMap (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.multiMap (Codec.upCast codec) |> Codec.downCast   : Codec<'Encoding, PropertyList<'a>>
+    let propMap      (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq        << MultiMap.toSeq <-> (Map.toSeq        >> MultiMap.ofSeq)) >.> multiPropMap codec
+    let propDictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << MultiMap.toSeq <-> (Dictionary.toSeq >> MultiMap.ofSeq)) >.> multiPropMap codec
+    let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (MultiMap.toSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toSeq >> MultiMap.ofSeq)) >.> multiPropMap codec
     let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option   (Codec.upCast codec) |> Codec.downCast  : Codec<'Encoding, option<'a>>
     let nullable (codec: Codec<'Encoding, 'a>) = (Ok << Option.toNullable <-> Option.ofNullable) >.> option codec  : Codec<'Encoding, Nullable<'a>>
     let result  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.result (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Result<'a,'b>>
@@ -321,9 +321,17 @@ module Codecs =
     let arraySegment (codec: Codec<'Encoding, 'a>) = (Ok << ArraySegment<_> << Seq.toArray <-> ArraySegment.toArray) >.> array codec
     #endif
 
-    let gmap (keyCodec: Codec<'Encoding, 'a>) (valueCodec: Codec<'Encoding, 'b>) =
+    let dictionary (keyCodec: Codec<'Encoding, 'Key>) (valueCodec: Codec<'Encoding, 'Value>) : Codec<'Encoding, Dictionary<'Key, 'Value>> =
+        let c = list (tuple2 keyCodec valueCodec)
+        ((Ok << Dictionary.ofSeq) <-> (Dictionary.toSeq >> toList)) >.> c
+
+    let map (keyCodec: Codec<'Encoding, 'Key>) (valueCodec: Codec<'Encoding, 'Value>) : Codec<'Encoding, Map<'Key, 'Value>> =
         let c = list (tuple2 keyCodec valueCodec)
         ((Ok << Map.ofList) <-> Map.toList) >.> c
+
+    let nonEmptyMap (keyCodec: Codec<'Encoding, 'Key>) (valueCodec: Codec<'Encoding, 'Value>) : Codec<'Encoding, NonEmptyMap<'Key, 'Value>> =
+        let c = list (tuple2 keyCodec valueCodec)
+        ((Map.ofList >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty")) <-> NonEmptyMap.toList) >.> c
 
 
 [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
@@ -490,9 +498,9 @@ module Internals =
     type GetCodec with static member inline GetCodec (_: Result<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Result<'a,'b>> = Codecs.result (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'b>, c))
     type GetCodec with static member inline GetCodec (_: Choice<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b>> = Codecs.choice (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'b>, c))
     type GetCodec with static member inline GetCodec (_: Choice<'a, 'b, 'c> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b,'c>> = Codecs.choice3 (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'b>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'c>, c))
-    type GetCodec with static member inline GetCodec (_: 'a option when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, option<'a>> = Codecs.option (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: 'a option   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, option<'a>>   = Codecs.option   (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
     type GetCodec with static member inline GetCodec (_: 'a Nullable when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Nullable<'a>> = Codecs.nullable (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-    type GetCodec with static member inline GetCodec (_: NonEmptyList<'T> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyList<'T>> = Codecs.nelist (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'T>, c))
+    type GetCodec with static member inline GetCodec (_: NonEmptyList<'T> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyList<'T>> = Codecs.nonEmptyList (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'T>, c))
 
     type GetCodec with
         static member inline GetCodec (_: 'a array  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, array<'a>> = Codecs.array  (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
@@ -501,16 +509,16 @@ module Internals =
         static member inline GetCodec (_: ArraySegment<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ArraySegment<'a>> = Codecs.arraySegment (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
         #endif
 
-    type GetCodec with static member inline GetCodec (_: list<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, list<'a>>         = Codecs.list     (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-    type GetCodec with static member inline GetCodec (_: Set<'a>          when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>          = Codecs.set      (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>>  = Codecs.neset    (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-    type GetCodec with static member inline GetCodec (_: Map<string, 'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Map<string, 'a>>  = Codecs.map      (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-    type GetCodec with static member inline GetCodec (_: PropertyList<'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, PropertyList<'a>> = Codecs.multiMap (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: list<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, list<'a>>         = Codecs.list         (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: Set<'a>          when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>          = Codecs.set          (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>>  = Codecs.nonEmptySet  (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: Map<string, 'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Map<string, 'a>>  = Codecs.propMap      (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: PropertyList<'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, PropertyList<'a>> = Codecs.multiPropMap (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
 
     type GetCodec with
-        static member inline GetCodec (_: NonEmptyMap<string, 'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding,NonEmptyMap<string, 'a>> = Codecs.nemap       (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-        static member inline GetCodec (_: Dictionary<string, 'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Dictionary<string, 'a>> = Codecs.dictionary  (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
-        static member inline GetCodec (_: ResizeArray<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ResizeArray<'a>>        = Codecs.resizeArray (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+        static member inline GetCodec (_: NonEmptyMap<string, 'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding,NonEmptyMap<string, 'a>> = Codecs.nonEmptyPropMap (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+        static member inline GetCodec (_: Dictionary<string, 'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Dictionary<string, 'a>> = Codecs.propDictionary  (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+        static member inline GetCodec (_: ResizeArray<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ResizeArray<'a>>        = Codecs.resizeArray     (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
         static member inline GetCodec (_: 'a Id2   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _, _: 'Operation)  = (Ok (Id2<'a> Unchecked.defaultof<'a>)), Map.empty
 
     type GetCodec with static member inline GetCodec (_: 'a * 'b                          when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b                         > = Codecs.tuple2 (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'b>, c))
@@ -556,7 +564,7 @@ module Internals =
                 let codecs = CodecCollection<'Encoding, 'Base>.GetSubtypes
                 match toList codecs with
                 | [] -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
-                | _  -> (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.multiMap Codecs.id
+                | _  -> (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.multiPropMap Codecs.id
             )
 
     type GetCodec with
@@ -579,7 +587,7 @@ module Internals =
         // But adding the warning changes overload resolution.
         static member inline GetCodec (_: 'T, _: IDefault6, _, _: 'Operation) : Codec<'Encoding, 'T> =
             let c: Codec<PropertyList<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<PropertyList<'Encoding>, 'T>) ())
-            c >.> Codecs.multiMap Codecs.id
+            c >.> Codecs.multiPropMap Codecs.id
 
         // For specific 'Encoding in recursive calls coming from a get_Codec operation
         static member inline GetCodec (_: 'T, _: IDefault8, _, _: 'Operation) : Codec<'Encoding, 'T> =
@@ -596,9 +604,15 @@ module Internals =
                 r
             { Decoder = d; Encoder = e }
 
-        // Maps where the Key is not a string
+        // Overloads for IDictionaries where the Key is not a string
+        static member inline GetCodec (_: Dictionary<'K, 'V>, _: IDefault3, c, _: 'Operation) : Codec<'Encoding, Dictionary<'K, 'V>> =
+            Codecs.dictionary (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'K>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'V>, c))
+        
         static member inline GetCodec (_: Map<'K, 'V>, _: IDefault3, c, _: 'Operation) : Codec<'Encoding, Map<'K, 'V>> =
-            Codecs.gmap (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'K>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'V>, c))
+            Codecs.map (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'K>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'V>, c))
+
+        static member inline GetCodec (_: NonEmptyMap<'K, 'V>, _: IDefault3, c, _: 'Operation) : Codec<'Encoding, NonEmptyMap<'K, 'V>> =
+            Codecs.nonEmptyMap (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'K>, c)) (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'V>, c))
 
 
     type GetEnc with
@@ -650,7 +664,7 @@ module Operators =
     /// Creates a codec to (from) 'Encoding from (to) an Object-Codec.
     /// <param name="objCodec">A codec of MultiMap from/to a strong type.</param>
     /// <returns>A codec of a strong type to (from) Encoding.</returns>
-    let ofObjCodec (objCodec: Codec<PropertyList<'Encoding>, 't>) : Codec<_, 't> = objCodec >.> Codecs.multiMap Codecs.id
+    let ofObjCodec (objCodec: Codec<PropertyList<'Encoding>, 't>) : Codec<_, 't> = objCodec >.> Codecs.multiPropMap Codecs.id
 
 
     let jreqWith (c: Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
@@ -702,7 +716,7 @@ module Operators =
 
 
     let jobj (x: list<string * 'Encoding>) : 'Encoding =
-        let (Codec (_, enc)) = Codecs.multiMap Codecs.id
+        let (Codec (_, enc)) = Codecs.multiPropMap Codecs.id
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
         |> enc
 
@@ -711,14 +725,14 @@ module Operators =
     let JNumber x = (Codecs.decimal |> Codec.encode) x
     let JString x = (Codecs.string  |> Codec.encode) x
     let JArray (x: IReadOnlyList<'Encoding>) = (Codecs.array Codecs.id |> Codec.encode) (toArray x)
-    let JObject x = (Codecs.multiMap Codecs.id |> Codec.encode) x
+    let JObject x = (Codecs.multiPropMap Codecs.id |> Codec.encode) x
     
     let (|JNull|_|)   (x: 'Encoding) = match (Codecs.option Codecs.id |> Codec.decode) x with | Ok None -> Some () | _ -> None    
     let (|JBool|_|)   (x: 'Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
     let (|JNumber|_|) (x: 'Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
     let (|JString|_|) (x: 'Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
-    let (|JArray|_|)  (x: 'Encoding) = (Codecs.array    Codecs.id |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
-    let (|JObject|_|) (x: 'Encoding) = (Codecs.multiMap Codecs.id |> Codec.decode) x |> Option.ofResult
+    let (|JArray|_|)  (x: 'Encoding) = (Codecs.array        Codecs.id |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
+    let (|JObject|_|) (x: 'Encoding) = (Codecs.multiPropMap Codecs.id |> Codec.decode) x |> Option.ofResult
 
     
     /// Gets a value from an Encoding object.

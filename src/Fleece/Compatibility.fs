@@ -174,9 +174,9 @@ module Operators =
         let list (x: Codec<Encoding, _>) = Codecs.list x
         let set (x: Codec<Encoding, _>) = Codecs.set x
         let resizeArray (x: Codec<Encoding, _>) = Codecs.resizeArray x
-        let map         (x: Codec<Encoding, _>) = Codecs.map x
-        let dictionary  (x: Codec<Encoding, _>) = Codecs.dictionary x
-        let unit  () : Codec<Encoding, _> = Codecs.unit
+        let map         (x: Codec<Encoding, _>) = Codecs.propMap x
+        let dictionary  (x: Codec<Encoding, _>) = Codecs.propDictionary x
+        let unit ()  : Codec<Encoding, _>  = Codecs.unit
         let tuple2 (x: Codec<Encoding, _>) = Codecs.tuple2 x
         let tuple3 (x: Codec<Encoding, _>) = Codecs.tuple3 x
         let tuple4 (x: Codec<Encoding, _>) = Codecs.tuple4 x
@@ -205,7 +205,7 @@ module Operators =
     let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
     let jobj (x: list<string * Encoding>) : Encoding =
-        let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
+        let (Codec (_, enc)) = Codecs.multiPropMap (Ok <-> id)
         multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
         |> enc
 
@@ -214,14 +214,14 @@ module Operators =
     let JNumber x : Encoding = (Codecs.decimal |> Codec.encode) x
     let JString x : Encoding = (Codecs.string  |> Codec.encode) x
     let JArray (x: System.Collections.Generic.IReadOnlyList<Encoding>) : Encoding = (Codecs.array (Ok <-> id) |> Codec.encode) (toArray x)
-    let JObject (x: PropertyList<Encoding>) : Encoding = (Codecs.multiMap (Ok <-> id) |> Codec.encode) x
+    let JObject (x: PropertyList<Encoding>) : Encoding = (Codecs.multiPropMap (Ok <-> id) |> Codec.encode) x
     
     let (|JNull|_|)   (x: Encoding) = match (Codecs.option (Ok <-> id) |> Codec.decode) x with | Ok None -> Some () | _ -> None    
     let (|JBool|_|)   (x: Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
     let (|JNumber|_|) (x: Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
     let (|JString|_|) (x: Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
-    let (|JArray|_|)  (x: Encoding) = (Codecs.array    (Ok <-> id) |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
-    let (|JObject|_|) (x: Encoding) = (Codecs.multiMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
+    let (|JArray|_|)  (x: Encoding) = (Codecs.array        (Ok <-> id) |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
+    let (|JObject|_|) (x: Encoding) = (Codecs.multiPropMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
 
     /// A codec to encode a collection of property/values into a Json encoding and the other way around.
     let jsonObjToValueCodec : Codec<Encoding, PropertyList<Encoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
