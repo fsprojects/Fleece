@@ -404,6 +404,10 @@ type GetCodec =
         let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a * _ -> Codec<'Encoding, ^t>) b, a, Unchecked.defaultof<'Operation>)
         call (Unchecked.defaultof<GetCodec>, x)
 
+    static member inline InvokeEx<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't, _: 'Class) : Codec<'Encoding, ^t> =
+        let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a * _ -> Codec<'Encoding, ^t>) b, a, Unchecked.defaultof<'Operation>)
+        call (Unchecked.defaultof<'Class>, x)
+
 type GetDec =
     inherit GetCodec
      
@@ -484,7 +488,7 @@ type GetCodec with
     static member inline GetCodec (_: ArraySegment<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding,ArraySegment<'a>> = Codecs.arraySegment (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
     #endif
 
-type GetCodec with static member inline GetCodec (_: list<'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, list<'a>>   = Codecs.list (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+type GetCodec with static member inline GetCodec (_: list<'a> when 'Encoding :> IEncoding and 'Encoding : struct, c: #GetCodec, _: 'Operation) : Codec<'Encoding, list<'a>>  = Codecs.list (GetCodec.InvokeEx<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
 type GetCodec with static member inline GetCodec (_: Set<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, Set<'a>>    = Codecs.set  (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 type GetCodec with static member inline GetCodec (_: NonEmptySet<'a>   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>>    = Codecs.neset    (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 type GetCodec with static member inline GetCodec (_: Map<string, 'a>   when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, _: 'Operation) : Codec<'Encoding, Map<string, 'a>>    = Codecs.map (GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
