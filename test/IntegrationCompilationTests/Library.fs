@@ -572,3 +572,29 @@ module TestInterfaces =
     // todo add checks
     
     ()
+
+
+module TestCompilationPartiallyInferredTypes =
+    open FSharpPlus
+    open Fleece.SystemTextJson
+    open Fleece
+    
+    type OpError = inherit ICodecInterface<OpError>
+    type Subject = inherit ICodecInterface<Subject>
+    
+    type ConstructionError<'OpError when 'OpError :> OpError> = CError of 'OpError
+    with
+        static member inline get_Codec () = ofObjCodec (CError <!> jreq "ConstructionError" (function (CError x) -> Some x ))
+    
+        static member CastUnsafe (CError err: ConstructionError<#OpError>) : ConstructionError<'OpError> = CError (err |> box :?> 'OpError)
+    
+    let inline forIsomorphicType (toCodecFriendly: 'T -> 'CodecFriendly) (ofCodecFriendly: 'CodecFriendly -> 'T) =
+        ((fun (t: obj) -> t :?> 'T |> toCodecFriendly |> toJsonText), ofJsonText<'CodecFriendly> >> Result.get >> ofCodecFriendly >> box)
+    
+    // Here Result is partially inferred without its generic types.
+    // Using overload for error messages, catching struct for generics resolves early.
+    // The following lines were failing to compile in 0.10.0-RC4 but subsequent changes seems to have fixed the problem somehow.
+    let _ = forIsomorphicType
+                (Result.map (fun x -> x :> Subject) >> Result.mapError ConstructionError<OpError>.CastUnsafe)
+                (Result.map id                      >> Result.mapError ConstructionError<OpError>.CastUnsafe)
+    ()
