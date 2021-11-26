@@ -202,7 +202,7 @@ module Operators =
         let guid           : Codec<Encoding, _> = Codecs.guid
     
     
-    let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
+    let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
     let jobj (x: list<string * Encoding>) : Encoding =
         let (Codec (_, enc)) = Codecs.multiMap (Ok <-> id)
