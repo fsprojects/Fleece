@@ -29,6 +29,8 @@ jobs:
       run: dotnet run --no-build --project ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f net5
     - name: Test SystemTextJson
       run: dotnet run --no-build --project ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f net5
+    - name: Test Integration
+      run: dotnet run --no-build --project ./test/IntegrationCompilationTests/IntegrationCompilationTests.fsproj -c Release -f net5
 
   docs:
 
