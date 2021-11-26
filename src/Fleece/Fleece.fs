@@ -613,29 +613,6 @@ type GetCodec with
         Codecs.gmap (GetCodec.InvokeEx<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'K>, c)) (GetCodec.InvokeEx<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'V>, c))
 
 
-
-    static member inline GetCodec (_: 't, _: IDefault4, _, _: OpEncode) : Codec<'Encoding, ^t> =
-        let e =
-            fun t ->
-                let mutable r = Unchecked.defaultof<'Encoding>
-                let _ = (^t : (static member Encode : ^t * byref<'Encoding> -> unit) (t, &r))
-                r
-        decoderNotAvailable <-> e
-    
-    static member inline GetCodec (_: 't , _: IDefault3, _, _: OpEncode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
-        let e: 't -> 'Encoding = fun t -> (^t : (static member ToJson : ^t -> 'Encoding) t)
-        decoderNotAvailable <-> e
-
-    [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
-    static member inline GetCodec (_: 't , _: IDefault4, _, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
-        let d = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) js)
-        d <-> encoderNotAvailable
-
-    static member inline GetCodec (_: 't , _: IDefault3, _, _: OpDecode) : Codec<'Encoding, ^t> (* when 'Encoding :> IEncoding and 'Encoding : struct *) =
-        let d = fun js -> (^t : (static member OfJson: 'Encoding -> ^t ParseResult) js) : ^t ParseResult
-        d <-> encoderNotAvailable
-
-
 type GetEnc with
     static member inline GetCodec (_: 't, _: IDefault2, _, _: OpEncode) : Codec<'Encoding, ^t> =
         let e =
