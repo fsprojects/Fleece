@@ -13,6 +13,50 @@ type ICodecInterface<'Base> = interface end
 module Config =
     let mutable codecCacheEnabled = true
 
+type PropertyList<'Encoding> (properties: (string * 'Encoding) []) =
+    let properties = properties
+    member _.Properties = properties
+    member _.Item with get (key: string) = properties |> Seq.filter (fun (k, _) -> k = key) |> Seq.map snd |> Seq.toList
+    member _.Count = properties.Length
+    with
+        interface System.Collections.IEnumerable with
+            member _.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator () :> System.Collections.IEnumerator
+
+        interface IEnumerable<KeyValuePair<string, 'Encoding>> with
+            member _.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator ()
+
+        interface IReadOnlyCollection<KeyValuePair<string,'Encoding>> with
+            member _.Count = properties.Length
+    
+        interface IReadOnlyDictionary<string, 'Encoding> with
+            member _.Keys = properties |> Seq.map fst
+            member _.Values = properties |> Seq.map snd
+            member _.Item with get (key: string) = properties |> Array.find (fun (k, _) -> k = key) |> snd
+            member _.ContainsKey (key: string) = properties |> Array.exists (fun (k, _) -> k = key)
+            member _.TryGetValue (key: string, value: byref<'Encoding>) =
+                match properties |> Array.tryFindIndex (fun (k, _) -> k = key) with
+                | Some i ->
+                    value <- snd properties.[i]
+                    true
+                | None -> false
+
+        static member Filter (x: PropertyList<'Encoding>, f) = x.Properties |> Array.filter f |> PropertyList
+        static member get_Zero () = PropertyList [||]
+        static member (+) (x: PropertyList<'Encoding>, y: PropertyList<'Encoding>) = PropertyList (x.Properties ++ y.Properties)
+        static member Map (x: PropertyList<'Encoding>, f) = PropertyList (x.Properties |> map (fun (k, v) -> (k, f v)))
+        static member ToSeq  (x: PropertyList<'Encoding>) = toSeq x.Properties
+        static member ToList (x: PropertyList<'Encoding>) = toList x.Properties
+        static member ToArray (x: PropertyList<'Encoding>) = x.Properties
+        static member add key x (t: PropertyList<'Encoding>) =
+            
+            let i = t.Properties |> Array.tryFindIndex (fun (k, _) -> k = key)
+            match i with
+            | Some i ->
+                let t = t.Properties |> Array.copy
+                t.[i] <- (key, x)
+                PropertyList t
+            | None   -> PropertyList (t.Properties ++ [|(key, x)|])
+
 [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module Helpers =
 
@@ -35,7 +79,7 @@ module Helpers =
     #endif
 
     /// Creates a MultiMap from a seq of KeyValue pairs.
-    let multiMap (x: seq<KeyValuePair<_, _>>) = x |> Seq.map (|KeyValue|) |> MultiMap.ofSeq
+    let multiMap (x: seq<KeyValuePair<_, _>>) = x |> Seq.map (|KeyValue|) |> Seq.toArray |> PropertyList
 
     module Dictionary =
 
@@ -49,6 +93,8 @@ module Helpers =
             for (KeyValue (k, v)) in source do
                 yield (k, v) }
 
+        let toArray (source: Dictionary<'Key, 'T>) = toSeq source |> Seq.toArray
+
     let decoderNotAvailable (_: 'Encoding) : Result<'T, _> = failwithf "Fleece internal error: this codec has no decoder from encoding %A to type %A." typeof<'Encoding> typeof<'T>
     let encoderNotAvailable (_: 'T) : 'Encoding            = failwithf "Fleece internal error: this codec has no encoder from type %A to encoding %A." typeof<'T> typeof<'Encoding>
 
@@ -57,10 +103,6 @@ open Helpers
 
 /// Encodes a value of a generic type 't into a value of raw type 'S.
 type Encoder<'S, 't> = 't -> 'S
-
-
-/// An alias for a MultimMap with string keys
-type PropertyList<'t> = MultiMap<string, 't>
 
 /// A decoder from raw type 'S1 and encoder to raw type 'S2 for strong types 't1 and 't2.
 type Codec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
@@ -297,9 +339,9 @@ module Codecs =
     let nonEmptySet  (codec: Codec<'Encoding, 'a>) = (Set >> NonEmptySet.tryOfSet >> Option.toResultWith (DecodeError.Uncategorized "Set is empty") <-> Array.ofSeq) >.> array codec
     let resizeArray  (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
     let multiPropMap (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.multiMap (Codec.upCast codec) |> Codec.downCast   : Codec<'Encoding, PropertyList<'a>>
-    let propMap      (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq        << MultiMap.toSeq <-> (Map.toSeq        >> MultiMap.ofSeq)) >.> multiPropMap codec
-    let propDictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << MultiMap.toSeq <-> (Dictionary.toSeq >> MultiMap.ofSeq)) >.> multiPropMap codec
-    let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (MultiMap.toSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toSeq >> MultiMap.ofSeq)) >.> multiPropMap codec
+    let propMap      (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq << PropertyList.ToSeq <-> (Map.toArray >> PropertyList)) >.> multiPropMap codec
+    let propDictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << PropertyList.ToSeq <-> (Dictionary.toArray >> PropertyList)) >.> multiPropMap codec
+    let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (PropertyList.ToSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toArray >> PropertyList)) >.> multiPropMap codec
     let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option   (Codec.upCast codec) |> Codec.downCast  : Codec<'Encoding, option<'a>>
     let nullable (codec: Codec<'Encoding, 'a>) = (Ok << Option.toNullable <-> Option.ofNullable) >.> option codec  : Codec<'Encoding, Nullable<'a>>
     let result  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.result (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Result<'a,'b>>
@@ -834,7 +876,7 @@ module Lens =
 
     /// Like '_jnth', but for 'Object' with Text indices.
     let inline _jkey i =
-        let inline dkey i f t = map (fun x -> MultiMap.add i x t) (f (t.[i] |> function [] -> JNull | x::_ -> x))
+        let inline dkey i f t = map (fun x -> PropertyList.add i x t) (f (t.[i] |> function [] -> JNull | x::_ -> x))
         _JObject << dkey i
 
     let inline _jnth i =

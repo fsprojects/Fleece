@@ -164,16 +164,18 @@ type ShapeD =
         static member JsonObjCodec =
             /// Derives a concrete field codec for a required field and value
             let inline jreqValue prop value codec =
-                let matchPropValue (o: MultiMap<_,Encoding>) =
-                     match o.[prop] with
-                     | [a] when (ofJson a) = Ok value -> Ok o
-                     | [a] -> Decode.Fail.invalidValue a value
-                     | _   -> Decode.Fail.propertyNotFound prop o
+                let matchPropValue o =
+                     match IReadOnlyDictionary.tryGetValue prop o with
+                     | Some a when (ofJson a) = Ok value -> Ok o
+                     | Some a -> Decode.Fail.invalidValue a value
+                     | None -> Decode.Fail.propertyNotFound prop o
                 Codec.ofConcrete codec
                 |> Codec.compose (
                                     matchPropValue
                                     <->
-                                    fun (encoded: MultiMap<_,Encoding>) -> MultiMap.ofList ([prop, toJson value]) ++ encoded
+                                    fun (encoded: PropertyList<Encoding>) ->
+                                        if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
+                                        else PropertyList [|prop, toJson value|] ++ encoded
                                  )
                 |> Codec.toConcrete
 

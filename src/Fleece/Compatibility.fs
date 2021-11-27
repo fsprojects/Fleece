@@ -224,7 +224,7 @@ module Operators =
     let (|JObject|_|) (x: Encoding) = (Codecs.multiPropMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
 
     /// A codec to encode a collection of property/values into a Json encoding and the other way around.
-    let jsonObjToValueCodec : Codec<Encoding, PropertyList<Encoding>> = ((function JObject (o: MultiMap<_,_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
+    let jsonObjToValueCodec : Codec<Encoding, PropertyList<Encoding>> = ((function JObject (o: PropertyList<_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
 
     /// A codec to encode a Json value to a Json text and the other way around.
     let jsonValueToTextCodec = (fun x -> try Ok (Encoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: Encoding) -> string x)
@@ -247,7 +247,7 @@ module Operators =
     let jgetWith ofJson (o: PropertyList<Encoding>) key =
         match o.[key] with
         | value::_ -> ofJson value
-        | _ -> Decode.Fail.propertyNotFound key (o |> MultiMap.mapValues (fun x -> x :> IEncoding))
+        | _ -> Decode.Fail.propertyNotFound key (o |> map (fun x -> x :> IEncoding))
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.

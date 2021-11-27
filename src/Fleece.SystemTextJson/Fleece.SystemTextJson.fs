@@ -314,7 +314,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member nullableE (encoder: _ -> Encoding) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else Encoding.JNull
     
     static member arrayE    (encoder: _ -> Encoding) (x: 'a [])        = Encoding.JArray ((Array.map encoder x) |> Array.toList)
-    static member multiMapE (encoder: _ -> Encoding) (x: PropertyList<'a>) = x |> MultiMap.toList |> Seq.filter (fun (k, _) -> not (isNull k)) |> Seq.map (fun (k, v) -> k, encoder v) |> Map.ofSeq |> Encoding.JObject
+    static member multiMapE (encoder: _ -> Encoding) (x: PropertyList<'a>) = x |> filter (fun (k, _) -> not (isNull k)) |> map encoder |> Encoding.JObject
 
     static member tuple1E (encoder1: 'a -> Encoding) (a: Tuple<_>) = Encoding.JArray ([|encoder1 a.Item1|] |> Seq.toList)
     static member tuple2E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (a, b) = Encoding.JArray ([|encoder1 a; encoder2 b|] |> Seq.toList)
