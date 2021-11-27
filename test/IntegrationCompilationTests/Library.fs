@@ -598,3 +598,35 @@ module TestCompilationPartiallyInferredTypes =
                 (Result.map (fun x -> x :> Subject) >> Result.mapError ConstructionError<OpError>.CastUnsafe)
                 (Result.map id                      >> Result.mapError ConstructionError<OpError>.CastUnsafe)
     ()
+
+
+module TestIDictionaries =
+    open FSharpPlus.Data
+    open Fleece.Helpers
+
+    let a1 = Fleece.SystemTextJson.Operators.toJsonText (Map.ofList ["One", 1; "Two", 2])
+    let a2 = Fleece.SystemTextJson.Operators.toJsonText (Map.ofList ['a', 1; 'b', 2])
+
+    let _: Result<Map<string, int>, _> = Fleece.SystemTextJson.Operators.ofJsonText a1
+    let _: Result<Map<float , int>, _> = Fleece.SystemTextJson.Operators.ofJsonText a2
+
+    Assert.Equal ("Map with string properties", "{\"One\":1,\"Two\":2}", a1)
+    Assert.Equal ("Map with non-string properties", "[[\"a\",1],[\"b\",2]]", a2)
+
+    let c1 = Fleece.SystemTextJson.Operators.toJsonText (Dictionary.ofSeq ["One", 1; "Two", 2])
+    let c2 = Fleece.SystemTextJson.Operators.toJsonText (Dictionary.ofSeq ['a', 1; 'b', 2])
+
+    let _: Result<Map<string, int>, _> = Fleece.SystemTextJson.Operators.ofJsonText c1
+    let _: Result<Map<float , int>, _> = Fleece.SystemTextJson.Operators.ofJsonText c2
+
+    Assert.Equal ("Dictionary with string properties", "{\"One\":1,\"Two\":2}", c1)
+    Assert.Equal ("Dictionary with non-string properties", "[[\"a\",1],[\"b\",2]]", c2)
+
+    let e1 = Fleece.SystemTextJson.Operators.toJsonText (Map.ofList ["One", 1; "Two", 2])
+    let e2 = Fleece.SystemTextJson.Operators.toJsonText (Map.ofList ['a', 1; 'b', 2])
+
+    let _: Result<NonEmptyMap<string, int>, _> = Fleece.SystemTextJson.Operators.ofJsonText e1
+    let _: Result<NonEmptyMap<float , int>, _> = Fleece.SystemTextJson.Operators.ofJsonText e2
+
+    Assert.Equal ("NonEmptyMap with string properties", "{\"One\":1,\"Two\":2}", e1)
+    Assert.Equal ("NonEmptyMap with non-string properties", "[[\"a\",1],[\"b\",2]]", e2)
