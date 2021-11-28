@@ -78,9 +78,6 @@ module Helpers =
             array
     #endif
 
-    /// Creates a MultiMap from a seq of KeyValue pairs.
-    let multiMap (x: seq<KeyValuePair<_, _>>) = x |> Seq.map (|KeyValue|) |> Seq.toArray |> PropertyList
-
     module Dictionary =
 
         let ofSeq (source: seq<'Key * 'T>) =
@@ -721,7 +718,7 @@ module Operators =
             | value:: _ -> decoder value
         {
             Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode c) o prop
-            Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode c x)] | _ -> zero
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero
         }
 
     let jreqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
@@ -732,7 +729,7 @@ module Operators =
             | value:: _ -> decoder value
         {
             Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop
-            Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode (c ()) x)] | _ -> zero
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero
         }
 
     /// Derive automatically a RawCodec, based on GetCodec / Codec static members
@@ -755,17 +752,14 @@ module Operators =
             | value:: _ -> decoder value |> Result.map Some
         {
             Decoder = fun (o: PropertyList<'S>) -> getFromListOptWith (Codec.decode c) o prop
-            Encoder = fun x -> match getter x with Some (x: 'Value) -> multiMap [KeyValuePair (prop, Codec.encode c x)] | _ -> zero
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero
         }
 
     /// Derives a concrete field codec for an optional field
     let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith (getCodec<'Encoding, 'param> ()) prop getter
 
 
-    let jobj (x: list<string * 'Encoding>) : 'Encoding =
-        let (Codec (_, enc)) = Codecs.multiPropMap Codecs.id
-        multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
-        |> enc
+    let jobj (x: list<string * 'Encoding>) : 'Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.multiPropMap Codecs.id)
 
     let JNull<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> : 'Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
     let JBool   x = (Codecs.boolean |> Codec.encode) x

@@ -170,7 +170,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | a        -> Decode.Fail.arrExpected (Encoding a)
         
     static member multiMapD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<PropertyList<'a>> = function
-        | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toList |> List.map KeyValuePair |> multiMap)
+        | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected (Encoding a)
 
     static member unitD : JsonValue -> ParseResult<unit> =

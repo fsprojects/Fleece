@@ -204,10 +204,7 @@ module Operators =
     
     let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
-    let jobj (x: list<string * Encoding>) : Encoding =
-        let (Codec (_, enc)) = Codecs.multiPropMap (Ok <-> id)
-        multiMap (x |> Seq.map System.Collections.Generic.KeyValuePair)
-        |> enc
+    let jobj (x: list<string * Encoding>) : Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.multiPropMap Codecs.id)
 
     let JNull     : Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
     let JBool   x : Encoding = (Codecs.boolean |> Codec.encode) x

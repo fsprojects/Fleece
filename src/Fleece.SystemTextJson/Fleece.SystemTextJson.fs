@@ -197,7 +197,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
         | a        -> Decode.Fail.arrExpected a
         
     static member multiMapD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<PropertyList<'a>> = function
-        | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toList |> List.map KeyValuePair |> multiMap)
+        | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected a
 
     static member unitD : Encoding -> ParseResult<unit> =
