@@ -17,8 +17,8 @@ module Internals =
         match o.ValueKind with
         | JsonValueKind.Null
         | JsonValueKind.Undefined -> JNull
-        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> (^Encoding : (static member Wrap: _ -> ^Encoding) x) ] |> Seq.toList)
-        | JsonValueKind.Object    -> JObject (Map.ofList [for x in o.EnumerateObject () -> (x.Name, (^Encoding : (static member Wrap: _ -> ^Encoding) x.Value))] :> IReadOnlyDictionary<_,_>)
+        | JsonValueKind.Array     -> JArray [ for x in o.EnumerateArray () -> (^Encoding : (static member Wrap: _ -> ^Encoding) x) ]
+        | JsonValueKind.Object    -> JObject (PropertyList [|for x in o.EnumerateObject () -> (x.Name, (^Encoding : (static member Wrap: _ -> ^Encoding) x.Value))|] :> IReadOnlyDictionary<_,_>)
         | JsonValueKind.Number    -> JNumber j
         | JsonValueKind.False     -> JBool false
         | JsonValueKind.True      -> JBool true
