@@ -361,7 +361,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         member _.choice3 c1 c2 c3 = Encoding.toIEncoding (Encoding.choice3  (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
         member _.option c         = Encoding.toIEncoding (Encoding.option   (Encoding.ofIEncoding c))
         member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
-        member _.multiMap c       = Encoding.toIEncoding (Encoding.multiMap (Encoding.ofIEncoding c))
+        member _.propertyList c   = Encoding.toIEncoding (Encoding.multiMap (Encoding.ofIEncoding c))
 
         member _.tuple1 c                    = Encoding.toIEncoding (Encoding.tuple1 (Encoding.ofIEncoding c))
         member _.tuple2 c1 c2                = Encoding.toIEncoding (Encoding.tuple2 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))

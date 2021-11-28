@@ -124,7 +124,7 @@ type NestedItem with
 module AdditionalCombinator =
     open Fleece
     let inline tag prop (codec: Codec<PropertyList<'Encoding>, 't>) : Codec<PropertyList<'Encoding>, 't> =
-        let (Codec (d, e)) = Codecs.multiPropMap Codecs.id
+        let (Codec (d, e)) = Codecs.propList Codecs.id
         codec
         |> Codec.compose (
                 (fun (o: PropertyList<_>) -> match map d o.[prop] with [Ok a] -> Ok a | [] -> Decode.Fail.propertyNotFound prop Unchecked.defaultof<_> | _ -> Error <| Uncategorized "Multiple props.")

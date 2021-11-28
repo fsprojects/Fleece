@@ -204,21 +204,21 @@ module Operators =
     
     let inline jsonValueCodec< ^t when (GetCodec or  ^t) : (static member GetCodec :  ^t * GetCodec * GetCodec * OpCodec -> Codec<Encoding, ^t>)> = GetCodec.Invoke<Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
-    let jobj (x: list<string * Encoding>) : Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.multiPropMap Codecs.id)
+    let jobj (x: list<string * Encoding>) : Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.propList Codecs.id)
 
     let JNull     : Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
     let JBool   x : Encoding = (Codecs.boolean |> Codec.encode) x
     let JNumber x : Encoding = (Codecs.decimal |> Codec.encode) x
     let JString x : Encoding = (Codecs.string  |> Codec.encode) x
     let JArray (x: System.Collections.Generic.IReadOnlyList<Encoding>) : Encoding = (Codecs.array (Ok <-> id) |> Codec.encode) (toArray x)
-    let JObject (x: PropertyList<Encoding>) : Encoding = (Codecs.multiPropMap (Ok <-> id) |> Codec.encode) x
+    let JObject (x: PropertyList<Encoding>) : Encoding = (Codecs.propList (Ok <-> id) |> Codec.encode) x
     
     let (|JNull|_|)   (x: Encoding) = match (Codecs.option (Ok <-> id) |> Codec.decode) x with | Ok None -> Some () | _ -> None    
     let (|JBool|_|)   (x: Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
     let (|JNumber|_|) (x: Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
     let (|JString|_|) (x: Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
     let (|JArray|_|)  (x: Encoding) = (Codecs.array        (Ok <-> id) |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
-    let (|JObject|_|) (x: Encoding) = (Codecs.multiPropMap (Ok <-> id) |> Codec.decode) x |> Option.ofResult
+    let (|JObject|_|) (x: Encoding) = (Codecs.propList (Ok <-> id) |> Codec.decode) x |> Option.ofResult
 
     /// A codec to encode a collection of property/values into a Json encoding and the other way around.
     let jsonObjToValueCodec : Codec<Encoding, PropertyList<Encoding>> = ((function JObject (o: PropertyList<_>) -> Ok o | a -> Decode.Fail.objExpected a) <-> JObject)
