@@ -196,7 +196,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
         | JArray a -> Seq.traverse decoder a |> Result.map Seq.toArray
         | a        -> Decode.Fail.arrExpected a
         
-    static member multiMapD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<PropertyList<'a>> = function
+    static member propListD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<PropertyList<'a>> = function
         | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected a
 
@@ -311,10 +311,9 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
         | None   -> Encoding.JNull
         | Some a -> encoder a
 
-    static member nullableE (encoder: _ -> Encoding) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else Encoding.JNull
-    
+    static member nullableE (encoder: _ -> Encoding) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else Encoding.JNull    
     static member arrayE    (encoder: _ -> Encoding) (x: 'a [])        = Encoding.JArray ((Array.map encoder x) |> Array.toList)
-    static member multiMapE (encoder: _ -> Encoding) (x: PropertyList<'a>) = x |> filter (fun (k, _) -> not (isNull k)) |> map encoder |> Encoding.JObject
+    static member propListE (encoder: _ -> Encoding) (x: PropertyList<'a>) = x |> filter (fun (k, _) -> not (isNull k)) |> map encoder |> Encoding.JObject
 
     static member tuple1E (encoder1: 'a -> Encoding) (a: Tuple<_>) = Encoding.JArray ([|encoder1 a.Item1|] |> Seq.toList)
     static member tuple2E (encoder1: 'a -> Encoding) (encoder2: 'b -> Encoding) (a, b) = Encoding.JArray ([|encoder1 a; encoder2 b|] |> Seq.toList)
@@ -358,8 +357,8 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
     static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = Encoding.choice3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) <-> Encoding.choice3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
     static member option   (codec: Codec<_,_>) = Encoding.optionD (Codec.decode codec) <-> Encoding.optionE (Codec.encode codec)
     static member nullable (codec: Codec<Encoding, 't>) = Encoding.nullableD (Codec.decode codec) <-> Encoding.nullableE (Codec.encode codec) : Codec<Encoding, Nullable<'t>>
-    static member array    (codec: Codec<_,_>) = Encoding.arrayD  (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
-    static member multiMap (codec: Codec<_,_>) = Encoding.multiMapD (Codec.decode codec) <-> Encoding.multiMapE (Codec.encode codec)
+    static member array    (codec: Codec<_,_>) = Encoding.arrayD    (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
+    static member propList (codec: Codec<_,_>) = Encoding.propListD (Codec.decode codec) <-> Encoding.propListE (Codec.encode codec)
 
     static member unit = Encoding.unitD <-> Encoding.unitE
     static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = Encoding.tuple1D (Codec.decode codec1)                                                                                                                                     <-> Encoding.tuple1E (Codec.encode codec1)
@@ -416,7 +415,7 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
         member _.choice3 c1 c2 c3 = Encoding.toIEncoding (Encoding.choice3  (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
         member _.option c         = Encoding.toIEncoding (Encoding.option   (Encoding.ofIEncoding c))
         member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
-        member _.propertyList c   = Encoding.toIEncoding (Encoding.multiMap (Encoding.ofIEncoding c))
+        member _.propertyList c   = Encoding.toIEncoding (Encoding.propList (Encoding.ofIEncoding c))
 
         member _.tuple1 c                    = Encoding.toIEncoding (Encoding.tuple1 (Encoding.ofIEncoding c))
         member _.tuple2 c1 c2                = Encoding.toIEncoding (Encoding.tuple2 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))

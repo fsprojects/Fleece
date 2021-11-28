@@ -156,7 +156,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JArray a -> Seq.traverse decoder a |> Result.map Seq.toArray
         | a        -> Decode.Fail.arrExpected (Encoding a)
         
-    static member multiMapD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<PropertyList<'a>> = function
+    static member propListD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<PropertyList<'a>> = function
         | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected (Encoding a)
 
@@ -274,9 +274,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | Some a -> encoder a
 
     static member nullableE (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
-    
     static member arrayE    (encoder: _ -> JsonValue) (x: 'a [])        = JArray ((Array.map encoder x) |> Array.toList)
-    static member multiMapE (encoder: _ -> JsonValue) (x: PropertyList<'a>) = x |> filter (fun (k, _) -> not (isNull k)) |> map encoder |> JObject
+    static member propListE (encoder: _ -> JsonValue) (x: PropertyList<'a>) = x |> filter (fun (k, _) -> not (isNull k)) |> map encoder |> JObject
 
     static member tuple1E (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([|encoder1 a.Item1|] |> Seq.toList)
     static member tuple2E (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> Seq.toList)
@@ -320,8 +319,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = Encoding.choice3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) <-> Encoding.choice3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
     static member option (codec: Codec<_,_>) = Encoding.optionD (Codec.decode codec) <-> Encoding.optionE (Codec.encode codec)
     static member nullable (codec: Codec<JsonValue, 't>) = Encoding.nullableD (Codec.decode codec) <-> Encoding.nullableE (Codec.encode codec) : Codec<JsonValue, Nullable<'t>>
-    static member array    (codec: Codec<_,_>) = Encoding.arrayD  (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
-    static member multiMap (codec: Codec<_,_>) = Encoding.multiMapD (Codec.decode codec) <-> Encoding.multiMapE (Codec.encode codec)
+    static member array    (codec: Codec<_,_>) = Encoding.arrayD    (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
+    static member multiMap (codec: Codec<_,_>) = Encoding.propListD (Codec.decode codec) <-> Encoding.propListE (Codec.encode codec)
 
     static member unit = Encoding.unitD <-> Encoding.unitE
     static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = Encoding.tuple1D (Codec.decode codec1)                                                                                                                                     <-> Encoding.tuple1E (Codec.encode codec1)
