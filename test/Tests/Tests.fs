@@ -123,14 +123,14 @@ type NestedItem with
 [<AutoOpen>]
 module AdditionalCombinator =
     open Fleece
-    let inline tag prop (codec: Codec<PropertyList<'Encoding>, 't>) : Codec<PropertyList<'Encoding>, 't> =
-        let (Codec (d, e)) = Codecs.propList Codecs.id
-        codec
+    let inline tag prop codec =
+        Codec.ofConcrete codec
         |> Codec.compose (
-                (fun (o: PropertyList<_>) -> match map d o.[prop] with [Ok a] -> Ok a | [] -> Decode.Fail.propertyNotFound prop Unchecked.defaultof<_> | _ -> Error <| Uncategorized "Multiple props.")
-                <->
-                (fun (x: PropertyList<_>) -> if Seq.isEmpty x then zero else PropertyList [|prop, e x|])
-                )
+                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o)
+                        <->
+                        (fun x -> if Seq.isEmpty x then zero else PropertyList [|prop, JObject x|])
+                     )
+        |> Codec.toConcrete
 
 type Vehicle =
    | Bike

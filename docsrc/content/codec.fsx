@@ -171,11 +171,10 @@ type ShapeD =
                      | None -> Decode.Fail.propertyNotFound prop o
                 Codec.ofConcrete codec
                 |> Codec.compose (
-                                    matchPropValue
-                                    <->
+                                    matchPropValue <->
                                     fun (encoded: PropertyList<Encoding>) ->
-                                        if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
-                                        else PropertyList [|prop, toJson value|] ++ encoded
+                                      if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
+                                      else PropertyList [|prop, toJson value|] ++ encoded
                                  )
                 |> Codec.toConcrete
 
