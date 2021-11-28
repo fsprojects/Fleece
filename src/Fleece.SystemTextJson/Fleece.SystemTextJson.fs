@@ -7,10 +7,9 @@ open System.Globalization
 open FSharpPlus
 open FSharpPlus.Data
 open Fleece
-open Fleece.Helpers
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix); ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module Internals =
     // pseudo-AST, wrapping Encoding subtypes:
     let inline (|JArray|JObject|JNumber|JBool|JString|JNull|) (j: ^Encoding) =
@@ -436,7 +435,8 @@ and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter ->
             | JArray  _ -> "JArray"
             | JObject _ -> "JObject"
 
-module Internal =
+[<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
+module InternalHelpers =
     let inline JArray x  = Encoding.JArray x
     let inline JObject x = Encoding.JObject x
     let        JBool x   = Encoding.JBool x

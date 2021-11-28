@@ -4,6 +4,7 @@ open System
 open System.Collections.Generic
 open System.Json
 
+[<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module Internals =
 
    open FSharpPlus

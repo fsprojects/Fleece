@@ -4,6 +4,7 @@ open System
 open System.Collections.Generic
 open FSharp.Data
 
+[<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module Internals =
 
     open FSharpPlus
@@ -66,24 +67,18 @@ open System.Globalization
 open FSharpPlus
 open FSharpPlus.Data
 open Fleece
-open Fleece.Helpers
 open Internals
 
 
 type [<Struct>] Encoding = Encoding of JsonValue with
-
     override this.ToString () = let (Encoding x) = this in x.ToString ()
-        
     static member Parse (x: string) = Encoding (JsonValue.Parse x)
-        
+
     static member inline tryRead x =
         match x with
         | JsonValue.Number n -> Ok (explicit n)
         | JsonValue.Float  n -> Ok (explicit n)
         | js                 -> Decode.Fail.numExpected (Encoding js)
-
-    
-   
 
     /// Unwraps the JsonValue inside an IEncoding
     static member Unwrap (x: IEncoding) = x :?> Encoding |> fun (Encoding s) -> s

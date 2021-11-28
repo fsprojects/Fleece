@@ -6,6 +6,7 @@ open Newtonsoft.Json.Linq
 
 type JsonValue = JToken
 
+[<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module Internals =
 
    open FSharpPlus

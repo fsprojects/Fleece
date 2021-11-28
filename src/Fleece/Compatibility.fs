@@ -26,11 +26,10 @@ open Fleece
 open Internals
 open FSharpPlus
 open FSharpPlus.Data
-open Fleece.Helpers
 
 
 #if SYSTEMTEXTJSON
-open Internal
+open Fleece.SystemTextJson.InternalHelpers
 #endif
 
 
