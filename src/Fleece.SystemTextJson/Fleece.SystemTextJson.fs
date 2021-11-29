@@ -25,6 +25,10 @@ module Internals =
         | JsonValueKind.String    -> JString (o.GetString ())
         | _                       -> failwithf "Invalid Encoding %A" o
 
+    [<Struct>]
+    type JsonElementOrWriter =
+    | Element of ElementValue: JsonElement
+    | Writer  of WriterValue: (Utf8JsonWriter -> string option-> unit)
 
 open Internals
 
@@ -32,45 +36,45 @@ type JsonObject = Map<string, Encoding>
 
 
 /// Wrapper type for JsonElement
-and [<Struct>]Encoding = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit>  } with
+and [<Struct>]Encoding = { Value: ref<JsonElementOrWriter> } with
 
-    static member Wrap x = { Encoding.Value = Choice1Of2 x }
+    static member Wrap x = { Encoding.Value = ref (Element x) }
 
     member this.ToString (options: JsonWriterOptions) =
         use stream = new System.IO.MemoryStream ()
         use writer = new Utf8JsonWriter (stream, options)
         use reader = new System.IO.StreamReader (stream)
-        match this with
-        | { Value = Choice2Of2 jobj  } -> jobj writer None
-        | { Value = Choice1Of2 value } -> value.WriteTo writer
+        match !this.Value with
+        | Writer jobj   -> jobj writer None
+        | Element value -> value.WriteTo writer
         writer.Flush ()
         stream.Seek (0L, System.IO.SeekOrigin.Begin) |> ignore
         reader.ReadToEnd ()
 
     override this.ToString () = this.ToString (new JsonWriterOptions (Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
 
-    static member Parse (x: string) = let doc = JsonDocument.Parse x in { Value = Choice1Of2 doc.RootElement }
+    static member Parse (x: string) = let doc = JsonDocument.Parse x in { Value = ref (Element doc.RootElement) }
 
     member this.get_InnerValue () =
-        match this with
-        | { Value = Choice1Of2 value } -> value
-        | { Value = Choice2Of2 _ } ->
+        match !this.Value with
+        | Element value -> value
+        | Writer  _ ->
             // run the function, then parseback
             let str = string this
             let doc = JsonDocument.Parse str
             let value = doc.RootElement
-            this.Value <- Choice1Of2 value
+            this.Value := Element value
             value
 
     member this.getWriter () =
-        match this with
-        | { Value = Choice2Of2 writer } -> writer
-        | { Value = Choice1Of2 value  } ->
+        match !this.Value with
+        | Writer writer -> writer
+        | Element value ->
             fun (writer: Utf8JsonWriter) (name: string option) ->
                 name |> Option.iter writer.WritePropertyName
                 value.WriteTo writer
 
-    static member inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
+    static member inline private writers keyValueWriter valueWriter = { Value = ref (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer)) }
 
     static member inline JArray (x: Encoding IReadOnlyList) =
         let f w =
