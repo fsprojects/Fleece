@@ -14,12 +14,15 @@ type JsonValue = System.Json.JsonValue
 
 #if SYSTEMTEXTJSON
 namespace Fleece.SystemTextJson
-[<AutoOpen>]type X = static member Encoding x = x
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Encoding =
-    let Parse x = Fleece.SystemTextJson.Encoding.Parse x
+[<AutoOpen>]
+type Extensions =
+    static member Encoding x = Encoding.Wrap x
 
-type JsonValue = Encoding
+[<RequireQualifiedAccess>]
+module JsonValue =
+    let Parse (x: string) = let doc = System.Text.Json.JsonDocument.Parse x in doc.RootElement
+
+type JsonValue = System.Text.Json.JsonElement
 #endif
 
 open Fleece
@@ -46,10 +49,10 @@ type Operators =
     /// Attempts to decode the value from its json encoding representation, using its default codec.
     static member inline ofJson (x: Encoding) : Result<'T, DecodeError> = ofEncoding x
     
-    /// Gets the json value representation of the value, using its default codec.
+    /// Gets the native json type representation of the value, using its default codec.
     static member inline toJsonValue (x: 'T) : JsonValue = toEncoding<Encoding, 'T> x |> Encoding.Unwrap
     
-    /// Attempts to decode the value from its json value representation, using its default codec.
+    /// Attempts to decode the value from its native json type representation, using its default codec.
     static member inline ofJsonValue (x: JsonValue) : Result<'T, DecodeError> = ofEncoding (Encoding x)
     
     /// Gets the json text representation of the value, using its default codec.

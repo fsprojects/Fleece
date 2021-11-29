@@ -141,7 +141,7 @@ and [<Struct>]Encoding = { Value: ref<JsonElementOrWriter> } with
         | js -> Decode.Fail.numExpected js
 
     /// Downcasts IEncoding to a SystemTextJson.Encoding
-    static member Unwrap (x: IEncoding) = x :?> Encoding
+    static member Unwrap (x: IEncoding) = (x :?> Encoding).get_InnerValue ()
 
     static member toIEncoding (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.upCast
     static member ofIEncoding (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.downCast
@@ -441,9 +441,20 @@ and [<Struct>]Encoding = { Value: ref<JsonElementOrWriter> } with
 
 [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module InternalHelpers =
-    let inline JArray x  = Encoding.JArray x
-    let inline JObject x = Encoding.JObject x
-    let        JBool x   = Encoding.JBool x
-    let        JNull     = Encoding.JNull
-    let        JString x = Encoding.JString x
-    let        JNumber x = Encoding.JNumber x
+    let inline JArray  (x: IReadOnlyList<JsonElement>) = x |> Seq.map Encoding.Wrap |> Seq.toList|> Encoding.JArray |> Encoding.Unwrap
+    let inline JObject (x: IReadOnlyDictionary<string, JsonElement>) = x |> IReadOnlyDictionary.map Encoding.Wrap |> Encoding.JObject |> Encoding.Unwrap
+    let        JBool x   = Encoding.JBool x   |> Encoding.Unwrap
+    let        JNull     = Encoding.JNull     |> Encoding.Unwrap
+    let        JString x = Encoding.JString x |> Encoding.Unwrap
+    let        JNumber x = Encoding.JNumber x |> Encoding.Unwrap
+    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonElement) =
+        match o.ValueKind with
+        | JsonValueKind.Null
+        | JsonValueKind.Undefined -> JNull
+        | JsonValueKind.Array     -> JArray [ for x in o.EnumerateArray () ->  x ]
+        | JsonValueKind.Object    -> JObject (PropertyList [|for x in o.EnumerateObject () -> (x.Name,  x.Value)|] :> IReadOnlyDictionary<_,_>)
+        | JsonValueKind.Number    -> JNumber o
+        | JsonValueKind.False     -> JBool false
+        | JsonValueKind.True      -> JBool true
+        | JsonValueKind.String    -> JString (o.GetString ())
+        | _                       -> failwithf "Invalid Encoding %A" o
