@@ -53,6 +53,8 @@ let JString = (JString >> StjEncoding.Unwrap)
 
 #endif
 
+let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
+
 let tests = [
         testList "key" [
             test "example 1: read first key" {
@@ -72,7 +74,7 @@ let tests = [
             test "example 4.1: write with missing key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" ) .-> JString "a"
                 let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
-                Assert.Equal("item", string expected, string actual)
+                Assert.Equal("item", strCleanUp (string expected), strCleanUp (string actual))
             }
             test "example 4.2: write with missing key" { //TODO: Fix
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" << _JString) .-> "a"
@@ -83,7 +85,7 @@ let tests = [
             test "example 5: write existing key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "a" << _JBool) .-> false
                 let expected = JsonValue.Parse ("{\"a\": false, \"b\": 200}")
-                Assert.Equal("item", string expected, string actual)
+                Assert.Equal("item", strCleanUp (string expected), strCleanUp (string actual))
             }
             test "example 6: read key from a different type" {
                 let actual = JsonValue.Parse( "[1,2,3]" ) ^? _jkey "a"
@@ -121,7 +123,7 @@ let tests = [
                                 #else
                                 "{\"a\": 200, \"b\": true}"
                                 #endif
-                Assert.Equal("item", (string (JsonValue.Parse expected)), string actual)
+                Assert.Equal("item", strCleanUp (string (JsonValue.Parse expected)), strCleanUp (string actual))
             }
         ]
         testList "array" [
