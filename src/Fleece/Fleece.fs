@@ -1,6 +1,6 @@
 namespace Fleece
 
-#nowarn "00042"
+#nowarn "00042" // retype
 
 open System
 open System.Collections.Generic
@@ -48,7 +48,6 @@ type PropertyList<'Encoding> (properties: (string * 'Encoding) []) =
         static member ToList (x: PropertyList<'Encoding>) = toList x.Properties
         static member ToArray (x: PropertyList<'Encoding>) = x.Properties
         static member add key x (t: PropertyList<'Encoding>) =
-            
             let i = t.Properties |> Array.tryFindIndex (fun (k, _) -> k = key)
             match i with
             | Some i ->
@@ -308,7 +307,7 @@ module Decode =
 module Codecs =
 
     let private instance<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = Unchecked.defaultof<'Encoding>
-    let private (<->) decoder encoder : Codec<_,_,_,_> = { Decoder = decoder; Encoder = encoder }
+    let private (<->) decoder encoder : Codec<_, _> = { Decoder = decoder; Encoder = encoder }
 
     let unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, _>
     let boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
@@ -820,12 +819,11 @@ module CodecInterfaceExtensions =
             let codec () =
                 let objCodec = codec ()
                 let (d, e) = objCodec.Decoder, objCodec.Encoder
-                let nd = d >> Result.map (fun (x: 'Type) -> retype x : 'Base)
-                let ne =
-                    fun (x: 'Base) ->
-                        match box x with
-                            | :? 'Type as t -> e t
-                            | _ -> zero
+                let nd = d >> Result.map retype<'Type, 'Base>
+                let ne (x: 'Base) =
+                    match box x with
+                    | :? 'Type as t -> e t
+                    | _ -> zero
                 { Decoder = nd; Encoder = ne }
             codec |> CodecCollection<'Encoding, 'Base>.AddSubtype typeof<'Type>
 
@@ -856,7 +854,7 @@ module ComputationExpressions =
         member _.Combine (x: Codec<PropertyList<'S>, 't>, y: Codec<PropertyList<'S>, 't>) = x <|> y : Codec<PropertyList<'S>, 't>
 
     /// Codec Applicative Computation Expression.
-    let codec= CodecApplicativeBuilder ()
+    let codec = CodecApplicativeBuilder ()
 
 
 module Lens =
