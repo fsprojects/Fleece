@@ -630,3 +630,12 @@ module TestIDictionaries =
 
     Assert.Equal ("NonEmptyMap with string properties", "{\"One\":1,\"Two\":2}", e1)
     Assert.Equal ("NonEmptyMap with non-string properties", "[[\"a\",1],[\"b\",2]]", e2)
+
+
+module TestGenerics =
+    open Fleece
+    
+    let inline listOfSomething () : Codec<'Encoding, list<'t>> =  getCodec ()
+    let x: Fleece.SystemTextJson.Encoding = (listOfSomething () |> Codec.encode) [1]
+    let y: Fleece.SystemTextJson.Encoding = (listOfSomething () |> Codec.encode) ['a']
+    ()
