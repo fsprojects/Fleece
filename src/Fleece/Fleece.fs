@@ -584,27 +584,6 @@ module Internals =
     type GetCodec with static member inline GetCodec (_: 't when 't : enum<_> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType, _: GetCodec, c, _: 'Operation) = Codecs.enum (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'u>, c))
 
 
-    // Overloads for compile-time error messages
-    type GetCodec with
-        [<CompilerMessage("No Encoder method found for reference type.", 10801, IsError = true)>]
-        static member inline GetCodec (_: 't when 't : not struct, _: IDefault8, _: #IDefault8, _: OpEncode) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Encoder for reference type)"
- 
-        [<CompilerMessage("No Decoder method found for reference type.", 10801, IsError = true)>]
-        static member inline GetCodec (_: 't when 't : not struct, _: IDefault8, _: #IDefault8, _: OpDecode) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Decoder for reference type)"
-
-        [<CompilerMessage("No codec method found for reference type.", 10801, IsError = true)>]
-        static member inline GetCodec (_: 't when 't : not struct, _: IDefault8, _: #IDefault8, _: OpCodec) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Codec for reference type)"
-
-        [<CompilerMessage("No Encoder method found for struct.", 10801, IsError = true)>]
-        static member inline GetCodec (_: 't when 't : struct, _: IDefault9, _: _, _: OpEncode) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Encoder for struct)"
- 
-        [<CompilerMessage("No Decoder method found for struct.", 10801, IsError = true)>]
-        static member inline GetCodec (_: 't when 't : struct, _: IDefault9, _: _, _: OpDecode) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Decoder for struct)"
-
-        [<CompilerMessage("No codec method found for struct.", 10801, IsError = true)>]
-        static member inline GetCodec (_: 't when 't : struct, _: IDefault9, _: _, _: OpCodec) : Codec<'Encoding, ^t> when 'Encoding :> IEncoding and 'Encoding : struct = failwith "Unreachable (Codec for struct)"
-
-
     type GetCodec with
 
         // Overload to handle user-defined interfaces
