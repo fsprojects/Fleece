@@ -309,25 +309,25 @@ module Codecs =
     let private instance<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = Unchecked.defaultof<'Encoding>
     let private (<->) decoder encoder : Codec<_, _> = { Decoder = decoder; Encoder = encoder }
 
-    let unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, _>
-    let boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
-    let guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, _>
-    let char<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, _>
-    let byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, _>
-    let sbyte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.sbyte          |> Codec.downCast : Codec<'Encoding, _>
-    let uint16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint16         |> Codec.downCast : Codec<'Encoding, _>
-    let uint32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint32         |> Codec.downCast : Codec<'Encoding, _>
-    let uint64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint64         |> Codec.downCast : Codec<'Encoding, _>
-    let int16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int16          |> Codec.downCast : Codec<'Encoding, _>
-    let int<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>            = instance<'Encoding>.int            |> Codec.downCast : Codec<'Encoding, _>
-    let int64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int64          |> Codec.downCast : Codec<'Encoding, _>
-    let decimal<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.decimal        |> Codec.downCast : Codec<'Encoding, _>
-    let float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, _>
-    let float<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, _>
-    let string<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, _>
-    let dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, _>
-    let dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
-    let timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] char<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] sbyte<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.sbyte          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] uint16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint16         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] uint32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint32         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] uint64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.uint64         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] int16<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int16          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] int<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>            = instance<'Encoding>.int            |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] int64<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.int64          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] decimal<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.decimal        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] float<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] string<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
     let array        (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
     let list         (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec
     let set          (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
@@ -351,7 +351,7 @@ module Codecs =
     let tuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = instance<'Encoding>.tuple6 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) |> Codec.downCast : Codec<'Encoding, _>
     let tuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = instance<'Encoding>.tuple7 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) (Codec.upCast codec7) |> Codec.downCast : Codec<'Encoding, _>
     let enum (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.enum (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, 'u>
-    let base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : struct> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, _>
     let id: Codec<'T, 'T> = { Decoder = Ok; Encoder = id }
 
     #if !FABLE_COMPILER
