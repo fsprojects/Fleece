@@ -11,7 +11,7 @@ open FSharpPlus.Data
 type ICodecInterface<'Base> = interface end
 
 module Config =
-    let mutable codecCacheEnabled = true
+    let mutable codecCacheEnabled = false
 
 type PropertyList<'Encoding> (properties: (string * 'Encoding) []) =
     let properties = properties
