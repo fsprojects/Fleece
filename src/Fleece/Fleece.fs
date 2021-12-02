@@ -389,7 +389,8 @@ module Internals =
     type IDefault5 = interface inherit IDefault6 end
     type IDefault4 = interface inherit IDefault5 end
     type IDefault3 = interface inherit IDefault4 end
-    type IDefault2 = interface inherit IDefault3 end
+    type IDefault2b = interface inherit IDefault3 end
+    type IDefault2 = interface inherit IDefault2b end
     type IDefault1 = interface inherit IDefault2 end
 
     type OpCodec  = OpCodec
@@ -465,7 +466,6 @@ module Internals =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<GetCodec>, x)
 
-        /// Recursive Invoker
         static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't, _: 'Class) : Codec<'Encoding, ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<'Class>, x)
@@ -479,8 +479,13 @@ module Internals =
             call (Unchecked.defaultof<GetDec>, x)
 
     type GetEnc =
-        inherit GetCodec
-    
+        inherit GetDec
+
+        /// Recursive Invoker
+        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't, _: unit) : Codec<'Encoding, ^t> =
+            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
+            call (Unchecked.defaultof<GetEnc>, x)
+
         /// Invoker for Codec, originated from an Encoder Invoker.
         static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't) : Codec<'Encoding, ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
@@ -545,7 +550,7 @@ module Internals =
         static member inline GetCodec (_: ArraySegment<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ArraySegment<'a>> = Codecs.arraySegment (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
         #endif
 
-    type GetCodec with static member inline GetCodec (_: list<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, list<'a>>         = Codecs.list         (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
+    type GetCodec with static member inline GetCodec (_: list<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _          , c, _: 'Operation) : Codec<'Encoding, list<'a>>         = Codecs.list         (GetEnc.Invoke<'Encoding, 'Operation, _> (Unchecked.defaultof<'a>))
     type GetCodec with static member inline GetCodec (_: Set<'a>          when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>          = Codecs.set          (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
     type GetCodec with static member inline GetCodec (_: NonEmptySet<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>>  = Codecs.nonEmptySet  (GetCodec.Invoke<'Encoding, 'Operation, _, _> (Unchecked.defaultof<'a>, c))
     type GetCodec with
@@ -639,7 +644,7 @@ module Internals =
 
     type GetEnc with
         // Encoder for specific 'Encoding
-        static member inline GetCodec (_: 't, _: IDefault2, _, _: OpEncode) : Codec<'Encoding, ^t> =
+        static member inline GetCodec (_: 't, _: IDefault2b, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^t> =
             let e t =
                 let mutable r = Unchecked.defaultof<'Encoding>
                 do (^t : (static member Encode : ^t * byref<'Encoding> -> unit) (t, &r))
@@ -648,19 +653,19 @@ module Internals =
 
     type GetEnc with
         // Encoder for generic 'Encoding
-        static member inline GetCodec (_: 't, _: IDefault1, _, _: OpEncode) : Codec<'Encoding, ^t> =
+        static member inline GetCodec (_: 't, _: IDefault2, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^t> =
             let e t = (^t : (static member ToJson : ^t -> 'Encoding) t)
             { Decoder = decoderNotAvailable; Encoder = e }
 
     type GetDec with
         [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
-        static member inline GetCodec (_: 't, _: IDefault2, _, _: OpDecode) : Codec<'Encoding, ^t> =
+        static member inline GetCodec (_: 't, _: IDefault2, _: GetDec, _: OpDecode) : Codec<'Encoding, ^t> =
             let d j = Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) j)
             { Decoder = d; Encoder = encoderNotAvailable }
 
     type GetDec with
         // Decoder
-        static member inline GetCodec (_: 't, _: IDefault1, _, _: OpDecode) : Codec<'Encoding, ^t> =
+        static member inline GetCodec (_: 't, _: IDefault1, _: GetDec, _: OpDecode) : Codec<'Encoding, ^t> =
             let d j = (^t : (static member OfJson: 'Encoding -> ^t ParseResult) j) : ^t ParseResult
             { Decoder = d; Encoder = encoderNotAvailable }
     
