@@ -1,5 +1,4 @@
 namespace IntegrationCompilationTests
-open FSharpPlus
 
 module LegacyTests =
 
@@ -8,7 +7,7 @@ module LegacyTests =
         member __.Age = age
         member __.Children = children
 
-
+    open FSharpPlus
     open Fleece
     open Fleece.FSharpData
     open Fleece.FSharpData.Operators
@@ -81,6 +80,7 @@ open Fuchu
 module TestSingleDecoderEncoderForAllJsonLibrary =
 
     open System
+    open FSharpPlus
     open Fleece
 
     type Gender =
@@ -211,9 +211,8 @@ module TestSingleCodecForAllJsonLibrary =
 module TestDifferentDecoderEncoderForEachJsonLibrary =
 
     open System
+    open FSharpPlus
     open Fleece
-    open Fleece.Newtonsoft
-    open Fleece.SystemTextJson
 
     type Gender =
         | Male = 1
@@ -322,8 +321,6 @@ module TestDifferentCodecsForEachJsonLibrary =
 
     open System
     open Fleece
-    open Fleece.Newtonsoft
-    open Fleece.SystemTextJson
 
     type Gender =
         | Male = 1
@@ -554,18 +551,15 @@ module TestInterfaces =
             return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad }
         }
     
-    
-    open Fleece.SystemJson
-    
     do
-        ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Car>      Car.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Car> Car.ObjCodec
         ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Truck> Truck.ObjCodec
-        ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Car>      Car.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Car> Car.ObjCodec
         ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Truck> Truck.ObjCodec
 
     let x = { Brand = "Ford"; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
-    let json = toJson x
-    let x': ParseResult<IVehicle> = ofJson json
+    let json = Fleece.SystemJson.Operators.toJson x
+    let x': ParseResult<IVehicle> = Fleece.SystemJson.Operators.ofJson json
     
     let json2 = Fleece.SystemTextJson.Operators.toJson x
 
