@@ -552,20 +552,21 @@ module TestInterfaces =
         }
     
     do
-        ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Car> Car.ObjCodec
-        ICodecInterface<IVehicle>.RegisterCodec<SystemJson.Encoding, Truck> Truck.ObjCodec
-        ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Car> Car.ObjCodec
-        ICodecInterface<IVehicle>.RegisterCodec<SystemTextJson.Encoding, Truck> Truck.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec
+        ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
 
     let x = { Brand = "Ford"; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
-    let json = Fleece.SystemJson.Operators.toJson x
-    let x': ParseResult<IVehicle> = Fleece.SystemJson.Operators.ofJson json
-    
-    let json2 = Fleece.SystemTextJson.Operators.toJson x
+    let nsjJson = Fleece.Newtonsoft.Operators.toJsonText x
+    let stjJson = Fleece.SystemTextJson.Operators.toJsonText x
 
-    // todo add checks
-    
-    ()
+    Assert.StringContains ("", "brand", nsjJson)
+    Assert.StringContains ("", "brand", stjJson)
+
+    let xNsjJson: ParseResult<IVehicle> = Fleece.SystemJson.Operators.ofJsonText nsjJson
+    let xSjJson : ParseResult<IVehicle> = Fleece.Newtonsoft.Operators.ofJsonText nsjJson
+    let xStjJson: ParseResult<IVehicle> = Fleece.SystemTextJson.Operators.ofJsonText nsjJson
+
+    Assert.Equal ("At least one decoding operation failed.", (Ok x, Ok x, Ok x), (xNsjJson, xSjJson, xStjJson) )
 
 
 module TestCompilationPartiallyInferredTypes =

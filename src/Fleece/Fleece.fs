@@ -177,6 +177,87 @@ with
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
+[<Struct>]
+type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncoding) with
+
+    static member ofIEncoding (c1: Codec<IEncoding, 'T>) : _ -> Codec<IEncoding, 'T> =
+        let dec1 (x: IEncoding)   = c1.Decoder (AdHocEncoding (fun _ -> x) :> IEncoding)
+        let enc1 (i: IEncoding) v = let (AdHocEncoding x) = c1.Encoder v :?> AdHocEncoding in x i
+        let codec1 i = { Decoder = dec1; Encoder = enc1 i }
+        codec1
+
+    static member ($) (_: AdHocEncoding, (x1, x2)                    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3)                ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4)            ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5)        ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5, x6)    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x, AdHocEncoding.ofIEncoding x6 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5, x6, x7)) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x, AdHocEncoding.ofIEncoding x6 x, AdHocEncoding.ofIEncoding x7 x)
+
+    /// Evals the IEncoding parameter to get a concrete Codec.
+    static member toIEncoding (codec: IEncoding -> Codec<IEncoding, 't>) : Codec<IEncoding, 't> =
+        {
+            Decoder = fun (x: IEncoding) ->
+                let (AdHocEncoding x) = x :?> AdHocEncoding
+                let i = x Unchecked.defaultof<_>
+                (codec i).Decoder i
+            Encoder = fun x -> AdHocEncoding (fun i -> (codec i).Encoder x) :> IEncoding
+        }
+
+    /// Same as toIEncoding but with one parameter.
+    static member toIEncoding1 (codec: IEncoding -> _) codec1 =
+        let codec1 x = AdHocEncoding.ofIEncoding codec1 x
+        let codec s = (codec s) (codec1 s)
+        AdHocEncoding.toIEncoding codec
+
+    /// Same as toIEncoding but with many parameters in tupled form.
+    static member inline toIEncodingN (codec: IEncoding -> _) tupledCodecs =
+        let codecs = Unchecked.defaultof<AdHocEncoding> $ tupledCodecs
+        let codec s = uncurryN (codec s) (codecs s)
+        AdHocEncoding.toIEncoding codec
+
+    interface IEncoding with
+        member _.unit           = AdHocEncoding.toIEncoding (fun x -> x.unit)
+        member _.boolean        = AdHocEncoding.toIEncoding (fun x -> x.boolean)
+        member _.string         = AdHocEncoding.toIEncoding (fun x -> x.string)
+        member _.dateTime       = AdHocEncoding.toIEncoding (fun x -> x.dateTime)
+        member _.dateTimeOffset = AdHocEncoding.toIEncoding (fun x -> x.dateTimeOffset)
+        member _.timeSpan       = AdHocEncoding.toIEncoding (fun x -> x.timeSpan)
+        member _.decimal        = AdHocEncoding.toIEncoding (fun x -> x.decimal)
+        member _.float          = AdHocEncoding.toIEncoding (fun x -> x.float)
+        member _.float32        = AdHocEncoding.toIEncoding (fun x -> x.float32)
+        member _.int            = AdHocEncoding.toIEncoding (fun x -> x.int)
+        member _.uint32         = AdHocEncoding.toIEncoding (fun x -> x.uint32)
+        member _.int64          = AdHocEncoding.toIEncoding (fun x -> x.int64)
+        member _.uint64         = AdHocEncoding.toIEncoding (fun x -> x.uint64)
+        member _.int16          = AdHocEncoding.toIEncoding (fun x -> x.int16)
+        member _.uint16         = AdHocEncoding.toIEncoding (fun x -> x.uint16)
+        member _.byte           = AdHocEncoding.toIEncoding (fun x -> x.byte)
+        member _.sbyte          = AdHocEncoding.toIEncoding (fun x -> x.sbyte)
+        member _.char           = AdHocEncoding.toIEncoding (fun x -> x.char)
+        member _.guid           = AdHocEncoding.toIEncoding (fun x -> x.guid)
+        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = AdHocEncoding.toIEncoding (fun x -> x.enum ())
+
+        member _.result c1 c2     = AdHocEncoding.toIEncodingN (fun x -> x.result)  (c1, c2)
+        member _.choice c1 c2     = AdHocEncoding.toIEncodingN (fun x -> x.choice)  (c1, c2)
+        member _.choice3 c1 c2 c3 = AdHocEncoding.toIEncodingN (fun x -> x.choice3) (c1, c2, c3)
+        member _.option c         = AdHocEncoding.toIEncoding1 (fun x -> x.option) c
+        member _.array c          = AdHocEncoding.toIEncoding1 (fun x -> x.array)  c
+        member _.propertyList c   = AdHocEncoding.toIEncoding1 (fun x -> x.propertyList) c
+
+        member _.tuple1 c                    = AdHocEncoding.toIEncoding1 (fun x -> x.tuple1) c
+        member _.tuple2 c1 c2                = AdHocEncoding.toIEncodingN (fun x -> x.tuple2) (c1, c2)
+        member _.tuple3 c1 c2 c3             = AdHocEncoding.toIEncodingN (fun x -> x.tuple3) (c1, c2, c3)
+        member _.tuple4 c1 c2 c3 c4          = AdHocEncoding.toIEncodingN (fun x -> x.tuple4) (c1, c2, c3, c4)
+        member _.tuple5 c1 c2 c3 c4 c5       = AdHocEncoding.toIEncodingN (fun x -> x.tuple5) (c1, c2, c3, c4, c5)
+        member _.tuple6 c1 c2 c3 c4 c5 c6    = AdHocEncoding.toIEncodingN (fun x -> x.tuple6) (c1, c2, c3, c4, c5, c6)
+        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = AdHocEncoding.toIEncodingN (fun x -> x.tuple7) (c1, c2, c3, c4, c5, c6, c7)
+
+        member x.getCase =
+            // Normally it won't get called as errors will access the getCase from the wrapped AdHocEncoding
+            let (AdHocEncoding f) = x
+            let i = f Unchecked.defaultof<IEncoding>
+            if not (Object.ReferenceEquals (i, null)) then i.getCase
+            else "Unknown case"
 
 /// Functions operating on Codecs
 module Codec =
@@ -584,14 +665,23 @@ module Internals =
 
         // Overload to handle user-defined interfaces
         static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
-            let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<PropertyList<'Encoding>, _> =
+            let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<PropertyList<'S>, _> =
                 let head, tail = Seq.head codecs, Seq.tail codecs
                 let r = foldBack (<|>) tail head
                 r
             (
                 let codecs = CodecCollection<'Encoding, 'Base>.GetSubtypes
                 match toList codecs with
-                | [] -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
+                | [] ->
+                    let codecs = CodecCollection<AdHocEncoding, 'Base>.GetSubtypes
+                    match toList codecs with
+                    | [] -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
+                    | _  ->
+                        let unwrapCodec (codec: Codec<AdHocEncoding, 'T>) : Codec<'Encoding, 'T> =
+                            let t = codec |> Codec.upCast |> AdHocEncoding.ofIEncoding
+                            t (Unchecked.defaultof<'Encoding> :> IEncoding) |> Codec.downCast<_, 'Encoding>
+                        
+                        (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.propList Codecs.id |> unwrapCodec
                 | _  -> (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.propList Codecs.id
             )
 
