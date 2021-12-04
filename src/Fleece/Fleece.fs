@@ -66,7 +66,6 @@ module Helpers =
         unbox<'destType> x
     #endif
 
-
     #if !FABLE_COMPILER
     module ArraySegment =
         let toArray (x: ArraySegment<'a>) =
@@ -95,7 +94,6 @@ module Helpers =
     let encoderNotAvailable (_: 'T) : 'Encoding            = failwithf "Fleece internal error: this codec has no encoder from type %A to encoding %A." typeof<'T> typeof<'Encoding>
 
 open Helpers
-
 
 /// Encodes a value of a generic type 't into a value of raw type 'S.
 type Encoder<'S, 't> = 't -> 'S
@@ -149,7 +147,7 @@ and IEncoding =
     abstract enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> : Codec<IEncoding, 'u> -> Codec<IEncoding, 't>
 
     /// Returns a string representing the internal "case" (or type) of the encoding (ie: Array, Object, ... )
-    abstract getCase    : string
+    abstract getCase : string
 
 and DecodeError =
     | EncodingCaseMismatch of DestinationType: Type * EncodedValue: IEncoding * ExpectedCase: string * ActualCase: string
@@ -376,15 +374,13 @@ module Internals =
 
     type Id1<'t> (v: 't) =
         let value = v
-        member __.getValue = value
+        member _.getValue = value
 
     type Id2<'t> (v: 't) =
         let value = v
-        member __.getValue = value
+        member _.getValue = value
 
-    type IDefault9 = interface end
-    type IDefault8 = interface inherit IDefault9 end
-    type IDefault7 = interface inherit IDefault8 end
+    type IDefault7 = interface end
     type IDefault6 = interface inherit IDefault7 end
     type IDefault5 = interface inherit IDefault6 end
     type IDefault4 = interface inherit IDefault5 end
@@ -546,9 +542,9 @@ module Internals =
         static member inline GetCodec (_: ArraySegment<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ArraySegment<'a>> = Codecs.arraySegment (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
         #endif
 
-    type GetCodec with static member inline GetCodec (_: list<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _          , c, _: 'Operation) : Codec<'Encoding, list<'a>>         = Codecs.list         (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
-    type GetCodec with static member inline GetCodec (_: Set<'a>          when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>          = Codecs.set          (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
-    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a>  when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>>  = Codecs.nonEmptySet  (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+    type GetCodec with static member inline GetCodec (_: list<'a>        when 'Encoding :> IEncoding and 'Encoding : struct, _          , c, _: 'Operation) : Codec<'Encoding, list<'a>>        = Codecs.list        (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+    type GetCodec with static member inline GetCodec (_: Set<'a>         when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>         = Codecs.set         (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>> = Codecs.nonEmptySet (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
     type GetCodec with
         static member inline GetCodec (_: Map<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Map<'K, 'V>> =
             match typeof<'K> with
@@ -582,7 +578,6 @@ module Internals =
     type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g when 'Encoding :> IEncoding and 'Encoding : struct, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b * 'c * 'd * 'e * 'f * 'g> = Codecs.tuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>)
 
     type GetCodec with static member inline GetCodec (_: 't when 't : enum<_> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType, _: GetCodec, c, _: 'Operation) = Codecs.enum (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'u>)
-
 
     type GetCodec with
 
@@ -733,7 +728,7 @@ module Operators =
             Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero
         }
 
-    /// Derives a concrete field codec for an optional field
+    /// Derives a concrete field codec for an optional field.
     let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith (getCodec<'Encoding, 'param> ()) prop getter
 
 
