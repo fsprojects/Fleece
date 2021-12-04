@@ -706,8 +706,8 @@ module Operators =
             Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero
         }
 
-    /// Derive automatically a RawCodec, based on GetCodec / Codec static members
-    let inline getCodec<'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : struct> () : Codec<'Encoding, 't> =
+    /// Derive automatically a Codec from the type, based on GetCodec / Codec static members.
+    let inline defaultCodec<'Encoding, ^t when 'Encoding :> IEncoding and 'Encoding: struct and (GetCodec or ^t) : (static member GetCodec: ^t * GetCodec * GetCodec * OpCodec -> Codec<'Encoding, ^t>)> =
         CodecCache.Run<'Encoding,'t> (fun () -> GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>)
 
 
@@ -716,7 +716,7 @@ module Operators =
     /// <param name="name">A string that will be used as key to the field.</param>
     /// <param name="getter">The field getter function.</param>
     /// <returns>The resulting object codec.</returns>
-    let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param, 'T> = jreqWithLazy (getCodec<'Encoding, 'param>) name getter
+    let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param, 'T> = jreqWithLazy (fun () -> defaultCodec<'Encoding, 'param>) name getter
 
     /// <summary>Same as jopt but using an explicit codec.</summary>
     let joptWith c (prop: string) (getter: 'T -> 'Value option) =
@@ -730,7 +730,7 @@ module Operators =
         }
 
     /// Derives a concrete field codec for an optional field.
-    let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith (getCodec<'Encoding, 'param> ()) prop getter
+    let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith defaultCodec<'Encoding, 'param> prop getter
 
 
     let jobj (x: list<string * 'Encoding>) : 'Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.propList Codecs.id)

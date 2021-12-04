@@ -629,7 +629,7 @@ module TestIDictionaries =
 module TestGenerics =
     open Fleece
     
-    let inline listOfSomething () : Codec<'Encoding, list<'t>> =  getCodec ()
+    let inline listOfSomething () : Codec<'Encoding, list<'t>> = defaultCodec
     let x: Fleece.SystemTextJson.Encoding = (listOfSomething () |> Codec.encode) [1]
     let y: Fleece.SystemTextJson.Encoding = (listOfSomething () |> Codec.encode) ['a']
     ()
