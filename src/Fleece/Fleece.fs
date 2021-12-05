@@ -665,25 +665,15 @@ module Internals =
 
         // Overload to handle user-defined interfaces
         static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : struct =
-            let choice (codecs: seq<Codec<_, _, 't, 't>>) : Codec<PropertyList<'S>, _> =
-                let head, tail = Seq.head codecs, Seq.tail codecs
-                let r = foldBack (<|>) tail head
-                r
-            (
-                let codecs = CodecCollection<'Encoding, 'Base>.GetSubtypes
-                match toList codecs with
-                | [] ->
-                    let codecs = CodecCollection<AdHocEncoding, 'Base>.GetSubtypes
-                    match toList codecs with
-                    | [] -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
-                    | _  ->
-                        let unwrapCodec (codec: Codec<AdHocEncoding, 'T>) : Codec<'Encoding, 'T> =
-                            let t = codec |> Codec.upCast |> AdHocEncoding.ofIEncoding
-                            t (Unchecked.defaultof<'Encoding> :> IEncoding) |> Codec.downCast<_, 'Encoding>
-                        
-                        (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.propList Codecs.id |> unwrapCodec
-                | _  -> (codecs |> Seq.map (fun (KeyValue(_, x)) -> x ()) |> choice) >.> Codecs.propList Codecs.id
-            )
+            let codecs = toList CodecCollection<'Encoding, 'Base>.GetSubtypes
+            match NonEmptyList.tryOfList codecs with
+            | None ->
+                let codecs = toList CodecCollection<AdHocEncoding, 'Base>.GetSubtypes
+                match NonEmptyList.tryOfList codecs with
+                | None -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
+                | Some codecs ->
+                    (codecs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id |> Codec.upCast |> AdHocEncoding.ofIEncoding) (Unchecked.defaultof<'Encoding> :> IEncoding) |> Codec.downCast<_, 'Encoding>
+            | Some cs -> cs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id
 
     type GetCodec with
 
