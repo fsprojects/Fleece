@@ -536,8 +536,8 @@ module Internals =
         static member GetCodec (()               , _: GetCodec, _, _: 'Operation) = Codecs.unit           : Codec<'Encoding, _>
 
         // Dummy overloads
-        static member GetCodec (_: OpCodec , _: GetCodec, _, _: OpEncode) = failwithf "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpCodec>
-        static member GetCodec (_: OpEncode, _: GetCodec, _, _: OpEncode) = failwithf "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpEncode>
+        static member GetCodec (_: OpCodec , _: GetCodec, _, _: OpEncode) = invalidOp "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpCodec>
+        static member GetCodec (_: OpEncode, _: GetCodec, _, _: OpEncode) = invalidOp "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpEncode>
 
         /// Invoker for Codec
         static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : struct> (x: 't) : Codec<'Encoding, ^t> =
@@ -907,6 +907,10 @@ module ComputationExpressions =
         member _.BindReturn (x: Codec<PropertyList<'r>, PropertyList<'r>,_,_>, f) = f <!> x
         member _.Run x : Codec<PropertyList<_>,'t> = x
         member _.Combine (x: Codec<PropertyList<'S>, 't>, y: Codec<PropertyList<'S>, 't>) = x <|> y : Codec<PropertyList<'S>, 't>
+
+        // Clients using F# lower than 5 will need this method
+        [<CompilerMessage("A Codec doesn't support the Zero operation.", 10708, IsError = true)>]
+        member _.Zero () = invalidOp "Fleece internal error: this code should be unreachable."
 
     /// Codec Applicative Computation Expression.
     let codec = CodecApplicativeBuilder ()
