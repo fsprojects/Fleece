@@ -300,9 +300,17 @@ module Codec =
             Encoder = field.Encoder
         }
 
-    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> = retype x
+    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> =
+        {
+            Decoder = fun (p: 'S) -> x.Decoder (p :> IEncoding)
+            Encoder = fun (p: 't) -> x.Encoder p :?> 'S
+        }
 
-    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> = retype x
+    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> =
+        {
+            Decoder = fun (p: IEncoding) -> x.Decoder (p :?> 'S)
+            Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
+        }
 
     
     [<Obsolete("This function is no longer needed. You can safely remove it.")>]
