@@ -36,15 +36,19 @@ type JsonObject = Map<string, Encoding>
 
 
 /// Wrapper type for JsonElement
-and [<Struct>]Encoding = { Value: ref<JsonElementOrWriter> } with
+and Encoding (j: JsonElementOrWriter) =
+    
+    let mutable Value = j
 
-    static member Wrap x = { Encoding.Value = ref (Element x) }
+    new () = Encoding (Unchecked.defaultof<_>)
 
-    member this.ToString (options: JsonWriterOptions) =
+    static member Wrap x = Encoding (Element x)
+
+    member _.ToString (options: JsonWriterOptions) =
         use stream = new System.IO.MemoryStream ()
         use writer = new Utf8JsonWriter (stream, options)
         use reader = new System.IO.StreamReader (stream)
-        match !this.Value with
+        match Value with
         | Writer jobj   -> jobj writer None
         | Element value -> value.WriteTo writer
         writer.Flush ()
@@ -53,28 +57,28 @@ and [<Struct>]Encoding = { Value: ref<JsonElementOrWriter> } with
 
     override this.ToString () = this.ToString (new JsonWriterOptions (Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
 
-    static member Parse (x: string) = let doc = JsonDocument.Parse x in { Value = ref (Element doc.RootElement) }
+    static member Parse (x: string) = let doc = JsonDocument.Parse x in Encoding (Element doc.RootElement)
 
     member this.get_InnerValue () =
-        match !this.Value with
+        match Value with
         | Element value -> value
         | Writer  _ ->
             // run the function, then parseback
             let str = string this
             let doc = JsonDocument.Parse str
             let value = doc.RootElement
-            this.Value := Element value
+            Value <- Element value
             value
 
-    member this.getWriter () =
-        match !this.Value with
+    member _.getWriter () =
+        match Value with
         | Writer writer -> writer
         | Element value ->
             fun (writer: Utf8JsonWriter) (name: string option) ->
                 name |> Option.iter writer.WritePropertyName
                 value.WriteTo writer
 
-    static member inline private writers keyValueWriter valueWriter = { Value = ref (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer)) }
+    static member inline private writers keyValueWriter valueWriter = Encoding (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer))
 
     static member inline JArray (x: Encoding IReadOnlyList) =
         let f w =
@@ -132,7 +136,7 @@ and [<Struct>]Encoding = { Value: ref<JsonElementOrWriter> } with
 
     static member inline tryGet (x: Encoding) : 't = (Unchecked.defaultof<Encoding> $ Unchecked.defaultof<'t>) x
 
-    static member inline tryRead x =
+    static member inline tryRead (x: Encoding) =
         match x with
         | JNumber j ->
             try 

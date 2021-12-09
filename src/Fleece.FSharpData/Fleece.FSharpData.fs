@@ -70,8 +70,12 @@ open Fleece
 open Internals
 
 
-type [<Struct>] Encoding = Encoding of JsonValue with
-    override this.ToString () = let (Encoding x) = this in x.ToString ()
+type Encoding (j: JsonValue) =
+    let value = j
+    new () = Encoding (Unchecked.defaultof<_>)
+    member _.Value = value
+    override _.ToString () = value.ToString ()
+
     static member Parse (x: string) = Encoding (JsonValue.Parse x)
 
     static member inline tryRead x =
@@ -81,7 +85,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | js                 -> Decode.Fail.numExpected (Encoding js)
 
     /// Unwraps the JsonValue inside an IEncoding
-    static member Unwrap (x: IEncoding) = x :?> Encoding |> fun (Encoding s) -> s
+    static member Unwrap (x: IEncoding) = x :?> Encoding |> fun s -> s.Value
 
     /// Wraps a JsonValue inside an IEncoding
     static member Wrap x = Encoding x :> IEncoding
@@ -372,11 +376,11 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
         member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = Encoding.toIEncoding (Encoding.enumD <-> Encoding.enumE)
 
-        member x.getCase =
-            match x with
-            | Encoding (JNull    ) -> "JNull"
-            | Encoding (JBool   _) -> "JBool" 
-            | Encoding (JNumber _) -> "JNumber"
-            | Encoding (JString _) -> "JString"
-            | Encoding (JArray  _) -> "JArray"
-            | Encoding (JObject _) -> "JObject"
+        member this.getCase =
+            match this.Value with
+            | JNull     -> "JNull"
+            | JBool   _ -> "JBool" 
+            | JNumber _ -> "JNumber"
+            | JString _ -> "JString"
+            | JArray  _ -> "JArray"
+            | JObject _ -> "JObject"
