@@ -36,15 +36,23 @@ type JsonObject = Map<string, Encoding>
 
 
 /// Wrapper type for JsonElement
-and [<Struct>]Encoding = Encoding of Value: ref<JsonElementOrWriter> with
+and Encoding (j: JsonElementOrWriter) =
+    
+    let mutable Value = j
+    static let mutable dateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fff"
+    static member DateTimeFormat
+        with get() = dateTimeFormat
+        and set(v) = dateTimeFormat <- v
 
-    static member Wrap x = Encoding (ref (Element x))
+    new () = Encoding (Unchecked.defaultof<_>)
 
-    member this.ToString (options: JsonWriterOptions) =
+    static member Wrap x = Encoding (Element x)
+
+    member _.ToString (options: JsonWriterOptions) =
         use stream = new System.IO.MemoryStream ()
         use writer = new Utf8JsonWriter (stream, options)
         use reader = new System.IO.StreamReader (stream)
-        match !(let (Encoding v) = this in v) with
+        match Value with
         | Writer jobj   -> jobj writer None
         | Element value -> value.WriteTo writer
         writer.Flush ()
@@ -53,28 +61,28 @@ and [<Struct>]Encoding = Encoding of Value: ref<JsonElementOrWriter> with
 
     override this.ToString () = this.ToString (new JsonWriterOptions (Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
 
-    static member Parse (x: string) = let doc = JsonDocument.Parse x in Encoding (ref (Element doc.RootElement))
+    static member Parse (x: string) = let doc = JsonDocument.Parse x in Encoding (Element doc.RootElement)
 
     member this.get_InnerValue () =
-        match !(let (Encoding v) = this in v) with
+        match Value with
         | Element value -> value
         | Writer  _ ->
             // run the function, then parseback
             let str = string this
             let doc = JsonDocument.Parse str
             let value = doc.RootElement
-            (let (Encoding v) = this in v) := Element value
+            Value <- Element value
             value
 
-    member this.getWriter () =
-        match !(let (Encoding v) = this in v) with
+    member _.getWriter () =
+        match Value with
         | Writer writer -> writer
         | Element value ->
             fun (writer: Utf8JsonWriter) (name: string option) ->
                 name |> Option.iter writer.WritePropertyName
                 value.WriteTo writer
 
-    static member inline private writers keyValueWriter valueWriter = Encoding (ref (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer)) )
+    static member inline private writers keyValueWriter valueWriter = Encoding (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer))
 
     static member inline JArray (x: Encoding IReadOnlyList) =
         let f w =
@@ -132,7 +140,7 @@ and [<Struct>]Encoding = Encoding of Value: ref<JsonElementOrWriter> with
 
     static member inline tryGet (x: Encoding) : 't = (Unchecked.defaultof<Encoding> $ Unchecked.defaultof<'t>) x
 
-    static member inline tryRead x =
+    static member inline tryRead (x: Encoding) =
         match x with
         | JNumber j ->
             try 
@@ -272,7 +280,7 @@ and [<Struct>]Encoding = Encoding of Value: ref<JsonElementOrWriter> with
         match x with
         | JString null -> Decode.Fail.nullString
         | JString s    ->
-            match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+            match DateTime.TryParseExact (s, [| dateTimeFormat+"Z"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
             | _       -> Decode.Fail.invalidValue x ""
         | a -> Decode.Fail.strExpected a
@@ -281,7 +289,7 @@ and [<Struct>]Encoding = Encoding of Value: ref<JsonElementOrWriter> with
         match x with
         | JString null -> Decode.Fail.nullString
         | JString s    ->
-            match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+            match DateTimeOffset.TryParseExact (s, [| dateTimeFormat+"K"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
             | _       -> Decode.Fail.invalidValue x ""
         | a -> Decode.Fail.strExpected a
@@ -331,8 +339,8 @@ and [<Struct>]Encoding = Encoding of Value: ref<JsonElementOrWriter> with
 
     static member booleanE        (x: bool          ) = Encoding.JBool x
     static member stringE         (x: string        ) = Encoding.JString x
-    static member dateTimeE       (x: DateTime      ) = Encoding.JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
-    static member dateTimeOffsetE (x: DateTimeOffset) = Encoding.JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
+    static member dateTimeE       (x: DateTime      ) = Encoding.JString (x.ToString (dateTimeFormat+"Z"))
+    static member dateTimeOffsetE (x: DateTimeOffset) = Encoding.JString (x.ToString (dateTimeFormat+"K"))
     static member timeSpanE       (x: TimeSpan) = Encoding.create x.Ticks
 
     static member decimalE        (x: decimal       ) = Encoding.create x
