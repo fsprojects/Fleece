@@ -177,7 +177,7 @@ with
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
-type AdHocEncoding (adHocEncodingPassing) = 
+type AdHocEncoding (adHocEncodingPassing) =
     
     member val EncodingFactory : (IEncoding -> IEncoding) = adHocEncodingPassing with get, set
 
@@ -301,17 +301,9 @@ module Codec =
             Encoder = field.Encoder
         }
 
-    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> =
-        {
-            Decoder = fun (p: 'S) -> x.Decoder (p :> IEncoding)
-            Encoder = fun (p: 't) -> x.Encoder p :?> 'S
-        }
+    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> = retype x
 
-    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> =
-        {
-            Decoder = fun (p: IEncoding) -> x.Decoder (p :?> 'S)
-            Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
-        }
+    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> = retype x
 
     
     [<Obsolete("This function is no longer needed. You can safely remove it.")>]
