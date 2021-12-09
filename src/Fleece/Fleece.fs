@@ -177,15 +177,12 @@ with
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
-type AdHocEncoding (adHocEncodingPassing) =
-    
-    member val EncodingFactory : (IEncoding -> IEncoding) = adHocEncodingPassing with get, set
-
-    new () = AdHocEncoding (Unchecked.defaultof<_>)
+[<Struct>]
+type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncoding) with
 
     static member ofIEncoding (c1: Codec<IEncoding, 'T>) : _ -> Codec<IEncoding, 'T> =
         let dec1 (x: IEncoding)   = c1.Decoder (AdHocEncoding (fun _ -> x) :> IEncoding)
-        let enc1 (i: IEncoding) v = (c1.Encoder v :?> AdHocEncoding).EncodingFactory i
+        let enc1 (i: IEncoding) v = let (AdHocEncoding x) = c1.Encoder v :?> AdHocEncoding in x i
         let codec1 i = { Decoder = dec1; Encoder = enc1 i }
         codec1
 
@@ -200,7 +197,8 @@ type AdHocEncoding (adHocEncodingPassing) =
     static member toIEncoding (codec: IEncoding -> Codec<IEncoding, 't>) : Codec<IEncoding, 't> =
         {
             Decoder = fun (x: IEncoding) ->
-                let i = (x :?> AdHocEncoding).EncodingFactory Unchecked.defaultof<_>
+                let (AdHocEncoding x) = x :?> AdHocEncoding
+                let i = x Unchecked.defaultof<_>
                 (codec i).Decoder i
             Encoder = fun x -> AdHocEncoding (fun i -> (codec i).Encoder x) :> IEncoding
         }
@@ -213,7 +211,7 @@ type AdHocEncoding (adHocEncodingPassing) =
 
     /// Same as toIEncoding but with many parameters in tupled form.
     static member inline toIEncodingN (codec: IEncoding -> _) tupledCodecs =
-        let codecs = new AdHocEncoding () $ tupledCodecs
+        let codecs = Unchecked.defaultof<AdHocEncoding> $ tupledCodecs
         let codec s = uncurryN (codec s) (codecs s)
         AdHocEncoding.toIEncoding codec
 
@@ -256,7 +254,8 @@ type AdHocEncoding (adHocEncodingPassing) =
 
         member x.getCase =
             // Normally it won't get called as errors will access the getCase from the wrapped AdHocEncoding
-            let i = x.EncodingFactory Unchecked.defaultof<IEncoding>
+            let (AdHocEncoding f) = x
+            let i = f Unchecked.defaultof<IEncoding>
             if not (Object.ReferenceEquals (i, null)) then i.getCase
             else "Unknown case"
 
