@@ -551,25 +551,36 @@ module TestInterfaces =
             and! maxLoad  = jreq "maxLoad"  (fun {MaxLoad = x } -> Some x)
             return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad }
         }
+
+    type Garage = { Vehicle : IVehicle } with
+        static member get_Codec () = ofObjCodec <| codec {
+            let! v = jreq "Vehicle" (fun x -> Some x.Vehicle)
+            return { Vehicle = v} }
     
     let car = Car (Brand = "Volvo", MaxSpeed = 120.0) :> IVehicle
     let truck =  { Brand = "Ford" ; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
+    let gcar =   { Vehicle = car }
+    let gtruck = { Vehicle = truck }
     
-    do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec    
+    do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec
 
     let nsjCarJson = Fleece.Newtonsoft.Operators.toJsonText car
     let stjCarJson = Fleece.SystemTextJson.Operators.toJsonText car
+    let stjGCarJson = Fleece.SystemTextJson.Operators.toJsonText gcar
 
     Assert.StringContains ("", "brand", nsjCarJson)
     Assert.StringContains ("", "brand", stjCarJson)
+    Assert.StringContains ("", "brand", stjGCarJson)
 
     do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
 
     let nsjTruckJson = Fleece.Newtonsoft.Operators.toJsonText truck
     let stjTruckJson = Fleece.SystemTextJson.Operators.toJsonText truck
+    let stjGTruckJson = Fleece.SystemTextJson.Operators.toJsonText gtruck
 
     Assert.StringContains ("", "brand", nsjTruckJson)
     Assert.StringContains ("", "brand", stjTruckJson)
+    Assert.StringContains ("", "brand", stjGTruckJson)
 
     let xNsjCarJson: ParseResult<IVehicle> = Fleece.SystemJson.Operators.ofJsonText nsjCarJson
     let xSjCarJson : ParseResult<IVehicle> = Fleece.Newtonsoft.Operators.ofJsonText nsjCarJson
