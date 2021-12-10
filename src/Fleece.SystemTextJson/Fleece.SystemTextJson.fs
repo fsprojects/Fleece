@@ -39,10 +39,14 @@ type JsonObject = Map<string, Encoding>
 and Encoding (j: JsonElementOrWriter) =
     
     let mutable Value = j
-    static let mutable dateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fff"
+    static let mutable dateTimeFormat       = "yyyy-MM-ddTHH:mm:ss.fffZ"
+    static let mutable dateTimeOffsetFormat = "yyyy-MM-ddTHH:mm:ss.fffK"
     static member DateTimeFormat
-        with get() = dateTimeFormat
-        and set(v) = dateTimeFormat <- v
+        with get () = dateTimeFormat
+        and set (v) = dateTimeFormat <- v
+    static member DateTimeOffsetFormat
+        with get () = dateTimeOffsetFormat
+        and set (v) = dateTimeOffsetFormat <- v
 
     new () = Encoding (Unchecked.defaultof<_>)
 
@@ -280,7 +284,7 @@ and Encoding (j: JsonElementOrWriter) =
         match x with
         | JString null -> Decode.Fail.nullString
         | JString s    ->
-            match DateTime.TryParseExact (s, [| dateTimeFormat+"Z"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
+            match DateTime.TryParseExact (s, [| dateTimeFormat; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
             | _       -> Decode.Fail.invalidValue x ""
         | a -> Decode.Fail.strExpected a
@@ -289,7 +293,7 @@ and Encoding (j: JsonElementOrWriter) =
         match x with
         | JString null -> Decode.Fail.nullString
         | JString s    ->
-            match DateTimeOffset.TryParseExact (s, [| dateTimeFormat+"K"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
+            match DateTimeOffset.TryParseExact (s, [| dateTimeOffsetFormat; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
             | _       -> Decode.Fail.invalidValue x ""
         | a -> Decode.Fail.strExpected a
@@ -339,8 +343,8 @@ and Encoding (j: JsonElementOrWriter) =
 
     static member booleanE        (x: bool          ) = Encoding.JBool x
     static member stringE         (x: string        ) = Encoding.JString x
-    static member dateTimeE       (x: DateTime      ) = Encoding.JString (x.ToString (dateTimeFormat+"Z"))
-    static member dateTimeOffsetE (x: DateTimeOffset) = Encoding.JString (x.ToString (dateTimeFormat+"K"))
+    static member dateTimeE       (x: DateTime      ) = Encoding.JString (x.ToString dateTimeFormat)
+    static member dateTimeOffsetE (x: DateTimeOffset) = Encoding.JString (x.ToString dateTimeOffsetFormat)
     static member timeSpanE       (x: TimeSpan) = Encoding.create x.Ticks
 
     static member decimalE        (x: decimal       ) = Encoding.create x
