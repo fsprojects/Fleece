@@ -474,43 +474,25 @@ module Internals =
     type OpCodec  = OpCodec
     type OpEncode = OpEncode
     type OpDecode = OpDecode
-
+    
     type CodecCollection<'Encoding, 'Interface> () =
-         static let mutable subtypes : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = new Dictionary<_,_> ()
-         static member GetSubtypes   : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = subtypes
-         static member AddSubtype ty x =
-             match Dictionary.tryGetValue ty subtypes with
-             | Some _ -> ()
-             | None -> subtypes.Add (ty, x)
+        static let monitor = obj ()
+        static let mutable subtypes : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = new Dictionary<_,_> ()
+        static member GetSubtypes = subtypes
+        static member AddSubtype ty (x: unit -> Codec<PropertyList<'Encoding>, 'Interface>) = lock monitor (fun () -> subtypes.[ty] <- x)
 
-    type CodecCache<'Operation, 'Encoding, 'T when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> () =
+    type CodecCache<'Operation, 'Encoding, 'T> () =
         static let mutable cachedCodec : option<Codec<'Encoding, 'T>> = None
-        static member getCache () = cachedCodec
-        static member Run<'Encoding, 'T> (f: unit -> Codec<'Encoding, 'T>) =
-            if not Config.codecCacheEnabled then f ()
-                else
-                match cachedCodec with
-                | Some c -> c
-                | None   ->
-                    match CodecCache<OpDecode, 'Encoding, 'T>.getCache (), CodecCache<OpEncode, 'Encoding, 'T>.getCache () with
-                    | Some d, Some e -> { Decoder = d.Decoder; Encoder = e.Encoder }
-                    | _ ->
-                        let c = f ()
-                        cachedCodec <- Some c
-                        c
-
-        static member Run<'Operation, 'Encoding, 'T> (f: unit -> Codec<'Encoding, 'T>) =
+        static member GetCache () = cachedCodec
+        static member Run (f: unit -> Codec<'Encoding, 'T>) =
             if not Config.codecCacheEnabled then f ()
             else
                 match cachedCodec with
                 | Some c -> c
                 | None   ->
-                    match CodecCache<OpCodec, 'Encoding, 'T>.getCache () with
-                    | Some c -> c
-                    | _ ->
-                        let c = f ()
-                        cachedCodec <- Some c
-                        c
+                    let c = f ()
+                    cachedCodec <- Some c
+                    c
 
     type GetCodec =
         interface IDefault0
@@ -665,11 +647,9 @@ module Internals =
 
         // Overload to handle user-defined interfaces
         static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) =
-            let codecs = toList CodecCollection<'Encoding, 'Base>.GetSubtypes
-            match NonEmptyList.tryOfList codecs with
+            match CodecCollection<'Encoding, 'Base>.GetSubtypes |> toList |> NonEmptyList.tryOfList with
             | None ->
-                let codecs = toList CodecCollection<AdHocEncoding, 'Base>.GetSubtypes
-                match NonEmptyList.tryOfList codecs with
+                match CodecCollection<AdHocEncoding, 'Base>.GetSubtypes |> toList |> NonEmptyList.tryOfList with
                 | None -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
                 | Some codecs ->
                     (codecs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id |> Codec.upCast |> AdHocEncoding.ofIEncoding) (new 'Encoding () :> IEncoding) |> Codec.downCast<_, 'Encoding>
@@ -681,64 +661,82 @@ module Internals =
         static member GetCodec (_: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: IDefault3, _, _: 'Operation) = Codecs.id : Codec<'Encoding, 'Encoding>
     
         // Main overload for external classes
-        static member inline GetCodec (_: 'T, _: IDefault3, c, _: 'Operation) : Codec<'Encoding, 'T> = // when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) =
-            (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
+        static member inline GetCodec (_: 'T, _: IDefault3, _, _: 'Operation) : Codec<'Encoding, 'T> =
+            fun () ->
+                (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
+            |> CodecCache<OpCodec, 'Encoding, 'T>.Run
 
         // Codec for specific 'Encoding
         static member inline GetCodec (_: 'T, _: IDefault4, _, _: 'Operation) =
-            let mutable r = Unchecked.defaultof<Codec< 'Encoding, 'T>>
-            do (^T : (static member Codec : byref<Codec< 'Encoding, 'T>> -> unit) &r)
-            r
+            fun () ->
+                let mutable r = Unchecked.defaultof<Codec< 'Encoding, 'T>>
+                do (^T : (static member Codec : byref<Codec< 'Encoding, 'T>> -> unit) &r)
+                r
+            |> CodecCache<OpCodec, 'Encoding, 'T>.Run
 
         // For backwards compatibility
         // [<Obsolete("This function resolves to a deprecated 'JsonObjCodec' method and it won't be supported in future versions of this library. Please rename it to 'Codec' or 'get_Codec ()' and convert the result by applying the 'ofObjCodec' function.")>]
         // But adding the warning changes overload resolution.
         static member inline GetCodec (_: 'T, _: IDefault5, _, _: 'Operation) : Codec<'Encoding, 'T> =
-            let c: Codec<PropertyList<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<PropertyList<'Encoding>, 'T>) ())
-            c >.> Codecs.propList Codecs.id
+            fun () ->
+                let c: Codec<PropertyList<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<PropertyList<'Encoding>, 'T>) ())
+                c >.> Codecs.propList Codecs.id
+            |> CodecCache<OpCodec, 'Encoding, 'T>.Run
 
         // For specific 'Encoding in recursive calls coming from a get_Codec operation
         static member inline GetCodec (_: 'T, _: IDefault7, _, _: 'Operation) : Codec<'Encoding, 'T> =
-            let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
-            let e t = (^T : (static member ToJson : ^T -> 'Encoding) t)
-            { Decoder = d; Encoder = e }
+            fun () ->
+                let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
+                let e t = (^T : (static member ToJson : ^T -> 'Encoding) t)
+                { Decoder = d; Encoder = e }
+            |> CodecCache<OpCodec, 'Encoding, 'T>.Run
     
         // For generic 'Encoding in recursive calls coming from a get_Codec operation
         static member inline GetCodec (_: 'T, _: IDefault6, _, _: 'Operation) : Codec<'Encoding, 'T> =
-            let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
-            let e t =
-                let mutable r = Unchecked.defaultof<'Encoding>
-                let _ = (^T : (static member Encode : ^T * byref<'Encoding> -> unit) (t, &r))
-                r
-            { Decoder = d; Encoder = e }
+            fun () ->
+                let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
+                let e t =
+                    let mutable r = Unchecked.defaultof<'Encoding>
+                    let _ = (^T : (static member Encode : ^T * byref<'Encoding> -> unit) (t, &r))
+                    r
+                { Decoder = d; Encoder = e }
+            |> CodecCache<OpCodec, 'Encoding, 'T>.Run
 
 
     type GetEnc with
         // Encoder for specific 'Encoding
-        static member inline GetCodec (_: 't, _: IDefault2, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^t> =
-            let e t =
-                let mutable r = Unchecked.defaultof<'Encoding>
-                do (^t : (static member Encode : ^t * byref<'Encoding> -> unit) (t, &r))
-                r
-            { Decoder = decoderNotAvailable; Encoder = e }
+        static member inline GetCodec (_: 'T, _: IDefault2, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let e t =
+                    let mutable r = Unchecked.defaultof<'Encoding>
+                    do (^T : (static member Encode : ^T * byref<'Encoding> -> unit) (t, &r))
+                    r
+                { Decoder = decoderNotAvailable; Encoder = e }
+            |> CodecCache<OpEncode, 'Encoding, 'T>.Run
 
     type GetEnc with
         // Encoder for generic 'Encoding
-        static member inline GetCodec (_: 't, _: IDefault1, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^t> =
-            let e t = (^t : (static member ToJson : ^t -> 'Encoding) t)
-            { Decoder = decoderNotAvailable; Encoder = e }
+        static member inline GetCodec (_: 'T, _: IDefault1, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let e t = (^T : (static member ToJson : ^T -> 'Encoding) t)
+                { Decoder = decoderNotAvailable; Encoder = e }
+            |> CodecCache<OpEncode, 'Encoding, 'T>.Run
 
     type GetDec with
         [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
-        static member inline GetCodec (_: 't, _: IDefault1, _: GetDec, _: OpDecode) : Codec<'Encoding, ^t> =
-            let d j = Result.bindError (Error << DecodeError.Uncategorized) (^t : (static member OfJson: 'Encoding -> Result< ^t, string>) j)
-            { Decoder = d; Encoder = encoderNotAvailable }
+        static member inline GetCodec (_: 'T, _: IDefault1, _: GetDec, _: OpDecode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let d j = Result.bindError (Error << DecodeError.Uncategorized) (^T : (static member OfJson: 'Encoding -> Result< ^T, string>) j)
+                { Decoder = d; Encoder = encoderNotAvailable }
+            |> CodecCache<OpDecode, 'Encoding, 'T>.Run
 
     type GetDec with
         // Decoder
-        static member inline GetCodec (_: 't, _: IDefault0, _: GetDec, _: OpDecode) : Codec<'Encoding, ^t> =
-            let d j = (^t : (static member OfJson: 'Encoding -> ^t ParseResult) j) : ^t ParseResult
-            { Decoder = d; Encoder = encoderNotAvailable }
+        static member inline GetCodec (_: 'T, _: IDefault0, _: GetDec, _: OpDecode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
+                { Decoder = d; Encoder = encoderNotAvailable }
+            |> CodecCache<OpDecode, 'Encoding, 'T>.Run
     
 
 [<AutoOpen>]
@@ -752,11 +750,11 @@ module Operators =
     let (|Codec|) { Decoder = x; Encoder = y } = (x, y)
 
     let inline toEncoding< 'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : 'Encoding =
-        let codec = CodecCache<OpEncode, 'Encoding, 't>.Run<OpEncode, 'Encoding, 't> (fun () -> GetEnc.Invoke<'Encoding, OpEncode, _> x)
+        let codec = GetEnc.Invoke<'Encoding, OpEncode, _> x
         (codec |> Codec.encode) x
 
     let inline ofEncoding (x: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) : Result<'t, _> =
-        let codec = CodecCache<OpDecode, 'Encoding, 't>.Run<OpDecode, 'Encoding, 't> (fun () -> GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t>)
+        let codec = GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t>
         (codec |> Codec.decode) x
             
     /// Creates a codec to (from) 'Encoding from (to) an Object-Codec.
@@ -777,7 +775,6 @@ module Operators =
 
     let jreqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
         let getFromListWith decoder (m: PropertyList<_>) key =
-
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key m
             | value:: _ -> decoder value
@@ -788,7 +785,7 @@ module Operators =
 
     /// Derive automatically a Codec from the type, based on GetCodec / Codec static members.
     let inline defaultCodec<'Encoding, ^t when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) and (GetCodec or ^t) : (static member GetCodec: ^t * GetCodec * GetCodec * OpCodec -> Codec<'Encoding, ^t>)> =
-        CodecCache.Run<'Encoding,'t> (fun () -> GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>)
+        GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
 
 
