@@ -521,6 +521,7 @@ module TestDifferentCodecsForEachJsonLibraryMixedCases =
 module TestInterfaces =
     
     open Fleece
+    Fleece.Config.codecCacheEnabled <- true
     
     type IVehicle =
         abstract member MaxSpeed : unit -> float
@@ -547,26 +548,34 @@ module TestInterfaces =
             let! _        = jreq "type-Truck" (fun _ -> Some ())
             and! brand    = jreq "brand"    (fun { Brand = x } -> Some x)
             and! maxSpeed = jreq "maxSpeed" (fun { MaxSpeed = x } -> Some x)
-            and! maxLoad = jreq "maxLoad" (fun {MaxLoad = x } -> Some x)
+            and! maxLoad  = jreq "maxLoad"  (fun {MaxLoad = x } -> Some x)
             return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad }
         }
     
-    do
-        ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec
-        ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
+    let car = Car (Brand = "Volvo", MaxSpeed = 120.0) :> IVehicle
+    let truck =  { Brand = "Ford" ; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
+    
+    do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec    
 
-    let x = { Brand = "Ford"; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
-    let nsjJson = Fleece.Newtonsoft.Operators.toJsonText x
-    let stjJson = Fleece.SystemTextJson.Operators.toJsonText x
+    let nsjCarJson = Fleece.Newtonsoft.Operators.toJsonText car
+    let stjCarJson = Fleece.SystemTextJson.Operators.toJsonText car
 
-    Assert.StringContains ("", "brand", nsjJson)
-    Assert.StringContains ("", "brand", stjJson)
+    Assert.StringContains ("", "brand", nsjCarJson)
+    Assert.StringContains ("", "brand", stjCarJson)
 
-    let xNsjJson: ParseResult<IVehicle> = Fleece.SystemJson.Operators.ofJsonText nsjJson
-    let xSjJson : ParseResult<IVehicle> = Fleece.Newtonsoft.Operators.ofJsonText nsjJson
-    let xStjJson: ParseResult<IVehicle> = Fleece.SystemTextJson.Operators.ofJsonText nsjJson
+    do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
 
-    Assert.Equal ("At least one decoding operation failed.", (Ok x, Ok x, Ok x), (xNsjJson, xSjJson, xStjJson) )
+    let nsjTruckJson = Fleece.Newtonsoft.Operators.toJsonText truck
+    let stjTruckJson = Fleece.SystemTextJson.Operators.toJsonText truck
+
+    Assert.StringContains ("", "brand", nsjTruckJson)
+    Assert.StringContains ("", "brand", stjTruckJson)
+
+    let xNsjCarJson: ParseResult<IVehicle> = Fleece.SystemJson.Operators.ofJsonText nsjCarJson
+    let xSjCarJson : ParseResult<IVehicle> = Fleece.Newtonsoft.Operators.ofJsonText nsjCarJson
+    let xStjCarJson: ParseResult<IVehicle> = Fleece.SystemTextJson.Operators.ofJsonText nsjCarJson
+
+    Assert.Equal ("At least one decoding operation failed.", (Ok car, Ok car, Ok car), (xNsjCarJson, xSjCarJson, xStjCarJson) )
 
 
 module TestCompilationPartiallyInferredTypes =
