@@ -488,17 +488,29 @@ module Internals =
                     codecCollectionGlobalVersion <- codecCollectionGlobalVersion + 1u)
 
     type CodecCache<'Operation, 'Encoding, 'T> () =
-        static let mutable cachedCodec : option<(* version *) uint * Codec<'Encoding, 'T>> = None
+        static let mutable cachedCodecInterface : option<uint * Codec<'Encoding, 'T>> = None
+        static let mutable cachedCodec          : option<       Codec<'Encoding, 'T>> = None
+
         static member GetCache () = cachedCodec
         static member Run (f: unit -> Codec<'Encoding, 'T>) =
             if not Config.codecCacheEnabled then f ()
             else
                 match cachedCodec with
+                | Some c -> c
+                | None   ->
+                    let c = f ()
+                    cachedCodec <- Some c
+                    c
+
+        static member RunForInterfaces (f: unit -> Codec<'Encoding, 'T>) =
+            if not Config.codecCacheEnabled then f ()
+            else
+                match cachedCodecInterface with
                 | Some (version, c) when version = codecCollectionGlobalVersion -> c
-                | _   ->
+                | _ ->
                     let version = codecCollectionGlobalVersion
                     let c = f ()
-                    cachedCodec <- Some (version, c)
+                    cachedCodecInterface <- Some (version, c)
                     c
 
     type GetCodec =
@@ -672,7 +684,7 @@ module Internals =
                     | Some codecs ->
                         (codecs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id |> Codec.upCast |> AdHocEncoding.ofIEncoding) (new 'Encoding () :> IEncoding) |> Codec.downCast<_, 'Encoding>
                 | Some cs -> cs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id
-            |> CodecCache<OpCodec, 'Encoding, _>.Run
+            |> CodecCache<OpCodec, 'Encoding, _>.RunForInterfaces
 
     type GetCodec with
 
