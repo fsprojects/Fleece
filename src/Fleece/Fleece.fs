@@ -475,23 +475,30 @@ module Internals =
     type OpEncode = OpEncode
     type OpDecode = OpDecode
     
+    let mutable private codecCollectionGlobalVersion : uint = 0u
+    let private codecCollectionMonitor = obj ()
+
     type CodecCollection<'Encoding, 'Interface> () =
-        static let monitor = obj ()
         static let mutable subtypes : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = new Dictionary<_,_> ()
         static member GetSubtypes = subtypes
-        static member AddSubtype ty (x: unit -> Codec<PropertyList<'Encoding>, 'Interface>) = lock monitor (fun () -> subtypes.[ty] <- x)
+        static member AddSubtype ty (x: unit -> Codec<PropertyList<'Encoding>, 'Interface>) =
+            lock codecCollectionMonitor
+                (fun () ->
+                    subtypes.[ty] <- x
+                    codecCollectionGlobalVersion <- codecCollectionGlobalVersion + 1u)
 
     type CodecCache<'Operation, 'Encoding, 'T> () =
-        static let mutable cachedCodec : option<Codec<'Encoding, 'T>> = None
+        static let mutable cachedCodec : option<(* version *) uint * Codec<'Encoding, 'T>> = None
         static member GetCache () = cachedCodec
         static member Run (f: unit -> Codec<'Encoding, 'T>) =
             if not Config.codecCacheEnabled then f ()
             else
                 match cachedCodec with
-                | Some c -> c
-                | None   ->
+                | Some (version, c) when version = codecCollectionGlobalVersion -> c
+                | _   ->
+                    let version = codecCollectionGlobalVersion
                     let c = f ()
-                    cachedCodec <- Some c
+                    cachedCodec <- Some (version, c)
                     c
 
     type GetCodec =

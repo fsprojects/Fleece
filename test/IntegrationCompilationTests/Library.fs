@@ -518,7 +518,7 @@ module TestDifferentCodecsForEachJsonLibraryMixedCases =
     Assert.StringContains ("", "dob", personText2)
 
 
-(*module TestInterfaces =
+module TestInterfaces =
     
     open Fleece
     Fleece.Config.codecCacheEnabled <- true
@@ -586,7 +586,7 @@ module TestDifferentCodecsForEachJsonLibraryMixedCases =
     let xSjCarJson : ParseResult<IVehicle> = Fleece.Newtonsoft.Operators.ofJsonText nsjCarJson
     let xStjCarJson: ParseResult<IVehicle> = Fleece.SystemTextJson.Operators.ofJsonText nsjCarJson
 
-    Assert.Equal ("At least one decoding operation failed.", (Ok car, Ok car, Ok car), (xNsjCarJson, xSjCarJson, xStjCarJson) )*)
+    Assert.Equal ("At least one decoding operation failed.", (Ok car, Ok car, Ok car), (xNsjCarJson, xSjCarJson, xStjCarJson) )
 
 
 module TestCompilationPartiallyInferredTypes =
