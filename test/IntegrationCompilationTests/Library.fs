@@ -564,9 +564,9 @@ module TestInterfaces =
     
     do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec
 
-    let nsjCarJson = Fleece.Newtonsoft.Operators.toJsonText car
-    let stjCarJson = Fleece.SystemTextJson.Operators.toJsonText car
     let stjGCarJson = Fleece.SystemTextJson.Operators.toJsonText gcar
+    let stjCarJson  = Fleece.SystemTextJson.Operators.toJsonText car
+    let nsjCarJson  = Fleece.Newtonsoft.Operators.toJsonText car
 
     Assert.StringContains ("", "brand", nsjCarJson)
     Assert.StringContains ("", "brand", stjCarJson)
@@ -574,9 +574,9 @@ module TestInterfaces =
 
     do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
 
-    let nsjTruckJson = Fleece.Newtonsoft.Operators.toJsonText truck
-    let stjTruckJson = Fleece.SystemTextJson.Operators.toJsonText truck
-    let stjGTruckJson = Fleece.SystemTextJson.Operators.toJsonText gtruck
+    let stjGTruckJson = Fleece.SystemTextJson.Operators.toJsonText gtruck    
+    let stjTruckJson  = Fleece.SystemTextJson.Operators.toJsonText truck
+    let nsjTruckJson  = Fleece.Newtonsoft.Operators.toJsonText truck
 
     Assert.StringContains ("", "brand", nsjTruckJson)
     Assert.StringContains ("", "brand", stjTruckJson)
