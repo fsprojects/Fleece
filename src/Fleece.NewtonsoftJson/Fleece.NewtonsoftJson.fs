@@ -398,3 +398,4 @@ type [<Struct>] Encoding = Encoding of JsonValue with
             | Encoding (JString _) -> "JString"
             | Encoding (JArray  _) -> "JArray"
             | Encoding (JObject _) -> "JObject"
+            | Encoding (JDate   _) -> "JDate"
