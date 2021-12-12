@@ -488,7 +488,6 @@ module Internals =
         static let mutable cachedCodecInterface : option<uint * Codec<'Encoding, 'T>> = None
         static let mutable cachedCodec          : option<       Codec<'Encoding, 'T>> = None
 
-        static member GetCache () = cachedCodec
         static member Run (f: unit -> Codec<'Encoding, 'T>) =
             if not Config.codecCacheEnabled then f ()
             else
@@ -552,11 +551,6 @@ module Internals =
 
     type GetEnc =
         inherit GetDec
-
-        /// Recursive Invoker
-        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't, _: unit) : Codec<'Encoding, ^t> =
-            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
-            call (Unchecked.defaultof<GetEnc>, x)
 
         /// Invoker for Codec, originated from an Encoder Invoker.
         static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
