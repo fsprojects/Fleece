@@ -1,5 +1,8 @@
 namespace IntegrationCompilationTests
 
+module Startup =
+    Fleece.Config.codecCacheEnabled <- true
+
 module LegacyTests =
 
     type Person (name: string, age: int, children: Person list) =
@@ -521,7 +524,6 @@ module TestDifferentCodecsForEachJsonLibraryMixedCases =
 module TestInterfaces =
     
     open Fleece
-    Fleece.Config.codecCacheEnabled <- true
     
     type IVehicle =
         abstract member MaxSpeed : unit -> float
