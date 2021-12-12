@@ -710,5 +710,8 @@ let main _ =
                                         printf "."
                                     })
 *)
-
+    Fleece.Config.codecCacheEnabled <- false
+    runParallel (TestList (tests @ Lenses.tests))
+    printfn "Running tests with cache enabled..."
+    Fleece.Config.codecCacheEnabled <- true
     runParallel (TestList (tests @ Lenses.tests))
