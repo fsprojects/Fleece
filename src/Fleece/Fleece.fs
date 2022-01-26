@@ -829,6 +829,9 @@ module Operators =
 
     let jobj (x: list<string * 'Encoding>) : 'Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.propList Codecs.id)
 
+    [<Obsolete("Use PropertyList instead.")>]
+    let dictAsProps (x: IReadOnlyDictionary<string, 'Encoding>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq |> PropertyList
+
     let JNull<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> : 'Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
     let JBool   x = (Codecs.boolean |> Codec.encode) x
     let JNumber x = (Codecs.decimal |> Codec.encode) x
@@ -840,7 +843,7 @@ module Operators =
     let (|JBool|_|)   (x: 'Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
     let (|JNumber|_|) (x: 'Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
     let (|JString|_|) (x: 'Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
-    let (|JArray|_|)  (x: 'Encoding) = (Codecs.array        Codecs.id |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
+    let (|JArray|_|)  (x: 'Encoding) = (Codecs.array Codecs.id |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
     let (|JObject|_|) (x: 'Encoding) = (Codecs.propList Codecs.id |> Codec.decode) x |> Option.ofResult
 
     
@@ -929,6 +932,29 @@ module ComputationExpressions =
     /// Codec Applicative Computation Expression.
     let codec = CodecApplicativeBuilder ()
 
+
+    // Verbose syntax
+
+    [<Literal>]
+    let private verboseSyntaxMessage = "Use applicative operators or codec Computation Expression instead."
+
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline withFields f : Codec<'s,'s,_,_> = result f //(fun _ -> Ok f) <-> (fun _ -> multiMap [])
+    
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfield fieldName getter rest = rest <*> jreq fieldName (getter >> Some)
+    
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldOpt fieldName getter rest = rest <*> jopt fieldName getter
+
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldWith codec fieldName getter rest = rest <*> jreqWith codec fieldName (getter >> Some)
+
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldWithLazy codec fieldName getter rest = rest <*> jreqWithLazy codec fieldName (getter >> Some)
+
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldOptWith codec fieldName getter rest = rest <*> joptWith codec fieldName getter
 
 module Lens =
     open FSharpPlus.Lens
