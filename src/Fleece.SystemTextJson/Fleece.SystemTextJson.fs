@@ -32,7 +32,7 @@ module Internals =
 
 open Internals
 
-type JsonObject = Map<string, Encoding>
+type JsonObject = PropertyList<Encoding>
 
 
 /// Wrapper type for JsonElement
