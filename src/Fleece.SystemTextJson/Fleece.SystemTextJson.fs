@@ -28,7 +28,7 @@ module Internals =
     [<Struct>]
     type JsonElementOrWriter =
     | Element of ElementValue: JsonElement
-    | Writer  of WriterValue: (Utf8JsonWriter -> string option-> unit)
+    | Writer  of WriterValue: (Utf8JsonWriter -> string option -> unit)
 
 open Internals
 
@@ -70,7 +70,7 @@ and Encoding (j: JsonElementOrWriter) =
     member this.get_InnerValue () =
         match Value with
         | Element value -> value
-        | Writer  _ ->
+        | Writer  _     ->
             // run the function, then parseback
             let str = string this
             let doc = JsonDocument.Parse str

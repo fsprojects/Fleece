@@ -275,7 +275,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member stringE         (x: string        ) = JString x
     static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
     static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
-    static member timeSpanE       (x: TimeSpan) = JsonHelpers.create x.Ticks
+    static member timeSpanE       (x: TimeSpan      ) = JsonHelpers.create x.Ticks
 
     static member decimalE        (x: decimal       ) = JsonHelpers.create x
     static member floatE          (x: Double        ) = JsonHelpers.create x

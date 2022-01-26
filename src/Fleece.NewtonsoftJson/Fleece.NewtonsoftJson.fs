@@ -15,25 +15,25 @@ module Internals =
        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict) |> Dict.toIReadOnlyDictionary
        static member GetValues (x: JObject) = x.AsReadOnlyDictionary ()
 
-   let jsonObjectGetValues (x : JObject) = JObject.GetValues x
+   let jsonObjectGetValues (x: JObject) = JObject.GetValues x
 
    type JsonObject = JObject
    
    type JsonHelpers () =
-       static member create (x: decimal)  = JValue          x  :> JToken
-       static member create (x: Double )  = JValue          x  :> JToken
-       static member create (x: Single )  = JValue          x  :> JToken
-       static member create (x: int    )  = JValue          x  :> JToken
-       static member create (x: uint32 )  = JValue          x  :> JToken
-       static member create (x: int64  )  = JValue          x  :> JToken
-       static member create (x: uint64 )  = JValue          x  :> JToken
-       static member create (x: int16  )  = JValue          x  :> JToken
-       static member create (x: uint16 )  = JValue          x  :> JToken
-       static member create (x: byte   )  = JValue          x  :> JToken
-       static member create (x: sbyte  )  = JValue          x  :> JToken
-       static member create (x: char   )  = JValue (string  x) :> JToken
-       static member create (x: Guid   )  = JValue (string  x) :> JToken
-       static member create (x: DateTime) = JValue           x :> JToken
+       static member create (x: decimal)  = JValue         x  :> JToken
+       static member create (x: Double )  = JValue         x  :> JToken
+       static member create (x: Single )  = JValue         x  :> JToken
+       static member create (x: int    )  = JValue         x  :> JToken
+       static member create (x: uint32 )  = JValue         x  :> JToken
+       static member create (x: int64  )  = JValue         x  :> JToken
+       static member create (x: uint64 )  = JValue         x  :> JToken
+       static member create (x: int16  )  = JValue         x  :> JToken
+       static member create (x: uint16 )  = JValue         x  :> JToken
+       static member create (x: byte   )  = JValue         x  :> JToken
+       static member create (x: sbyte  )  = JValue         x  :> JToken
+       static member create (x: char   )  = JValue (string x) :> JToken
+       static member create (x: Guid   )  = JValue (string x) :> JToken
+       static member create (x: DateTime) = JValue         x  :> JToken
 
 
    // FSharp.Newtonsoft.Json AST adapter
