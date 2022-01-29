@@ -649,6 +649,7 @@ let tests = [
             yield testProperty "char" (roundtrip<char>)
             yield testProperty "byte" (roundtrip<byte>)
             yield testProperty "sbyte" (roundtrip<sbyte>)
+            yield testProperty "bigint" (roundtrip<bigint>)
             yield testProperty "Guid" (roundtrip<Guid>)
             yield testProperty "attribute" (Prop.forAll attributeArb.Value roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)

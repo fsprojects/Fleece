@@ -129,6 +129,7 @@ and IEncoding =
     abstract byte           : Codec<IEncoding, byte>
     abstract sbyte          : Codec<IEncoding, sbyte>
     abstract char           : Codec<IEncoding, char>
+    abstract bigint         : Codec<IEncoding, bigint>
     abstract guid           : Codec<IEncoding, Guid>
     abstract result         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Result<'t1,'t2>>
     abstract choice         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Choice<'t1,'t2>>
@@ -232,6 +233,7 @@ type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncod
         member _.byte           = AdHocEncoding.toIEncoding (fun x -> x.byte)
         member _.sbyte          = AdHocEncoding.toIEncoding (fun x -> x.sbyte)
         member _.char           = AdHocEncoding.toIEncoding (fun x -> x.char)
+        member _.bigint         = AdHocEncoding.toIEncoding (fun x -> x.bigint)
         member _.guid           = AdHocEncoding.toIEncoding (fun x -> x.guid)
         member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = AdHocEncoding.toIEncoding (fun x -> x.enum ())
 
@@ -389,6 +391,7 @@ module Codecs =
 
     let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] bigint<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.bigint         |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] char<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, _>
@@ -529,6 +532,7 @@ module Internals =
         static member GetCodec (_: byte          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.byte
         static member GetCodec (_: sbyte         , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.sbyte
         static member GetCodec (_: char          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.char
+        static member GetCodec (_: bigint        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.bigint
         static member GetCodec (_: Guid          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.guid
         static member GetCodec (()               , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.unit
 

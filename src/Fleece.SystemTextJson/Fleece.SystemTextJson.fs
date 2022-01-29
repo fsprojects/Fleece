@@ -116,6 +116,20 @@ and Encoding (j: JsonElementOrWriter) =
     static member jobj (x: seq<string * Encoding>) : Encoding = Encoding.JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
 
     static member create (x: string ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
+    static member create (x: bigint ) =
+        let keyValueWriter =
+            fun (w: Utf8JsonWriter) (k: string) ->
+                let s = x.ToString NumberFormatInfo.InvariantInfo
+                let doc = JsonDocument.Parse s
+                w.WritePropertyName k
+                doc.WriteTo w
+        let valueWriter =
+            fun (w: Utf8JsonWriter) ->
+                let js = x.ToString NumberFormatInfo.InvariantInfo
+                let doc = JsonDocument.Parse js
+                doc.WriteTo w
+        Encoding (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer))
+
     static member create (x: Guid   ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
     static member create (x: decimal) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
     static member create (x: Single ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
@@ -141,6 +155,7 @@ and Encoding (j: JsonElementOrWriter) =
     static member ($) (_:Encoding, _: sbyte  ) = fun (x: Encoding) -> x.get_InnerValue().GetSByte ()
     static member ($) (_:Encoding, _: float  ) = fun (x: Encoding) -> x.get_InnerValue().GetDouble ()
     static member ($) (_:Encoding, _: float32) = fun (x: Encoding) -> x.get_InnerValue().GetSingle ()
+    static member ($) (_:Encoding, _: bigint ) = fun (x: Encoding) -> System.Numerics.BigInteger.Parse (x.get_InnerValue().GetRawText (), NumberFormatInfo.InvariantInfo)
 
     static member inline tryGet (x: Encoding) : 't = (Unchecked.defaultof<Encoding> $ Unchecked.defaultof<'t>) x
 
@@ -274,6 +289,8 @@ and Encoding (j: JsonElementOrWriter) =
         | JString s    -> Ok s.[0]
         | a -> Decode.Fail.strExpected a
 
+    static member bigintD x = Encoding.tryRead<bigint> x
+
     static member guidD x =
         match x with
         | JString null -> Decode.Fail.nullString
@@ -359,6 +376,7 @@ and Encoding (j: JsonElementOrWriter) =
     static member byteE           (x: byte          ) = Encoding.create x
     static member sbyteE          (x: sbyte         ) = Encoding.create x
     static member charE           (x: char          ) = Encoding.create x
+    static member bigintE         (x: bigint        ) = Encoding.create x
     static member guidE           (x: Guid          ) = Encoding.create x
 
     
@@ -401,6 +419,7 @@ and Encoding (j: JsonElementOrWriter) =
     static member byte           = Encoding.byteD           <-> Encoding.byteE
     static member sbyte          = Encoding.sbyteD          <-> Encoding.sbyteE
     static member char           = Encoding.charD           <-> Encoding.charE
+    static member bigint         = Encoding.bigintD         <-> Encoding.bigintE
     static member guid           = Encoding.guidD           <-> Encoding.guidE
 
 
@@ -423,6 +442,7 @@ and Encoding (j: JsonElementOrWriter) =
         member _.byte           = Encoding.toIEncoding Encoding.byte
         member _.sbyte          = Encoding.toIEncoding Encoding.sbyte
         member _.char           = Encoding.toIEncoding Encoding.char
+        member _.bigint         = Encoding.toIEncoding Encoding.bigint
         member _.guid           = Encoding.toIEncoding Encoding.guid
 
         member _.result c1 c2     = Encoding.toIEncoding (Encoding.result   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
@@ -431,7 +451,7 @@ and Encoding (j: JsonElementOrWriter) =
         member _.option c         = Encoding.toIEncoding (Encoding.option   (Encoding.ofIEncoding c))
         member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
         member _.propertyList c   = Encoding.toIEncoding (Encoding.propList (Encoding.ofIEncoding c))
-
+        
         member _.tuple1 c                    = Encoding.toIEncoding (Encoding.tuple1 (Encoding.ofIEncoding c))
         member _.tuple2 c1 c2                = Encoding.toIEncoding (Encoding.tuple2 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
         member _.tuple3 c1 c2 c3             = Encoding.toIEncoding (Encoding.tuple3 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
@@ -439,9 +459,9 @@ and Encoding (j: JsonElementOrWriter) =
         member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIEncoding (Encoding.tuple5 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5))
         member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIEncoding (Encoding.tuple6 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6))
         member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIEncoding (Encoding.tuple7 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6) (Encoding.ofIEncoding c7))
-
+        
         member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = Encoding.toIEncoding (Encoding.enumD <-> Encoding.enumE)
-
+        
         member x.getCase =
             match x with
             | JNull     -> "JNull"
