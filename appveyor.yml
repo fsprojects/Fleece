@@ -18,6 +18,7 @@ test_script:
   - cmd: dotnet run --project .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net5
   - cmd: dotnet run --project .\test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net5
   - cmd: dotnet run --project .\test\Tests.SystemTextJson\Tests.SystemTextJson.fsproj -c Release -f net5
+  - cmd: dotnet run --project .\test\IntegrationCompilationTests\IntegrationCompilationTests.fsproj -c Release -f net5
 
 artifacts:
   # pushing all *.nupkg files in build directory recursively

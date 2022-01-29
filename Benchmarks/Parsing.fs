@@ -9,10 +9,9 @@ module Bench =
     let resetStream (stream : #Stream) =
         stream.Seek(0L, SeekOrigin.Begin) |> ignore
 
-    module SystemJson =
-        open Fleece.SystemJson
-        open Fleece.SystemJson.Decode
-        open System.Json
+    module SystemJson =        
+        open Fleece.SystemJson.Operators
+        open Fleece.Decode        
         let inline parse (s: string): JsonObject =
             s
             |> parseJson
@@ -24,9 +23,8 @@ module Bench =
             |> parse
 
     module SystemTextJson =
-        open Fleece.SystemTextJson
-        open Fleece.SystemTextJson.Decode
-        open System.Text.Json
+        open Fleece.SystemTextJson.Operators
+        open Fleece.Decode        
         let inline parse (s: string): JsonObject =
             s
             |> parseJson
@@ -38,9 +36,8 @@ module Bench =
             |> parse
 
     module NewtonsoftJson =
-        open Fleece.Newtonsoft
-        open Fleece.Newtonsoft.Decode
-        open Newtonsoft.Json.Linq
+        open Fleece.Newtonsoft.Operators
+        open Fleece.Decode        
         let inline parse (s: string): JsonObject =
             s
             |> parseJson
@@ -52,9 +49,8 @@ module Bench =
             |> parse
 
     module FSharpData =
-        open Fleece.FSharpData
-        open Fleece.FSharpData.Decode
-        open FSharp.Data
+        open Fleece.FSharpData.Operators
+        open Fleece.Decode
         let inline parse (s: string): JsonObject =
             s
             |> parseJson

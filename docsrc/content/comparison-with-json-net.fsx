@@ -3,7 +3,8 @@
 // it to define helpers that you do not want to show in the documentation.
 #r "nuget: Newtonsoft.Json, 10.0.2"
 #r "nuget: FSharpPlus, 1.2.2"
-#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.1/Fleece.NewtonsoftJson.dll"
+#r @"../../src/Fleece/bin/Release/netstandard2.0/Fleece.dll"
+#r @"../../src/Fleece.NewtonsoftJson/bin/Release/netstandard2.0/Fleece.NewtonsoftJson.dll"
 
 (**
 ```f#
@@ -14,6 +15,7 @@
 open System
 open Newtonsoft.Json
 open FSharpPlus
+open Fleece
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 
@@ -57,15 +59,18 @@ type Vehicle =
    | Bike
    | Car       of CarInfo
 with
-    static member OfJson (json:Linq.JToken) =
+    static member OfJson (json: Encoding) =
         match json with
         | JObject o ->
             monad.strict {
                 match! o .@ "type" with
                 | "Bike" -> return Bike
                 | "Car" ->
+                    // Our native is wrapped into NsjEncoding
+                    let j = Encoding.Unwrap json
+
                     // we know that json token is a JObject due to the check above so we can directly cast it:
-                    let jobj : Linq.JObject = downcast json
+                    let jobj : Linq.JObject = downcast j
                     try
                         // now we can use the default Newtonsoft Json decoder:
                         let info = jobj.ToObject<CarInfo>() // NOTE: here we hand over control of the mapping to Newtonsoft.Json

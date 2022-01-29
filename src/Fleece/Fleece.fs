@@ -1,1304 +1,981 @@
-﻿namespace Fleece
+namespace Fleece
 
-#nowarn "00042"
+#nowarn "00042" // retype
 
 open System
-open System.Globalization
 open System.Collections.Generic
 open FSharpPlus
 open FSharpPlus.Data
 
-type Id1<'t> (v: 't) =
-    let value = v
-    member __.getValue = value
+/// Marker interface for all interfaces whose derived classes will support codecs
+type ICodecInterface<'Base> = interface end
 
-type Id2<'t> (v: 't) =
-    let value = v
-    member __.getValue = value
+module Config =
+    let mutable codecCacheEnabled = false
 
-type Default7 = class end
-type Default6 = class inherit Default7 end
-type Default5 = class inherit Default6 end
-type Default4 = class inherit Default5 end
-type Default3 = class inherit Default4 end
-type Default2 = class inherit Default3 end
-type Default1 = class inherit Default2 end
-
-#if FSHARPDATA
-
-module FSharpData =
-    
-    open FSharp.Data
-        
-    type private JsonHelpers () =
-        static member create (x: decimal) : JsonValue = JsonValue.Number          x
-        static member create (x: Double ) : JsonValue = JsonValue.Float           x
-        static member create (x: Single ) : JsonValue = JsonValue.Float  (float   x)
-        static member create (x: int    ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: bool   ) : JsonValue = JsonValue.Boolean         x
-        static member create (x: uint32 ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: int64  ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: uint64 ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: int16  ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: uint16 ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: byte   ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: sbyte  ) : JsonValue = JsonValue.Number (decimal x)
-        static member create (x: char   ) : JsonValue = JsonValue.String (string  x)
-        static member create (x: Guid   ) : JsonValue = JsonValue.String (string  x)
-
-
-    type JsonObject (properties: (string * JsonValue) []) =
-        let properties = properties
-        member __.Properties = properties
-        with
-            interface System.Collections.IEnumerable with
-                member __.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator () :> System.Collections.IEnumerator
-
-            interface IEnumerable<KeyValuePair<string, JsonValue>> with
-                member __.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator ()
-
-            interface IReadOnlyCollection<KeyValuePair<string,JsonValue>> with
-                member __.Count = properties.Length
-        
-            interface IReadOnlyDictionary<string, JsonValue> with
-                member __.Keys = properties |> Seq.map fst
-                member __.Values = properties |> Seq.map snd
-                member __.Item with get (key: string) = properties |> Array.find (fun (k, _) -> k = key) |> snd
-                member __.ContainsKey (key: string) = properties |> Array.exists (fun (k, _) -> k = key)
-                member __.TryGetValue (key: string, value:byref<JsonValue>) =
-                    match properties |> Array.tryFindIndex (fun (k, _) -> k = key) with
-                    | Some i ->
-                        value <- snd properties.[i]
-                        true
-                    | None -> false
-
-    let jsonObjectGetValues (x: JsonObject) = x :> IReadOnlyDictionary<string, JsonValue>
-
-
-    // FSharp.Data.JsonValue AST adapter
-
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
-        match o with
-        | JsonValue.Null          -> JNull
-        | JsonValue.Array els     -> JArray (IList.toIReadOnlyList els)
-        | JsonValue.Record props  -> JObject (jsonObjectGetValues (JsonObject props))
-        | JsonValue.Number _ as x -> JNumber x
-        | JsonValue.Float _ as x  -> JNumber x
-        | JsonValue.Boolean x     -> JBool x
-        | JsonValue.String x      -> JString x
-    
-    let dictAsJsonObject (x: IReadOnlyDictionary<string, JsonValue>) =
-        match x with
-        | :? JsonObject as x' -> x'
-        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq |> JsonObject
-
-    let dictAsProps (x: IReadOnlyDictionary<string, JsonValue>) =
-        match x with
-        | :? JsonObject as x' -> x'.Properties
-        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq
-
-    let inline JArray (x: JsonValue IReadOnlyList) = JsonValue.Array (x |> Array.ofSeq)
-    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonValue.Record (dictAsProps x)
-    let inline JBool (x: bool) = JsonValue.Boolean x
-    let inline JNumber (x: decimal) = JsonValue.Number x
-    let JNull : JsonValue = JsonValue.Null
-    let inline JString (x: string) = if isNull x then JsonValue.Null else JsonValue.String x
-    
-#endif
-
-#if NEWTONSOFT
-
-module Newtonsoft =
-    
-    open Newtonsoft.Json.Linq
-    type JsonValue = JToken
-    type JObject with
-        member x.AsReadOnlyDictionary () = (x.Properties () |> Seq.map (fun p -> (p.Name, p.Value)) |> dict) |> Dict.toIReadOnlyDictionary
-        static member GetValues (x: JObject) = x.AsReadOnlyDictionary ()
-
-    let jsonObjectGetValues (x : JObject) = JObject.GetValues x
-
-    type JsonObject = JObject
-    
-    type private JsonHelpers () =
-        static member create (x: decimal)  = JValue          x  :> JToken
-        static member create (x: Double )  = JValue          x  :> JToken
-        static member create (x: Single )  = JValue          x  :> JToken
-        static member create (x: int    )  = JValue          x  :> JToken
-        static member create (x: uint32 )  = JValue          x  :> JToken
-        static member create (x: int64  )  = JValue          x  :> JToken
-        static member create (x: uint64 )  = JValue          x  :> JToken
-        static member create (x: int16  )  = JValue          x  :> JToken
-        static member create (x: uint16 )  = JValue          x  :> JToken
-        static member create (x: byte   )  = JValue          x  :> JToken
-        static member create (x: sbyte  )  = JValue          x  :> JToken
-        static member create (x: char   )  = JValue (string  x) :> JToken
-        static member create (x: Guid   )  = JValue (string  x) :> JToken
-        static member create (x: DateTime) = JValue           x :> JToken
-
-
-    // FSharp.Newtonsoft.Json AST adapter
-
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|JDate|) (o: JToken) =
-        match o.Type with
-        | JTokenType.Null    -> JNull
-        | JTokenType.Array   -> JArray ((o :?> JArray) |> IList.toIReadOnlyList)
-        | JTokenType.Object  -> JObject (jsonObjectGetValues (o :?> JObject))
-        | JTokenType.Integer -> JNumber  o
-        | JTokenType.Float   -> JNumber  o
-        | JTokenType.Boolean -> JBool   (o.ToObject () : bool)
-        | JTokenType.String  -> JString (o.ToObject () : string)
-        | JTokenType.Date    -> JDate    o
-        | t                  -> failwithf "Invalid JTokenType %A" t
-    
-    let dictAsProps (x: IReadOnlyDictionary<string, JToken>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq
-
-    let inline JArray (x: JToken IReadOnlyList) = JArray (x |> Array.ofSeq) :> JToken
-    let inline JObject (x: IReadOnlyDictionary<string, JToken>) =
-        let o = JObject ()
-        for kv in x do
-            o.Add (kv.Key, kv.Value)
-        o :> JToken
-    let inline JBool (x: bool) = JValue x :> JToken
-    let inline JNumber (x: decimal) = JValue x :> JToken
-    let JNull = JValue.CreateNull () :> JToken
-    let inline JString (x: string) = if isNull x then JNull else JValue x :> JToken
-    let inline JDate (x: DateTime) = JValue x :> JToken
-    
-#endif
-
-#if SYSTEMJSON
-
-module SystemJson =
-    
-    open System.Json
-
-    type JsonObject with
-        member x.AsReadOnlyDictionary () = (x :> IDictionary<string, JsonValue>) |> Dict.toIReadOnlyDictionary
-        static member GetValues (x: JsonObject) = x.AsReadOnlyDictionary ()
-
-    let jsonObjectGetValues (x: JsonObject) = JsonObject.GetValues x
-
-    type private JsonHelpers () =
-        static member create (x: decimal) = JsonPrimitive x :> JsonValue
-        static member create (x: Double ) = JsonPrimitive x :> JsonValue
-        static member create (x: Single ) = JsonPrimitive x :> JsonValue
-        static member create (x: int    ) = JsonPrimitive x :> JsonValue
-        static member create (x: uint32 ) = JsonPrimitive x :> JsonValue
-        static member create (x: int64  ) = JsonPrimitive x :> JsonValue
-        static member create (x: uint64 ) = JsonPrimitive x :> JsonValue
-        static member create (x: int16  ) = JsonPrimitive x :> JsonValue
-        static member create (x: uint16 ) = JsonPrimitive x :> JsonValue
-        static member create (x: byte   ) = JsonPrimitive x :> JsonValue
-        static member create (x: sbyte  ) = JsonPrimitive x :> JsonValue
-        static member create (x: char   ) = JsonPrimitive (string x) :> JsonValue
-        static member create (x: Guid   ) = JsonPrimitive (string x) :> JsonValue
-
-
-    // pseudo-AST, wrapping JsonValue subtypes:
-
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (o: JsonValue) =
-        match o with
-        | null -> JNull
-        | :? JsonArray  as x -> JArray ((x :> JsonValue IList) |> IList.toIReadOnlyList)
-        | :? JsonObject as x -> JObject (x.AsReadOnlyDictionary ())
-        | :? JsonPrimitive as x ->
-            match x.JsonType with
-            | JsonType.Number  -> JNumber x
-            | JsonType.Boolean -> JBool   (implicit x: bool)
-            | JsonType.String  -> JString (implicit x: string)
-            | _ -> failwithf "Invalid JsonType %A for primitive %A" x.JsonType x
-        | _ -> failwithf "Invalid JsonValue %A" o
-
-    let inline JArray (x: JsonValue IReadOnlyList) = JsonArray x :> JsonValue
-    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) = JsonObject x :> JsonValue
-    let inline JBool (x: bool) = JsonPrimitive x :> JsonValue
-    let JNull : JsonValue = null
-    let inline JString (x: string) = if isNull x then JNull else JsonPrimitive x :> JsonValue
-    let inline JNumber (x: decimal) = JsonPrimitive x :> JsonValue
-
-#endif
-
-#if SYSTEMTEXTJSON
-
-module SystemTextJson =
-
-    open System.Text.Json
-
-    type JsonValue = { mutable Value : Choice<JsonElement, Utf8JsonWriter -> string option-> unit> } with
-
-        member this.ToString (options: JsonWriterOptions) =
-            use stream = new System.IO.MemoryStream ()
-            use writer = new Utf8JsonWriter (stream, options)
-            use reader = new System.IO.StreamReader (stream)
-            match this with
-            | { Value = Choice2Of2 jobj  } -> jobj writer None
-            | { Value = Choice1Of2 value } -> value.WriteTo writer
-            writer.Flush ()
-            stream.Seek (0L, System.IO.SeekOrigin.Begin) |> ignore
-            reader.ReadToEnd ()
-
-        override this.ToString () = this.ToString (new JsonWriterOptions (Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping))
-
-        member this.getValue () =
-            match this with
-            | { Value = Choice1Of2 value } -> value
-            | { Value = Choice2Of2 _ } ->
-                // run the function, then parseback
-                let str = string this
-                let doc = JsonDocument.Parse str
-                let value = doc.RootElement
-                this.Value <- Choice1Of2 value
-                value
-
-        member this.getWriter () =
-            match this with
-            | { Value = Choice2Of2 writer } -> writer
-            | { Value = Choice1Of2 value  } ->
-                fun (writer: Utf8JsonWriter) (name: string option) ->
-                    name |> Option.iter writer.WritePropertyName
-                    value.WriteTo writer
-                    
-
-    type JsonObject = Map<string, JsonValue>
-
-    module JsonValue =
-        let Parse (x: string) = let doc = JsonDocument.Parse x in { Value = Choice1Of2 doc.RootElement }
-
-    let jsonObjectGetValues (o: JsonObject) = o :> IReadOnlyDictionary<string, JsonValue>
-
-    let inline private writers keyValueWriter valueWriter = { Value = Choice2Of2 (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer) }
-
-    type private JsonHelpers () =
-
-        static member create (x: string ) = writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-        static member create (x: Guid   ) = writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-        static member create (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: Single ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: Double ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: int    ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: int64  ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: uint32 ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: uint64 ) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-        static member create (x: int16  ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-        static member create (x: uint16 ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-        static member create (x: byte   ) = writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
-        static member create (x: sbyte  ) = writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))        
-        static member create (x: char   ) = writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
-        
-
-    // pseudo-AST, wrapping JsonValue subtypes:
-    let (|JArray|JObject|JNumber|JBool|JString|JNull|) (j: JsonValue) =
-        let o = j.getValue ()
-        match o.ValueKind with
-        | JsonValueKind.Null
-        | JsonValueKind.Undefined -> JNull
-        | JsonValueKind.Array     -> JArray ([ for x in o.EnumerateArray () -> {Value = Choice1Of2 x} ] :> IReadOnlyList<_>)
-        | JsonValueKind.Object    -> JObject ( Map.ofList [for x in o.EnumerateObject () -> (x.Name, {Value = Choice1Of2 x.Value})] :> IReadOnlyDictionary<_,_>)
-        | JsonValueKind.Number    -> JNumber j
-        | JsonValueKind.False     -> JBool false
-        | JsonValueKind.True      -> JBool true
-        | JsonValueKind.String    -> JString (o.GetString ())
-        | _                       -> failwithf "Invalid JsonValue %A" o
-
-    let dictAsJsonObject (x: IReadOnlyDictionary<string, JsonValue>) =
-        match x with
-        | :? JsonObject as x' -> x'
-        | _ -> x |> Seq.map (|KeyValue|) |> Array.ofSeq |> JsonObject
-
-    let inline JArray (x: JsonValue IReadOnlyList) =
-        let f w =
-            for v in x do (v.getWriter ()) w None
-            w.WriteEndArray ()
-        writers (fun w k -> w.WriteStartArray k; f w) (fun w -> w.WriteStartArray (); f w)
-
-    let inline JObject (x: IReadOnlyDictionary<string, JsonValue>) =
-        let f w =
-            for kv in x do kv.Value.getWriter () w (Some kv.Key)
-            w.WriteEndObject ()
-        writers (fun w k -> w.WriteStartObject k; f w) (fun w -> w.WriteStartObject (); f w)
-
-    let JBool (x: bool)      = writers (fun w k -> w.WriteBoolean (k, x)) (fun w -> w.WriteBooleanValue x)
-    let JNull                = writers (fun w k -> w.WriteNull k) (fun w -> w.WriteNullValue ())
-    let JString (x: string)  = if isNull x then JNull else writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-    let JNumber (x: decimal) = writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
-    
-#endif
-
-    let inline retype (x:'a) : 'b = (# "" x : 'b #)
-
-    // Deserializing:
-
-    type JType =
-        | Object = 1
-        | Array  = 2
-        | Number = 3
-        | String = 4
-        | Bool   = 5
-        | Null   = 6
-#if NEWTONSOFT
-        | Date   = 7
-#endif
-
-    let getJType (o: JsonValue) =
-        match o with
-        | JNull     -> JType.Null
-        | JArray _  -> JType.Array
-        | JObject _ -> JType.Object
-        | JNumber _ -> JType.Number
-        | JBool _   -> JType.Bool
-        | JString _ -> JType.String
-#if NEWTONSOFT
-        | JDate _   -> JType.Date
-#endif
-
-    type DecodeError =
-        | JsonTypeMismatch of System.Type * JsonValue * JType * JType
-        | NullString of System.Type
-        | IndexOutOfRange of int * JsonValue
-        | InvalidValue of System.Type * JsonValue * string
-        | PropertyNotFound of string * IReadOnlyDictionary<string, JsonValue>
-        | ParseError of System.Type * exn * string
-        | Uncategorized of string
-        | Multiple of DecodeError list
-
+type PropertyList<'Encoding> (properties: (string * 'Encoding) []) =
+    let properties = properties
+    member _.Properties = properties
+    member _.Item with get (key: string) = properties |> Seq.filter (fun (k, _) -> k = key) |> Seq.map snd |> Seq.toList
+    member _.Count = properties.Length
     with
-        static member (+) (x, y) =
-            match x, y with
-            | Multiple x, Multiple y -> Multiple (x @ y)
-            | _                      -> Multiple [x; y]
-        override x.ToString () =
-            match x with
-            | JsonTypeMismatch (t, v: JsonValue, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
-            | NullString t -> sprintf "Expected %s, got null" (string t)
-            | IndexOutOfRange (e, a) -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
-            | InvalidValue (t, v, s) -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
-            | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
-            | ParseError (t, s, v) -> sprintf "Error decoding %s from  %s: %s" (string v) (string t) (string s)
-            | Uncategorized str -> str
-            | Multiple lst -> List.map string lst |> String.concat "\r\n"
+        interface System.Collections.IEnumerable with
+            member _.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator () :> System.Collections.IEnumerator
 
-    type 'a ParseResult = Result<'a, DecodeError>
+        interface IEnumerable<KeyValuePair<string, 'Encoding>> with
+            member _.GetEnumerator () = (properties |> Seq.map KeyValuePair).GetEnumerator ()
 
-    module Decode =
-        let inline Success x = Ok x
-        let (|Success|Failure|) = function
-            | Ok    x -> Success x
-            | Error x -> Failure x
-
-        module Fail =
-            let inline objExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Object, a))
-            let inline arrExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Array , a))
-            let inline numExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Number, a))
-            let inline strExpected  v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.String, a))
-            let inline boolExpected v : Result<'t, _> = let a = getJType v in Error (JsonTypeMismatch (typeof<'t>, v, JType.Bool  , a))
-            let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
-            let inline count e a = Error (IndexOutOfRange (e, a))
-            let invalidValue v o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
-            let propertyNotFound p o = Error (PropertyNotFound (p, o))
-            let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
+        interface IReadOnlyCollection<KeyValuePair<string,'Encoding>> with
+            member _.Count = properties.Length
     
-    module Helpers =
-        // results:
-        let inline Success x = Ok x
-        let listAsReadOnly (l: _ list) =
-            { new IReadOnlyList<_> with
-                member __.Count = l.Length
-                member __.Item with get index = l.[index]
-                member __.GetEnumerator () = (l :> _ seq).GetEnumerator ()
-                member __.GetEnumerator () = (l :> System.Collections.IEnumerable).GetEnumerator () }
+        interface IReadOnlyDictionary<string, 'Encoding> with
+            member _.Keys = properties |> Seq.map fst
+            member _.Values = properties |> Seq.map snd
+            member _.Item with get (key: string) = properties |> Array.find (fun (k, _) -> k = key) |> snd
+            member _.ContainsKey (key: string) = properties |> Array.exists (fun (k, _) -> k = key)
+            member _.TryGetValue (key: string, value: byref<'Encoding>) =
+                match properties |> Array.tryFindIndex (fun (k, _) -> k = key) with
+                | Some i ->
+                    value <- snd properties.[i]
+                    true
+                | None -> false
 
-#if !NETCOREAPP
-        type ArraySegment<'a> with
-            member x.ToArray () =
-                if isNull x.Array then invalidOp "Null Array" else
-                if x.Count = 0 then Array.empty else
-                let array = Array.zeroCreate<'a> x.Count
-                Array.Copy(x.Array, x.Offset, array, 0, x.Count)
-                array
-#endif
+        static member Filter (x: PropertyList<'Encoding>, f) = x.Properties |> Array.filter f |> PropertyList
+        static member get_Zero () = PropertyList [||]
+        static member (+) (x: PropertyList<'Encoding>, y: PropertyList<'Encoding>) = PropertyList (x.Properties ++ y.Properties)
+        static member Map (x: PropertyList<'Encoding>, f) = PropertyList (x.Properties |> map (fun (k, v) -> (k, f v)))
+        static member ToSeq  (x: PropertyList<'Encoding>) = toSeq x.Properties
+        static member ToList (x: PropertyList<'Encoding>) = toList x.Properties
+        static member ToArray (x: PropertyList<'Encoding>) = x.Properties
+        static member add key x (t: PropertyList<'Encoding>) =
+            let i = t.Properties |> Array.tryFindIndex (fun (k, _) -> k = key)
+            match i with
+            | Some i ->
+                let t = t.Properties |> Array.copy
+                t.[i] <- (key, x)
+                PropertyList t
+            | None   -> PropertyList (t.Properties ++ [|(key, x)|])
 
+[<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
+module Helpers =
 
-        #if FSHARPDATA
+    let inline retype<'sourceType, 'destType> (x: 'sourceType) : 'destType =
+    #if !FABLE_COMPILER
+        (# "" x : 'destType #)
+    #else
+        unbox<'destType> x
+    #endif
 
-        let inline tryRead x =
-            match x with
-            | JsonValue.Number n -> Success (explicit n)
-            | JsonValue.Float  n -> Success (explicit n)
-            | js                 -> Decode.Fail.numExpected js
+    #if !FABLE_COMPILER
+    module ArraySegment =
+        let toArray (x: ArraySegment<'a>) =
+            if isNull x.Array then invalidOp "Null Array" else
+            if x.Count = 0 then Array.empty else
+            let array = Array.zeroCreate<'a> x.Count
+            System.Array.Copy (x.Array, x.Offset, array, 0, x.Count)
+            array
+    #endif
 
-        type JsonHelpers with
-            static member jsonObjectOfJson = function
-                | JObject x -> Success (dictAsJsonObject x)
-                | a -> Decode.Fail.objExpected a
+    module Dictionary =
 
-            static member jsonOfJsonObject o = JObject o
+        let ofSeq (source: seq<'Key * 'T>) =
+            let dct = Dictionary ()
+            for (k, v) in source do
+                dct.Add (k, v)
+            dct
 
-        #endif
+        let toSeq (source: Dictionary<'Key, 'T>) = seq {
+            for (KeyValue (k, v)) in source do
+                yield (k, v) }
 
-        #if NEWTONSOFT
+        let toArray (source: Dictionary<'Key, 'T>) = toSeq source |> Seq.toArray
 
-        let inline tryRead<'a> x =
-            match x with
-            | JNumber j -> 
-                try
-                  Success (j.ToObject<'a> ())
-                with
-                | e -> Decode.Fail.invalidValue j (string e)
-            | JString _ -> 
-                try
-                    Success (x.ToObject<'a> ())
-                with
-                | e -> Decode.Fail.invalidValue x (string e)
-            | js -> Decode.Fail.numExpected js
+    let decoderNotAvailable (_: 'Encoding) : Result<'T, _> = failwithf "Fleece internal error: this codec has no decoder from encoding %A to type %A." typeof<'Encoding> typeof<'T>
+    let encoderNotAvailable (_: 'T) : 'Encoding            = failwithf "Fleece internal error: this codec has no encoder from type %A to encoding %A." typeof<'T> typeof<'Encoding>
 
-        type JsonHelpers with
-            static member jsonObjectOfJson =
-                fun (o: JToken) ->
-                    match o.Type with
-                    | JTokenType.Object -> Success (o :?> JObject)
-                    | _ -> Decode.Fail.objExpected o
+open Helpers
 
-            static member jsonOfJsonObject o = o :> JToken
- 
-        #endif
+/// Encodes a value of a generic type 't into a value of raw type 'S.
+type Encoder<'S, 't> = 't -> 'S
 
-        #if SYSTEMJSON
+/// A decoder from raw type 'S1 and encoder to raw type 'S2 for strong types 't1 and 't2.
+type Codec<'S1, 'S2, 't1, 't2> = { Decoder : Decoder<'S1, 't1>; Encoder : Encoder<'S2, 't2> } with
+    static member inline Return f = { Decoder = (fun _ -> Ok f); Encoder = zero }
 
-        let inline tryRead x =
-            match x with
-            | JNumber j ->
-                try
-                    Success (implicit j)
-                with e -> Decode.Fail.invalidValue j (string e)
-            | js -> Decode.Fail.numExpected js
+/// A codec for raw type 'S to strong type 't.
+and Codec<'S, 't> = Codec<'S, 'S, 't, 't>
 
-        type JsonHelpers with
-            static member inline jsonObjectOfJson =
-                fun (o: JsonValue) ->
-                    match box o with
-                    | :? JsonObject as x -> Success x
-                    | _ -> Decode.Fail.objExpected o
+/// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
+and Decoder<'S, 't> = 'S -> Result<'t, DecodeError>
 
-            static member jsonOfJsonObject (o: JsonObject) = o :> JsonValue
+and ParseResult<'t> = Result<'t, DecodeError>
 
-        #endif
+and IEncoding =
+    abstract unit           : Codec<IEncoding, unit>
+    abstract boolean        : Codec<IEncoding, bool>
+    abstract string         : Codec<IEncoding, string>
+    abstract dateTime       : Codec<IEncoding, DateTime>
+    abstract dateTimeOffset : Codec<IEncoding, DateTimeOffset>
+    abstract timeSpan       : Codec<IEncoding, TimeSpan>
+    abstract decimal        : Codec<IEncoding, Decimal>
+    abstract float          : Codec<IEncoding, float>
+    abstract float32        : Codec<IEncoding, float32>
+    abstract int            : Codec<IEncoding, int>
+    abstract uint32         : Codec<IEncoding, uint32>
+    abstract int64          : Codec<IEncoding, int64>
+    abstract uint64         : Codec<IEncoding, uint64>
+    abstract int16          : Codec<IEncoding, int16>
+    abstract uint16         : Codec<IEncoding, uint16>
+    abstract byte           : Codec<IEncoding, byte>
+    abstract sbyte          : Codec<IEncoding, sbyte>
+    abstract char           : Codec<IEncoding, char>
+    abstract guid           : Codec<IEncoding, Guid>
+    abstract result         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Result<'t1,'t2>>
+    abstract choice         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Choice<'t1,'t2>>
+    abstract choice3        : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, Choice<'t1,'t2,'t3>>
+    abstract option         : Codec<IEncoding, 't>  -> Codec<IEncoding, option<'t>>
+    abstract array          : Codec<IEncoding, 't>  -> Codec<IEncoding, 't []>
+    abstract propertyList   : Codec<IEncoding, 't>  -> Codec<IEncoding, PropertyList<'t>>
+    abstract tuple1         : Codec<IEncoding, 't>  -> Codec<IEncoding, Tuple<'t>>
+    abstract tuple2         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't1 * 't2>
+    abstract tuple3         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't1 * 't2 * 't3>
+    abstract tuple4         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't1 * 't2 * 't3 * 't4>
+    abstract tuple5         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't1 * 't2 * 't3 * 't4 * 't5>
+    abstract tuple6         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't6> -> Codec<IEncoding, 't1 * 't2 * 't3 * 't4 * 't5 * 't6>
+    abstract tuple7         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't6> -> Codec<IEncoding, 't7> -> Codec<IEncoding, 't1 * 't2 * 't3 * 't4 * 't5 * 't6 * 't7>    
+    abstract enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> : unit -> Codec<IEncoding, 't>
 
-        #if SYSTEMTEXTJSON
+    /// Returns a string representing the internal "case" (or type) of the encoding (ie: Array, Object, ... )
+    abstract getCase : string
 
-        type TryGet = TryGet with                
-            static member ($) (TryGet, _: decimal) = fun (x: JsonValue) -> x.getValue().GetDecimal ()
-            static member ($) (TryGet, _: int16  ) = fun (x: JsonValue) -> x.getValue().GetInt16 ()
-            static member ($) (TryGet, _: int    ) = fun (x: JsonValue) -> x.getValue().GetInt32 ()
-            static member ($) (TryGet, _: int64  ) = fun (x: JsonValue) -> x.getValue().GetInt64 ()
-            static member ($) (TryGet, _: uint16 ) = fun (x: JsonValue) -> x.getValue().GetUInt16 ()
-            static member ($) (TryGet, _: uint32 ) = fun (x: JsonValue) -> x.getValue().GetUInt32 ()
-            static member ($) (TryGet, _: uint64 ) = fun (x: JsonValue) -> x.getValue().GetUInt64 ()
-            static member ($) (TryGet, _: byte   ) = fun (x: JsonValue) -> x.getValue().GetByte ()
-            static member ($) (TryGet, _: sbyte  ) = fun (x: JsonValue) -> x.getValue().GetSByte ()
-            static member ($) (TryGet, _: float  ) = fun (x: JsonValue) -> x.getValue().GetDouble ()
-            static member ($) (TryGet, _: float32) = fun (x: JsonValue) -> x.getValue().GetSingle ()
+and DecodeError =
+    | EncodingCaseMismatch of DestinationType: Type * EncodedValue: IEncoding * ExpectedCase: string * ActualCase: string
+    | NullString of DestinationType: Type
+    | IndexOutOfRange of int * IEncoding
+    | InvalidValue of DestinationType:  Type * EncodedValue: IEncoding * AdditionalInformation: string
+    | PropertyNotFound of string * PropertyList<IEncoding>
+    | ParseError of DestinationType: Type * exn * string
+    | Uncategorized of string
+    | Multiple of DecodeError list
+with
+    static member (+) (x, y) =
+        match x, y with
+        | Multiple x, Multiple y -> Multiple (x @ y)
+        | Multiple x,  y         -> Multiple (x @ [y])
+        | x, Multiple  y         -> Multiple (x::y)
+        | _                      -> Multiple [x; y]
+    override x.ToString () =
+        match x with
+        | EncodingCaseMismatch (t, v: IEncoding, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
+        | NullString t            -> sprintf "Expected %s, got null" (string t)
+        | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
+        | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
+        | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
+        | ParseError (t, s, v)    -> sprintf "Error decoding %s from  %s: %s" (string v) (string t) (string s)
+        | Uncategorized str       -> str
+        | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
-        let inline tryGet (x: JsonValue) : 't = (TryGet $ Unchecked.defaultof<'t>) x
+[<Struct>]
+type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncoding) with
 
+    static member ofIEncoding (c1: Codec<IEncoding, 'T>) : _ -> Codec<IEncoding, 'T> =
+        let dec1 (x: IEncoding)   = c1.Decoder (AdHocEncoding (fun _ -> x) :> IEncoding)
+        let enc1 (i: IEncoding) v = let (AdHocEncoding x) = c1.Encoder v :?> AdHocEncoding in x i
+        let codec1 i = { Decoder = dec1; Encoder = enc1 i }
+        codec1
 
-        let inline tryRead x =
-            match x with
-            | JNumber j ->
-                try 
-                    Success (tryGet j)
-                with e -> Decode.Fail.invalidValue x (string e)
-            | js -> Decode.Fail.numExpected js
+    static member ($) (_: AdHocEncoding, (x1, x2)                    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3)                ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4)            ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5)        ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5, x6)    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x, AdHocEncoding.ofIEncoding x6 x)
+    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5, x6, x7)) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x, AdHocEncoding.ofIEncoding x6 x, AdHocEncoding.ofIEncoding x7 x)
 
-        type JsonHelpers with
-            static member jsonObjectOfJson = function
-                | JObject x -> Success (dictAsJsonObject x)
-                | a -> Decode.Fail.objExpected a
+    /// Evals the IEncoding parameter to get a concrete Codec.
+    static member toIEncoding (codec: IEncoding -> Codec<IEncoding, 't>) : Codec<IEncoding, 't> =
+        {
+            Decoder = fun (x: IEncoding) ->
+                let (AdHocEncoding x) = x :?> AdHocEncoding
+                let i = x Unchecked.defaultof<_>
+                (codec i).Decoder i
+            Encoder = fun x -> AdHocEncoding (fun i -> (codec i).Encoder x) :> IEncoding
+        }
 
-            static member jsonOfJsonObject (o: JsonObject) = JObject o
+    /// Same as toIEncoding but with one parameter.
+    static member toIEncoding1 (codec: IEncoding -> _) codec1 =
+        let codec1 x = AdHocEncoding.ofIEncoding codec1 x
+        let codec s = (codec s) (codec1 s)
+        AdHocEncoding.toIEncoding codec
 
-        #endif
+    /// Same as toIEncoding but with many parameters in tupled form.
+    static member inline toIEncodingN (codec: IEncoding -> _) tupledCodecs =
+        let codecs = Unchecked.defaultof<AdHocEncoding> $ tupledCodecs
+        let codec s = uncurryN (codec s) (codecs s)
+        AdHocEncoding.toIEncoding codec
 
-    open Helpers
+    interface IEncoding with
+        member _.unit           = AdHocEncoding.toIEncoding (fun x -> x.unit)
+        member _.boolean        = AdHocEncoding.toIEncoding (fun x -> x.boolean)
+        member _.string         = AdHocEncoding.toIEncoding (fun x -> x.string)
+        member _.dateTime       = AdHocEncoding.toIEncoding (fun x -> x.dateTime)
+        member _.dateTimeOffset = AdHocEncoding.toIEncoding (fun x -> x.dateTimeOffset)
+        member _.timeSpan       = AdHocEncoding.toIEncoding (fun x -> x.timeSpan)
+        member _.decimal        = AdHocEncoding.toIEncoding (fun x -> x.decimal)
+        member _.float          = AdHocEncoding.toIEncoding (fun x -> x.float)
+        member _.float32        = AdHocEncoding.toIEncoding (fun x -> x.float32)
+        member _.int            = AdHocEncoding.toIEncoding (fun x -> x.int)
+        member _.uint32         = AdHocEncoding.toIEncoding (fun x -> x.uint32)
+        member _.int64          = AdHocEncoding.toIEncoding (fun x -> x.int64)
+        member _.uint64         = AdHocEncoding.toIEncoding (fun x -> x.uint64)
+        member _.int16          = AdHocEncoding.toIEncoding (fun x -> x.int16)
+        member _.uint16         = AdHocEncoding.toIEncoding (fun x -> x.uint16)
+        member _.byte           = AdHocEncoding.toIEncoding (fun x -> x.byte)
+        member _.sbyte          = AdHocEncoding.toIEncoding (fun x -> x.sbyte)
+        member _.char           = AdHocEncoding.toIEncoding (fun x -> x.char)
+        member _.guid           = AdHocEncoding.toIEncoding (fun x -> x.guid)
+        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = AdHocEncoding.toIEncoding (fun x -> x.enum ())
 
-    /// A specific type to represent codecs, with associated operations
-    type ConcreteCodec<'S1, 'S2, 't1, 't2> = { Decoder : ReaderT<'S1, ParseResult<'t1>>; Encoder : 't2 -> Const<'S2, unit> } with
-        static member inline Return f = { Decoder = result f; Encoder = konst <| result () }
-        static member inline (<*>) (remainderFields: ConcreteCodec<'S, 'S, 'f ->'r, 'T>, currentField: ConcreteCodec<'S, 'S, 'f, 'T>) =
-            {
-                Decoder = (remainderFields.Decoder : ReaderT<'S, ParseResult<'f -> 'r>>) <*> currentField.Decoder
-                Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
-            }
-        static member inline (<!>) (f, field: ConcreteCodec<'S, 'S, 'f, 'T>) = f <!> field
-        static member inline (<|>) (source: ConcreteCodec<'S, 'S, 'f, 'T>, alternative: ConcreteCodec<'S, 'S, 'f, 'T>) =
-            {
-                Decoder = (source.Decoder : ReaderT<'S, ParseResult<'f>>) <|> alternative.Decoder
-                Encoder = fun w -> (source.Encoder w ++ alternative.Encoder w)
-            }
+        member _.result c1 c2     = AdHocEncoding.toIEncodingN (fun x -> x.result)  (c1, c2)
+        member _.choice c1 c2     = AdHocEncoding.toIEncodingN (fun x -> x.choice)  (c1, c2)
+        member _.choice3 c1 c2 c3 = AdHocEncoding.toIEncodingN (fun x -> x.choice3) (c1, c2, c3)
+        member _.option c         = AdHocEncoding.toIEncoding1 (fun x -> x.option) c
+        member _.array c          = AdHocEncoding.toIEncoding1 (fun x -> x.array)  c
+        member _.propertyList c   = AdHocEncoding.toIEncoding1 (fun x -> x.propertyList) c
+
+        member _.tuple1 c                    = AdHocEncoding.toIEncoding1 (fun x -> x.tuple1) c
+        member _.tuple2 c1 c2                = AdHocEncoding.toIEncodingN (fun x -> x.tuple2) (c1, c2)
+        member _.tuple3 c1 c2 c3             = AdHocEncoding.toIEncodingN (fun x -> x.tuple3) (c1, c2, c3)
+        member _.tuple4 c1 c2 c3 c4          = AdHocEncoding.toIEncodingN (fun x -> x.tuple4) (c1, c2, c3, c4)
+        member _.tuple5 c1 c2 c3 c4 c5       = AdHocEncoding.toIEncodingN (fun x -> x.tuple5) (c1, c2, c3, c4, c5)
+        member _.tuple6 c1 c2 c3 c4 c5 c6    = AdHocEncoding.toIEncodingN (fun x -> x.tuple6) (c1, c2, c3, c4, c5, c6)
+        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = AdHocEncoding.toIEncodingN (fun x -> x.tuple7) (c1, c2, c3, c4, c5, c6, c7)
+
+        member x.getCase =
+            // Normally it won't get called as errors will access the getCase from the wrapped AdHocEncoding
+            let (AdHocEncoding f) = x
+            let i = f Unchecked.defaultof<IEncoding>
+            if not (Object.ReferenceEquals (i, null)) then i.getCase
+            else "Unknown case"
+
+/// Functions operating on Codecs
+module Codec =
+
+    let decode { Decoder = d } = d
+    let encode { Encoder = e } = e
+
+    /// Turns a Codec into another Codec, by mapping it over an isomorphism.
+    let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) c =
+        let { Decoder = r; Encoder = w } = c
+        { Decoder = contramap f r; Encoder = map g w }
+
+    let inline lift2 (f: 'x1 -> 'x2 -> 'r) (x1: Codec<'S, 'S, 'x1, 'T>) (x2: Codec<'S, 'S, 'x2, 'T>) : Codec<'S, 'S, 'r, 'T> =
+        {
+            Decoder = lift2 f x1.Decoder x2.Decoder
+            Encoder = fun w -> (x1.Encoder w *> x2.Encoder w)
+        }
+
+    let inline lift3 f (x1: Codec<'S, 'S, 'x1, 'T>) (x2: Codec<'S, 'S, 'x2, 'T>) (x3: Codec<'S, 'S, 'x3, 'T>) : Codec<'S, 'S, 'r, 'T> =
+        {
+            Decoder = lift3 f x1.Decoder x2.Decoder x3.Decoder
+            Encoder = fun w -> (x1.Encoder w *> x2.Encoder w *> x3.Encoder w)
+        }
+
+    /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
+    /// and codec1 then codec2 for decoding
+    let inline compose codec1 codec2 =
+        let { Decoder = dec1 ; Encoder = enc1 } = codec1
+        let { Decoder = dec2 ; Encoder = enc2 } = codec2
+        { Decoder = dec1 >> (=<<) dec2 ; Encoder = enc1 << enc2 }
+
+    /// Maps a function over the decoder.
+    let map (f: 't1 -> 'u1) (field: Codec<PropertyList<'S>, PropertyList<'S>, 't1, 't2>) =
+        {
+            Decoder = fun x ->
+                match field.Decoder x with
+                | Error e -> Error e
+                | Ok a    -> Ok (f a)
+
+            Encoder = field.Encoder
+        }
+
+    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> =
+        {
+            Decoder = fun (p: 'S) -> x.Decoder (p :> IEncoding)
+            Encoder = fun (p: 't) -> x.Encoder p :?> 'S
+        }
+
+    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> =
+        {
+            Decoder = fun (p: IEncoding) -> x.Decoder (p :?> 'S)
+            Encoder = fun (p: 't) -> x.Encoder p :> IEncoding
+        }
 
     
-    // Type aliases for functions, representing Codecs
+    [<Obsolete("This function is no longer needed. You can safely remove it.")>]
+    let ofConcrete x = id x
 
-    /// Encodes a value of a generic type 't into a value of raw type 'S.
-    type Encoder<'S, 't> = 't -> 'S
-
-    /// Decodes a value of raw type 'S into a value of generic type 't, possibly returning an error.
-    type Decoder<'S, 't> = 'S -> ParseResult<'t>
-
-    /// A decoder from raw type 'S1 and encoder to raw type 'S2 for string types 't1 and 't2.
-    type Codec<'S1, 'S2, 't1, 't2> = Decoder<'S1, 't1> * Encoder<'S2, 't2>
-
-    /// A decoder from raw type 'S1 and encoder to raw type 'S2 for type 't.
-    type Codec<'S1, 'S2, 't> = Codec<'S1, 'S2, 't, 't>
-
-    /// A codec for raw type 'S decoding to strong type 't1 and encoding to strong type 't2.
-    type SplitCodec<'S, 't1, 't2> = Codec<'S, 'S, 't1, 't2>
-
-    /// A codec for raw type 'S to strong type 't.
-    type Codec<'S, 't> = Codec<'S, 'S, 't>
+    [<Obsolete("This function is no longer needed. You can safely remove it.")>]
+    let toConcrete x = id x
 
 
-    /// Functions operating on Codecs (as pair of functions)
-    module Codec =
+type Codec<'S1, 'S2, 't1, 't2> with
 
-        /// Turns a Codec into another Codec, by mapping it over an isomorphism.
-        let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) (r, w) = (contramap f r, map g w)
-
-        /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
-        /// and codec1 then codec2 for decoding
-        let inline compose codec1 codec2 = 
-            let (dec1, enc1) = codec1
-            let (dec2, enc2) = codec2
-            (dec1 >> (=<<) dec2, enc1 << enc2)
-
-        let decode (d: Decoder<'i, 'a>, _) (i: 'i) : ParseResult<'a> = d i
-        let encode (_, e: Encoder<'o, 'a>) (a: 'a) : 'o = e a
-
-        let inline toMonoid x = x |> toList
-        let inline ofMonoid x = x |> (List.map (|KeyValue|) >> readOnlyDict)
-
-        /// Extracts a pair of functions from a ConcreteCodec
-        let inline ofConcrete {Decoder = ReaderT d; Encoder = e} = contramap toMonoid d, map ofMonoid (e >> Const.run)
-
-        /// Wraps a pair of functions into a ConcreteCodec
-        let inline toConcrete (d: _ -> _, e: _ -> _) = { Decoder = ReaderT (contramap ofMonoid d); Encoder = Const << map toMonoid e }
-
-    /// A pair of functions representing a codec to encode a Dictionary into a Json value and the other way around.
-    let jsonObjToValueCodec = ((function JObject (o: IReadOnlyDictionary<_,_>) -> Ok o | a  -> Decode.Fail.objExpected a) , JObject)
+    static member (<.<) (c1, c2) = Codec.compose c1 c2
+    static member (>.>) (c1, c2) = Codec.compose c2 c1
     
-    /// A pair of functions representing a codec to encode a Json value to a Json text and the other way around.
-    let jsonValueToTextCodec = (fun x -> try Ok (JsonValue.Parse x) with e -> Decode.Fail.parseError e x), (fun (x: JsonValue) -> string x)
+    static member (<*>) (remainderFields: Codec<PropertyList<'S>, PropertyList<'S>, 'f ->'r, 'T>, currentField: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
+        {
+            Decoder = fun x ->
+                match remainderFields.Decoder x, lazy (currentField.Decoder x) with
+                | Error e, _ | _, Lazy (Error e) -> Error e
+                | Ok a   , Lazy (Ok b)           -> Ok (a b)
 
-    /// Creates a new Json object for serialization
-    let jobj x = JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> readOnlyDict)
+            Encoder = fun t -> remainderFields.Encoder t ++ currentField.Encoder t
+        }
+
+    /// Apply two codecs in such a way that the field values are ignored when decoding.
+    static member ( *>) (f: Codec<PropertyList<'S>, PropertyList<'S>, 't, 'u>, x) = f *> x : Codec<PropertyList<'S>, 'u>
+
+    /// Apply two codecs in such a way that the field values are ignored when decoding.
+    static member (<* )  (x, f: Codec<PropertyList<'S>, PropertyList<'S>, 't, 'u>) = x <* f : Codec<PropertyList<'S>, 'u>
+
+    static member (<!>) (f, field: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) = Codec.map f field
+    static member Map   (field: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>, f) = Codec.map f field
+
+    static member (<|>) (source: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>, alternative: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
+        {
+            Decoder = fun r ->
+                match source.Decoder r, lazy (alternative.Decoder r) with
+                | Ok x, _ -> Ok x
+                | Error x, Lazy (Error y) -> Error (x ++ y)
+                | _, Lazy d -> d
+
+            Encoder = fun t -> source.Encoder t ++ alternative.Encoder t
+        }
+
+    static member Lift2 (f: 'x ->'y ->'r, x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>, y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
+        {
+            Decoder = fun s -> ( (f <!> x.Decoder s : ParseResult<'y -> 'r>) <*> y.Decoder s : ParseResult<'r> )
+            Encoder = x.Encoder ++ y.Encoder
+        }
 
 
-    [<RequireQualifiedAccess>]
-    module JsonDecode =
 
-        let private createTuple c t = function 
-            | JArray a as x -> if length a <> c then Decode.Fail.count c x else t a
-            | a -> Decode.Fail.arrExpected a
+/// Helpers to deal with Decode errors.
+module Decode =
+    let inline Success x = Ok x : ParseResult<_>
+    let (|Success|Failure|) (x: ParseResult<_>) = x |> function
+        | Ok    x -> Success x
+        | Error x -> Failure x
 
-        let result (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Result<'a, 'b>> = function
-            | JObject o as jobj ->
-                match Seq.toList o with
-                | [KeyValue("Ok"   , a)] -> a |> decoder1 |> map Ok
-                | [KeyValue("Error", a)] -> a |> decoder2 |> map Error
-                | _ -> Decode.Fail.invalidValue jobj ""
-            | a -> Decode.Fail.objExpected a
-            
-        let choice (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<Choice<'a, 'b>> = function
-            | JObject o as jobj ->
-                match Seq.toList o with
-                | [KeyValue("Choice1Of2", a)] -> a |> decoder1 |> map Choice1Of2
-                | [KeyValue("Choice2Of2", a)] -> a |> decoder2 |> map Choice2Of2
-                | _ -> Decode.Fail.invalidValue jobj ""
-            | a -> Decode.Fail.objExpected a
+    module Fail =
+        let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Object", a))
+        let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
+        let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Number", a))
+        let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
+        let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
+        let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
+        let inline count e (a: 'Encoding) = Error (DecodeError.IndexOutOfRange (e, a))
+        let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
+        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
+        let parseError s v : Result<'t, _> = Error (DecodeError.ParseError (typeof<'t>, s, v))
 
-        let choice3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = function
-            | JObject o as jobj ->
-                match Seq.toList o with
-                | [KeyValue("Choice1Of3", a)] -> a |> decoder1 |> map Choice1Of3
-                | [KeyValue("Choice2Of3", a)] -> a |> decoder2 |> map Choice2Of3
-                | [KeyValue("Choice3Of3", a)] -> a |> decoder3 |> map Choice3Of3
-                | _ -> Decode.Fail.invalidValue jobj ""
-            | a -> Decode.Fail.objExpected a
 
-        let option (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a option> = function
-            | JNull _ -> Success None
-            | x       -> map Some (decoder x)
 
-        let nullable (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Nullable<'a>> = function
-            | JNull _ -> Success (Nullable ())
-            | x       -> map Nullable (decoder x)
+module Codecs =
 
-        let array (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
-            | JArray a -> traverse decoder a |> map Seq.toArray
-            | a        -> Decode.Fail.arrExpected a
-            
-        let arraySegment (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ArraySegment> = function
-            | JArray a -> traverse decoder a |> map (Seq.toArray >> ArraySegment<_>)
-            | a        -> Decode.Fail.arrExpected a
+    let private instance<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = new 'Encoding ()
+    let private (<->) decoder encoder : Codec<_, _> = { Decoder = decoder; Encoder = encoder }
 
-        let list (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a list> = function
-            | JArray a -> traverse decoder a |> map Seq.toList
-            | a        -> Decode.Fail.arrExpected a
+    let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.unit           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] char<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] sbyte<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.sbyte          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] uint16<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.uint16         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] uint32<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.uint32         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] uint64<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.uint64         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] int16<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.int16          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] int<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>            = instance<'Encoding>.int            |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] int64<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.int64          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] decimal<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.decimal        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] float<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] string<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
+    let array        (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
+    let list         (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec
+    let set          (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
+    let nonEmptyList (codec: Codec<'Encoding, 'a>) = (Array.toList >> NonEmptyList.tryOfList >> Option.toResultWith (DecodeError.Uncategorized "List is empty") <-> Array.ofSeq) >.> array codec
+    let nonEmptySet  (codec: Codec<'Encoding, 'a>) = (Set >> NonEmptySet.tryOfSet >> Option.toResultWith (DecodeError.Uncategorized "Set is empty") <-> Array.ofSeq) >.> array codec
+    let resizeArray  (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
+    let propList     (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.propertyList (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, PropertyList<'a>>
+    let propMap      (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq << PropertyList.ToSeq <-> (Map.toArray >> PropertyList)) >.> propList codec
+    let propDictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << PropertyList.ToSeq <-> (Dictionary.toArray >> PropertyList)) >.> propList codec
+    let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (PropertyList.ToSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toArray >> PropertyList)) >.> propList codec
+    let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option   (Codec.upCast codec) |> Codec.downCast  : Codec<'Encoding, option<'a>>
+    let nullable (codec: Codec<'Encoding, 'a>) = (Ok << Option.toNullable <-> Option.ofNullable) >.> option codec  : Codec<'Encoding, Nullable<'a>>
+    let result  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.result (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Result<'a,'b>>
+    let choice  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.choice (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Choice<'a,'b>>
+    let choice3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.choice3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple1  (codec1: Codec<'Encoding, 't1>) = instance<'Encoding>.tuple1 (Codec.upCast codec1) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple2  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) = instance<'Encoding>.tuple2 (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple3  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.tuple3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple4  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) = instance<'Encoding>.tuple4 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = instance<'Encoding>.tuple5 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = instance<'Encoding>.tuple6 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = instance<'Encoding>.tuple7 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) (Codec.upCast codec7) |> Codec.downCast : Codec<'Encoding, _>
+    let enum<'Encoding, 't, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType and 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.enum () |> Codec.downCast : Codec<'Encoding, 't>
+    let [<GeneralizableValue>] base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, _>
+    let id: Codec<'T, 'T> = { Decoder = Ok; Encoder = id }
 
-        let set (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a Set> = function
-            | JArray a -> traverse decoder a |> map set
-            | a        -> Decode.Fail.arrExpected a
+    #if !FABLE_COMPILER
+    let arraySegment (codec: Codec<'Encoding, 'a>) = (Ok << ArraySegment<_> << Seq.toArray <-> ArraySegment.toArray) >.> array codec
+    #endif
 
-        let resizeArray (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a ResizeArray> = function
-            | JArray a -> traverse decoder a |> map (fun x -> ResizeArray<_> (x: 'a seq))
-            | a        -> Decode.Fail.arrExpected a
+    let dictionary (keyCodec: Codec<'Encoding, 'Key>) (valueCodec: Codec<'Encoding, 'Value>) : Codec<'Encoding, Dictionary<'Key, 'Value>> =
+        let c = list (tuple2 keyCodec valueCodec)
+        ((Ok << Dictionary.ofSeq) <-> (Dictionary.toSeq >> toList)) >.> c
 
-        let dictionary (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Dictionary<string, 'a>> = function
-            | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> ofSeq)
-            | a -> Decode.Fail.objExpected a
+    let map (keyCodec: Codec<'Encoding, 'Key>) (valueCodec: Codec<'Encoding, 'Value>) : Codec<'Encoding, Map<'Key, 'Value>> =
+        let c = list (tuple2 keyCodec valueCodec)
+        ((Ok << Map.ofList) <-> Map.toList) >.> c
 
-        let map (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Map<string, 'a>> = function
-            | JObject o -> traverse decoder (IReadOnlyDictionary.values o) |> map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Map.ofSeq)
-            | a -> Decode.Fail.objExpected a
+    let nonEmptyMap (keyCodec: Codec<'Encoding, 'Key>) (valueCodec: Codec<'Encoding, 'Value>) : Codec<'Encoding, NonEmptyMap<'Key, 'Value>> =
+        let c = list (tuple2 keyCodec valueCodec)
+        ((Map.ofList >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty")) <-> NonEmptyMap.toList) >.> c
 
-        let unit : JsonValue -> ParseResult<unit> = 
-            createTuple 0 (konst (Success ()))
 
-        let tuple1 (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
-            createTuple 1 (fun a -> Tuple  <!> decoder1 a.[0])
+[<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
+module Internals =
 
-        let tuple2 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
-            createTuple 2 (fun a -> tuple2 <!> decoder1 a.[0] <*> decoder2 a.[1])
+    type Id1<'t> (v: 't) =
+        let value = v
+        member _.getValue = value
 
-        let tuple3 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> =
-            createTuple 3 (fun a -> tuple3 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2])
+    type Id2<'t> (v: 't) =
+        let value = v
+        member _.getValue = value
 
-        let tuple4 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
-            createTuple 4 (fun a -> tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
+    type IDefault7 = interface end
+    type IDefault6 = interface inherit IDefault7 end
+    type IDefault5 = interface inherit IDefault6 end
+    type IDefault4 = interface inherit IDefault5 end
+    type IDefault3 = interface inherit IDefault4 end
+    type IDefault2 = interface inherit IDefault3 end
+    type IDefault1 = interface inherit IDefault2 end
+    type IDefault0 = interface inherit IDefault1 end
 
-        let tuple5 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
-            createTuple 5 (fun a -> tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
+    type OpCodec  = OpCodec
+    type OpEncode = OpEncode
+    type OpDecode = OpDecode
+    
+    let mutable private codecCollectionGlobalVersion : uint = 0u
+    let private codecCollectionMonitor = obj ()
 
-        let tuple6 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
-            createTuple 6 (fun a -> tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
+    type CodecCollection<'Encoding, 'Interface> () =
+        static let mutable subtypes : Dictionary<Type, unit -> Codec<PropertyList<'Encoding>, 'Interface>> = new Dictionary<_, _> ()
+        static member GetSubtypes = subtypes
+        static member AddSubtype ty (x: unit -> Codec<PropertyList<'Encoding>, 'Interface>) =
+            lock codecCollectionMonitor (fun () ->
+                subtypes.[ty] <- x
+                codecCollectionGlobalVersion <- codecCollectionGlobalVersion + 1u)
 
-        let tuple7 (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
-            createTuple 7 (fun a -> tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
+    type CodecCache<'Operation, 'Encoding, 'T> () =
+        static let mutable cachedCodecInterface : option<uint * Codec<'Encoding, 'T>> = None
+        static let mutable cachedCodec          : option<       Codec<'Encoding, 'T>> = None
 
-        let decimal x = tryRead<decimal> x
-        let int16   x = tryRead<int16>   x
-        let int     x = tryRead<int>     x
-        let int64   x = tryRead<int64>   x
-        let uint16  x = tryRead<uint16>  x
-        let uint32  x = tryRead<uint32>  x
-        let uint64  x = tryRead<uint64>  x
-        let byte    x = tryRead<byte>    x
-        let sbyte   x = tryRead<sbyte>   x
-        let float   x = tryRead<double>  x
-        let float32 x = tryRead<single>  x
+        static member Run (f: unit -> Codec<'Encoding, 'T>) =
+            if not Config.codecCacheEnabled then f ()
+            else
+                match cachedCodec with
+                | Some c -> c
+                | None   ->
+                    let c = f ()
+                    cachedCodec <- Some c
+                    c
 
-        let inline enum x =
-            match x with
-            | JString null -> Decode.Fail.nullString
-            | JString s    -> tryParse s |> Operators.option Success (Decode.Fail.invalidValue x "")
-            | a -> Decode.Fail.strExpected a
+        static member RunForInterfaces (f: unit -> Codec<'Encoding, 'T>) =
+            if not Config.codecCacheEnabled then f ()
+            else
+                match cachedCodecInterface with
+                | Some (version, c) when version = codecCollectionGlobalVersion -> c
+                | _ ->                    
+                    let version = codecCollectionGlobalVersion
+                    let c = f ()
+                    cachedCodecInterface <- Some (version, c)
+                    c
 
-        let boolean x =
-            match x with
-            | JBool b -> Success b
-            | a -> Decode.Fail.boolExpected a
+    type GetCodec =
+        interface IDefault0
 
-        let string x =
-            match x with
-            | JString b -> Success b
-            | JNull -> Success null
-            | a -> Decode.Fail.strExpected a
+        static member GetCodec (_: bool          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.boolean
+        static member GetCodec (_: string        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.string
+        static member GetCodec (_: DateTime      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
+        static member GetCodec (_: DateTimeOffset, _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTimeOffset
+        static member GetCodec (_: TimeSpan      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.timeSpan
+        static member GetCodec (_: decimal       , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.decimal
+        static member GetCodec (_: Double        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.float
+        static member GetCodec (_: Single        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.float32
+        static member GetCodec (_: int           , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.int
+        static member GetCodec (_: uint32        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.uint32
+        static member GetCodec (_: int64         , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.int64
+        static member GetCodec (_: uint64        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.uint64
+        static member GetCodec (_: int16         , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.int16
+        static member GetCodec (_: uint16        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.uint16
+        static member GetCodec (_: byte          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.byte
+        static member GetCodec (_: sbyte         , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.sbyte
+        static member GetCodec (_: char          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.char
+        static member GetCodec (_: Guid          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.guid
+        static member GetCodec (()               , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.unit
 
-        let char x =
-            match x with
-            | JString null -> Decode.Fail.nullString
-            | JString s    -> Success s.[0]
-            | a -> Decode.Fail.strExpected a
+        // Dummy overloads
+        static member GetCodec (_: OpCodec , _: GetCodec, _, _: OpEncode) = invalidOp "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpCodec>
+        static member GetCodec (_: OpEncode, _: GetCodec, _, _: OpEncode) = invalidOp "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpEncode>
 
-        let guid x =
-            match x with
-            | JString null -> Decode.Fail.nullString
-            | JString s    -> tryParse<Guid> s |> Operators.option Success (Decode.Fail.invalidValue x "")
-            | a -> Decode.Fail.strExpected a
+        /// Invoker for Codec
+        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
+            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
+            call (Unchecked.defaultof<GetCodec>, x)
 
-#if NEWTONSOFT
-        let dateTime x =
-            match x with
-            | JString null
-            | JDate null -> Decode.Fail.nullString
-            | JString s -> 
-                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
-                | true, t -> Success t
-                | _       -> Decode.Fail.invalidValue x ""
-            | JDate d    ->
-                Success <| d.Value<DateTime>()
-            | a -> Decode.Fail.strExpected a
-
-#else
-        let dateTime x =
-            match x with
-            | JString null -> Decode.Fail.nullString
-            | JString s    ->
-                match DateTime.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffZ"; "yyyy-MM-ddTHH:mm:ssZ" |], null, DateTimeStyles.RoundtripKind) with
-                | true, t -> Success t
-                | _       -> Decode.Fail.invalidValue x ""
-            | a -> Decode.Fail.strExpected a
-#endif
-
-        let dateTimeOffset x =
-            match x with
-            | JString null -> Decode.Fail.nullString
-            | JString s    ->
-                match DateTimeOffset.TryParseExact (s, [| "yyyy-MM-ddTHH:mm:ss.fffK"; "yyyy-MM-ddTHH:mm:ssK" |], null, DateTimeStyles.RoundtripKind) with
-                | true, t -> Success t
-                | _       -> Decode.Fail.invalidValue x ""
-            | a -> Decode.Fail.strExpected a
-
-    [<RequireQualifiedAccess>]
-    module JsonEncode =
-
-        let result (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
-            | Ok    a -> jobj [ "Ok"   , encoder1 a ]
-            | Error a -> jobj [ "Error", encoder2 a ]
-
-        let choice (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) = function
-            | Choice1Of2 a -> jobj [ "Choice1Of2", encoder1 a ]
-            | Choice2Of2 a -> jobj [ "Choice2Of2", encoder2 a ]
-
-        let choice3 (encoder1: _ -> JsonValue) (encoder2: _ -> JsonValue) (encoder3: _ -> JsonValue) = function
-            | Choice1Of3 a -> jobj [ "Choice1Of3", encoder1 a ]
-            | Choice2Of3 a -> jobj [ "Choice2Of3", encoder2 a ]
-            | Choice3Of3 a -> jobj [ "Choice3Of3", encoder3 a ]
-
-        let option (encoder: _ -> JsonValue) = function
-            | None   -> JNull
-            | Some a -> encoder a
-
-        let nullable    (encoder: _ -> JsonValue) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else JNull
-        let array       (encoder: _ -> JsonValue) (x: 'a [])           = JArray ((Array.map encoder x) |> IList.toIReadOnlyList)
-        let arraySegment(encoder: _ -> JsonValue) (x: 'a ArraySegment) = JArray ((Array.map encoder (x.ToArray ())) |> IList.toIReadOnlyList)
-        let list        (encoder: _ -> JsonValue) (x: list<'a>)        = JArray (listAsReadOnly (List.map encoder x))
-        let set         (encoder: _ -> JsonValue) (x: Set<'a>)         = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
-        let resizeArray (encoder: _ -> JsonValue) (x: ResizeArray<'a>) = JArray (Seq.toIReadOnlyList (Seq.map encoder x))
-        let map         (encoder: _ -> JsonValue) (x: Map<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
-        let dictionary  (encoder: _ -> JsonValue) (x: Dictionary<string, 'a>) = x |> Seq.filter (fun (KeyValue(k, _)) -> not (isNull k)) |> Seq.map (fun (KeyValue(k, v)) -> k, encoder v) |> readOnlyDict |> JObject
-
-        let tuple1 (encoder1: 'a -> JsonValue) (a: Tuple<_>) = JArray ([|encoder1 a.Item1|] |> IList.toIReadOnlyList)
-        let tuple2 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (a, b) = JArray ([|encoder1 a; encoder2 b|] |> IList.toIReadOnlyList)
-        let tuple3 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (a, b, c) = JArray ([|encoder1 a; encoder2 b; encoder3 c|] |> IList.toIReadOnlyList)
-        let tuple4 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (a, b, c, d) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d|] |> IList.toIReadOnlyList)
-        let tuple5 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (a, b, c, d, e) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|] |> IList.toIReadOnlyList)
-        let tuple6 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (a, b, c, d, e, f) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|] |> IList.toIReadOnlyList)
-        let tuple7 (encoder1: 'a -> JsonValue) (encoder2: 'b -> JsonValue) (encoder3: 'c -> JsonValue) (encoder4: 'd -> JsonValue) (encoder5: 'e -> JsonValue) (encoder6: 'f -> JsonValue) (encoder7: 'g -> JsonValue) (a, b, c, d, e, f, g) = JArray ([|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|] |> IList.toIReadOnlyList)
-        
-        let inline enum (x: 't when 't : enum<_>) = JString (string x)
-        let unit () = JArray ([||] |> IList.toIReadOnlyList)
-
-        let boolean        (x: bool          ) = JBool x
-        let string         (x: string        ) = JString x
-        let dateTime       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ")) // JsonPrimitive is incorrect for DateTime
-        let dateTimeOffset (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK")) // JsonPrimitive is incorrect for DateTimeOffset
-
-        let decimal        (x: decimal       ) = JsonHelpers.create x
-        let float          (x: Double        ) = JsonHelpers.create x
-        let float32        (x: Single        ) = JsonHelpers.create x
-        let int            (x: int           ) = JsonHelpers.create x
-        let uint32         (x: uint32        ) = JsonHelpers.create x
-        let int64          (x: int64         ) = JsonHelpers.create x
-        let uint64         (x: uint64        ) = JsonHelpers.create x
-        let int16          (x: int16         ) = JsonHelpers.create x
-        let uint16         (x: uint16        ) = JsonHelpers.create x
-        let byte           (x: byte          ) = JsonHelpers.create x
-        let sbyte          (x: sbyte         ) = JsonHelpers.create x
-        let char           (x: char          ) = JsonHelpers.create x
-        let guid           (x: Guid          ) = JsonHelpers.create x
-
-    [<RequireQualifiedAccess>]
-    module JsonCodec =
+    type GetDec =
+        inherit GetCodec
      
-        let result  codec1 codec2 = JsonDecode.result (fst codec1) (fst codec2), JsonEncode.result (snd codec1) (snd codec2)
-        let choice  codec1 codec2 = JsonDecode.choice (fst codec1) (fst codec2), JsonEncode.choice (snd codec1) (snd codec2)
-        let choice3 codec1 codec2 codec3 = JsonDecode.choice3 (fst codec1) (fst codec2) (fst codec3), JsonEncode.choice3 (snd codec1) (snd codec2) (snd codec3)
-        let option codec = JsonDecode.option (fst codec), JsonEncode.option (snd codec)
-        let nullable codec = JsonDecode.nullable (fst codec), JsonEncode.nullable (snd codec)
-        let array codec = JsonDecode.array (fst codec), JsonEncode.array (snd codec)
-        let arraySegment codec = JsonDecode.array (fst codec), JsonEncode.arraySegment (snd codec)
-        let list  codec = JsonDecode.list  (fst codec), JsonEncode.list  (snd codec)
-        let set         codec = JsonDecode.set         (fst codec), JsonEncode.set         (snd codec)
-        let resizeArray codec = JsonDecode.resizeArray (fst codec), JsonEncode.resizeArray (snd codec)
-        let map         codec = JsonDecode.map         (fst codec), JsonEncode.map         (snd codec)
-        let dictionary  codec = JsonDecode.dictionary  (fst codec), JsonEncode.dictionary  (snd codec)
+        /// Invoker for Codec, originated from a Decoder Invoker.
+        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
+            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
+            call (Unchecked.defaultof<GetDec>, x)
 
-        let unit  ()                                                = JsonDecode.unit                                                                                             , JsonEncode.unit ()
-        let tuple2 codec1 codec2                                    = JsonDecode.tuple2 (fst codec1) (fst codec2)                                                                 , JsonEncode.tuple2 (snd codec1) (snd codec2)
-        let tuple3 codec1 codec2 codec3                             = JsonDecode.tuple3 (fst codec1) (fst codec2) (fst codec3)                                                    , JsonEncode.tuple3 (snd codec1) (snd codec2) (snd codec3)
-        let tuple4 codec1 codec2 codec3 codec4                      = JsonDecode.tuple4 (fst codec1) (fst codec2) (fst codec3) (fst codec4)                                       , JsonEncode.tuple4 (snd codec1) (snd codec2) (snd codec3) (snd codec4)
-        let tuple5 codec1 codec2 codec3 codec4 codec5               = JsonDecode.tuple5 (fst codec1) (fst codec2) (fst codec3) (fst codec4) (fst codec5)                          , JsonEncode.tuple5 (snd codec1) (snd codec2) (snd codec3) (snd codec4) (snd codec5)
-        let tuple6 codec1 codec2 codec3 codec4 codec5 codec6        = JsonDecode.tuple6 (fst codec1) (fst codec2) (fst codec3) (fst codec4) (fst codec5) (fst codec6)             , JsonEncode.tuple6 (snd codec1) (snd codec2) (snd codec3) (snd codec4) (snd codec5) (snd codec6)
-        let tuple7 codec1 codec2 codec3 codec4 codec5 codec6 codec7 = JsonDecode.tuple7 (fst codec1) (fst codec2) (fst codec3) (fst codec4) (fst codec5) (fst codec6) (fst codec7), JsonEncode.tuple7 (snd codec1) (snd codec2) (snd codec3) (snd codec4) (snd codec5) (snd codec6) (snd codec7)
+    type GetEnc =
+        inherit GetDec
 
-        let boolean        = JsonDecode.boolean       , JsonEncode.boolean
-        let string         = JsonDecode.string        , JsonEncode.string
-        let dateTime       = JsonDecode.dateTime      , JsonEncode.dateTime
-        let dateTimeOffset = JsonDecode.dateTimeOffset, JsonEncode.dateTimeOffset
-        let decimal        = JsonDecode.decimal       , JsonEncode.decimal
-        let float          = JsonDecode.float         , JsonEncode.float
-        let float32        = JsonDecode.float32       , JsonEncode.float32
-        let int            = JsonDecode.int           , JsonEncode.int
-        let uint32         = JsonDecode.uint32        , JsonEncode.uint32
-        let int64          = JsonDecode.int64         , JsonEncode.int64
-        let uint64         = JsonDecode.uint64        , JsonEncode.uint64
-        let int16          = JsonDecode.int16         , JsonEncode.int16
-        let uint16         = JsonDecode.uint16        , JsonEncode.uint16
-        let byte           = JsonDecode.byte          , JsonEncode.byte
-        let sbyte          = JsonDecode.sbyte         , JsonEncode.sbyte
-        let char           = JsonDecode.char          , JsonEncode.char
-        let guid           = JsonDecode.guid          , JsonEncode.guid
+        /// Invoker for Codec, originated from an Encoder Invoker.
+        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
+            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
+            call (Unchecked.defaultof<GetEnc>, x)
 
+    type GetCodec with
+        static member inline GetCodec (_: Tuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Tuple<'a>> = Codecs.tuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+        static member inline GetCodec (_: 'a Id1    when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, _, _: 'Operation) = Ok (Id1<'a> Unchecked.defaultof<'a>), Map.empty
 
-    // Deserializing:
+    type GetCodec with
+        static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, _> =
+            CodecCache<'Operation, 'Encoding, 'tuple>.Run (fun () ->
+                let { Decoder = ofArray; Encoder = toArray } = Codecs.array Codecs.id
+                let c1 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t1>
+                let c2 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t2>
+                let c3 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t3>
+                let c4 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t4>
+                let c5 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t5>
+                let c6 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t6>
+                let c7 = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t7>
+                let cr = GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'tr>
+                { 
+                    Decoder = fun x ->
+                        match ofArray x with
+                        | Ok a ->
+                            let (t1: 't1 ParseResult) = (Codec.decode c1) (a.[0])
+                            let (t2: 't2 ParseResult) = (Codec.decode c2) (a.[1])
+                            let (t3: 't3 ParseResult) = (Codec.decode c3) (a.[2])
+                            let (t4: 't4 ParseResult) = (Codec.decode c4) (a.[3])
+                            let (t5: 't5 ParseResult) = (Codec.decode c5) (a.[4])
+                            let (t6: 't6 ParseResult) = (Codec.decode c6) (a.[5])
+                            let (t7: 't7 ParseResult) = (Codec.decode c7) (a.[6])
+                            let (tr: 'tr ParseResult) = (Codec.decode cr) (toArray (a.[7..]))
+                            match tr with
+                            | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, x))
+                            | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
+                        | Error e -> Error e
+                    Encoder = fun (t: 'tuple) ->
+                        let t1 = (Codec.encode c1) (^tuple: (member Item1: 't1) t)
+                        let t2 = (Codec.encode c2) (^tuple: (member Item2: 't2) t)
+                        let t3 = (Codec.encode c3) (^tuple: (member Item3: 't3) t)
+                        let t4 = (Codec.encode c4) (^tuple: (member Item4: 't4) t)
+                        let t5 = (Codec.encode c5) (^tuple: (member Item5: 't5) t)
+                        let t6 = (Codec.encode c6) (^tuple: (member Item6: 't6) t)
+                        let t7 = (Codec.encode c7) (^tuple: (member Item7: 't7) t)
+                        let tr = (Codec.encode cr) (^tuple: (member Rest : 'tr) t) |> ofArray
+                        match tr with
+                        | Error _ -> failwith "Nested tuple didn't decompose as list, check your `list` and your `tupleX` encoder implementations."
+                        | Ok tr -> toArray ([|t1; t2; t3; t4; t5; t6; t7|] ++ tr)
+                })
 
-    type OfJson =
-        inherit Default1
+    type GetCodec with static member inline GetCodec (_: Result<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Result<'a,'b>> = (fun () -> Codecs.result (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Choice<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b>> = (fun () -> Codecs.choice (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Choice<'a, 'b, 'c> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b,'c>> = (fun () -> Codecs.choice3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a option   when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, option<'a>>   = (fun () -> Codecs.option   (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a Nullable when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Nullable<'a>> = (fun () -> Codecs.nullable (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: NonEmptyList<'T> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyList<'T>> = (fun () -> Codecs.nonEmptyList (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'T>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+
+    type GetCodec with
+        static member inline GetCodec (_: 'a array  when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, array<'a>> = Codecs.array (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+
+        #if !FABLE_COMPILER
+        static member inline GetCodec (_: ArraySegment<'a>  when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ArraySegment<'a>> = (fun () -> Codecs.arraySegment (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+        #endif
+
+    type GetCodec with static member inline GetCodec (_: list<'a>        when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _          , c, _: 'Operation) : Codec<'Encoding, list<'a>>        = (fun () -> Codecs.list        (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Set<'a>         when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>         = (fun () -> Codecs.set         (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>> = (fun () -> Codecs.nonEmptySet (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with
+        static member inline GetCodec (_: Map<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Map<'K, 'V>> =
+            fun () ->
+                match typeof<'K> with
+                | t when t = typeof<string> 
+                    -> Codecs.propMap (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>) |> retype
+                | _ -> Codecs.map     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'K>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>)
+            |> CodecCache<'Operation, 'Encoding, _>.Run
         
-        static member OfJson (_: decimal, _: OfJson) = JsonDecode.decimal
-        static member OfJson (_: int16  , _: OfJson) = JsonDecode.int16
-        static member OfJson (_: int    , _: OfJson) = JsonDecode.int
-        static member OfJson (_: int64  , _: OfJson) = JsonDecode.int64
-        static member OfJson (_: uint16 , _: OfJson) = JsonDecode.uint16
-        static member OfJson (_: uint32 , _: OfJson) = JsonDecode.uint32
-        static member OfJson (_: uint64 , _: OfJson) = JsonDecode.uint64
-        static member OfJson (_: byte   , _: OfJson) = JsonDecode.byte
-        static member OfJson (_: sbyte  , _: OfJson) = JsonDecode.sbyte
-        static member OfJson (_: double , _: OfJson) = JsonDecode.float
-        static member OfJson (_: single , _: OfJson) = JsonDecode.float32
+    type GetCodec with
+        static member inline GetCodec (_: PropertyList<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, PropertyList<'a>> =
+            fun () -> Codecs.propList (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+            |> CodecCache<'Operation, 'Encoding, _>.Run
 
-        static member OfJson (_: bool          , _: OfJson) = JsonDecode.boolean
-        static member OfJson (_: string        , _: OfJson) = JsonDecode.string
-        static member OfJson (_: char          , _: OfJson) = JsonDecode.char
-        static member OfJson (_: Guid          , _: OfJson) = JsonDecode.guid
-        static member OfJson (_: DateTime      , _: OfJson) = JsonDecode.dateTime
-        static member OfJson (_: DateTimeOffset, _: OfJson) = JsonDecode.dateTimeOffset
-        static member OfJson (_: unit          , _: OfJson) = JsonDecode.unit
+        static member inline GetCodec (_: NonEmptyMap<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyMap<'K, 'V>> =
+            fun () -> 
+                match typeof<'K> with
+                | t when t = typeof<string> 
+                    -> Codecs.nonEmptyPropMap (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>) |> retype
+                | _ -> Codecs.nonEmptyMap     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'K>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>)
+            |> CodecCache<'Operation, 'Encoding, _>.Run
 
-    type OfJson with
-        static member inline Invoke (x: JsonValue) : 't ParseResult =
-            let inline iOfJson (a: ^a, b: ^b) = ((^a or ^b) : (static member OfJson : ^b * _ -> (JsonValue -> ^b ParseResult)) b, a)
-            iOfJson (Unchecked.defaultof<OfJson>, Unchecked.defaultof<'t>) x
+        static member inline GetCodec (_: Dictionary<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Dictionary<'K, 'V>> =
+            fun () ->
+                match typeof<'K> with
+                | t when t = typeof<string> 
+                    -> Codecs.propDictionary (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>) |> retype
+                | _ -> Codecs.dictionary     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'K>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>)
+            |> CodecCache<'Operation, 'Encoding, _>.Run
+        
+        static member inline GetCodec (_: ResizeArray<'a>         when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ResizeArray<'a>>        = (fun () -> Codecs.resizeArray     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetCodec (_: 'a Id2   when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, _, _: 'Operation)  = (Ok (Id2<'a> Unchecked.defaultof<'a>)), Map.empty
 
-    type OfJson with
-        static member inline OfJson (_: Tuple<'a>, _: OfJson) : JsonValue -> ParseResult<Tuple<'a>> = JsonDecode.tuple1 OfJson.Invoke
-        static member inline OfJson (_: 'a Id2, _: OfJson) : JsonValue -> ParseResult<Id2<'a>> = fun _ -> Success (Id2<'a> Unchecked.defaultof<'a>)
+    type GetCodec with static member inline GetCodec (_: 'a * 'b                          when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b                         > = (fun () -> Codecs.tuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)                                                                                                                                                                                                                                                                                                                                          ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c                     when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b * 'c                    > = (fun () -> Codecs.tuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                        ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c * 'd                when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b * 'c * 'd               > = (fun () -> Codecs.tuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                      ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c * 'd * 'e           when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b * 'c * 'd * 'e          > = (fun () -> Codecs.tuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                    ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c * 'd * 'e * 'f      when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b * 'c * 'd * 'e * 'f     > = (fun () -> Codecs.tuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                  ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, 'a * 'b * 'c * 'd * 'e * 'f * 'g> = (fun () -> Codecs.tuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>)) |> CodecCache<'Operation, 'Encoding, _>.Run
 
-    type OfJson with
-        static member inline OfJson (t:'tuple, _: OfJson) = function
-            | JArray a as x ->
-                let (t1: 't1 ParseResult) = if false then Ok (^tuple : (member Item1: 't1) t) else OfJson.Invoke (a.[0])
-                let (t2: 't2 ParseResult) = if false then Ok (^tuple : (member Item2: 't2) t) else OfJson.Invoke (a.[1])
-                let (t3: 't3 ParseResult) = if false then Ok (^tuple : (member Item3: 't3) t) else OfJson.Invoke (a.[2])
-                let (t4: 't4 ParseResult) = if false then Ok (^tuple : (member Item4: 't4) t) else OfJson.Invoke (a.[3])
-                let (t5: 't5 ParseResult) = if false then Ok (^tuple : (member Item5: 't5) t) else OfJson.Invoke (a.[4])
-                let (t6: 't6 ParseResult) = if false then Ok (^tuple : (member Item6: 't6) t) else OfJson.Invoke (a.[5])
-                let (t7: 't7 ParseResult) = if false then Ok (^tuple : (member Item7: 't7) t) else OfJson.Invoke (a.[6])
-                let (tr: 'tr ParseResult) = if false then Ok (^tuple : (member Rest : 'tr) t) else OfJson.Invoke (JArray (IReadOnlyList.ofArray ((toArray a).[7..])))
-                match tr with
-                | Error (IndexOutOfRange (i, _)) -> Error (IndexOutOfRange (i + 8, x))
-                | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
-            | a -> Decode.Fail.arrExpected a
+    type GetCodec with static member inline GetCodec (_: 't when 't : enum<_> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType, _: GetCodec, c, _: 'Operation) = Codecs.enum
 
-    type OfJson with static member inline OfJson (_: Choice<'a, 'b>    , _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b>>     = JsonDecode.choice  OfJson.Invoke OfJson.Invoke
-    type OfJson with static member inline OfJson (_: Choice<'a, 'b, 'c>, _: OfJson) : JsonValue -> ParseResult<Choice<'a, 'b, 'c>> = JsonDecode.choice3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
+    type GetCodec with
 
-    type OfJson with static member inline OfJson (_: 'a option  , _: OfJson) : JsonValue -> ParseResult<'a option>   = JsonDecode.option   OfJson.Invoke
-    type OfJson with static member inline OfJson (_: 'a Nullable, _: OfJson) : JsonValue -> ParseResult<'a Nullable> = JsonDecode.nullable OfJson.Invoke
+        // Overload to handle user-defined interfaces
+        static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) =
+            fun () ->
+                match CodecCollection<'Encoding, 'Base>.GetSubtypes |> toList |> NonEmptyList.tryOfList with
+                | None ->
+                    match CodecCollection<AdHocEncoding, 'Base>.GetSubtypes |> toList |> NonEmptyList.tryOfList with
+                    | None -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
+                    | Some codecs ->
+                        (codecs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id |> Codec.upCast |> AdHocEncoding.ofIEncoding) (new 'Encoding () :> IEncoding) |> Codec.downCast<_, 'Encoding>
+                | Some cs -> cs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id
+            |> CodecCache<'Operation, 'Encoding, _>.RunForInterfaces
 
-    type OfJson with static member inline OfJson (_: 'a array, _: OfJson) : JsonValue -> ParseResult<'a array> = JsonDecode.array OfJson.Invoke
-    type OfJson with static member inline OfJson (_: 'a ArraySegment, _: OfJson) : JsonValue -> ParseResult<'a ArraySegment> = JsonDecode.arraySegment OfJson.Invoke
+    type GetCodec with
+
+        // Overload to "passthrough" an IEncoding
+        static member GetCodec (_: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: IDefault3, _, _: 'Operation) = Codecs.id : Codec<'Encoding, 'Encoding>
     
-    type OfJson with static member inline OfJson (_: list<'a>, _: OfJson) : JsonValue -> ParseResult<list<'a>> = JsonDecode.list  OfJson.Invoke
-    type OfJson with static member inline OfJson (_: 'a Set  , _: OfJson) : JsonValue -> ParseResult<'a Set>   = JsonDecode.set   OfJson.Invoke
+        // Main overload for external classes
+        static member inline GetCodec (_: 'T, _: IDefault3, _, _: 'Operation) : Codec<'Encoding, 'T> =
+            fun () ->
+                (^T : (static member Codec: Codec< 'Encoding, 'T>) ())
+            |> CodecCache<'Operation, 'Encoding, 'T>.Run
 
-    type OfJson with static member inline OfJson (_: Map<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Map<string, 'a>> = JsonDecode.map OfJson.Invoke
+        // Codec for specific 'Encoding
+        static member inline GetCodec (_: 'T, _: IDefault4, _, _: 'Operation) =
+            fun () ->
+                let mutable r = Unchecked.defaultof<Codec< 'Encoding, 'T>>
+                do (^T : (static member Codec : byref<Codec< 'Encoding, 'T>> -> unit) &r)
+                r
+            |> CodecCache<'Operation, 'Encoding, 'T>.Run
 
-    type OfJson with
-        static member inline OfJson (_: Dictionary<string, 'a>, _: OfJson) : JsonValue -> ParseResult<Dictionary<string, 'a>> = JsonDecode.dictionary  OfJson.Invoke
-        static member inline OfJson (_: ResizeArray<'a>       , _: OfJson) : JsonValue -> ParseResult<ResizeArray<'a>>        = JsonDecode.resizeArray OfJson.Invoke
-        static member inline OfJson (_: 'a Id1, _: OfJson) : JsonValue -> ParseResult<Id1<'a>> = fun _ -> Success (Id1<'a> Unchecked.defaultof<'a>)
+        // For backwards compatibility
+        // [<Obsolete("This function resolves to a deprecated 'JsonObjCodec' method and it won't be supported in future versions of this library. Please rename it to 'Codec' or 'get_Codec ()' and convert the result by applying the 'ofObjCodec' function.")>]
+        // But adding the warning changes overload resolution.
+        static member inline GetCodec (_: 'T, _: IDefault5, _, _: 'Operation) : Codec<'Encoding, 'T> =
+            fun () ->
+                let c: Codec<PropertyList<'Encoding>, 'T> = (^T : (static member JsonObjCodec: Codec<PropertyList<'Encoding>, 'T>) ())
+                c >.> Codecs.propList Codecs.id
+            |> CodecCache<'Operation, 'Encoding, 'T>.Run
+
+        // For specific 'Encoding in recursive calls coming from a get_Codec operation
+        static member inline GetCodec (_: 'T, _: IDefault7, _, _: 'Operation) : Codec<'Encoding, 'T> =
+            let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
+            let e t = (^T : (static member ToJson : ^T -> 'Encoding) t)
+            { Decoder = d; Encoder = e }
     
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b, _: OfJson) : JsonValue -> ParseResult<'a * 'b> = JsonDecode.tuple2 OfJson.Invoke OfJson.Invoke
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c> = JsonDecode.tuple3 OfJson.Invoke OfJson.Invoke OfJson.Invoke
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> = JsonDecode.tuple4 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> = JsonDecode.tuple5 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> = JsonDecode.tuple6 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
-
-    type OfJson with
-        static member inline OfJson (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g, _: OfJson) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> = JsonDecode.tuple7 OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke OfJson.Invoke
-
-    type OfJson with static member inline OfJson (_: 't when 't : enum<_>, _: OfJson) = JsonDecode.enum
-
-    // Default, for external classes.
-    type OfJson with
-
-        static member inline OfJson (_: 'R, _: Default7) =
-            let codec = (^R : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'R>) ())
-            codec |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
-
-        static member inline OfJson (_: 'R, _: Default6) =
-            let codec = (^R : (static member JsonObjCodec : ConcreteCodec<_,_,_,'R>) ())
-            codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> fst : JsonValue -> ^R ParseResult
-
-        static member inline OfJson (r: 'R, _: Default5) = Result.bindError (Error << DecodeError.Uncategorized) << (^R : (static member FromJSON: ^R  -> (JsonValue -> Result< ^R, string>)) r) : JsonValue ->  ^R ParseResult
-        static member inline OfJson (_: 'R, _: Default4) = fun js -> Result.bindError (Error << DecodeError.Uncategorized) (^R : (static member OfJson: JsonValue -> Result< ^R, string>) js) : ^R ParseResult
-        static member inline OfJson (r: 'R, _: Default3) = (^R : (static member FromJSON: ^R  -> (JsonValue -> ^R ParseResult)) r) : JsonValue ->  ^R ParseResult
-        static member inline OfJson (_: 'R, _: Default2) = fun js -> (^R : (static member OfJson: JsonValue -> ^R ParseResult) js) : ^R ParseResult
-
-        static member OfJson (_: JsonObject, _: Default1) = JsonHelpers.jsonObjectOfJson
-        static member OfJson (_: JsonValue, _: Default1) = Success
+        // For generic 'Encoding in recursive calls coming from a get_Codec operation
+        static member inline GetCodec (_: 'T, _: IDefault6, _, _: 'Operation) : Codec<'Encoding, 'T> =
+            let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
+            let e t =
+                let mutable r = Unchecked.defaultof<'Encoding>
+                let _ = (^T : (static member Encode : ^T * byref<'Encoding> -> unit) (t, &r))
+                r
+            { Decoder = d; Encoder = e }
 
 
-    /// Maps Json to a type
-    let inline ofJson (x: JsonValue) : 't ParseResult = OfJson.Invoke x
+    type GetEnc with
+        // Encoder for specific 'Encoding
+        static member inline GetCodec (_: 'T, _: IDefault2, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let e t =
+                    let mutable r = Unchecked.defaultof<'Encoding>
+                    do (^T : (static member Encode : ^T * byref<'Encoding> -> unit) (t, &r))
+                    r
+                { Decoder = decoderNotAvailable; Encoder = e }
+            |> CodecCache<OpEncode, 'Encoding, 'T>.Run
 
-    [<Obsolete("Use 'ofJson'")>]
-    let inline fromJSON (x: JsonValue) : 't ParseResult = OfJson.Invoke x
+    type GetEnc with
+        // Encoder for generic 'Encoding
+        static member inline GetCodec (_: 'T, _: IDefault1, _: GetEnc, _: OpEncode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let e t = (^T : (static member ToJson : ^T -> 'Encoding) t)
+                { Decoder = decoderNotAvailable; Encoder = e }
+            |> CodecCache<OpEncode, 'Encoding, 'T>.Run
 
-    /// Gets a value from a Json object
-    let inline jgetWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
-        match o.TryGetValue key with
-        | true, value -> ofJson value
+    type GetDec with
+        [<Obsolete("This function resolves to a deprecated 'OfJson' overload, returning a string as an error and it won't be supported in future versions of this library. Please update the 'OfJson' method, using the 'Fail' module to create a DecodeError.")>]
+        static member inline GetCodec (_: 'T, _: IDefault1, _: GetDec, _: OpDecode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let d j = Result.bindError (Error << DecodeError.Uncategorized) (^T : (static member OfJson: 'Encoding -> Result< ^T, string>) j)
+                { Decoder = d; Encoder = encoderNotAvailable }
+            |> CodecCache<OpDecode, 'Encoding, 'T>.Run
+
+    type GetDec with
+        // Decoder
+        static member inline GetCodec (_: 'T, _: IDefault0, _: GetDec, _: OpDecode) : Codec<'Encoding, ^T> =
+            fun () ->
+                let d j = (^T : (static member OfJson: 'Encoding -> ^T ParseResult) j) : ^T ParseResult
+                { Decoder = d; Encoder = encoderNotAvailable }
+            |> CodecCache<OpDecode, 'Encoding, 'T>.Run
+    
+
+[<AutoOpen>]
+module Operators =
+    
+    open Internals
+
+    /// Creates a Codec from a pair of decoder and encoder functions, used mainly internally and in Encoding implementations.
+    let (<->) decoder encoder : Codec<_,_,_,_> = { Decoder = decoder; Encoder = encoder }
+
+    let (|Codec|) { Decoder = x; Encoder = y } = (x, y)
+
+    let inline toEncoding< 'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : 'Encoding =
+        let codec = GetEnc.Invoke<'Encoding, OpEncode, _> x
+        (codec |> Codec.encode) x
+
+    let inline ofEncoding (x: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) : Result<'t, _> =
+        let codec = GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t>
+        (codec |> Codec.decode) x
+            
+    /// Creates a codec to (from) 'Encoding from (to) an Object-Codec.
+    /// <param name="objCodec">A codec of MultiMap from/to a strong type.</param>
+    /// <returns>A codec of a strong type to (from) Encoding.</returns>
+    let ofObjCodec (objCodec: Codec<PropertyList<'Encoding>, 't>) : Codec<_, 't> = objCodec >.> Codecs.propList Codecs.id
+
+
+    let jreqWith (c: Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
+        let getFromListWith decoder (m: PropertyList<_>) key =
+            match m.[key] with
+            | []        -> Decode.Fail.propertyNotFound key m
+            | value:: _ -> decoder value
+        {
+            Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode c) o prop
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero
+        }
+
+    let jreqWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value option) =
+        let getFromListWith decoder (m: PropertyList<_>) key =
+            match m.[key] with
+            | []        -> Decode.Fail.propertyNotFound key m
+            | value:: _ -> decoder value
+        {
+            Decoder = fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero
+        }
+
+    /// Derive automatically a Codec from the type, based on GetCodec / Codec static members.
+    let inline defaultCodec<'Encoding, ^t when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) and (GetCodec or ^t) : (static member GetCodec: ^t * GetCodec * GetCodec * OpCodec -> Codec<'Encoding, ^t>)> =
+        GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>
+
+
+
+    /// <summary>Derives a concrete field object codec for a required field.</summary>
+    /// <param name="name">A string that will be used as key to the field.</param>
+    /// <param name="getter">The field getter function.</param>
+    /// <returns>The resulting object codec.</returns>
+    let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param, 'T> = jreqWithLazy (fun () -> defaultCodec<'Encoding, 'param>) name getter
+
+    /// <summary>Same as jopt but using an explicit codec.</summary>
+    let joptWith c (prop: string) (getter: 'T -> 'Value option) =
+        let getFromListOptWith decoder (m: PropertyList<_>) key =
+            match m.[key] with
+            | []        -> Ok None
+            | value:: _ -> decoder value |> Result.map Some
+        {
+            Decoder = fun (o: PropertyList<'S>) -> getFromListOptWith (Codec.decode c) o prop
+            Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero
+        }
+
+    /// Derives a concrete field codec for an optional field.
+    let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith defaultCodec<'Encoding, 'param> prop getter
+
+
+    let jobj (x: list<string * 'Encoding>) : 'Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.propList Codecs.id)
+
+    [<Obsolete("Use PropertyList instead.")>]
+    let dictAsProps (x: IReadOnlyDictionary<string, 'Encoding>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq |> PropertyList
+
+    let JNull<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> : 'Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
+    let JBool   x = (Codecs.boolean |> Codec.encode) x
+    let JNumber x = (Codecs.decimal |> Codec.encode) x
+    let JString x = (Codecs.string  |> Codec.encode) x
+    let JArray (x: IReadOnlyList<'Encoding>) = (Codecs.array Codecs.id |> Codec.encode) (toArray x)
+    let JObject x = (Codecs.propList Codecs.id |> Codec.encode) x
+    
+    let (|JNull|_|)   (x: 'Encoding) = match (Codecs.option Codecs.id |> Codec.decode) x with | Ok None -> Some () | _ -> None    
+    let (|JBool|_|)   (x: 'Encoding) = (Codecs.boolean |> Codec.decode) x |> Option.ofResult
+    let (|JNumber|_|) (x: 'Encoding) = (Codecs.decimal |> Codec.decode) x |> Option.ofResult
+    let (|JString|_|) (x: 'Encoding) = (Codecs.string  |> Codec.decode) x |> Option.ofResult
+    let (|JArray|_|)  (x: 'Encoding) = (Codecs.array    Codecs.id |> Codec.decode) x |> Option.ofResult |> Option.map IReadOnlyList.ofArray
+    let (|JObject|_|) (x: 'Encoding) = (Codecs.propList Codecs.id |> Codec.decode) x |> Option.ofResult
+
+    
+    /// Gets a value from an Encoding object.
+    let jgetWith decoder (o: PropertyList<'Encoding>) key =
+        match o.[key] with
+        | value::_ -> decoder value
         | _ -> Decode.Fail.propertyNotFound key o
 
-    /// Gets a value from a Json object
-    let inline jget (o: IReadOnlyDictionary<string, JsonValue>) key = jgetWith ofJson o key
-
-    /// Tries to get a value from a Json object.
+    /// Tries to get a value from an Encoding object.
     /// Returns None if key is not present in the object.
-    let inline jgetOptWith ofJson (o: IReadOnlyDictionary<string, JsonValue>) key =
-        match o.TryGetValue key with
-        | true, JNull -> Success None
-        | true, value -> ofJson value |> map Some
-        | _ -> Success None
+    let jgetOptWith decoder (o: PropertyList<'Encoding>) key =
+        match o.[key] with
+        | JNull _::_ -> Ok None
+        | value  ::_ -> decoder value |> Result.map Some
+        | _ -> Ok None
 
-    /// Tries to get a value from a Json object.
+    /// Gets a value from an Encoding object.
+    let inline jget (o: PropertyList<' Encoding>) key = jgetWith ofEncoding o key
+
+    /// Tries to get a value from an Encoding object.
     /// Returns None if key is not present in the object.
-    let inline jgetOpt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
+    let inline jgetOpt (o: PropertyList<' Encoding>) key = jgetOptWith ofEncoding o key
 
-    [<Obsolete("Use 'jgetOpt'")>]
-    let inline jgetopt (o: IReadOnlyDictionary<string, JsonValue>) key = jgetOptWith ofJson o key
+    /// Gets a value from an Encoding object.
+    let inline (.@) o key = jget o key
 
+    /// Tries to get a value from an Encoding object.
+    /// Returns None if key is not present in the object.
+    let inline (.@?) o key = jgetOpt o key
 
-    // Serializing:
+    /// Creates a new Encoding key-value pair for an Encoding object.
+    let inline jpair (key: string) (value: 'T) = map toEncoding (key, value)
 
-    type ToJson =
-        inherit Default1
-        static member ToJson (x: bool          , _: ToJson) = JsonEncode.boolean        x
-        static member ToJson (x: string        , _: ToJson) = JsonEncode.string         x
-        static member ToJson (x: DateTime      , _: ToJson) = JsonEncode.dateTime       x
-        static member ToJson (x: DateTimeOffset, _: ToJson) = JsonEncode.dateTimeOffset x
-        static member ToJson (x: decimal       , _: ToJson) = JsonEncode.decimal        x
-        static member ToJson (x: Double        , _: ToJson) = JsonEncode.float          x
-        static member ToJson (x: Single        , _: ToJson) = JsonEncode.float32        x
-        static member ToJson (x: int           , _: ToJson) = JsonEncode.int            x
-        static member ToJson (x: uint32        , _: ToJson) = JsonEncode.uint32         x
-        static member ToJson (x: int64         , _: ToJson) = JsonEncode.int64          x
-        static member ToJson (x: uint64        , _: ToJson) = JsonEncode.uint64         x
-        static member ToJson (x: int16         , _: ToJson) = JsonEncode.int16          x
-        static member ToJson (x: uint16        , _: ToJson) = JsonEncode.uint16         x
-        static member ToJson (x: byte          , _: ToJson) = JsonEncode.byte           x
-        static member ToJson (x: sbyte         , _: ToJson) = JsonEncode.sbyte          x
-        static member ToJson (x: char          , _: ToJson) = JsonEncode.char           x
-        static member ToJson (x: Guid          , _: ToJson) = JsonEncode.guid           x
-        static member ToJson (()               , _: ToJson) = JsonEncode.unit ()
-
-    type ToJson with
-
-        static member inline Invoke (x: 't) : JsonValue =
-            let inline iToJson (a: ^a, b: ^b) = ((^a or ^b) : (static member ToJson : ^b * _ -> JsonValue) b, a)
-            iToJson (Unchecked.defaultof<ToJson>, x)
-
-    type ToJson with        
-        static member inline ToJson (x         , _: ToJson) = JsonEncode.tuple1 ToJson.Invoke x
-        static member        ToJson (_: Id1<'t>, _: ToJson) = ()
-
-    type ToJson with
-        static member inline ToJson (t: 'tuple, _: ToJson) =
-            let t1 = ToJson.Invoke (^tuple : (member Item1: 't1) t)
-            let t2 = ToJson.Invoke (^tuple : (member Item2: 't2) t)
-            let t3 = ToJson.Invoke (^tuple : (member Item3: 't3) t)
-            let t4 = ToJson.Invoke (^tuple : (member Item4: 't4) t)
-            let t5 = ToJson.Invoke (^tuple : (member Item5: 't5) t)
-            let t6 = ToJson.Invoke (^tuple : (member Item6: 't6) t)
-            let t7 = ToJson.Invoke (^tuple : (member Item7: 't7) t)
-            let (JArray tr) = ToJson.Invoke (^tuple : (member Rest : 'tr) t)
-            JArray ([|t1; t2; t3; t4; t5; t6; t7|] ++ IReadOnlyList.toArray tr)
+    /// Creates a new Encoding key-value pair for an Encoding object.
+    let inline (.=) key value = jpair key value
     
-    type ToJson with
-        static member inline ToJson (x: Choice<'a, 'b>, _: ToJson) = JsonEncode.choice ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: Choice<'a, 'b, 'c>, _: ToJson) = JsonEncode.choice3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: 'a option, _: ToJson) = JsonEncode.option ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: 'a Nullable, _: ToJson) = JsonEncode.nullable ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: list<'a>, _: ToJson) = JsonEncode.list ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: 'a Set, _: ToJson) = JsonEncode.set ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: 'a array, _: ToJson) = JsonEncode.array ToJson.Invoke x
-        static member inline ToJson (x: 'a ArraySegment, _: ToJson) = JsonEncode.arraySegment ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x: Map<string, 'a>, _: ToJson) = JsonEncode.map ToJson.Invoke x
-
-    type ToJson with        
-        static member inline ToJson (x: Dictionary<string, 'a>, _: ToJson) = JsonEncode.dictionary  ToJson.Invoke x
-        static member inline ToJson (x: 'a ResizeArray        , _: ToJson) = JsonEncode.resizeArray ToJson.Invoke x
-        static member inline ToJson (x                        , _: ToJson) = JsonEncode.tuple2      ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple3 ToJson.Invoke ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple4 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple5 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple6 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with
-        static member inline ToJson (x, _: ToJson) = JsonEncode.tuple7 ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke ToJson.Invoke x
-
-    type ToJson with static member inline ToJson (x: 't when 't : enum<_>, _: ToJson) = JsonEncode.enum x
-
-    // Default, for external classes.
-    type ToJson with
-
-        static member inline ToJson (t: 'T, _: Default5) =
-            let codec = (^T : (static member JsonObjCodec : Codec<IReadOnlyDictionary<string,JsonValue>,'T>) ())
-            (codec |> Codec.compose jsonObjToValueCodec |> snd) t
-
-        static member inline ToJson (t: 'T, _: Default4) =
-            let codec = (^T : (static member JsonObjCodec : ConcreteCodec<_,_,_,'T>) ())
-            (codec |> Codec.ofConcrete |> Codec.compose jsonObjToValueCodec |> snd) t
-
-        static member inline ToJson (t: 'T, _: Default3) = (^T : (static member ToJSON : ^T -> JsonValue) t)
-        static member inline ToJson (t: 'T, _: Default2) = (^T : (static member ToJson : ^T -> JsonValue) t)
-
-        static member ToJson (t: JsonObject, _: Default1) = JsonHelpers.jsonOfJsonObject t
-        static member ToJson (t: JsonValue , _: Default1) = t
-
-    /// Maps a value to Json
-    let inline toJson (x: 't) : JsonValue = ToJson.Invoke x
-
-    [<Obsolete("Use 'toJson'")>]
-    let inline toJSON (x: 't) : JsonValue = ToJson.Invoke x
-
-    /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
-    let inline getJsonValueCodec () : Codec<JsonValue, 't> = ofJson, toJson
-
-    /// Derive automatically a JsonCodec, based of OfJson and ToJson static members
-    let inline jsonValueCodec< ^t when (OfJson or ^t) : (static member OfJson : ^t * OfJson -> (JsonValue -> ^t ParseResult)) and (ToJson or ^t) : (static member ToJson : ^t * ToJson -> JsonValue)> : Codec<JsonValue,'t> = ofJson, toJson
     
-    /// Parses a Json Text and maps to a type
-    let inline parseJson (x: string) : 'a ParseResult = fst jsonValueToTextCodec x >>= ofJson
+[<AutoOpen>]
+module CodecInterfaceExtensions =
+    open Internals
+    type ICodecInterface<'Base> with
+        /// This is the entry point to register codecs for interface implementations.
+        static member RegisterCodec<'Encoding, 'Type> (codec: unit -> Codec<PropertyList<'Encoding>, 'Type>) =
+            let codec () =
+                let objCodec = codec ()
+                let (d, e) = objCodec.Decoder, objCodec.Encoder
+                let nd = d >> Result.map retype<'Type, 'Base>
+                let ne (x: 'Base) =
+                    match box x with
+                    | :? 'Type as t -> e t
+                    | _ -> zero
+                { Decoder = nd; Encoder = ne }
+            codec |> CodecCollection<'Encoding, 'Base>.AddSubtype typeof<'Type>
 
-    [<Obsolete("Use 'parseJson'")>]
-    let inline parseJSON (x: string) : 'a ParseResult = parseJson (x: string)
+[<AutoOpen>]
+module ComputationExpressions =
+    type CodecApplicativeBuilder () =
+
+        let privReturn f = ({ Decoder = (fun _ -> Ok f); Encoder = zero }) : Codec<PropertyList<'S>, PropertyList<'S>,_,_>
+        let privlift2 (f: 'x ->'y ->'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y:  Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
+                {
+                    Decoder = fun s -> lift2 f (x.Decoder s) (y.Decoder s)
+                    Encoder = x.Encoder ++ y.Encoder
+                }
+        let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) (z: Codec<PropertyList<'S>, PropertyList<'S>,'z,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
+                {
+                    Decoder = fun s -> lift3 f (x.Decoder s) (y.Decoder s) (z.Decoder s)
+                    Encoder = x.Encoder ++ y.Encoder ++ z.Encoder
+                }
+
+        member _.Delay x = x ()
+        member _.ReturnFrom expr = expr
+        member _.Return x = privReturn x
+        member _.Yield  x : Codec<PropertyList<'r>, 't> = x
+        member _.MergeSources  (t1, t2)     = privlift2 tuple2 t1 t2
+        member _.MergeSources3 (t1, t2, t3) = privlift3 tuple3 t1 t2 t3
+        member _.BindReturn (x: Codec<PropertyList<'r>, PropertyList<'r>,_,_>, f) = f <!> x
+        member _.Run x : Codec<PropertyList<_>,'t> = x
+        member _.Combine (x: Codec<PropertyList<'S>, 't>, y: Codec<PropertyList<'S>, 't>) = x <|> y : Codec<PropertyList<'S>, 't>
+
+        // Clients using F# lower than 5 will need this method
+        [<CompilerMessage("A Codec doesn't support the Zero operation.", 10708, IsError = true)>]
+        member _.Zero () = invalidOp "Fleece internal error: this code should be unreachable."
+
+    /// Codec Applicative Computation Expression.
+    let codec = CodecApplicativeBuilder ()
 
 
+    // Verbose syntax
 
-    /// Creates a new Json key-value pair for a Json object
-    let inline jpairWith toJson (key: string) value = key, toJson value
+    [<Literal>]
+    let private verboseSyntaxMessage = "Use applicative operators or codec Computation Expression instead."
 
-    /// Creates a new Json key-value pair for a Json object
-    let inline jpair (key: string) value = jpairWith toJson key value
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline withFields f : Codec<'s,'s,_,_> = result f //(fun _ -> Ok f) <-> (fun _ -> multiMap [])
     
-    /// Creates a new Json key-value pair for a Json object if the value option is present
-    let inline jpairOptWith toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfield fieldName getter rest = rest <*> jreq fieldName (getter >> Some)
+    
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldOpt fieldName getter rest = rest <*> jopt fieldName getter
 
-    /// Creates a new Json key-value pair for a Json object if the value option is present
-    let inline jpairOpt (key: string) value = jpairOptWith toJson key value
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldWith codec fieldName getter rest = rest <*> jreqWith codec fieldName (getter >> Some)
 
-    /// <summary>Initialize the field mappings.</summary>
-    /// <param name="f">An object constructor as a curried function.</param>
-    /// <returns>The resulting object codec.</returns>
-    let withFields f = (fun _ -> Success f), (fun _ -> readOnlyDict [])
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldWithLazy codec fieldName getter rest = rest <*> jreqWithLazy codec fieldName (getter >> Some)
 
-    let diApply combiner (remainderFields: SplitCodec<'S, 'f ->'r, 'T>) (currentField: SplitCodec<'S, 'f, 'T>) =
-        ( 
-            Compose.run (Compose (fst remainderFields: Decoder<'S, 'f -> 'r>) <*> Compose (fst currentField)),
-            fun p -> combiner (snd remainderFields p) ((snd currentField) p)
-        )
+    [<Obsolete(verboseSyntaxMessage)>]
+    let inline jfieldOptWith codec fieldName getter rest = rest <*> joptWith codec fieldName getter
 
-    /// <summary>Appends a field mapping to the codec.</summary>
-    /// <param name="codec">The codec to be used.</param>
-    /// <param name="fieldName">A string that will be used as key to the field.</param>
-    /// <param name="getter">The field getter function.</param>
-    /// <param name="rest">The other mappings.</param>
-    /// <returns>The resulting object codec.</returns>
-    let inline jfieldWith codec fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) =
-        let inline deriveFieldCodec codec prop getter =
-            (
-                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetWith (fst codec) o prop),
-                (getter >> fun (x: 'Value) -> readOnlyDict [prop, (snd codec) x])
-            )
-        diApply IReadOnlyDictionary.union rest (deriveFieldCodec codec fieldName getter)
+module Lens =
+    open FSharpPlus.Lens
+    let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
+    let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
+    let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
+    let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
+    let inline _JNumber x = (prism' JNumber <| fun v -> match Operators.ofEncoding v : decimal ParseResult with Ok s -> Some s | _ -> None) x
+    let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
 
-    /// <summary>Appends a field mapping to the codec.</summary>
-    /// <param name="fieldName">A string that will be used as key to the field.</param>
-    /// <param name="getter">The field getter function.</param>
-    /// <param name="rest">The other mappings.</param>
-    /// <returns>The resulting object codec.</returns>
-    let inline jfield fieldName (getter: 'T -> 'Value) (rest: SplitCodec<_, _ -> 'Rest, _>) = jfieldWith jsonValueCodec fieldName getter rest
+    /// Like '_jnth', but for 'Object' with Text indices.
+    let inline _jkey i =
+        let inline dkey i f t = map (fun x -> PropertyList.add i x t) (f (t.[i] |> function [] -> JNull | x::_ -> x))
+        _JObject << dkey i
 
-    /// <summary>Appends an optional field mapping to the codec.</summary>
-    /// <param name="codec">The codec to be used.</param>
-    /// <param name="fieldName">A string that will be used as key to the field.</param>
-    /// <param name="getter">The field getter function.</param>
-    /// <param name="rest">The other mappings.</param>
-    /// <returns>The resulting object codec.</returns>
-    let inline jfieldOptWith codec fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) =
-        let inline deriveFieldCodecOpt codec prop getter =
-            (
-                (fun (o: IReadOnlyDictionary<string,JsonValue>) -> jgetOptWith (fst codec) o prop),
-                (getter >> function Some (x: 'Value) -> readOnlyDict [prop, (snd codec) x] | _ -> readOnlyDict [])
-            )
-        diApply IReadOnlyDictionary.union rest (deriveFieldCodecOpt codec fieldName getter)
+    let inline _jnth i =
+        let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
+        _JArray << dnth i
 
-    /// <summary>Appends an optional field mapping to the codec.</summary>
-    /// <param name="fieldName">A string that will be used as key to the field.</param>
-    /// <param name="getter">The field getter function.</param>
-    /// <param name="rest">The other mappings.</param>
-    /// <returns>The resulting object codec.</returns>
-    let inline jfieldOpt fieldName (getter: 'T -> 'Value option) (rest: SplitCodec<_, _ -> 'Rest, _>) = jfieldOptWith jsonValueCodec fieldName getter rest
+    // Reimport some basic Lens operations from F#+
 
-    module Operators =
-
-        /// Creates a new Json key-value pair for a Json object
-        let inline (.=) key value = jpair key value
-        
-        /// Creates a new Json key-value pair for a Json object if the value is present in the option
-        let inline (.=?) (key: string) value = jpairOpt key value
-
-        /// Gets a value from a Json object
-        let inline (.@) o key = jget o key
-
-        /// Tries to get a value from a Json object.
-        /// Returns None if key is not present in the object.
-        let inline (.@?) o key = jgetOpt o key
-
-        /// <summary>Applies a field mapping to the object codec.</summary>
-        /// <param name="fieldName">A string that will be used as key to the field.</param>
-        /// <param name="getter">The field getter function.</param>
-        /// <param name="rest">The other mappings.</param>
-        /// <returns>The resulting object codec.</returns>
-        let inline (<*/>) (rest: SplitCodec<_, _ ->'Rest, _>) (fieldName, getter: 'T -> 'Value) = jfield fieldName getter rest
-
-        /// <summary>Appends the first field mapping to the codec.</summary>
-        /// <param name="fieldName">A string that will be used as key to the field.</param>
-        /// <param name="getter">The field getter function.</param>
-        /// <param name="f">An object initializer as a curried function.</param>
-        /// <returns>The resulting object codec.</returns>
-        let inline (<!/>) f (fieldName, getter: 'T -> 'Value) = jfield fieldName getter (withFields f)
-
-        /// <summary>Appends an optional field mapping to the codec.</summary>
-        /// <param name="fieldName">A string that will be used as key to the field.</param>
-        /// <param name="getter">The field getter function.</param>
-        /// <param name="rest">The other mappings.</param>
-        /// <returns>The resulting object codec.</returns>
-        let inline (<*/?>) (rest: SplitCodec<_, _ -> 'Rest, _>) (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter rest
-
-        /// <summary>Appends the first field (optional) mapping to the codec.</summary>
-        /// <param name="fieldName">A string that will be used as key to the field.</param>
-        /// <param name="getter">The field getter function.</param>
-        /// <param name="f">An object initializer as a curried function.</param>
-        /// <returns>The resulting object codec.</returns>
-        let inline (<!/?>) f (fieldName, getter: 'T -> 'Value option) = jfieldOpt fieldName getter (withFields f)
-        
-        /// Tuple two values.
-        let inline (^=) a b = (a, b)
-
-        /// Gets a value from a Json object
-        let inline jgetFromListWith decoder (o: list<KeyValuePair<string, JsonValue>>) key =
-            match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
-            | Some (KeyValue(_, value)) -> decoder value
-            | _                         -> Decode.Fail.propertyNotFound key (ofList o)
-
-        // /// Gets a value from a Json object
-        // let inline jgetFromList (o: list<KeyValuePair<string, JsonValue>>) key = jgetFromListWith ofJson o key
-
-        /// Tries to get a value from a Json object.
-        /// Returns None if key is not present in the object.
-        let inline jgetFromListOptWith decoder (o: list<KeyValuePair<string, JsonValue>>) key =
-            match List.tryFind (fun (KeyValue(x, _)) -> x = key) o with
-            | Some (KeyValue(_, value)) -> decoder value |> map Some
-            | _ -> Success None
-
-        let inline joptWith codec prop getter =
-            {
-                Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListOptWith (fst codec) o prop)
-                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
-            }
-
-        /// Derives a concrete field codec for an optional field
-        let inline jopt prop getter = joptWith jsonValueCodec prop getter
-
-        let inline jreqWith codec (prop: string) (getter: 'T -> 'Value option) =
-            {
-                Decoder = ReaderT (fun (o: list<KeyValuePair<string, JsonValue>>) -> jgetFromListWith (fst codec) o prop)
-                Encoder = fun x -> Const (match getter x with Some (x: 'Value) -> [KeyValuePair (prop, (snd codec) x)] | _ -> [])
-            }
-
-        /// Derives a concrete field codec for a required field
-        let inline jreq (name: string) (getter: 'T -> 'param option) = jreqWith jsonValueCodec name getter
-
-        let inline jchoice (codecs: seq<ConcreteCodec<'S, 'S, 't1, 't2>>) =
-            let head, tail = Seq.head codecs, Seq.tail codecs
-            foldBack (<|>) tail head
-
-    module Lens =
-        open FSharpPlus.Lens
-        let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
-        let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
-        let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
-        let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
-        let inline _JNumber x = (prism' JNumber <| fun v -> match ofJson v : decimal ParseResult with Ok s -> Some s | _ -> None) x
-        let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
-
-        /// Like '_jnth', but for 'Object' with Text indices.
-        let inline _jkey i =
-            let inline dkey i f t = map (fun x -> IReadOnlyDictionary.add i x t) (f (IReadOnlyDictionary.tryGetValue i t |> Option.defaultValue JNull))
-            _JObject << dkey i
-
-        let inline _jnth i =
-            let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
-            _JArray << dnth i
-
-        // Reimport some basic Lens operations from F#+
-
-        let setl optic value   (source: 's) : 't = setl optic value source
-        let over optic updater (source: 's) : 't = over optic updater source
-        let preview (optic: ('a -> Const<_,'b>) -> _ -> Const<_,'t>) (source: 's) : 'a option = preview optic source
+    let setl optic value   (source: 's) : 't = setl optic value source
+    let over optic updater (source: 's) : 't = over optic updater source
+    let preview (optic: ('a -> Const<_,'b>) -> _ -> Const<_,'t>) (source: 's) : 'a option = preview optic source

@@ -12,9 +12,9 @@ open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 #endif
 #if SYSTEMJSON
+open System.Json
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
-open System.Json
 #endif
 #if SYSTEMTEXTJSON
 open Fleece.SystemTextJson
@@ -67,7 +67,8 @@ type Attribute = {
 type Attribute with
     static member Create name value = { Attribute.Name = name; Value = value }
 
-    static member FromJSON (_: Attribute) =
+    static member OfJson x =
+        x |>
         function
         | JObject o -> 
             monad {
@@ -119,13 +120,17 @@ type NestedItem with
             }
         | x -> Decode.Fail.objExpected x
 
-let tag prop codec =
-    Codec.ofConcrete codec
-    |> Codec.compose (
-                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o), 
-                        (fun x -> if Seq.isEmpty x then zero else Dict.toIReadOnlyDictionary (dict [prop, JObject x]))
+[<AutoOpen>]
+module AdditionalCombinator =
+    open Fleece
+    let inline tag prop codec =
+        Codec.ofConcrete codec
+        |> Codec.compose (
+                        (fun o -> match Seq.toList o with [KeyValue(p, JObject a)] when p = prop -> Ok a | _ -> Decode.Fail.propertyNotFound prop o)
+                        <->
+                        (fun x -> if Seq.isEmpty x then zero else PropertyList [|prop, JObject x|])
                      )
-    |> Codec.toConcrete
+        |> Codec.toConcrete
 
 type Vehicle =
    | Bike
@@ -195,6 +200,7 @@ type Car = {
     Kms : int }
 /// Combinators using a more verbose syntax
 module CB =
+    open Fleece
     let colorDecoder = function
         | JString "red"   -> Decode.Success Red  
         | JString "blue"  -> Decode.Success Blue 
@@ -207,7 +213,7 @@ module CB =
         | Blue  -> JString "blue"
         | White -> JString "white"
 
-    let colorCodec = colorDecoder, colorEncoder
+    let colorCodec = colorDecoder <-> colorEncoder
 
     let [<GeneralizableValue>]carCodec<'t> =
         fun i c k -> { Id = i; Color = c; Kms = k }
@@ -300,13 +306,13 @@ let tests = [
             }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
-                let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07.862Z")
+                let actual : DateTime ParseResult = ofJson (Fleece.SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
                 let expected = new DateTime(2014,9,5,4,38,7,862)
                 Assert.Equal("DateTime", Ok expected, actual)
             }
 
             test "DateTime without milliseconds" {
-                let actual : DateTime ParseResult = ofJson (JsonPrimitive "2014-09-05T04:38:07Z")
+                let actual : DateTime ParseResult = ofJson (Fleece.SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07Z"))
                 let expected = new DateTime(2014,9,5,4,38,7)
                 Assert.Equal("DateTime", Ok expected, actual)
             }
@@ -331,7 +337,7 @@ let tests = [
             #if SYSTEMTEXTJSON
                 let expected = """{"id": 1, "brand": "Sony"}"""
             #endif
-                    
+
                 Assert.Equal("item", strCleanUp expected, strCleanUp actual)
             }
 
@@ -538,8 +544,8 @@ let tests = [
                 
                 let actual = 
                     { Item.Id = 1; Brand = "Sony"; Availability = None }
-                    |> snd itemBinaryCodec  // go to bytes
-                    |> fst itemBinaryCodec  // and come back to Item
+                    |> Codec.encode itemBinaryCodec  // go to bytes
+                    |> Codec.decode itemBinaryCodec  // and come back to Item
 
                 let expected = { Item.Id = 1; Brand = "Sony"; Availability = None }
                     
@@ -704,5 +710,8 @@ let main _ =
                                         printf "."
                                     })
 *)
-
+    Fleece.Config.codecCacheEnabled <- false
+    runParallel (TestList (tests @ Lenses.tests))
+    printfn "Running tests with cache enabled..."
+    Fleece.Config.codecCacheEnabled <- true
     runParallel (TestList (tests @ Lenses.tests))

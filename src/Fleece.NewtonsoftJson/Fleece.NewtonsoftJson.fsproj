@@ -1,20 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-        <NoWarn>0686</NoWarn>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <Description>JSON mapper for Newtonsoft Json</Description>
-        <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
-        <OtherFlags>--warnon:1182</OtherFlags>
-        <CopyLocalLockFileAssemblies Condition=" '$(Configuration)' == 'Debug' ">true</CopyLocalLockFileAssemblies>
-    </PropertyGroup>
-    <ItemGroup>
-        <Compile Include="../Fleece/Fleece.fs" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Update="FSharp.Core" Version="4.6.2" />
-        <PackageReference Include="FSharpPlus" Version="1.2.2" />
-        <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-    </ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>JSON mapper for Newtonsoft Json</Description>
+    <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
+    <OtherFlags>--warnon:1182</OtherFlags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Fleece.NewtonsoftJson.fs" />
+    <Compile Include="../Fleece/Compatibility.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fleece\Fleece.fsproj" />
+  </ItemGroup>
+
 </Project>

@@ -12,27 +12,49 @@ open FSharp.Data
 open Fleece.FSharpData
 open Fleece.FSharpData.Operators
 open Fleece.FSharpData.Lens
+
+type FdEncoding = Fleece.FSharpData.Encoding
+let JString = (JString >> FdEncoding.Unwrap)
+
 #endif
-#if SYSTEMJSON
-open System.Json
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
-open Fleece.SystemJson.Lens
-#endif
-#if SYSTEMTEXTJSON
-open Fleece.SystemTextJson.Helpers
-open Fleece.SystemTextJson
-open Fleece.SystemTextJson.Operators
-open System.Text.Json
-open Fleece.SystemTextJson.Lens
-#endif
+
+
 #if NEWTONSOFT
 open Fleece.Newtonsoft
 open Fleece.Newtonsoft.Operators
 open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
+
+type NsjEncoding = Fleece.Newtonsoft.Encoding
+let JString = (JString >> NsjEncoding.Unwrap)
+
 #endif
+
+#if SYSTEMJSON
+open System.Json
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+open Fleece.SystemJson.Lens
+
+type SjEncoding = Fleece.SystemJson.Encoding
+let JString = (JString >> SjEncoding.Unwrap)
+
+#endif
+
+#if SYSTEMTEXTJSON
+open Fleece.SystemTextJson
+open Fleece.SystemTextJson.Operators
+open System.Text.Json
+open Fleece.SystemTextJson.Lens
+
+type StjEncoding = Fleece.SystemTextJson.Encoding
+let JString = (JString >> StjEncoding.Unwrap)
+
+#endif
+
+let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
+
 let tests = [
         testList "key" [
             test "example 1: read first key" {
@@ -52,7 +74,7 @@ let tests = [
             test "example 4.1: write with missing key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" ) .-> JString "a"
                 let expected = JsonValue.Parse ("{\"a\": true, \"b\": 200, \"c\":\"a\"}")
-                Assert.Equal("item", string expected, string actual)
+                Assert.Equal("item", strCleanUp (string expected), strCleanUp (string actual))
             }
             test "example 4.2: write with missing key" { //TODO: Fix
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "c" << _JString) .-> "a"
@@ -63,7 +85,7 @@ let tests = [
             test "example 5: write existing key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" )|> (_jkey "a" << _JBool) .-> false
                 let expected = JsonValue.Parse ("{\"a\": false, \"b\": 200}")
-                Assert.Equal("item", string expected, string actual)
+                Assert.Equal("item", strCleanUp (string expected), strCleanUp (string actual))
             }
             test "example 6: read key from a different type" {
                 let actual = JsonValue.Parse( "[1,2,3]" ) ^? _jkey "a"
@@ -101,7 +123,7 @@ let tests = [
                                 #else
                                 "{\"a\": 200, \"b\": true}"
                                 #endif
-                Assert.Equal("item", (string (JsonValue.Parse expected)), string actual)
+                Assert.Equal("item", strCleanUp (string (JsonValue.Parse expected)), strCleanUp (string actual))
             }
         ]
         testList "array" [

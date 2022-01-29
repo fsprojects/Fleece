@@ -8,8 +8,9 @@
         <PackageTags>json fsharp</PackageTags>
 
         <WarningLevel>3</WarningLevel>
+      <OtherFlags>--nowarn:3186 $(OtherFlags)</OtherFlags>
 
-        <VersionPrefix>0.9.0</VersionPrefix>
+        <VersionPrefix>0.10.0-RC12</VersionPrefix>
         <VersionSuffix></VersionSuffix>
         <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
         <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
