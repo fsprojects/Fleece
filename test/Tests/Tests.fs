@@ -279,7 +279,27 @@ let tests = [
                 let expected = 
                     { Attribute.Name = "a name"
                       Value = null }
-                Assert.Equal("attribute", Some expected, Option.ofResult actual)           
+                Assert.Equal("attribute", Some expected, Option.ofResult actual)
+            }
+
+            test "Big Integer" {
+                let js =
+                #if FSHARPDATA
+                    """[[1,"10000000000000000000000000000005767000000000000000000001"]]"""
+                #endif
+                #if SYSTEMJSON
+                    """[[1,"10000000000000000000000000000005767000000000000000000001"]]"""
+                #endif
+                #if SYSTEMTEXTJSON
+                    """[[1,10000000000000000000000000000005767000000000000000000001]]"""
+                #endif
+                #if NEWTONSOFT
+                    """[[1,10000000000000000000000000000005767000000000000000000001]]"""
+                #endif
+                
+                let actual: ParseResult<list<int * bigint>> = ofJsonText js
+                let expected = [(1, 10000000000000000000000000000005767000000000000000000001I)]
+                Assert.Equal("bigint", Some expected, Option.ofResult actual)
             }
 
             test "Person recursive" {
