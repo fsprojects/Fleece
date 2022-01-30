@@ -116,20 +116,6 @@ and Encoding (j: JsonElementOrWriter) =
     static member jobj (x: seq<string * Encoding>) : Encoding = Encoding.JObject (x |> Seq.filter (fun (k,_) -> not (isNull k)) |> Map.ofSeq)
 
     static member create (x: string ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
-    static member create (x: bigint ) =
-        let keyValueWriter =
-            fun (w: Utf8JsonWriter) (k: string) ->
-                let s = x.ToString NumberFormatInfo.InvariantInfo
-                let doc = JsonDocument.Parse s
-                w.WritePropertyName k
-                doc.WriteTo w
-        let valueWriter =
-            fun (w: Utf8JsonWriter) ->
-                let js = x.ToString NumberFormatInfo.InvariantInfo
-                let doc = JsonDocument.Parse js
-                doc.WriteTo w
-        Encoding (Writer (fun (writer: Utf8JsonWriter) -> function Some name -> keyValueWriter writer name | _ -> valueWriter writer))
-
     static member create (x: Guid   ) = Encoding.writers (fun w k -> w.WriteString (k, x)) (fun w -> w.WriteStringValue x)
     static member create (x: decimal) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
     static member create (x: Single ) = Encoding.writers (fun w k -> w.WriteNumber (k, x)) (fun w -> w.WriteNumberValue x)
@@ -143,6 +129,12 @@ and Encoding (j: JsonElementOrWriter) =
     static member create (x: byte   ) = Encoding.writers (fun w k -> w.WriteNumber (k, uint32 x)) (fun w -> w.WriteNumberValue (uint32 x))
     static member create (x: sbyte  ) = Encoding.writers (fun w k -> w.WriteNumber (k,  int32 x)) (fun w -> w.WriteNumberValue ( int32 x))
     static member create (x: char   ) = Encoding.writers (fun w k -> w.WriteString (k, string x)) (fun w -> w.WriteStringValue (string x))
+    static member create (x: bigint ) =
+        let f (w: Utf8JsonWriter) (k: option<string>) =
+            k |> Option.iter w.WritePropertyName
+            let doc = JsonDocument.Parse (string x)
+            doc.WriteTo w
+        Encoding (Writer f)
 
     static member ($) (_:Encoding, _: decimal) = fun (x: Encoding) -> x.get_InnerValue().GetDecimal ()
     static member ($) (_:Encoding, _: int16  ) = fun (x: Encoding) -> x.get_InnerValue().GetInt16 ()
