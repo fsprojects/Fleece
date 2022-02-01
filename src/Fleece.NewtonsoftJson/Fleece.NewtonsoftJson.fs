@@ -32,6 +32,7 @@ module Internals =
        static member create (x: byte   )  = JValue         x  :> JToken
        static member create (x: sbyte  )  = JValue         x  :> JToken
        static member create (x: char   )  = JValue (string x) :> JToken
+       static member create (x: bigint )  = JValue         x  :> JToken
        static member create (x: Guid   )  = JValue (string x) :> JToken
        static member create (x: DateTime) = JValue         x  :> JToken
 
@@ -220,6 +221,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    -> Ok s.[0]
         | a -> Decode.Fail.strExpected (Encoding a)
 
+    static member bigintD x = Encoding.tryRead<bigint>  x
+
     static member guidD x =
         match x with
         | JString null -> Decode.Fail.nullString
@@ -307,6 +310,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member byteE           (x: byte          ) = JsonHelpers.create x
     static member sbyteE          (x: sbyte         ) = JsonHelpers.create x
     static member charE           (x: char          ) = JsonHelpers.create x
+    static member bigintE         (x: bigint        ) = JsonHelpers.create x
     static member guidE           (x: Guid          ) = JsonHelpers.create x
 
     
@@ -349,6 +353,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member byte           = Encoding.byteD           <-> Encoding.byteE
     static member sbyte          = Encoding.sbyteD          <-> Encoding.sbyteE
     static member char           = Encoding.charD           <-> Encoding.charE
+    static member bigint         = Encoding.bigintD         <-> Encoding.bigintE
     static member guid           = Encoding.guidD           <-> Encoding.guidE
 
 
@@ -371,6 +376,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         member _.byte           = Encoding.toIEncoding Encoding.byte
         member _.sbyte          = Encoding.toIEncoding Encoding.sbyte
         member _.char           = Encoding.toIEncoding Encoding.char
+        member _.bigint         = Encoding.toIEncoding Encoding.bigint
         member _.guid           = Encoding.toIEncoding Encoding.guid
 
         member _.result c1 c2     = Encoding.toIEncoding (Encoding.result   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
