@@ -679,7 +679,8 @@ let tests = [
             yield testProperty "int ResizeArray" (fun (x: int ResizeArray) -> roundtripEq (Seq.forall2 (=)) x)
             yield testProperty "Map<string, char>" (Prop.forAll mapArb.Value roundtrip<Map<string, char>>)
             yield testProperty "Dictionary<string, int>" (fun (x: Dictionary<string, int>) -> roundtripEq (fun a b -> kvset a = kvset b) x)
-            yield testProperty "int option array" (roundtrip<int option array>)
+            yield testProperty "int option array"  (roundtrip<int option array>)
+            yield testProperty "int voption array" (roundtrip<int voption array>)
             //yield testProperty "int Nullable array" (roundtrip<int Nullable array>) // not handled by FsCheck
             yield testProperty "decimal tuple" (roundtrip<decimal * decimal>)
             yield testProperty "decimal vtuple" (roundtrip<struct (decimal * decimal)>)

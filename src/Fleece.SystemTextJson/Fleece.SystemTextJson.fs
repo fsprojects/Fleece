@@ -206,9 +206,9 @@ and Encoding (j: JsonElementOrWriter) =
             | _ -> Decode.Fail.invalidValue jobj ""
         | a     -> Decode.Fail.objExpected a
 
-    static member optionD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<'a option> = function
-        | JNull _ -> Ok None
-        | x       -> Result.map Some (decoder x)
+    static member voptionD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<'a voption> = function
+        | JNull _ -> Ok ValueNone
+        | x       -> Result.map ValueSome (decoder x)
 
     static member nullableD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<Nullable<'a>> = function
         | JNull _ -> Ok (Nullable ())
@@ -331,9 +331,9 @@ and Encoding (j: JsonElementOrWriter) =
         | Choice2Of3 a -> jobj [ "Choice2Of3", encoder2 a ]
         | Choice3Of3 a -> jobj [ "Choice3Of3", encoder3 a ]
 
-    static member optionE (encoder: _ -> Encoding) = function
-        | None   -> Encoding.JNull
-        | Some a -> encoder a
+    static member voptionE (encoder: _ -> Encoding) = function
+        | ValueNone   -> Encoding.JNull
+        | ValueSome a -> encoder a
 
     static member nullableE (encoder: _ -> Encoding) (x: Nullable<'a>) = if x.HasValue then encoder x.Value else Encoding.JNull    
     static member arrayE    (encoder: _ -> Encoding) (x: 'a [])        = Encoding.JArray ((Array.map encoder x) |> Array.toList)
@@ -380,7 +380,7 @@ and Encoding (j: JsonElementOrWriter) =
 
     static member choice  (codec1: Codec<_,_>) (codec2: Codec<_,_>) = Encoding.choiceD (Codec.decode codec1) (Codec.decode codec2) <-> Encoding.choiceE (Codec.encode codec1) (Codec.encode codec2)
     static member choice3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) = Encoding.choice3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) <-> Encoding.choice3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
-    static member option   (codec: Codec<_,_>) = Encoding.optionD (Codec.decode codec) <-> Encoding.optionE (Codec.encode codec)
+    static member voption  (codec: Codec<_,_>) = Encoding.voptionD (Codec.decode codec) <-> Encoding.voptionE (Codec.encode codec)
     static member nullable (codec: Codec<Encoding, 't>) = Encoding.nullableD (Codec.decode codec) <-> Encoding.nullableE (Codec.encode codec) : Codec<Encoding, Nullable<'t>>
     static member array    (codec: Codec<_,_>) = Encoding.arrayD    (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
     static member propList (codec: Codec<_,_>) = Encoding.propListD (Codec.decode codec) <-> Encoding.propListE (Codec.encode codec)
@@ -440,7 +440,7 @@ and Encoding (j: JsonElementOrWriter) =
         member _.result c1 c2     = Encoding.toIEncoding (Encoding.result   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
         member _.choice c1 c2     = Encoding.toIEncoding (Encoding.choice   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
         member _.choice3 c1 c2 c3 = Encoding.toIEncoding (Encoding.choice3  (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
-        member _.option c         = Encoding.toIEncoding (Encoding.option   (Encoding.ofIEncoding c))
+        member _.option c         = Encoding.toIEncoding (Encoding.voption  (Encoding.ofIEncoding c))
         member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
         member _.propertyList c   = Encoding.toIEncoding (Encoding.propList (Encoding.ofIEncoding c))
 
