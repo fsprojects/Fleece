@@ -276,9 +276,18 @@ module Operators =
     /// Creates a new Json key-value pair for a Json object
     let inline jpair (key: string) value = jpairWith toEncoding key value
 
+    /// Creates a new Json key-value pair for a Json object if the value option is present
+    let jpairOptWith toJson (key: string) value = match value with Some value -> (key, toJson value) | _ -> (null, JNull)
+
+    /// Creates a new Json key-value pair for a Json object if the value option is present
+    let inline jpairOpt (key: string) value = jpairOptWith toJson key value
+
 
     /// Creates a new Json key-value pair for a Json object
     let inline (.=) key value = jpair key value
+
+    /// Creates a new Json key-value pair for a Json object if the value is present in the option
+    let inline (.=?) (key: string) value = jpairOpt key value
 
     let jsonObjectGetValues x = id x
 
