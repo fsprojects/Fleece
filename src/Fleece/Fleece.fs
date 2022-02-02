@@ -76,9 +76,9 @@ module Helpers =
             array
     #endif
 
-    module ValueOption =
-        let ofOption x = match x with Some x -> ValueSome x | _ -> ValueNone
-        let toOption x = match x with ValueSome x -> Some x | _ -> None
+    module Option =
+        let ofValueOption x = match x with ValueSome x -> Some x | _ -> None
+        let toValueOption x = match x with Some x -> ValueSome x | _ -> ValueNone
 
     module Dictionary =
 
@@ -138,16 +138,16 @@ and IEncoding =
     abstract result         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Result<'t1,'t2>>
     abstract choice         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Choice<'t1,'t2>>
     abstract choice3        : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, Choice<'t1,'t2,'t3>>
-    abstract option         : Codec<IEncoding, 't>  -> Codec<IEncoding, voption<'t>>
+    abstract option         : Codec<IEncoding, 't>  -> Codec<IEncoding, option<'t>>
     abstract array          : Codec<IEncoding, 't>  -> Codec<IEncoding, 't []>
     abstract propertyList   : Codec<IEncoding, 't>  -> Codec<IEncoding, PropertyList<'t>>
-    abstract tuple1         : Codec<IEncoding, 't>  -> Codec<IEncoding, ValueTuple<'t>>
-    abstract tuple2         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, struct ('t1 * 't2)>
-    abstract tuple3         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, struct ('t1 * 't2 * 't3)>
-    abstract tuple4         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, struct ('t1 * 't2 * 't3 * 't4)>
-    abstract tuple5         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, struct ('t1 * 't2 * 't3 * 't4 * 't5)>
-    abstract tuple6         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't6> -> Codec<IEncoding, struct ('t1 * 't2 * 't3 * 't4 * 't5 * 't6)>
-    abstract tuple7         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't6> -> Codec<IEncoding, 't7> -> Codec<IEncoding, struct ('t1 * 't2 * 't3 * 't4 * 't5 * 't6 * 't7)>
+    abstract tuple1         : Codec<IEncoding, 't>  -> Codec<IEncoding, Tuple<'t>>
+    abstract tuple2         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, ('t1 * 't2)>
+    abstract tuple3         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, ('t1 * 't2 * 't3)>
+    abstract tuple4         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, ('t1 * 't2 * 't3 * 't4)>
+    abstract tuple5         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, ('t1 * 't2 * 't3 * 't4 * 't5)>
+    abstract tuple6         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't6> -> Codec<IEncoding, ('t1 * 't2 * 't3 * 't4 * 't5 * 't6)>
+    abstract tuple7         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, 't4> -> Codec<IEncoding, 't5> -> Codec<IEncoding, 't6> -> Codec<IEncoding, 't7> -> Codec<IEncoding, ('t1 * 't2 * 't3 * 't4 * 't5 * 't6 * 't7)>
     abstract enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> : unit -> Codec<IEncoding, 't>
 
     /// Returns a string representing the internal "case" (or type) of the encoding (ie: Array, Object, ... )
@@ -423,27 +423,27 @@ module Codecs =
     let propMap      (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq << PropertyList.ToSeq <-> (Map.toArray >> PropertyList)) >.> propList codec
     let propDictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << PropertyList.ToSeq <-> (Dictionary.toArray >> PropertyList)) >.> propList codec
     let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (PropertyList.ToSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toArray >> PropertyList)) >.> propList codec    
-    let voption  (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, voption<'a>>
-    let option   (codec: Codec<'Encoding, 'a>) = (Ok << ValueOption.toOption   <-> ValueOption.ofOption  ) >.> voption codec : Codec<'Encoding, option<'a>>
-    let nullable (codec: Codec<'Encoding, 'a>) = (Ok << ValueOption.toNullable <-> ValueOption.ofNullable) >.> voption codec : Codec<'Encoding, Nullable<'a>>
+    let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, option<'a>>
+    let voption  (codec: Codec<'Encoding, 'a>) = (Ok << Option.toValueOption <-> Option.ofValueOption) >.> option codec : Codec<'Encoding, voption<'a>>
+    let nullable (codec: Codec<'Encoding, 'a>) = (Ok << Option.toNullable    <-> Option.ofNullable   ) >.> option codec : Codec<'Encoding, Nullable<'a>>
     let result  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.result (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Result<'a,'b>>
     let choice  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.choice (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Choice<'a,'b>>
     let choice3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.choice3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple1  (codec1: Codec<'Encoding, 't1>) = instance<'Encoding>.tuple1 (Codec.upCast codec1) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple2  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) = instance<'Encoding>.tuple2 (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple3  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.tuple3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple4  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) = instance<'Encoding>.tuple4 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = instance<'Encoding>.tuple5 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = instance<'Encoding>.tuple6 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) |> Codec.downCast : Codec<'Encoding, _>
-    let vtuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = instance<'Encoding>.tuple7 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) (Codec.upCast codec7) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple1  (codec1: Codec<'Encoding, 't1>) = instance<'Encoding>.tuple1 (Codec.upCast codec1) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple2  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) = instance<'Encoding>.tuple2 (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple3  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.tuple3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple4  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) = instance<'Encoding>.tuple4 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = instance<'Encoding>.tuple5 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = instance<'Encoding>.tuple6 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) |> Codec.downCast : Codec<'Encoding, _>
+    let tuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = instance<'Encoding>.tuple7 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) (Codec.upCast codec4) (Codec.upCast codec5) (Codec.upCast codec6) (Codec.upCast codec7) |> Codec.downCast : Codec<'Encoding, _>
     
-    let tuple1  (codec1: Codec<'Encoding, 't1>) = ((Ok << fun (x: ValueTuple<_>) -> Tuple<_> x.Item1) <-> fun x -> ValueTuple<_> x.Item1) >.> vtuple1 codec1
-    let tuple2  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) = ((Ok << fun (struct (x1, x2)) -> (x1, x2)) <-> fun (x1, x2) -> struct (x1, x2)) >.> vtuple2 codec1 codec2
-    let tuple3  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = ((Ok << fun (struct (x1, x2, x3)) -> (x1, x2, x3)) <-> fun (x1, x2, x3) -> struct (x1, x2, x3)) >.> vtuple3 codec1 codec2 codec3
-    let tuple4  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) = ((Ok << fun (struct (x1, x2, x3, x4)) -> (x1, x2, x3, x4)) <-> fun (x1, x2, x3, x4) -> struct (x1, x2, x3, x4)) >.> vtuple4 codec1 codec2 codec3 codec4 : Codec<'Encoding, _>
-    let tuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = ((Ok << fun (struct (x1, x2, x3, x4, x5)) -> (x1, x2, x3, x4, x5)) <-> fun (x1, x2, x3, x4, x5) -> struct (x1, x2, x3, x4, x5)) >.> vtuple5 codec1 codec2 codec3 codec4 codec5: Codec<'Encoding, _>
-    let tuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = ((Ok << fun (struct (x1, x2, x3, x4, x5, x6)) -> (x1, x2, x3, x4, x5, x6)) <-> fun (x1, x2, x3, x4, x5, x6) -> struct (x1, x2, x3, x4, x5, x6)) >.> vtuple6 codec1 codec2 codec3 codec4 codec5 codec6: Codec<'Encoding, _>
-    let tuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = ((Ok << fun (struct (x1, x2, x3, x4, x5, x6, x7)) -> (x1, x2, x3, x4, x5, x6, x7)) <-> fun (x1, x2, x3, x4, x5, x6, x7) -> struct (x1, x2, x3, x4, x5, x6, x7)) >.> vtuple7 codec1 codec2 codec3 codec4 codec5 codec6 codec7: Codec<'Encoding, _>
+    let vtuple1  (codec1: Codec<'Encoding, 't1>) = ((Ok << fun (x: Tuple<_>) -> ValueTuple<_> x.Item1) <-> fun x -> Tuple<_> x.Item1) >.> tuple1 codec1
+    let vtuple2  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) = ((Ok << fun (x1, x2) -> struct (x1, x2)) <-> fun (struct (x1, x2)) -> (x1, x2)) >.> tuple2 codec1 codec2
+    let vtuple3  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = ((Ok << fun (x1, x2, x3) -> struct (x1, x2, x3)) <-> fun (struct (x1, x2, x3)) -> (x1, x2, x3)) >.> tuple3 codec1 codec2 codec3
+    let vtuple4  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) = ((Ok << fun (x1, x2, x3, x4) -> struct (x1, x2, x3, x4)) <-> fun (struct (x1, x2, x3, x4)) -> (x1, x2, x3, x4)) >.> tuple4 codec1 codec2 codec3 codec4 : Codec<'Encoding, _>
+    let vtuple5  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) = ((Ok << fun (x1, x2, x3, x4, x5) -> struct (x1, x2, x3, x4, x5)) <-> fun (struct (x1, x2, x3, x4, x5)) -> (x1, x2, x3, x4, x5)) >.> tuple5 codec1 codec2 codec3 codec4 codec5: Codec<'Encoding, _>
+    let vtuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = ((Ok << fun (x1, x2, x3, x4, x5, x6) -> struct (x1, x2, x3, x4, x5, x6)) <-> fun (struct (x1, x2, x3, x4, x5, x6)) -> (x1, x2, x3, x4, x5, x6)) >.> tuple6 codec1 codec2 codec3 codec4 codec5 codec6: Codec<'Encoding, _>
+    let vtuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = ((Ok << fun (x1, x2, x3, x4, x5, x6, x7) -> struct (x1, x2, x3, x4, x5, x6, x7)) <-> fun (struct (x1, x2, x3, x4, x5, x6, x7)) -> (x1, x2, x3, x4, x5, x6, x7)) >.> tuple7 codec1 codec2 codec3 codec4 codec5 codec6 codec7: Codec<'Encoding, _>
 
     let enum<'Encoding, 't, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType and 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.enum () |> Codec.downCast : Codec<'Encoding, 't>
     let [<GeneralizableValue>] base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, _>
