@@ -542,7 +542,7 @@ module TestInterfaces =
             }
             
     
-    type Truck = { Brand: string; MaxSpeed : float; MaxLoad : float } with
+    type Truck = { Brand: string; MaxSpeed : float; MaxLoad : float; Extra : (int * int * int * int * int * int * int * int) } with
         interface IVehicle with
             member x.MaxSpeed () = let { MaxSpeed = s } = x in s
     
@@ -550,8 +550,9 @@ module TestInterfaces =
             let! _        = jreq "type-Truck" (fun _ -> Some ())
             and! brand    = jreq "brand"    (fun { Brand = x } -> Some x)
             and! maxSpeed = jreq "maxSpeed" (fun { MaxSpeed = x } -> Some x)
-            and! maxLoad  = jreq "maxLoad"  (fun {MaxLoad = x } -> Some x)
-            return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad }
+            and! maxLoad  = jreq "maxLoad"  (fun { MaxLoad = x } -> Some x)
+            and! extra    = jreq "extra"    (fun { Extra = x} -> Some x)
+            return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad; Extra = extra }
         }
 
     type Garage = { Vehicle : IVehicle } with
@@ -560,7 +561,7 @@ module TestInterfaces =
             return { Vehicle = v} }
     
     let car = Car (Brand = "Volvo", MaxSpeed = 120.0) :> IVehicle
-    let truck =  { Brand = "Ford" ; MaxSpeed = 100.0 ; MaxLoad = 2500.0 } :> IVehicle
+    let truck =  { Brand = "Ford" ; MaxSpeed = 100.0; MaxLoad = 2500.0; Extra = (1, 2, 3, 4, 5, 6, 7, 8) } :> IVehicle
     let gcar =   { Vehicle = car }
     let gtruck = { Vehicle = truck }
     
