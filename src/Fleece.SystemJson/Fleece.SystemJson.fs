@@ -97,9 +97,9 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
     static member jsonOfJsonObject (o: JsonObject) = o :> JsonValue
 
-    static member createTuple c t = function 
-        | JArray a as x -> if length a <> c then Decode.Fail.count c (Encoding x) else t a
-        | a -> Decode.Fail.arrExpected (Encoding a)
+    // static member createTuple c t = function 
+    //     | JArray a as x -> if length a <> c then Decode.Fail.count c (Encoding x) else t a
+    //     | a -> Decode.Fail.arrExpected (Encoding a)
 
     
     //////////////
@@ -147,29 +147,29 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected (Encoding a)
 
-    static member unitD : JsonValue -> ParseResult<unit> =
-        Encoding.createTuple 0 (fun _ -> (Ok ()))
-
-    static member tuple1D (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
-        Encoding.createTuple 1 (fun a -> Result.map Tuple (decoder1 a.[0]))
-
-    static member tuple2D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
-        Encoding.createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
-
-    static member tuple3D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> =
-        Encoding.createTuple 3 (fun a -> Result.map (fun a b c -> (a, b, c)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2])
-    
-    static member tuple4D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
-        Encoding.createTuple 4 (fun a -> Result.map (fun a b c d -> (a, b, c, d)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
-    
-    static member tuple5D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
-        Encoding.createTuple 5 (fun a -> Result.map (fun a b c d e -> (a, b, c, d, e)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
-    
-    static member tuple6D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
-        Encoding.createTuple 6 (fun a -> Result.map (fun a b c d e f -> (a, b, c, d, e, f)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
-    
-    static member tuple7D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
-        Encoding.createTuple 7 (fun a -> Result.map (fun a b c d e f g -> (a, b, c, d, e, f, g)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
+    // static member unitD : JsonValue -> ParseResult<unit> =
+    //     Encoding.createTuple 0 (fun _ -> (Ok ()))
+    // 
+    // static member tuple1D (decoder1: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<Tuple<'a>> =
+    //     Encoding.createTuple 1 (fun a -> Result.map Tuple (decoder1 a.[0]))
+    // 
+    // static member tuple2D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) : JsonValue -> ParseResult<'a * 'b> =
+    //     Encoding.createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
+    // 
+    // static member tuple3D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) : JsonValue -> ParseResult<'a * 'b * 'c> =
+    //     Encoding.createTuple 3 (fun a -> Result.map (fun a b c -> (a, b, c)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2])
+    // 
+    // static member tuple4D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd> =
+    //     Encoding.createTuple 4 (fun a -> Result.map (fun a b c d -> (a, b, c, d)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
+    // 
+    // static member tuple5D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e> =
+    //     Encoding.createTuple 5 (fun a -> Result.map (fun a b c d e -> (a, b, c, d, e)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
+    // 
+    // static member tuple6D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
+    //     Encoding.createTuple 6 (fun a -> Result.map (fun a b c d e f -> (a, b, c, d, e, f)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
+    // 
+    // static member tuple7D (decoder1: JsonValue -> ParseResult<'a>) (decoder2: JsonValue -> ParseResult<'b>) (decoder3: JsonValue -> ParseResult<'c>) (decoder4: JsonValue -> ParseResult<'d>) (decoder5: JsonValue -> ParseResult<'e>) (decoder6: JsonValue -> ParseResult<'f>) (decoder7: JsonValue -> ParseResult<'g>) : JsonValue -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
+    //     Encoding.createTuple 7 (fun a -> Result.map (fun a b c d e f g -> (a, b, c, d, e, f, g)) (decoder1 a.[0]) <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
 
     static member decimalD x = Encoding.tryRead<decimal> x
     static member int16D   x = Encoding.tryRead<int16>   x
@@ -314,14 +314,14 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     static member array    (codec: Codec<_,_>) = Encoding.arrayD    (Codec.decode codec) <-> Encoding.arrayE    (Codec.encode codec)
     static member multiMap (codec: Codec<_,_>) = Encoding.propListD (Codec.decode codec) <-> Encoding.propListE (Codec.encode codec)
 
-    static member unit = Encoding.unitD <-> Encoding.unitE
-    static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = Encoding.tuple1D (Codec.decode codec1)                                                                                                                                     <-> Encoding.tuple1E (Codec.encode codec1)
-    static member tuple2 (codec1: Codec<_,_>) (codec2: Codec<_,_>)                                                                                                          = Encoding.tuple2D (Codec.decode codec1) (Codec.decode codec2)                                                                                                               <-> Encoding.tuple2E (Codec.encode codec1) (Codec.encode codec2)
-    static member tuple3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>)                                                                                     = Encoding.tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3)                                                                                         <-> Encoding.tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
-    static member tuple4 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>)                                                                = Encoding.tuple4D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4)                                                                   <-> Encoding.tuple4E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4)
-    static member tuple5 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>)                                           = Encoding.tuple5D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5)                                             <-> Encoding.tuple5E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5)
-    static member tuple6 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>)                      = Encoding.tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6)                       <-> Encoding.tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6)
-    static member tuple7 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>) (codec7: Codec<_,_>) = Encoding.tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7) <-> Encoding.tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7)
+    // static member unit = Encoding.unitD <-> Encoding.unitE
+    // static member tuple1 (codec1: Codec<_,_>)                                                                                                                               = Encoding.tuple1D (Codec.decode codec1)                                                                                                                                     <-> Encoding.tuple1E (Codec.encode codec1)
+    // static member tuple2 (codec1: Codec<_,_>) (codec2: Codec<_,_>)                                                                                                          = Encoding.tuple2D (Codec.decode codec1) (Codec.decode codec2)                                                                                                               <-> Encoding.tuple2E (Codec.encode codec1) (Codec.encode codec2)
+    // static member tuple3 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>)                                                                                     = Encoding.tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3)                                                                                         <-> Encoding.tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
+    // static member tuple4 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>)                                                                = Encoding.tuple4D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4)                                                                   <-> Encoding.tuple4E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4)
+    // static member tuple5 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>)                                           = Encoding.tuple5D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5)                                             <-> Encoding.tuple5E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5)
+    // static member tuple6 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>)                      = Encoding.tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6)                       <-> Encoding.tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6)
+    // static member tuple7 (codec1: Codec<_,_>) (codec2: Codec<_,_>) (codec3: Codec<_,_>) (codec4: Codec<_,_>) (codec5: Codec<_,_>) (codec6: Codec<_,_>) (codec7: Codec<_,_>) = Encoding.tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7) <-> Encoding.tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7)
 
     static member boolean        = Encoding.booleanD        <-> Encoding.booleanE
     static member string         = Encoding.stringD         <-> Encoding.stringE
@@ -345,7 +345,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
 
     interface IEncoding with
-        member _.unit           = Encoding.toIEncoding Encoding.unit
+        // member _.unit           = Encoding.toIEncoding Encoding.unit
         member _.boolean        = Encoding.toIEncoding Encoding.boolean
         member _.string         = Encoding.toIEncoding Encoding.string
         member _.dateTime       = Encoding.toIEncoding Encoding.dateTime
@@ -373,13 +373,13 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
         member _.propertyList c   = Encoding.toIEncoding (Encoding.multiMap (Encoding.ofIEncoding c))
 
-        member _.tuple1 c                    = Encoding.toIEncoding (Encoding.tuple1 (Encoding.ofIEncoding c))
-        member _.tuple2 c1 c2                = Encoding.toIEncoding (Encoding.tuple2 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
-        member _.tuple3 c1 c2 c3             = Encoding.toIEncoding (Encoding.tuple3 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
-        member _.tuple4 c1 c2 c3 c4          = Encoding.toIEncoding (Encoding.tuple4 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4))
-        member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIEncoding (Encoding.tuple5 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5))
-        member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIEncoding (Encoding.tuple6 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6))
-        member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIEncoding (Encoding.tuple7 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6) (Encoding.ofIEncoding c7))
+        // member _.tuple1 c                    = Encoding.toIEncoding (Encoding.tuple1 (Encoding.ofIEncoding c))
+        // member _.tuple2 c1 c2                = Encoding.toIEncoding (Encoding.tuple2 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
+        // member _.tuple3 c1 c2 c3             = Encoding.toIEncoding (Encoding.tuple3 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
+        // member _.tuple4 c1 c2 c3 c4          = Encoding.toIEncoding (Encoding.tuple4 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4))
+        // member _.tuple5 c1 c2 c3 c4 c5       = Encoding.toIEncoding (Encoding.tuple5 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5))
+        // member _.tuple6 c1 c2 c3 c4 c5 c6    = Encoding.toIEncoding (Encoding.tuple6 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6))
+        // member _.tuple7 c1 c2 c3 c4 c5 c6 c7 = Encoding.toIEncoding (Encoding.tuple7 (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3) (Encoding.ofIEncoding c4) (Encoding.ofIEncoding c5) (Encoding.ofIEncoding c6) (Encoding.ofIEncoding c7))
 
         member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = Encoding.toIEncoding (Encoding.enumD <-> Encoding.enumE)
 
