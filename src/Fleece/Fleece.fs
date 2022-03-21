@@ -430,7 +430,7 @@ module Codecs =
     let id: Codec<'T, 'T> = { Decoder = Ok; Encoder = id }
 
     let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           =
-        let tuple0D  : 'Encoding [] -> ParseResult<unit> = createTuple 1 (fun a -> Ok ())
+        let tuple0D  : 'Encoding [] -> ParseResult<unit> = createTuple 0 (fun a -> Ok ())
         let tuple0E () = [||]
         { Decoder = tuple0D; Encoder = tuple0E }
         |> Codec.compose (array id)
