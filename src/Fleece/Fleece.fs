@@ -375,7 +375,7 @@ module Decode =
         let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
         let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
-        let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, a))
+        let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
         let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
         let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
         
@@ -429,7 +429,7 @@ module Codecs =
     
     let id: Codec<'T, 'T> = { Decoder = Ok; Encoder = id }
 
-    let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           =
+    let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> =
         let tuple0D  : 'Encoding [] -> ParseResult<unit> = createTuple 0 (fun a -> Ok ())
         let tuple0E () = [||]
         { Decoder = tuple0D; Encoder = tuple0E }
@@ -640,22 +640,6 @@ module Internals =
         static member inline GetArrCodec (_: list<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding [], list<'a>> = Unchecked.defaultof<_>
 
         static member inline GetArrCodec (_: array<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding [], array<'a>> = Unchecked.defaultof<_>
-
-
-        static member inline GetArreCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) and 'tuple : struct , _: obj, c, _: 'Operation) : Codec<'Encoding [], _> =
-            let c1 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let c2 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let c3 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let c4 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let c5 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let c6 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let c7 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<string>
-            let cr = Unchecked.defaultof<'tr>
-            {   
-                Decoder = Unchecked.defaultof<_>
-                Encoder = Unchecked.defaultof<_>
-            }
-
 
         static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding [], ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * ^a * _ -> Codec<'Encoding [], ^t>) b, a, a, Unchecked.defaultof<'Operation>)
