@@ -812,15 +812,10 @@ module Internals =
                 c >.> Codecs.propList Codecs.id
             |> CodecCache<'Operation, 'Encoding, 'T>.Run
 
+        // Overload for tuples
         static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: obj, c, _: 'Operation) : Codec<'Encoding, _> =
-            // GetArrCodec.Invoke Unchecked.defaultof<'tuple> >.> Codecs.array Codecs.id
-            // let c: Codec<'Encoding [], 'T> = (^T : (static member GetArrCodec: Codec<'Encoding [], 'T>) ())
-            // c >.> Codecs.array Codecs.id
-
-            let f t = (^tuple: (member Item1: 't1) t)
-
-            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * ^a * _ -> Codec<'Encoding [], ^t>) b, a, a, Unchecked.defaultof<'Operation>)
-            call (Unchecked.defaultof<GetArrCodec>, Unchecked.defaultof<'tuple>) >.> Codecs.array Codecs.id
+            let _f t = (^tuple: (member Item1: 't1) t)
+            GetArrCodec.Invoke Unchecked.defaultof<'tuple> >.> Codecs.array Codecs.id
 
         // For specific 'Encoding in recursive calls coming from a get_Codec operation
         static member inline GetCodec (_: 'T, _: IDefault7, _, _: 'Operation) : Codec<'Encoding, 'T> =
