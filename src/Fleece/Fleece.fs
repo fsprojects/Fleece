@@ -173,15 +173,30 @@ with
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
 
-[<AutoOpen>]
-module MoreHelpers =
-    let instance<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = new 'Encoding ()
+/// Helpers to deal with Decode errors.
+module Decode =
+    let inline Success x = Ok x : ParseResult<_>
+    let (|Success|Failure|) (x: ParseResult<_>) = x |> function
+        | Ok    x -> Success x
+        | Error x -> Failure x
 
-    let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) =
-        let inline fcount e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
-        function
-        | (a : 'Encoding []) -> if length a <> c then fcount c a else t a
-        // | a -> Decode.Fail.arrExpected (Encoding a)
+    module Fail =
+        let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Object", a))
+        let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
+        let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Number", a))
+        let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
+        let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
+        let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
+        let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
+        let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
+        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
+        
+        /// <summary>Creates a parsing error.</summary>
+        /// <param name="exn">The source parsing exception.</param>
+        /// <param name="value">The portion of the source string, representing the value that caused the parsing error.</param>
+        /// <returns>The resulting DecodeError.</returns>
+        let parseError exn value : Result<'t, _> = Error (DecodeError.ParseError (typeof<'t>, exn, value))
+
 
 [<Struct>]
 type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncoding) with
@@ -318,6 +333,9 @@ module Codec =
     let toConcrete x = id x
 
 
+
+
+
 type Codec<'S1, 'S2, 't1, 't2> with
 
     static member (<.<) (c1, c2) = Codec.compose c1 c2
@@ -359,31 +377,6 @@ type Codec<'S1, 'S2, 't1, 't2> with
             Encoder = x.Encoder ++ y.Encoder
         }
 
-
-
-/// Helpers to deal with Decode errors.
-module Decode =
-    let inline Success x = Ok x : ParseResult<_>
-    let (|Success|Failure|) (x: ParseResult<_>) = x |> function
-        | Ok    x -> Success x
-        | Error x -> Failure x
-
-    module Fail =
-        let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Object", a))
-        let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
-        let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Number", a))
-        let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
-        let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
-        let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
-        let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
-        let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
-        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
-        
-        /// <summary>Creates a parsing error.</summary>
-        /// <param name="exn">The source parsing exception.</param>
-        /// <param name="value">The portion of the source string, representing the value that caused the parsing error.</param>
-        /// <returns>The resulting DecodeError.</returns>
-        let parseError exn value : Result<'t, _> = Error (DecodeError.ParseError (typeof<'t>, exn, value))
 
 
 module Codecs =
@@ -429,52 +422,58 @@ module Codecs =
     
     let id: Codec<'T, 'T> = { Decoder = Ok; Encoder = id }
 
+    [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
+    module Internals =
+        let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) (a : 'Encoding []) =
+            if length a <> c then Decode.Fail.count c a else t a
+
+        let ptuple1  (codec1: Codec<'Encoding, 't1>) =
+            let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (decoder1 a.[0]) )
+            let tuple1E (encoder1: 'a -> 'Encoding) (a: Tuple<_>) = [|encoder1 a.Item1|]
+            { Decoder = tuple1D (Codec.decode codec1); Encoder = tuple1E (Codec.encode codec1) }
+
+        let ptuple2 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) =
+            let tuple2D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) : 'Encoding [] -> ParseResult<'a * 'b> = createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
+            let tuple2E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (a, b) = [|encoder1 a; encoder2 b|]
+            { Decoder = tuple2D (Codec.decode codec1) (Codec.decode codec2); Encoder = tuple2E (Codec.encode codec1) (Codec.encode codec2) }
+
+        let ptuple3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) =
+            let tuple3D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) : 'Encoding [] -> ParseResult<'a * 'b * 'c> =
+                createTuple 3 (fun a -> Result.map3 (fun a b c -> (a, b, c)) (decoder1 a.[0]) (decoder2 a.[1]) (decoder3 a.[2]))
+            let tuple3E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (a, b, c) = [|encoder1 a; encoder2 b; encoder3 c|]
+            { Decoder = tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3); Encoder = tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) }
+
+        let ptuple4 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) =
+            let tuple4D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd> =
+                createTuple 4 (fun a -> tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
+            let tuple4E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (a, b, c, d) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d|]
+            { Decoder = tuple4D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4); Encoder = tuple4E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) }
+
+        let ptuple5 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) =
+            let tuple5D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e> =
+                createTuple 5 (fun a -> tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
+            let tuple5E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (a, b, c, d, e) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|]
+            { Decoder = tuple5D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5); Encoder = tuple5E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) }
+
+        let ptuple6 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) =
+            let tuple6D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
+                createTuple 6 (fun a -> tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
+            let tuple6E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (a, b, c, d, e, f) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|]
+            { Decoder = tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6); Encoder = tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) }
+
+        let ptuple7 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) =
+            let tuple7D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) (decoder7: 'Encoding -> ParseResult<'g>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
+                createTuple 7 (fun a -> tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
+            let tuple7E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (encoder7: 'g -> 'Encoding) (a, b, c, d, e, f, g) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|]
+            { Decoder = tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7); Encoder = tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7) }
+        
+    open Internals
+    
     let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> =
-        let tuple0D  : 'Encoding [] -> ParseResult<unit> = createTuple 0 (fun a -> Ok ())
+        let tuple0D : 'Encoding [] -> ParseResult<unit> = createTuple 0 (fun _ -> Ok ())
         let tuple0E () = [||]
         { Decoder = tuple0D; Encoder = tuple0E }
         |> Codec.compose (array id)
-
-    let ptuple1  (codec1: Codec<'Encoding, 't1>) =
-        let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (decoder1 a.[0]) )
-        let tuple1E (encoder1: 'a -> 'Encoding) (a: Tuple<_>) = [|encoder1 a.Item1|]
-        { Decoder = tuple1D (Codec.decode codec1); Encoder = tuple1E (Codec.encode codec1) }
-
-    let ptuple2 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) =
-        let tuple2D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) : 'Encoding [] -> ParseResult<'a * 'b> = createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
-        let tuple2E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (a, b) = [|encoder1 a; encoder2 b|]
-        { Decoder = tuple2D (Codec.decode codec1) (Codec.decode codec2); Encoder = tuple2E (Codec.encode codec1) (Codec.encode codec2) }
-
-    let ptuple3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) =
-        let tuple3D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) : 'Encoding [] -> ParseResult<'a * 'b * 'c> =
-            createTuple 3 (fun a -> Result.map3 (fun a b c -> (a, b, c)) (decoder1 a.[0]) (decoder2 a.[1]) (decoder3 a.[2]))
-        let tuple3E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (a, b, c) = [|encoder1 a; encoder2 b; encoder3 c|]
-        { Decoder = tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3); Encoder = tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) }
-
-    let ptuple4 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) =
-        let tuple4D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd> =
-            createTuple 4 (fun a -> tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
-        let tuple4E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (a, b, c, d) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d|]
-        { Decoder = tuple4D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4); Encoder = tuple4E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) }
-
-    let ptuple5 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) =
-        let tuple5D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e> =
-            createTuple 5 (fun a -> tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
-        let tuple5E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (a, b, c, d, e) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|]
-        { Decoder = tuple5D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5); Encoder = tuple5E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) }
-
-    let ptuple6 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) =
-        let tuple6D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
-            createTuple 6 (fun a -> tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
-        let tuple6E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (a, b, c, d, e, f) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|]
-        { Decoder = tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6); Encoder = tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) }
-
-    let ptuple7 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) =
-        let tuple7D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) (decoder7: 'Encoding -> ParseResult<'g>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
-            createTuple 7 (fun a -> tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
-        let tuple7E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (encoder7: 'g -> 'Encoding) (a, b, c, d, e, f, g) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|]
-        { Decoder = tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7); Encoder = tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7) }
-        
 
     let tuple1 a = ptuple1 a |> Codec.compose (array id)
     let tuple2 a b = ptuple2 a b |> Codec.compose (array id)
@@ -693,21 +692,18 @@ module Internals =
     type GetArrCodec with
 
         static member inline GetArrCodec (_: Tuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], Tuple<'a>> =
-            Codecs.ptuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+            Codecs.Internals.ptuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 
         static member inline GetArrCodec (_: Id2<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], Id2<'a>> =
             Unchecked.defaultof<_>
 
     type GetArrCodec with
-        static member inline GetArrCodec (_: 'a * 'b                          when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b> =
-            Codecs.ptuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)
-        
-    type GetArrCodec with    
-        static member inline GetArrCodec (_: 'a * 'b * 'c                     when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c                    > = Codecs.ptuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                         // ) |> CodecCache<'Operation, 'Encoding, _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd                when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd               > = Codecs.ptuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                       // ) |> CodecCache<'Operation, 'Encoding, _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e           when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e          > = Codecs.ptuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                     // ) |> CodecCache<'Operation, 'Encoding, _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f      when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f     > = Codecs.ptuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                   // ) |> CodecCache<'Operation, 'Encoding, _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f * 'g> = Codecs.ptuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>) // ) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetArrCodec (_: 'a * 'b                          when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b>                          = Codecs.Internals.ptuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)
+        static member inline GetArrCodec (_: 'a * 'b * 'c                     when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c                    > = Codecs.Internals.ptuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                         // ) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd                when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd               > = Codecs.Internals.ptuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                       // ) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e           when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e          > = Codecs.Internals.ptuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                     // ) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f      when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f     > = Codecs.Internals.ptuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                   // ) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f * 'g> = Codecs.Internals.ptuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>) // ) |> CodecCache<'Operation, 'Encoding, _>.Run
 
     
     type GetCodec with static member inline GetCodec (_: Result<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Result<'a,'b>> = (fun () -> Codecs.result (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
