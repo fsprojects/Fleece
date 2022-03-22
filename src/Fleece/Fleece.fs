@@ -650,7 +650,7 @@ module Internals =
                 let c5 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t5>
                 let c6 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t6>
                 let c7 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t7>
-                let cr = GetArrCodec.Invoke Unchecked.defaultof<'tr>
+                let cr = GetArrCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'tr>
                 {   
                     Decoder = fun x ->
                         match x with
