@@ -123,7 +123,12 @@ module Operators =
             let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "String", a))
             let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
             let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
-            let inline count e (a: 'Encoding) = Error (IndexOutOfRange (e, a))
+            let inline count e (x: 'Encoding) =
+                let a =
+                    match (Codecs.array (Ok <-> id) |> Codec.decode) x with
+                    | Ok a -> a
+                    | Error x -> failwithf "Error on error handling: Expected an 'Encoding [] but received %A." x
+                Error (IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
             let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
             let propertyNotFound p (o: PropertyList<'Encoding>) = Error (PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
             let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
@@ -161,7 +166,6 @@ module Operators =
     
         
         let ofConcrete x = id x
-    
         let toConcrete x = id x    
     
     [<RequireQualifiedAccess>]
