@@ -424,8 +424,7 @@ module Codecs =
 
     [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
     module Internals =
-        let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) (a : 'Encoding []) =
-            if length a <> c then Decode.Fail.count c a else t a
+        let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) (a : 'Encoding []) = if length a <> c then Decode.Fail.count c a else t a
 
         let ptuple1  (codec1: Codec<'Encoding, 't1>) =
             let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (decoder1 a.[0]) )
@@ -522,7 +521,8 @@ module Internals =
         let value = v
         member _.getValue = value
 
-    type IDefault7 = interface end
+    type IDefault8 = interface end
+    type IDefault7 = interface inherit IDefault8 end
     type IDefault6 = interface inherit IDefault7 end
     type IDefault5 = interface inherit IDefault6 end
     type IDefault4 = interface inherit IDefault5 end
@@ -630,15 +630,11 @@ module Internals =
     type GetArrCodec =
         interface IDefault0
 
-        static member inline GetArrCodec (_: Id1<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding [], Id1<'a>> =
+        static member inline GetArrCodec (_: Id2<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], Id2<'a>> =
             Unchecked.defaultof<_>
 
-        static member inline GetArrCodec (_: ValueTuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding [], ValueTuple<'a>> =
-            Unchecked.defaultof<_>
-
-        static member inline GetArrCodec (_: list<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding [], list<'a>> = Unchecked.defaultof<_>
-
-        static member inline GetArrCodec (_: array<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding [], array<'a>> = Unchecked.defaultof<_>
+        static member inline GetArrCodec (_: Tuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], Tuple<'a>> =
+            Codecs.Internals.ptuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 
         static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding [], ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * ^a * _ -> Codec<'Encoding [], ^t>) b, a, a, Unchecked.defaultof<'Operation>)
@@ -689,13 +685,7 @@ module Internals =
                         //| Error _ -> failwith "Nested tuple didn't decompose as list, check your `list` and your `tupleX` encoder implementations."
                         | tr -> ([|t1; t2; t3; t4; t5; t6; t7|] ++ tr)
                 }// )
-    type GetArrCodec with
 
-        static member inline GetArrCodec (_: Tuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], Tuple<'a>> =
-            Codecs.Internals.ptuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
-
-        static member inline GetArrCodec (_: Id2<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], Id2<'a>> =
-            Unchecked.defaultof<_>
 
     type GetArrCodec with
         static member inline GetArrCodec (_: 'a * 'b                          when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, c, _: 'Operation) : Codec<'Encoding [], 'a * 'b>                          = Codecs.Internals.ptuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)
@@ -809,7 +799,7 @@ module Internals =
             |> CodecCache<'Operation, 'Encoding, 'T>.Run
 
         // Overload for tuples
-        static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: obj, c, _: 'Operation) : Codec<'Encoding, _> =
+        static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: IDefault8, c, _: 'Operation) : Codec<'Encoding, _> =
             let _f t = (^tuple: (member Item1: 't1) t)
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * ^a * _ -> Codec<'Encoding [], ^t>) b, a, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<GetArrCodec>, Unchecked.defaultof<'tuple>) >.> Codecs.array Codecs.id
