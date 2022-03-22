@@ -643,7 +643,6 @@ module Internals =
     type GetArrCodec with
         static member inline GetArrCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) , _: 'GetArrCodec, _: 'Operation) : Codec<'Encoding [], 'tuple> =                
             // CodecCache<'Operation, 'Encoding, 'tuple>.Run (fun () ->
-                // let { Decoder = ofArray; Encoder = toArray } = Codecs.array Codecs.id
                 let c1 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t1>
                 let c2 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t2>
                 let c3 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t3>
@@ -651,10 +650,7 @@ module Internals =
                 let c5 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t5>
                 let c6 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t6>
                 let c7 = GetCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'t7>
-                let cr = 
-                    // GetArrCodec.Invoke Unchecked.defaultof<'tr>
-                    let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * _ -> Codec<'Encoding [], ^t>) b, a, Unchecked.defaultof<'Operation>)
-                    call (Unchecked.defaultof<'GetArrCodec>, Unchecked.defaultof<'tr>)
+                let cr = GetArrCodec.Invoke Unchecked.defaultof<'tr>
                 {   
                     Decoder = fun x ->
                         match x with
@@ -668,9 +664,8 @@ module Internals =
                             let (t7: 't7 ParseResult) = (Codec.decode c7) (a.[6])
                             let (tr: 'tr ParseResult) = (Codec.decode cr) ( (a.[7..]) )
                             match tr with
-                            | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, x |> Array.map (fun x -> x :> IEncoding) ))
+                            | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, x |> Array.map (fun x -> x :> IEncoding)))
                             | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr
-                        // | Error e -> Error e
                     Encoder = fun (t: 'tuple) ->
                         let t1 = (Codec.encode c1) (^tuple: (member Item1: 't1) t)
                         let t2 = (Codec.encode c2) (^tuple: (member Item2: 't2) t)
@@ -680,10 +675,7 @@ module Internals =
                         let t6 = (Codec.encode c6) (^tuple: (member Item6: 't6) t)
                         let t7 = (Codec.encode c7) (^tuple: (member Item7: 't7) t)
                         let tr = (Codec.encode cr) (^tuple: (member Rest : 'tr) t)
-
-                        match tr with
-                        //| Error _ -> failwith "Nested tuple didn't decompose as list, check your `list` and your `tupleX` encoder implementations."
-                        | tr -> ([|t1; t2; t3; t4; t5; t6; t7|] ++ tr)
+                        ([|t1; t2; t3; t4; t5; t6; t7|] ++ tr)
                 }// )
 
 
