@@ -793,8 +793,7 @@ module Internals =
         // Overload for tuples
         static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: IDefault8, c, _: 'Operation) : Codec<'Encoding, _> =
             let _f t = (^tuple: (member Item1: 't1) t)
-            let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * _ -> Codec<'Encoding [], ^t>) b, a, Unchecked.defaultof<'Operation>)
-            call (Unchecked.defaultof<GetArrCodec>, Unchecked.defaultof<'tuple>) >.> Codecs.array Codecs.id
+            GetArrCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'tuple> >.> Codecs.array Codecs.id
 
         // For specific 'Encoding in recursive calls coming from a get_Codec operation
         static member inline GetCodec (_: 'T, _: IDefault7, _, _: 'Operation) : Codec<'Encoding, 'T> =
