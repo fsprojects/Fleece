@@ -907,6 +907,11 @@ module Operators =
             Encoder = fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero
         }
 
+    [<Obsolete("Use codec computation expression instead.")>]
+    let inline jchoice (codecs: seq<Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 't1, 't2>>) =
+        let head, tail = Seq.head codecs, Seq.tail codecs
+        foldBack (<|>) tail head
+    
     /// Derives a concrete field codec for an optional field.
     let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith defaultCodec<'Encoding, 'param> prop getter
 
