@@ -146,13 +146,13 @@ and IEncoding =
     abstract getCase : string
 
 and DecodeError =
-    | EncodingCaseMismatch of DestinationType: Type * EncodedValue: IEncoding * ExpectedCase: string * ActualCase: string
+    | EncodingCaseMismatch of DestinationType: Type * Source: IEncoding * ExpectedCase: string * ActualCase: string
     | NullString of DestinationType: Type
-    | IndexOutOfRange of int * IEncoding []
-    | InvalidValue of DestinationType:  Type * EncodedValue: IEncoding * AdditionalInformation: string
-    | PropertyNotFound of string * PropertyList<IEncoding>
-    | ParseError of DestinationType: Type * exn * string
-    | Uncategorized of string
+    | IndexOutOfRange of Index: int * Source: IEncoding []
+    | InvalidValue of DestinationType: Type * Source: IEncoding * AdditionalInformation: string
+    | PropertyNotFound of Property: string * Source: PropertyList<IEncoding>
+    | ParseError of DestinationType: Type * Exception: exn * Source: string
+    | Uncategorized of Description: string
     | Multiple of DecodeError list
 with
     static member (+) (x, y) =
@@ -168,7 +168,7 @@ with
         | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
         | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
         | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
-        | ParseError (t, s, v)    -> sprintf "Error decoding %s from %s: %s" (string v) (string t) (string s)
+        | ParseError (t, s, v) -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
