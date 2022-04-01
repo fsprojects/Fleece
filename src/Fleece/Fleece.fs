@@ -746,9 +746,9 @@ module Internals =
         // Overload to handle user-defined interfaces
         static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) =
             fun () ->
-                match CodecCollection<'Encoding, 'Base>.GetSubtypes |> toList |> NonEmptyList.tryOfList with
+                match CodecCollection<'Encoding, 'Base>.GetSubtypes |> NonEmptySeq.tryOfSeq with
                 | None ->
-                    match CodecCollection<AdHocEncoding, 'Base>.GetSubtypes |> toList |> NonEmptyList.tryOfList with
+                    match CodecCollection<AdHocEncoding, 'Base>.GetSubtypes |> NonEmptySeq.tryOfSeq with
                     | None -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
                     | Some codecs ->
                         (codecs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id |> Codec.upCast |> AdHocEncoding.ofIEncoding) (new 'Encoding () :> IEncoding) |> Codec.downCast<_, 'Encoding>
