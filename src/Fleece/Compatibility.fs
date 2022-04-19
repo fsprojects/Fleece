@@ -137,32 +137,29 @@ module Operators =
     /// Functions operating on Codecs
     module Codec =
     
-        let decode { Decoder = d } = d
-        let encode { Encoder = e } = e
+        let decode { Decoder = ReaderT d } = d
+        let encode { Encoder = e } = e >> Const.run
     
         /// Turns a Codec into another Codec, by mapping it over an isomorphism.
         let inline invmap (f: 'T -> 'U) (g: 'U -> 'T) c =
-            let { Decoder = r ; Encoder = w } = c
+            let (Codec (r, w)) = c
             contramap f r <-> map g w
     
     
         /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
         /// and codec1 then codec2 for decoding
         let inline compose codec1 codec2 =
-            let { Decoder = dec1 ; Encoder = enc1 } = codec1
-            let { Decoder = dec2 ; Encoder = enc2 } = codec2
+            let (Codec (dec1, enc1)) = codec1
+            let (Codec (dec2, enc2)) = codec2
             (dec1 >> (=<<) dec2) <-> (enc1 << enc2)
     
         /// Maps a function over the decoder.
         let map (f: 't1 -> 'u1) (field: Codec<PropertyList<'S>, PropertyList<'S>, 't1, 't2>) =
-            {
-                Decoder = fun x ->
-                    match field.Decoder x with
+            (fun x ->
+                    match Codec.decode field x with
                     | Error e -> Error e
-                    | Ok a    -> Ok (f a)
-    
-                Encoder = field.Encoder
-            }
+                    | Ok a    -> Ok (f a))
+            <-> Codec.encode field
     
         
         let ofConcrete x = id x
