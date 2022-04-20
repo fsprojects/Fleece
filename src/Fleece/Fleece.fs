@@ -104,12 +104,7 @@ type Encoder<'S, 't> = 't -> Const<'S, unit>
 
 /// A decoder from raw type 'S1 and encoder to raw type 'S2 for strong types 't1 and 't2.
 type Codec<'S1, 'S2, 't1, 't2> = { Decoder: Decoder<'S1, 't1>; Encoder: Encoder<'S2, 't2> } with
-    static member internal create decoder encoder = { Decoder = ReaderT decoder; Encoder = encoder >> Const }
     static member inline Return f = { Decoder = ReaderT (fun _ -> Ok f); Encoder = zero >> Const }
-
-    member v.DecoderFunc = let { Decoder = ReaderT x } = v in x
-    member v.EncoderFunc = let { Encoder = x } = v in x >> Const.run
-
 
 /// A codec for raw type 'S to strong type 't.
 and Codec<'S, 't> = Codec<'S, 'S, 't, 't>
@@ -207,9 +202,9 @@ module Decode =
 type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncoding) with
 
     static member ofIEncoding (c1: Codec<IEncoding, 'T>) : _ -> Codec<IEncoding, 'T> =
-        let dec1 (x: IEncoding)   = c1.DecoderFunc (AdHocEncoding (fun _ -> x) :> IEncoding)
-        let enc1 (i: IEncoding) v = let (AdHocEncoding x) = c1.EncoderFunc v :?> AdHocEncoding in x i
-        let codec1 i = Codec<_,_,_,_>.create dec1 (enc1 i)
+        let dec1 (x: IEncoding)   = ReaderT.run c1.Decoder (AdHocEncoding (fun _ -> x) :> IEncoding)
+        let enc1 (i: IEncoding) v = let (AdHocEncoding x) = Const.run (c1.Encoder v) :?> AdHocEncoding in x i
+        let codec1 i = { Decoder = ReaderT dec1; Encoder = (enc1 i) >> Const }
         codec1
 
     static member ($) (_: AdHocEncoding, (x1, x2)                    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x)
@@ -221,12 +216,13 @@ type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncod
 
     /// Evals the IEncoding parameter to get a concrete Codec.
     static member toIEncoding (codec: IEncoding -> Codec<IEncoding, 't>) : Codec<IEncoding, 't> =
-        Codec<_,_,_,_>.create
-            (fun (x: IEncoding) ->
+        {
+            Decoder = ReaderT (fun (x: IEncoding) ->
                 let (AdHocEncoding x) = x :?> AdHocEncoding
                 let i = x Unchecked.defaultof<_>
-                (codec i).DecoderFunc i)
-            (fun x -> AdHocEncoding (fun i -> (codec i).EncoderFunc x) :> IEncoding)
+                ReaderT.run (codec i).Decoder i)
+            Encoder = (fun x -> AdHocEncoding (fun i -> Const.run ((codec i).Encoder x)) :> IEncoding) >> Const
+        }
 
     /// Same as toIEncoding but with one parameter.
     static member toIEncoding1 (codec: IEncoding -> _) codec1 =
@@ -309,20 +305,20 @@ module Codec =
     let map (f: 't1 -> 'u1) (field: Codec<PropertyList<'S>, PropertyList<'S>, 't1, 't2>) =
         create
             (fun x ->
-                match field.DecoderFunc x with
+                match decode field x with
                 | Error e -> Error e
                 | Ok a    -> Ok (f a))
-            field.EncoderFunc
+            (encode field)
 
     let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> =
         create
-            (fun (p: 'S) -> x.DecoderFunc (p :> IEncoding))
-            (fun (p: 't) -> x.EncoderFunc p :?> 'S)
+            (fun (p: 'S) -> decode x (p :> IEncoding))
+            (fun (p: 't) -> encode x p :?> 'S)
 
     let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> =
         create
-            (fun (p: IEncoding) -> x.DecoderFunc (p :?> 'S))
-            (fun (p: 't) -> x.EncoderFunc p :> IEncoding)
+            (fun (p: IEncoding) -> decode x (p :?> 'S))
+            (fun (p: 't) -> encode x p :> IEncoding)
 
     
     [<Obsolete("This function is no longer needed. You can safely remove it.")>]
@@ -340,10 +336,10 @@ type Codec<'S1, 'S2, 't1, 't2> with
     static member (<*>) (remainderFields: Codec<PropertyList<'S>, PropertyList<'S>, 'f ->'r, 'T>, currentField: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
         Codec.create
             (fun x ->
-                match remainderFields.DecoderFunc x, lazy (currentField.DecoderFunc x) with
+                match Codec.decode remainderFields x, lazy (Codec.decode currentField x) with
                 | Error e, _ | _, Lazy (Error e) -> Error e
                 | Ok a   , Lazy (Ok b)           -> Ok (a b))
-            (fun t -> remainderFields.EncoderFunc t ++ currentField.EncoderFunc t)
+            (fun t -> Codec.encode remainderFields t ++ Codec.encode currentField t)
 
     /// Apply two codecs in such a way that the field values are ignored when decoding.
     static member ( *>) (f: Codec<PropertyList<'S>, PropertyList<'S>, 't, 'u>, x) = f *> x : Codec<PropertyList<'S>, 'u>
@@ -357,16 +353,16 @@ type Codec<'S1, 'S2, 't1, 't2> with
     static member (<|>) (source: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>, alternative: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
         Codec.create
             (fun r ->
-                match source.DecoderFunc r, lazy (alternative.DecoderFunc r) with
+                match Codec.decode source r, lazy (Codec.decode alternative r) with
                 | Ok x, _ -> Ok x
                 | Error x, Lazy (Error y) -> Error (x ++ y)
                 | _, Lazy d -> d)
-            (fun t -> source.EncoderFunc t ++ alternative.EncoderFunc t)
+            (fun t -> Codec.encode source t ++ Codec.encode alternative t)
 
     static member Lift2 (f: 'x ->'y ->'r, x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>, y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
         Codec.create
-            (fun s -> ((f <!> x.DecoderFunc s: ParseResult<'y -> 'r>) <*> y.DecoderFunc s: ParseResult<'r>))
-            (x.EncoderFunc ++ y.EncoderFunc)
+            (fun s -> ((f <!> Codec.decode x s: ParseResult<'y -> 'r>) <*> Codec.decode y s: ParseResult<'r>))
+            (Codec.encode x ++ Codec.encode y)
 
 
 
@@ -416,47 +412,46 @@ module Codecs =
     [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
     module Internals =
         let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) (a : 'Encoding []) = if length a <> c then Decode.Fail.count c a else t a
-        let inline createTuplE c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding))  = ReaderT (fun (a : 'Encoding []) -> if length a <> c then Decode.Fail.count c a else t a)
 
-        let ptuple1 (codec1: Codec<'Encoding, 't1>) =
+        let ptuple1  (codec1: Codec<'Encoding, 't1>) =
             let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (decoder1 a.[0]) )
             let tuple1E (encoder1: 'a -> 'Encoding) (a: Tuple<_>) = [|encoder1 a.Item1|]
-            tuple1D codec1.DecoderFunc <-> tuple1E codec1.EncoderFunc
+            tuple1D (Codec.decode codec1) <-> tuple1E (Codec.encode codec1)
 
         let ptuple2 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) =
             let tuple2D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) : 'Encoding [] -> ParseResult<'a * 'b> = createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0]) (decoder2 a.[1]))
             let tuple2E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (a, b) = [|encoder1 a; encoder2 b|]
-            tuple2D codec1.DecoderFunc codec2.DecoderFunc <-> tuple2E codec1.EncoderFunc codec2.EncoderFunc
+            tuple2D (Codec.decode codec1) (Codec.decode codec2) <-> tuple2E (Codec.encode codec1) (Codec.encode codec2)
 
         let ptuple3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) =
             let tuple3D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) : 'Encoding [] -> ParseResult<'a * 'b * 'c> =
                 createTuple 3 (fun a -> Result.map3 (fun a b c -> (a, b, c)) (decoder1 a.[0]) (decoder2 a.[1]) (decoder3 a.[2]))
             let tuple3E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (a, b, c) = [|encoder1 a; encoder2 b; encoder3 c|]
-            tuple3D codec1.DecoderFunc codec2.DecoderFunc codec3.DecoderFunc <-> tuple3E codec1.EncoderFunc codec2.EncoderFunc codec3.EncoderFunc
+            tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) <-> tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
 
         let ptuple4 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) =
             let tuple4D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd> =
                 createTuple 4 (fun a -> tuple4 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3])
             let tuple4E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (a, b, c, d) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d|]
-            tuple4D codec1.DecoderFunc codec2.DecoderFunc codec3.DecoderFunc codec4.DecoderFunc <-> tuple4E codec1.EncoderFunc codec2.EncoderFunc codec3.EncoderFunc codec4.EncoderFunc
+            tuple4D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) <-> tuple4E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4)
 
         let ptuple5 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) =
             let tuple5D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e> =
                 createTuple 5 (fun a -> tuple5 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4])
             let tuple5E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (a, b, c, d, e) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|]
-            tuple5D codec1.DecoderFunc codec2.DecoderFunc codec3.DecoderFunc codec4.DecoderFunc codec5.DecoderFunc <-> tuple5E codec1.EncoderFunc codec2.EncoderFunc codec3.EncoderFunc codec4.EncoderFunc codec5.EncoderFunc
+            tuple5D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) <-> tuple5E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5)
 
         let ptuple6 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) =
             let tuple6D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
                 createTuple 6 (fun a -> tuple6 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5])
             let tuple6E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (a, b, c, d, e, f) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|]
-            tuple6D codec1.DecoderFunc codec2.DecoderFunc codec3.DecoderFunc codec4.DecoderFunc codec5.DecoderFunc codec6.DecoderFunc <-> tuple6E codec1.EncoderFunc codec2.EncoderFunc codec3.EncoderFunc codec4.EncoderFunc codec5.EncoderFunc codec6.EncoderFunc
+            tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) <-> tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6)
 
         let ptuple7 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) =
             let tuple7D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) (decoder7: 'Encoding -> ParseResult<'g>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
                 createTuple 7 (fun a -> tuple7 <!> decoder1 a.[0] <*> decoder2 a.[1] <*> decoder3 a.[2] <*> decoder4 a.[3] <*> decoder5 a.[4] <*> decoder6 a.[5] <*> decoder7 a.[6])
             let tuple7E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (encoder7: 'g -> 'Encoding) (a, b, c, d, e, f, g) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|]
-            tuple7D codec1.DecoderFunc codec2.DecoderFunc codec3.DecoderFunc codec4.DecoderFunc codec5.DecoderFunc codec6.DecoderFunc codec7.DecoderFunc <-> tuple7E codec1.EncoderFunc codec2.EncoderFunc codec3.EncoderFunc codec4.EncoderFunc codec5.EncoderFunc codec6.EncoderFunc codec7.EncoderFunc
+            tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7) <-> tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7)
         
     open Internals
     
@@ -643,26 +638,26 @@ module Internals =
                 let cr = GetArrCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'tr>
                 Codec.create
                     (fun (x: 'Encoding []) ->
-                        let (t1: 't1 ParseResult) = (c1.DecoderFunc) (x.[0])
-                        let (t2: 't2 ParseResult) = (c2.DecoderFunc) (x.[1])
-                        let (t3: 't3 ParseResult) = (c3.DecoderFunc) (x.[2])
-                        let (t4: 't4 ParseResult) = (c4.DecoderFunc) (x.[3])
-                        let (t5: 't5 ParseResult) = (c5.DecoderFunc) (x.[4])
-                        let (t6: 't6 ParseResult) = (c6.DecoderFunc) (x.[5])
-                        let (t7: 't7 ParseResult) = (c7.DecoderFunc) (x.[6])
-                        let (tr: 'tr ParseResult) = (cr.DecoderFunc) (x.[7..])
+                        let (t1: 't1 ParseResult) = (Codec.decode c1) (x.[0])
+                        let (t2: 't2 ParseResult) = (Codec.decode c2) (x.[1])
+                        let (t3: 't3 ParseResult) = (Codec.decode c3) (x.[2])
+                        let (t4: 't4 ParseResult) = (Codec.decode c4) (x.[3])
+                        let (t5: 't5 ParseResult) = (Codec.decode c5) (x.[4])
+                        let (t6: 't6 ParseResult) = (Codec.decode c6) (x.[5])
+                        let (t7: 't7 ParseResult) = (Codec.decode c7) (x.[6])
+                        let (tr: 'tr ParseResult) = (Codec.decode cr) (x.[7..])
                         match tr with
                         | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, Array.map (fun x -> x :> IEncoding) x))
                         | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr)
                     (fun (t: 'tuple) ->
-                        let t1 = (c1.EncoderFunc) (^tuple: (member Item1: 't1) t)
-                        let t2 = (c2.EncoderFunc) (^tuple: (member Item2: 't2) t)
-                        let t3 = (c3.EncoderFunc) (^tuple: (member Item3: 't3) t)
-                        let t4 = (c4.EncoderFunc) (^tuple: (member Item4: 't4) t)
-                        let t5 = (c5.EncoderFunc) (^tuple: (member Item5: 't5) t)
-                        let t6 = (c6.EncoderFunc) (^tuple: (member Item6: 't6) t)
-                        let t7 = (c7.EncoderFunc) (^tuple: (member Item7: 't7) t)
-                        let tr = (cr.EncoderFunc) (^tuple: (member Rest : 'tr) t)
+                        let t1 = (Codec.encode c1) (^tuple: (member Item1: 't1) t)
+                        let t2 = (Codec.encode c2) (^tuple: (member Item2: 't2) t)
+                        let t3 = (Codec.encode c3) (^tuple: (member Item3: 't3) t)
+                        let t4 = (Codec.encode c4) (^tuple: (member Item4: 't4) t)
+                        let t5 = (Codec.encode c5) (^tuple: (member Item5: 't5) t)
+                        let t6 = (Codec.encode c6) (^tuple: (member Item6: 't6) t)
+                        let t7 = (Codec.encode c7) (^tuple: (member Item7: 't7) t)
+                        let tr = (Codec.encode cr) (^tuple: (member Rest : 'tr) t)
                         [|t1; t2; t3; t4; t5; t6; t7|] ++ tr ))
 
 
@@ -839,18 +834,19 @@ module Operators =
     
     open Internals
 
-    /// Creates a Codec from a pair of decoder and encoder functions, used mainly internally and in Encoding implementations.
+    /// Creates a Codec from a pair of decoder and encoder functions, same as Codec.create
     let (<->) decoder encoder : Codec<_,_,_,_> = Codec.create decoder encoder
 
+    // Extracts a decoder and an encoder function from a Codec.
     let (|Codec|) { Decoder = ReaderT x; Encoder = y } = (x, y >> Const.run)
 
     let inline toEncoding< 'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : 'Encoding =
         let codec = GetEnc.Invoke<'Encoding, OpEncode, _> x
-        codec.EncoderFunc x
+        Codec.encode codec x
 
     let inline ofEncoding (x: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) : Result<'t, _> =
         let codec = GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t>
-        codec.DecoderFunc x
+        Codec.decode codec x
             
     /// Creates a codec to (from) 'Encoding from (to) an Object-Codec.
     /// <param name="objCodec">A codec of MultiMap from/to a strong type.</param>
@@ -973,7 +969,7 @@ module CodecInterfaceExtensions =
         static member RegisterCodec<'Encoding, 'Type> (codec: unit -> Codec<PropertyList<'Encoding>, 'Type>) =
             let codec () =
                 let objCodec = codec ()
-                let (d, e) = objCodec.DecoderFunc, objCodec.EncoderFunc
+                let (d, e) = Codec.decode objCodec, Codec.encode objCodec
                 let nd = d >> Result.map retype<'Type, 'Base>
                 let ne (x: 'Base) =
                     match box x with
@@ -988,11 +984,11 @@ module ComputationExpressions =
 
         let privReturn f = ((fun _ -> Ok f) <-> zero ) : Codec<PropertyList<'S>, PropertyList<'S>,_,_>
         let privlift2 (f: 'x ->'y ->'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y:  Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
-                (fun s -> lift2 f (x.DecoderFunc s) (y.DecoderFunc s))
-                <-> (x.EncoderFunc ++ y.EncoderFunc)
+                (fun s -> lift2 f (Codec.decode x s) (Codec.decode y s))
+                <-> (Codec.encode x ++ Codec.encode y)
         let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) (z: Codec<PropertyList<'S>, PropertyList<'S>,'z,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
-                (fun s -> lift3 f (x.DecoderFunc s) (y.DecoderFunc s) (z.DecoderFunc s))
-                <-> (x.EncoderFunc ++ y.EncoderFunc ++ z.EncoderFunc)
+                (fun s -> lift3 f (Codec.decode x s) (Codec.decode y s) (Codec.decode z s))
+                <-> (Codec.encode x ++ Codec.encode y ++ Codec.encode z)
 
         member _.Delay x = x ()
         member _.ReturnFrom expr = expr
