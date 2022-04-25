@@ -285,14 +285,16 @@ module Codec =
         create (contramap f r) (map g w)
 
     let inline lift2 (f: 'x1 -> 'x2 -> 'r) (x1: Codec<'S, 'S, 'x1, 'T>) (x2: Codec<'S, 'S, 'x2, 'T>) : Codec<'S, 'S, 'r, 'T> =
-        create
-            (lift2 f (decode x1) (encode x2))
-            (fun w -> (encode x1 w *> encode x2 w))
+        {
+            Decoder = lift2 f x1.Decoder x2.Decoder
+            Encoder = fun w -> (x1.Encoder w *> x2.Encoder w)
+        }
 
     let inline lift3 f (x1: Codec<'S, 'S, 'x1, 'T>) (x2: Codec<'S, 'S, 'x2, 'T>) (x3: Codec<'S, 'S, 'x3, 'T>) : Codec<'S, 'S, 'r, 'T> =
-        create
-            (lift3 f (decode x1) (decode x2) (decode x3))
-            (fun w -> (encode x1 w *> encode x2 w *> encode x3 w))
+        {
+            Decoder = lift3 f x1.Decoder x2.Decoder x3.Decoder
+            Encoder = fun w -> (x1.Encoder w *> x2.Encoder w *> x3.Encoder w)
+        }
 
     /// Creates a new codec which is the result of applying codec2 then codec1 for encoding
     /// and codec1 then codec2 for decoding
@@ -334,12 +336,10 @@ type Codec<'S1, 'S2, 't1, 't2> with
     static member (>.>) (c1, c2) = Codec.compose c2 c1
     
     static member (<*>) (remainderFields: Codec<PropertyList<'S>, PropertyList<'S>, 'f ->'r, 'T>, currentField: Codec<PropertyList<'S>, PropertyList<'S>, 'f, 'T>) =
-        Codec.create
-            (fun x ->
-                match Codec.decode remainderFields x, lazy (Codec.decode currentField x) with
-                | Error e, _ | _, Lazy (Error e) -> Error e
-                | Ok a   , Lazy (Ok b)           -> Ok (a b))
-            (fun t -> Codec.encode remainderFields t ++ Codec.encode currentField t)
+        {
+            Decoder = remainderFields.Decoder <*> currentField.Decoder
+            Encoder = fun w -> (remainderFields.Encoder w *> currentField.Encoder w)
+        }
 
     /// Apply two codecs in such a way that the field values are ignored when decoding.
     static member ( *>) (f: Codec<PropertyList<'S>, PropertyList<'S>, 't, 'u>, x) = f *> x : Codec<PropertyList<'S>, 'u>
@@ -360,9 +360,10 @@ type Codec<'S1, 'S2, 't1, 't2> with
             (fun t -> Codec.encode source t ++ Codec.encode alternative t)
 
     static member Lift2 (f: 'x ->'y ->'r, x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>, y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
-        Codec.create
-            (fun s -> ((f <!> Codec.decode x s: ParseResult<'y -> 'r>) <*> Codec.decode y s: ParseResult<'r>))
-            (Codec.encode x ++ Codec.encode y)
+        {
+            Decoder = lift2 f x.Decoder y.Decoder
+            Encoder = fun w -> x.Encoder w *> y.Encoder w
+        }
 
 
 
@@ -658,7 +659,7 @@ module Internals =
                         let t6 = (Codec.encode c6) (^tuple: (member Item6: 't6) t)
                         let t7 = (Codec.encode c7) (^tuple: (member Item7: 't7) t)
                         let tr = (Codec.encode cr) (^tuple: (member Rest : 'tr) t)
-                        [|t1; t2; t3; t4; t5; t6; t7|] ++ tr ))
+                        [|t1; t2; t3; t4; t5; t6; t7|] ++ tr))
 
 
     type GetArrCodec with
@@ -984,11 +985,15 @@ module ComputationExpressions =
 
         let privReturn f = ((fun _ -> Ok f) <-> zero ) : Codec<PropertyList<'S>, PropertyList<'S>,_,_>
         let privlift2 (f: 'x ->'y ->'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y:  Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
-                (fun s -> lift2 f (Codec.decode x s) (Codec.decode y s))
-                <-> (Codec.encode x ++ Codec.encode y)
+            {
+                Decoder = lift2 f x.Decoder y.Decoder
+                Encoder = fun w -> x.Encoder w *> y.Encoder w
+            }
         let privlift3 (f: 'x -> 'y -> 'z -> 'r) (x: Codec<PropertyList<'S>, PropertyList<'S>,'x,'T>) (y: Codec<PropertyList<'S>, PropertyList<'S>,'y,'T>) (z: Codec<PropertyList<'S>, PropertyList<'S>,'z,'T>) : Codec<PropertyList<'S>, PropertyList<'S>,'r,'T> =
-                (fun s -> lift3 f (Codec.decode x s) (Codec.decode y s) (Codec.decode z s))
-                <-> (Codec.encode x ++ Codec.encode y ++ Codec.encode z)
+            {
+                Decoder = lift3 f x.Decoder y.Decoder z.Decoder
+                Encoder = fun w -> x.Encoder w *> y.Encoder w *> z.Encoder w
+            }
 
         member _.Delay x = x ()
         member _.ReturnFrom expr = expr
