@@ -159,6 +159,7 @@ module TestSingleDecoderEncoderForAllJsonLibrary =
 module TestSingleCodecForAllJsonLibrary =
 
     open System
+    open FSharpPlus
     open Fleece
 
     type Gender =
@@ -209,6 +210,7 @@ module TestSingleCodecForAllJsonLibrary =
 
     Assert.StringContains ("", "DoB", personText1)
     Assert.StringContains ("", "DoB", personText2)
+    Assert.None ("", String.tryFindSliceIndex """Children":[]""" personText2)
 
 
 module TestDifferentDecoderEncoderForEachJsonLibrary =
