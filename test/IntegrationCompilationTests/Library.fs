@@ -180,7 +180,7 @@ module TestSingleCodecForAllJsonLibrary =
                 and! age      = jreq "Age"      (fun x -> Some x.Age)
                 and! gender   = jreq "Gender"   (fun x -> Some x.Gender)
                 and! dob      = jreq "DoB"      (fun x -> Some x.DoB)
-                and! children = jreq "Children" (fun x -> Some x.Children)
+                and! children = jopt "Children" (fun x ->      x.Children)
                 return { Name = name; Age = age; Gender = gender; DoB= dob; Children = children }
             } |> ofObjCodec
 
