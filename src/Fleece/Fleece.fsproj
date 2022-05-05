@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FSharpPlus" Version="1.2.3.1-PR476-02311" />
+    <PackageReference Include="FSharpPlus" Version="1.2.4" />
   </ItemGroup>
 
 </Project>
