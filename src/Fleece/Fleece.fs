@@ -884,13 +884,24 @@ module Operators =
     let inline jreq (name: string) (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param, 'T> = jreqWithLazy (fun () -> defaultCodec<'Encoding, 'param>) name getter
 
     /// <summary>Same as jopt but using an explicit codec.</summary>
-    let joptWith c (prop: string) (getter: 'T -> 'Value option) =
+    let inline joptWith c (prop: string) (getter: 'T -> 'Value) =
+        let z = zero<'Value>
         let getFromListOptWith decoder (m: PropertyList<_>) key =
             match m.[key] with
-            | []        -> Ok None
-            | value:: _ -> decoder value |> Result.map Some
-        (fun (o: PropertyList<'S>) -> getFromListOptWith (Codec.decode c) o prop)
-        <-> (fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero)
+            | []        -> Ok z
+            | value:: _ -> decoder value
+        (fun (o: PropertyList<'Encoding>) -> getFromListOptWith (Codec.decode c) o prop)
+        <-> (fun x -> match getter x with (x: 'Value) when x <> z -> PropertyList [| prop, Codec.encode c x |] | _ -> zero)
+
+    /// <summary>Same as joptWith but using a thunk for the explicit codec. Useful for recursive types.</summary>
+    let inline joptWithLazy (c: unit -> Codec<'Encoding,_,_,'Value>) (prop: string) (getter: 'T -> 'Value) =
+        let z = zero<'Value>
+        let getFromListOptWith decoder (m: PropertyList<_>) key =
+            match m.[key] with
+            | []        -> Ok z
+            | value:: _ -> decoder value
+        (fun (o: PropertyList<'Encoding>) -> getFromListOptWith (Codec.decode (c ())) o prop)
+        <-> (fun x -> match getter x with (x: 'Value) when x <> z -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero)
 
     [<Obsolete("Use codec computation expression instead.")>]
     let inline jchoice (codecs: seq<Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 't1, 't2>>) =
@@ -898,7 +909,7 @@ module Operators =
         foldBack (<|>) tail head
     
     /// Derives a concrete field codec for an optional field.
-    let inline jopt prop (getter: 'T -> 'param option) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param option, 'T> = joptWith defaultCodec<'Encoding, 'param> prop getter
+    let inline jopt prop (getter: 'T -> 'param) : Codec<PropertyList<'Encoding>, PropertyList<'Encoding>, 'param, 'T> = joptWithLazy (fun () -> defaultCodec<'Encoding, 'param>) prop getter
 
 
     let jobj (x: list<string * 'Encoding>) : 'Encoding = x |> List.toArray |> PropertyList |> Codec.encode (Codecs.propList Codecs.id)
