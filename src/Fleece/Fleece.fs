@@ -120,6 +120,7 @@ and IEncoding =
     abstract dateTime       : Codec<IEncoding, DateTime>
     abstract dateTimeOffset : Codec<IEncoding, DateTimeOffset>
     abstract timeSpan       : Codec<IEncoding, TimeSpan>
+    
     abstract decimal        : Codec<IEncoding, Decimal>
     abstract float          : Codec<IEncoding, float>
     abstract float32        : Codec<IEncoding, float32>
