@@ -1,4 +1,4 @@
-image: Visual Studio 2019
+image: Visual Studio 2022
 
 before_build:
   - ps: >-
@@ -15,10 +15,10 @@ build_script:
   - cmd: build.bat
 test_script:
   - cmd: dotnet run --project .\test\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
-  - cmd: dotnet run --project .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net5
-  - cmd: dotnet run --project .\test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net5
-  - cmd: dotnet run --project .\test\Tests.SystemTextJson\Tests.SystemTextJson.fsproj -c Release -f net5
-  - cmd: dotnet run --project .\test\IntegrationCompilationTests\IntegrationCompilationTests.fsproj -c Release -f net5
+  - cmd: dotnet run --project .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net6
+  - cmd: dotnet run --project .\test\Tests.NewtonsoftJson\Tests.NewtonsoftJson.fsproj -c Release -f net6
+  - cmd: dotnet run --project .\test\Tests.SystemTextJson\Tests.SystemTextJson.fsproj -c Release -f net6
+  - cmd: dotnet run --project .\test\IntegrationCompilationTests\IntegrationCompilationTests.fsproj -c Release -f net6
 
 artifacts:
   # pushing all *.nupkg files in build directory recursively
