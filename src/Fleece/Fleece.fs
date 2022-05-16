@@ -13,6 +13,12 @@ type ICodecInterface<'Base> = interface end
 module Config =
     let mutable codecCacheEnabled = false
 
+[<RequireQualifiedAccess>]
+type DateTimeContents =
+    | Date
+    | Time
+    | DateTime
+
 type PropertyList<'Encoding> (properties: (string * 'Encoding) []) =
     let properties = properties
     member _.Properties = properties
@@ -117,7 +123,7 @@ and ParseResult<'t> = Result<'t, DecodeError>
 and IEncoding =
     abstract boolean        : Codec<IEncoding, bool>
     abstract string         : Codec<IEncoding, string>
-    abstract dateTime       : Codec<IEncoding, DateTime>
+    abstract dateTime       : ?dtc: DateTimeContents -> Codec<IEncoding, DateTime>
     abstract dateTimeOffset : Codec<IEncoding, DateTimeOffset>
     abstract timeSpan       : Codec<IEncoding, TimeSpan>
     
@@ -240,7 +246,7 @@ type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncod
     interface IEncoding with
         member _.boolean        = AdHocEncoding.toIEncoding (fun x -> x.boolean)
         member _.string         = AdHocEncoding.toIEncoding (fun x -> x.string)
-        member _.dateTime       = AdHocEncoding.toIEncoding (fun x -> x.dateTime)
+        member _.dateTime ?dtc  = AdHocEncoding.toIEncoding (fun x -> match dtc with Some d -> x.dateTime d | None -> x.dateTime ())
         member _.dateTimeOffset = AdHocEncoding.toIEncoding (fun x -> x.dateTimeOffset)
         member _.timeSpan       = AdHocEncoding.toIEncoding (fun x -> x.timeSpan)
         member _.decimal        = AdHocEncoding.toIEncoding (fun x -> x.decimal)
@@ -389,7 +395,7 @@ module Codecs =
     let [<GeneralizableValue>] float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] float<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] string<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.dateTime       |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.dateTime ()    |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
     let array        (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
@@ -409,6 +415,11 @@ module Codecs =
     let choice  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.choice (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Choice<'a,'b>>
     let choice3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.choice3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
     
+    // if net6
+    let [<GeneralizableValue>] date<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTime DateTimeContents.Date |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] time<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTime DateTimeContents.Time |> Codec.downCast : Codec<'Encoding, _>
+    //
+
     let [<GeneralizableValue>]id<'T> : Codec<'T, 'T> = Ok <-> id
 
     [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
@@ -565,6 +576,8 @@ module Internals =
 
         static member GetCodec (_: bool          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.boolean
         static member GetCodec (_: string        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.string
+        static member GetCodec (_: DateOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
+        static member GetCodec (_: TimeOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
         static member GetCodec (_: DateTime      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
         static member GetCodec (_: DateTimeOffset, _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTimeOffset
         static member GetCodec (_: TimeSpan      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.timeSpan
