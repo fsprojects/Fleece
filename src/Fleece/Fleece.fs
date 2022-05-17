@@ -576,8 +576,10 @@ module Internals =
 
         static member GetCodec (_: bool          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.boolean
         static member GetCodec (_: string        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.string
+#if NET6
         static member GetCodec (_: DateOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
         static member GetCodec (_: TimeOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
+#endif
         static member GetCodec (_: DateTime      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
         static member GetCodec (_: DateTimeOffset, _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTimeOffset
         static member GetCodec (_: TimeSpan      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.timeSpan
