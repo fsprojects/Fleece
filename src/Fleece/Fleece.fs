@@ -415,10 +415,10 @@ module Codecs =
     let choice  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.choice (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Choice<'a,'b>>
     let choice3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.choice3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
     
-    // if net6
+#if NET6
     let [<GeneralizableValue>] date<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTime DateTimeContents.Date |> Codec.downCast : Codec<'Encoding, _>
     let [<GeneralizableValue>] time<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTime DateTimeContents.Time |> Codec.downCast : Codec<'Encoding, _>
-    //
+#endif
 
     let [<GeneralizableValue>]id<'T> : Codec<'T, 'T> = Ok <-> id
 
@@ -577,8 +577,8 @@ module Internals =
         static member GetCodec (_: bool          , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.boolean
         static member GetCodec (_: string        , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.string
 #if NET6
-        static member GetCodec (_: DateOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
-        static member GetCodec (_: TimeOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
+        static member GetCodec (_: DateOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.date
+        static member GetCodec (_: TimeOnly      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.time
 #endif
         static member GetCodec (_: DateTime      , _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTime
         static member GetCodec (_: DateTimeOffset, _: GetCodec, _, _: 'Operation) : Codec<'Encoding, _> = Codecs.dateTimeOffset

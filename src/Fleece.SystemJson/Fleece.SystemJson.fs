@@ -196,8 +196,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    ->
             match DateTime.TryParseExact (s, [|"yyyy-MM-dd" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue x ""
-        | a -> Decode.Fail.strExpected a
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member timeD x =
         match x with
@@ -205,8 +205,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    ->
             match DateTime.TryParseExact (s, [| "HH:mm:ss.fff"; "HH:mm:ss" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue x ""
-        | a -> Decode.Fail.strExpected a
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member dateTimeD x =
         match x with

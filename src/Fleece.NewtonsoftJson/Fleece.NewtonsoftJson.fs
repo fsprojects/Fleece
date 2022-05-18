@@ -208,9 +208,9 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    ->
             match DateTime.TryParseExact (s, [|"yyyy-MM-dd" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue x ""
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
         | JDate d -> Ok (d.Value<DateTime> ())
-        | a -> Decode.Fail.strExpected a
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member timeD x =
         match x with
@@ -219,9 +219,9 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    ->
             match DateTime.TryParseExact (s, [| "HH:mm:ss.fff"; "HH:mm:ss" |], null, DateTimeStyles.RoundtripKind) with
             | true, t -> Ok t
-            | _       -> Decode.Fail.invalidValue x ""
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
         | JDate d -> Ok (d.Value<DateTime> ())
-        | a -> Decode.Fail.strExpected a
+        | a -> Decode.Fail.strExpected (Encoding a)
 
     static member dateTimeD x =
         match x with
@@ -288,8 +288,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
     static member booleanE        (x: bool          ) = JBool x
     static member stringE         (x: string        ) = JString x
-    static member dateE           (x: DateTime      ) = Encoding.JString (x.ToString "yyyy-MM-dd")
-    static member timeE           (x: DateTime      ) = Encoding.JString (x.ToString "HH:mm:ss.fff")
+    static member dateE           (x: DateTime      ) = JString (x.ToString "yyyy-MM-dd")
+    static member timeE           (x: DateTime      ) = JString (x.ToString "HH:mm:ss.fff")
     static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
     static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
     static member timeSpanE       (x: TimeSpan) = JsonHelpers.create x.Ticks
