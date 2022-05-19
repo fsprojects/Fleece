@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>net6</TargetFrameworks>
+        <TargetFrameworks>netcoreapp31;net6</TargetFrameworks>
         <DefineConstants>SYSTEMTEXTJSON;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
