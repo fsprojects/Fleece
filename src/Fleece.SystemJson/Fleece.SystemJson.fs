@@ -190,6 +190,24 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    -> match Guid.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue (Encoding x) s
         | a -> Decode.Fail.strExpected (Encoding a)
 
+    static member dateD x =
+        match x with
+        | JString null -> Decode.Fail.nullString
+        | JString s    ->
+            match DateTime.TryParseExact (s, [|"yyyy-MM-dd" |], null, DateTimeStyles.RoundtripKind) with
+            | true, t -> Ok t
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
+        | a -> Decode.Fail.strExpected (Encoding a)
+
+    static member timeD x =
+        match x with
+        | JString null -> Decode.Fail.nullString
+        | JString s    ->
+            match DateTime.TryParseExact (s, [| "HH:mm:ss.fff"; "HH:mm:ss" |], null, DateTimeStyles.RoundtripKind) with
+            | true, t -> Ok t
+            | _       -> Decode.Fail.invalidValue (Encoding x) ""
+        | a -> Decode.Fail.strExpected (Encoding a)
+
     static member dateTimeD x =
         match x with
         | JString null -> Decode.Fail.nullString
@@ -253,6 +271,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
     static member booleanE        (x: bool          ) = JBool x
     static member stringE         (x: string        ) = JString x
+    static member dateE           (x: DateTime      ) = JString (x.ToString "yyyy-MM-dd")
+    static member timeE           (x: DateTime      ) = JString (x.ToString "HH:mm:ss.fff")
     static member dateTimeE       (x: DateTime      ) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffZ"))
     static member dateTimeOffsetE (x: DateTimeOffset) = JString (x.ToString ("yyyy-MM-ddTHH:mm:ss.fffK"))
     static member timeSpanE       (x: TimeSpan) = JsonHelpers.create x.Ticks
@@ -288,6 +308,8 @@ type [<Struct>] Encoding = Encoding of JsonValue with
 
     static member boolean        = Encoding.booleanD        <-> Encoding.booleanE
     static member string         = Encoding.stringD         <-> Encoding.stringE
+    static member date           = Encoding.dateD           <-> Encoding.dateE
+    static member time           = Encoding.timeD           <-> Encoding.timeE
     static member dateTime       = Encoding.dateTimeD       <-> Encoding.dateTimeE
     static member dateTimeOffset = Encoding.dateTimeOffsetD <-> Encoding.dateTimeOffsetE
     static member timeSpan       = Encoding.timeSpanD       <-> Encoding.timeSpanE
@@ -310,7 +332,11 @@ type [<Struct>] Encoding = Encoding of JsonValue with
     interface IEncoding with
         member _.boolean        = Encoding.toIEncoding Encoding.boolean
         member _.string         = Encoding.toIEncoding Encoding.string
-        member _.dateTime       = Encoding.toIEncoding Encoding.dateTime
+        member _.dateTime t     =
+            match t with            
+            | Some DateTimeContents.Date -> Encoding.toIEncoding Encoding.date
+            | Some DateTimeContents.Time -> Encoding.toIEncoding Encoding.time
+            | _                          -> Encoding.toIEncoding Encoding.dateTime
         member _.dateTimeOffset = Encoding.toIEncoding Encoding.dateTimeOffset
         member _.timeSpan       = Encoding.toIEncoding Encoding.timeSpan
         member _.decimal        = Encoding.toIEncoding Encoding.decimal

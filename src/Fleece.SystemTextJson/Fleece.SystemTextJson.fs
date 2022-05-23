@@ -39,14 +39,14 @@ type JsonObject = PropertyList<Encoding>
 and Encoding (j: JsonElementOrWriter) =
     
     let mutable Value = j
+    static let mutable dateFormat           = "yyyy-MM-dd"
+    static let mutable timeFormat           = "HH:mm:ss.fff"
     static let mutable dateTimeFormat       = "yyyy-MM-ddTHH:mm:ss.fffZ"
     static let mutable dateTimeOffsetFormat = "yyyy-MM-ddTHH:mm:ss.fffK"
-    static member DateTimeFormat
-        with get () = dateTimeFormat
-        and set (v) = dateTimeFormat <- v
-    static member DateTimeOffsetFormat
-        with get () = dateTimeOffsetFormat
-        and set (v) = dateTimeOffsetFormat <- v
+    static member DateFormat           with get () = dateFormat           and set (v) = dateFormat <- v
+    static member TimeFormat           with get () = timeFormat           and set (v) = timeFormat <- v
+    static member DateTimeFormat       with get () = dateTimeFormat       and set (v) = dateTimeFormat <- v
+    static member DateTimeOffsetFormat with get () = dateTimeOffsetFormat and set (v) = dateTimeOffsetFormat <- v
 
     new () = Encoding (Unchecked.defaultof<_>)
 
@@ -261,6 +261,24 @@ and Encoding (j: JsonElementOrWriter) =
         | JString s    -> match Guid.TryParse s with (true, value) -> Ok value | _ -> Decode.Fail.invalidValue x s
         | a -> Decode.Fail.strExpected a
 
+    static member dateD x =
+        match x with
+        | JString null -> Decode.Fail.nullString
+        | JString s    ->
+            match DateTime.TryParseExact (s, [|dateFormat;  "yyyy-MM-dd" |], null, DateTimeStyles.RoundtripKind) with
+            | true, t -> Ok t
+            | _       -> Decode.Fail.invalidValue x ""
+        | a -> Decode.Fail.strExpected a
+
+    static member timeD x =
+        match x with
+        | JString null -> Decode.Fail.nullString
+        | JString s    ->
+            match DateTime.TryParseExact (s, [| timeFormat; "HH:mm:ss" |], null, DateTimeStyles.RoundtripKind) with
+            | true, t -> Ok t
+            | _       -> Decode.Fail.invalidValue x ""
+        | a -> Decode.Fail.strExpected a
+
     static member dateTimeD x =
         match x with
         | JString null -> Decode.Fail.nullString
@@ -324,6 +342,8 @@ and Encoding (j: JsonElementOrWriter) =
 
     static member booleanE        (x: bool          ) = Encoding.JBool x
     static member stringE         (x: string        ) = Encoding.JString x
+    static member dateE           (x: DateTime      ) = Encoding.JString (x.ToString dateFormat)
+    static member timeE           (x: DateTime      ) = Encoding.JString (x.ToString timeFormat)
     static member dateTimeE       (x: DateTime      ) = Encoding.JString (x.ToString dateTimeFormat)
     static member dateTimeOffsetE (x: DateTimeOffset) = Encoding.JString (x.ToString dateTimeOffsetFormat)
     static member timeSpanE       (x: TimeSpan) = Encoding.create x.Ticks
@@ -359,6 +379,8 @@ and Encoding (j: JsonElementOrWriter) =
 
     static member boolean        = Encoding.booleanD        <-> Encoding.booleanE
     static member string         = Encoding.stringD         <-> Encoding.stringE
+    static member date           = Encoding.dateD           <-> Encoding.dateE
+    static member time           = Encoding.timeD           <-> Encoding.timeE
     static member dateTime       = Encoding.dateTimeD       <-> Encoding.dateTimeE
     static member dateTimeOffset = Encoding.dateTimeOffsetD <-> Encoding.dateTimeOffsetE
     static member timeSpan       = Encoding.timeSpanD       <-> Encoding.timeSpanE
@@ -381,7 +403,11 @@ and Encoding (j: JsonElementOrWriter) =
     interface IEncoding with
         member _.boolean        = Encoding.toIEncoding Encoding.boolean
         member _.string         = Encoding.toIEncoding Encoding.string
-        member _.dateTime       = Encoding.toIEncoding Encoding.dateTime
+        member _.dateTime t     =
+            match t with            
+            | Some DateTimeContents.Date -> Encoding.toIEncoding Encoding.date
+            | Some DateTimeContents.Time -> Encoding.toIEncoding Encoding.time
+            | _                          -> Encoding.toIEncoding Encoding.dateTime
         member _.dateTimeOffset = Encoding.toIEncoding Encoding.dateTimeOffset
         member _.timeSpan       = Encoding.toIEncoding Encoding.timeSpan
         member _.decimal        = Encoding.toIEncoding Encoding.decimal

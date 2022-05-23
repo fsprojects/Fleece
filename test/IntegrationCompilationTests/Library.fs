@@ -659,3 +659,16 @@ module TestGenerics =
     let x: Fleece.SystemTextJson.Encoding = (listOfSomething () |> Codec.encode) [1]
     let y: Fleece.SystemTextJson.Encoding = (listOfSomething () |> Codec.encode) ['a']
     ()
+
+
+#if NET6_0_OR_GREATER
+module TestDateTime =
+    open System
+    open Fleece
+    open Fleece.SystemTextJson
+
+    let x = DateOnly (2022,5,22)
+    let json = toJsonText x
+    Assert.Equal ("DateOnly", "\"2022-05-22\"", json)
+#endif
+    
