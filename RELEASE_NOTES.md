@@ -1,3 +1,14 @@
+#### 0.10.0  - May 25 2022
+* Internally using mainly codecs (more efficient and less boilerplate in source code).
+* Ability to switch to different implementations, even at the same time, this allows to use several Json implementations at the same time.
+* Unify Codec types, no more ConcreteCodec vs tupled codecs, just a simple 4 params Codec type.
+* A new and recommended Codec syntax for records and DUs trough an Applicative CE.
+* Internal caching of codecs.
+* Ability to workaround codecs for interfaces.
+* jopt combinator works with all types supporting `zero`, so in addition to option we can use voption, nullable or even list.
+* Native support for bigint, vtuple, voption, TimeSpan, NonEmptyList, NonEmptySet, NonEmptyMap, and "Generic Map" (Maps where keys are not strings).
+* DateOnly and TimeOnly support for .net6 users
+
 #### 0.9.0  - October 28 2021
 * Added Result codec and overload
 * Fix problem decoding null values into Options.
