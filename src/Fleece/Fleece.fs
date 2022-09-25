@@ -1063,26 +1063,57 @@ module ComputationExpressions =
     [<Obsolete(verboseSyntaxMessage)>]
     let inline jfieldOptWith codec fieldName getter rest = rest <*> joptWith codec fieldName getter
 
+
+/// Contains Json specific prisms which adds on top of FSharpPlus.Lens
 module Lens =
     open FSharpPlus.Lens
+    
+    /// Prism into a String over a JsonValue.
     let inline _JString x = (prism' JString <| function JString s -> Some s | _ -> None) x
+    
+    /// Prism into a Json Object over a JsonValue.
     let inline _JObject x = (prism' JObject <| function JObject s -> Some s | _ -> None) x
+    
+    /// Prism into an Array over a JsonValue.
     let inline _JArray  x = (prism' JArray  <| function JArray  s -> Some s | _ -> None) x
+    
+    /// Prism into a Boolean over a JsonValue.
     let inline _JBool   x = (prism' JBool   <| function JBool   s -> Some s | _ -> None) x
+    
+    /// Prism into a Decimal over a JsonValue.
     let inline _JNumber x = (prism' JNumber <| fun v -> match Operators.ofEncoding v : decimal ParseResult with Ok s -> Some s | _ -> None) x
+    
+    /// Prism into a Null (as a unit option) over a JsonValue.
     let inline _JNull   x = prism' (konst JNull) (function JNull -> Some () | _ -> None) x
 
-    /// Like '_jnth', but for 'Object' with Text indices.
+    /// Prism into an Json Object property over a JsonValue.
     let inline _jkey i =
         let inline dkey i f t = map (fun x -> PropertyList.add i x t) (f (t.[i] |> function [] -> JNull | x::_ -> x))
         _JObject << dkey i
 
+    /// Prism into an array index over a JsonValue.
     let inline _jnth i =
         let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
         _JArray << dnth i
 
     // Reimport some basic Lens operations from F#+
 
-    let setl optic value   (source: 's) : 't = setl optic value source
+    /// <summary>Write to a lens.</summary>
+    /// <param name="optic">The lens.</param>
+    /// <param name="value">The value we want to write in the part targeted by the lens.</param>
+    /// <param name="source">The original object.</param>
+    /// <returns>The new object with the value modified.</returns>
+    let setl optic value (source: 's) : 't = setl optic value source
+    
+    /// <summary>Update a value in a lens.</summary>
+    /// <param name="optic">The lens.</param>
+    /// <param name="updater">A function that converts the value we want to write in the part targeted by the lens.</param>
+    /// <param name="source">The original object.</param>
+    /// <returns>The new object with the value modified.</returns>
     let over optic updater (source: 's) : 't = over optic updater source
-    let preview (optic: ('a -> Const<_,'b>) -> _ -> Const<_,'t>) (source: 's) : 'a option = preview optic source
+    
+    /// <summary>Retrieve the first value targeted by a Prism, Fold or Traversal (or Some result from a Getter or Lens). See also (^?) in FSharpPlus.Lens.</summary>
+    /// <param name="optic">The prism.</param>
+    /// <param name="source">The object.</param>
+    /// <returns>The value (if any) the prism is targeting.</returns>
+    let preview (optic: ('a -> Const<_, 'b>) -> _ -> Const<_, 't>) (source: 's) : 'a option = preview optic source
