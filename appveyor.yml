@@ -14,7 +14,6 @@ build_script:
   - cmd: echo vs %VersionSuffix%"
   - cmd: build.bat
 test_script:
-  - cmd: dotnet run --project .\test\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net461
   - cmd: dotnet run --project .\test\Tests.SystemJson\Tests.SystemJson.fsproj -c Release -f net7
   - cmd: dotnet run --project .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net7
   - cmd: dotnet run --project .\test\Tests.FSharpData\Tests.FSharpData.fsproj -c Release -f net7
