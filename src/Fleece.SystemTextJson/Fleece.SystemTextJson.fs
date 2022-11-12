@@ -160,10 +160,7 @@ and Encoding (j: JsonElementOrWriter) =
         | js -> Decode.Fail.numExpected js
 
     /// Downcasts IEncoding to a SystemTextJson.Encoding
-    static member Unwrap (x: IEncoding) = (x :?> Encoding).get_InnerValue ()
-
-    static member toIEncoding (c: Codec<Encoding, 't>) : Codec<IEncoding, 't> = c |> Codec.upCast
-    static member ofIEncoding (c: Codec<IEncoding, 't>) : Codec<Encoding, 't> = c |> Codec.downCast
+    static member Unwrap (x: Encoding) = x.get_InnerValue ()
 
 
     static member jsonObjectOfJson = function
@@ -400,39 +397,39 @@ and Encoding (j: JsonElementOrWriter) =
     static member guid           = Encoding.guidD           <-> Encoding.guidE
 
 
-    interface IEncoding with
-        member _.boolean        = Encoding.toIEncoding Encoding.boolean
-        member _.string         = Encoding.toIEncoding Encoding.string
-        member _.dateTime t     =
+    interface IEncoding<Encoding> with
+        static member boolean        = Encoding.boolean
+        static member string         = Encoding.string
+        static member dateTime t     =
             match t with            
-            | Some DateTimeContents.Date -> Encoding.toIEncoding Encoding.date
-            | Some DateTimeContents.Time -> Encoding.toIEncoding Encoding.time
-            | _                          -> Encoding.toIEncoding Encoding.dateTime
-        member _.dateTimeOffset = Encoding.toIEncoding Encoding.dateTimeOffset
-        member _.timeSpan       = Encoding.toIEncoding Encoding.timeSpan
-        member _.decimal        = Encoding.toIEncoding Encoding.decimal
-        member _.float          = Encoding.toIEncoding Encoding.float
-        member _.float32        = Encoding.toIEncoding Encoding.float32
-        member _.int            = Encoding.toIEncoding Encoding.int
-        member _.uint32         = Encoding.toIEncoding Encoding.uint32
-        member _.int64          = Encoding.toIEncoding Encoding.int64
-        member _.uint64         = Encoding.toIEncoding Encoding.uint64
-        member _.int16          = Encoding.toIEncoding Encoding.int16
-        member _.uint16         = Encoding.toIEncoding Encoding.uint16
-        member _.byte           = Encoding.toIEncoding Encoding.byte
-        member _.sbyte          = Encoding.toIEncoding Encoding.sbyte
-        member _.char           = Encoding.toIEncoding Encoding.char
-        member _.bigint         = Encoding.toIEncoding Encoding.bigint
-        member _.guid           = Encoding.toIEncoding Encoding.guid
+            | Some DateTimeContents.Date -> Encoding.date
+            | Some DateTimeContents.Time -> Encoding.time
+            | _                          -> Encoding.dateTime
+        static member dateTimeOffset = Encoding.dateTimeOffset
+        static member timeSpan       = Encoding.timeSpan
+        static member decimal        = Encoding.decimal
+        static member float          = Encoding.float
+        static member float32        = Encoding.float32
+        static member int            = Encoding.int
+        static member uint32         = Encoding.uint32
+        static member int64          = Encoding.int64
+        static member uint64         = Encoding.uint64
+        static member int16          = Encoding.int16
+        static member uint16         = Encoding.uint16
+        static member byte           = Encoding.byte
+        static member sbyte          = Encoding.sbyte
+        static member char           = Encoding.char
+        static member bigint         = Encoding.bigint
+        static member guid           = Encoding.guid
 
-        member _.result c1 c2     = Encoding.toIEncoding (Encoding.result   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
-        member _.choice c1 c2     = Encoding.toIEncoding (Encoding.choice   (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2))
-        member _.choice3 c1 c2 c3 = Encoding.toIEncoding (Encoding.choice3  (Encoding.ofIEncoding c1) (Encoding.ofIEncoding c2) (Encoding.ofIEncoding c3))
-        member _.option c         = Encoding.toIEncoding (Encoding.option   (Encoding.ofIEncoding c))
-        member _.array c          = Encoding.toIEncoding (Encoding.array    (Encoding.ofIEncoding c))
-        member _.propertyList c   = Encoding.toIEncoding (Encoding.propList (Encoding.ofIEncoding c))
+        static member result c1 c2     = Encoding.result   c1 c2
+        static member choice c1 c2     = Encoding.choice   c1 c2
+        static member choice3 c1 c2 c3 = Encoding.choice3  c1 c2 c3
+        static member option c         = Encoding.option   c
+        static member array c          = Encoding.array    c
+        static member propertyList c   = Encoding.propList c
         
-        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = Encoding.toIEncoding (Encoding.enumD <-> Encoding.enumE)
+        static member enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<Encoding, 't> = (Encoding.enumD <-> Encoding.enumE)
         
         member x.getCase =
             match x with

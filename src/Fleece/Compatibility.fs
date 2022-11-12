@@ -117,20 +117,20 @@ module Operators =
             | Error x -> Failure x
     
         module Fail =
-            let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Object", a))
-            let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
-            let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Number", a))
-            let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "String", a))
-            let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
+            let inline objExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Object", a))
+            let inline arrExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
+            let inline numExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Number", a))
+            let inline strExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "String", a))
+            let inline boolExpected (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
             let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (NullString typeof<'t>)
             let inline count e (x: 'Encoding) =
                 let a =
                     match (Codecs.array (Ok <-> id) |> Codec.decode) x with
                     | Ok a -> a
                     | Error x -> failwithf "Error on error handling: Expected an 'Encoding [] but received %A." x
-                Error (IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
+                Error (IndexOutOfRange (e, map (fun x -> x :> obj) a))
             let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (InvalidValue (typeof<'t>, v, o))
-            let propertyNotFound p (o: PropertyList<'Encoding>) = Error (PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
+            let propertyNotFound p (o: PropertyList<'Encoding>) = Error (PropertyNotFound (p, map (fun x -> x :> obj) o))
             let parseError s v : Result<'t, _> = Error (ParseError (typeof<'t>, s, v))
 
     
@@ -247,7 +247,7 @@ module Operators =
     let jgetWith ofJson (o: PropertyList<Encoding>) key =
         match o.[key] with
         | value::_ -> ofJson value
-        | _ -> Decode.Fail.propertyNotFound key (o |> map (fun x -> x :> IEncoding))
+        | _ -> Decode.Fail.propertyNotFound key (o |> map (fun x -> x :> obj))
 
     /// Tries to get a value from a Json object.
     /// Returns None if key is not present in the object.

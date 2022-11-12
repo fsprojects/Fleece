@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>netcoreapp31;net6</TargetFrameworks>
+        <TargetFrameworks>net7</TargetFrameworks>
         <DefineConstants>FSHARPDATA;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
