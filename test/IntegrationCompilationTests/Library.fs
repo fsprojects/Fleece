@@ -557,23 +557,19 @@ module TestInterfaces =
             return { Brand = brand; MaxSpeed = maxSpeed; MaxLoad = maxLoad; Extra = extra }
         }
 
-    let ivehicleObjCodec () = codec {
-        Car.ObjCodec ()   <.< ((fun (x: Car  ) -> Ok (x :> IVehicle)) <-> fun (x: IVehicle) -> x :?> Car)
-        Truck.ObjCodec () <.< ((fun (x: Truck) -> Ok (x :> IVehicle)) <-> fun (x: IVehicle) -> x :?> Truck) }
-    
     type Garage = { Vehicle : IVehicle } with
         static member get_Codec () = ofObjCodec <| codec {
-            let! v = jreqWith (ofObjCodec (ivehicleObjCodec ()))  "Vehicle" (fun x -> Some x.Vehicle)
+            let! v = jreq "Vehicle" (fun x -> Some x.Vehicle)
             return { Vehicle = v} }
     
     let car = Car (Brand = "Volvo", MaxSpeed = 120.0) :> IVehicle
     let truck =  { Brand = "Ford" ; MaxSpeed = 100.0; MaxLoad = 2500.0; Extra = (1, 2, 3, 4, 5, 6, 7, 8) } :> IVehicle
     let gcar =   { Vehicle = car }
     let gtruck = { Vehicle = truck }
-
     
-    
-    // do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemJson.Encoding    , Car> Car.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.Newtonsoft.Encoding    , Car> Car.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemTextJson.Encoding, Car> Car.ObjCodec
 
     let stjGCarJson = Fleece.SystemTextJson.Operators.toJsonText gcar
     let stjCarJson  = Fleece.SystemTextJson.Operators.toJsonText car
@@ -583,7 +579,9 @@ module TestInterfaces =
     Assert.StringContains ("", "brand", stjCarJson)
     Assert.StringContains ("", "brand", stjGCarJson)
 
-    // do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemJson.Encoding    , Truck> Truck.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.Newtonsoft.Encoding    , Truck> Truck.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemTextJson.Encoding, Truck> Truck.ObjCodec
 
     let stjGTruckJson = Fleece.SystemTextJson.Operators.toJsonText gtruck    
     let stjTruckJson  = Fleece.SystemTextJson.Operators.toJsonText truck
@@ -677,4 +675,3 @@ module TestDateTime =
     let json = toJsonText x
     Assert.Equal ("DateOnly", "\"2022-05-22\"", json)
 #endif
-    
