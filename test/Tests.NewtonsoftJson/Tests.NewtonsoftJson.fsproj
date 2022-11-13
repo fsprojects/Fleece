@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net7</TargetFramework>
         <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
+        <IsPackable>false</IsPackable>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
     <ItemGroup>

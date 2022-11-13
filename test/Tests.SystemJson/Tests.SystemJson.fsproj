@@ -3,6 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net7</TargetFrameworks>
+        <IsPackable>false</IsPackable>
         <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
