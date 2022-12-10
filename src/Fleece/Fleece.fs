@@ -153,11 +153,11 @@ and IEncoding =
     abstract getCase : string
 
 and DecodeError =
-    | EncodingCaseMismatch of DestinationType: Type * Source: IEncoding * ExpectedCase: string * ActualCase: string
+    | EncodingCaseMismatch of DestinationType: Type * Source: obj * ExpectedCase: string * ActualCase: string
     | NullString of DestinationType: Type
-    | IndexOutOfRange of Index: int * Source: IEncoding []
-    | InvalidValue of DestinationType: Type * Source: IEncoding * AdditionalInformation: string
-    | PropertyNotFound of Property: string * Source: PropertyList<IEncoding>
+    | IndexOutOfRange of Index: int * Source: obj []
+    | InvalidValue of DestinationType: Type * Source: obj * AdditionalInformation: string
+    | PropertyNotFound of Property: string * Source: PropertyList<obj>
     | ParseError of DestinationType: Type * Exception: exn * Source: string
     | Uncategorized of Description: string
     | Multiple of DecodeError list
@@ -170,12 +170,12 @@ with
         | _                      -> Multiple [x; y]
     override x.ToString () =
         match x with
-        | EncodingCaseMismatch (t, v: IEncoding, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
+        | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
         | NullString t            -> sprintf "Expected %s, got null" (string t)
         | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
         | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
         | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
-        | ParseError (t, s, v) -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
+        | ParseError (t, s, v)    -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
@@ -194,9 +194,9 @@ module Decode =
         let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
         let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
-        let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> IEncoding) a))
+        let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> obj) a))
         let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
-        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> IEncoding) o))
+        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> obj) o))
         
         /// <summary>Creates a parsing error.</summary>
         /// <param name="exn">The source parsing exception.</param>
@@ -664,7 +664,7 @@ module Internals =
                         let (t7: 't7 ParseResult) = (Codec.decode c7) (x.[6])
                         let (tr: 'tr ParseResult) = (Codec.decode cr) (x.[7..])
                         match tr with
-                        | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, Array.map (fun x -> x :> IEncoding) x))
+                        | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, Array.map (fun x -> x :> obj) x))
                         | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr)
                     (fun (t: 'tuple) ->
                         let t1 = (Codec.encode c1) (^tuple: (member Item1: 't1) t)
