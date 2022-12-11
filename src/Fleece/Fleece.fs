@@ -184,7 +184,7 @@ with
             | Inner (e, i) -> getPath (e::x) i
             | error        -> List.rev x, error //sprintf "Error while decoding element %s from %s" (string element) (string inner)
             let (path, error) = getPath [element] inner
-            sprintf "Error in [%s]:%s%s" (String.concat " => " path) "\r\n" (string error)
+            sprintf "Error in [%s]%s%s" (String.concat " => " path) "\r\n" (string error)
 
 
 /// Helpers to deal with Decode errors.
