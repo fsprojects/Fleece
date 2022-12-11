@@ -211,7 +211,7 @@ and Encoding (j: JsonElementOrWriter) =
         | x       -> Result.map Nullable (decoder x)
 
     static member arrayD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<'a array> = function
-        | JArray a -> Seq.traverse decoder a |> Result.map Seq.toArray
+        | JArray a -> traversei (fun i -> decoder >> Result.bindError (Decode.Fail.inner ($"#{i}"))) a |> Result.map Seq.toArray
         | a        -> Decode.Fail.arrExpected a
         
     static member propListD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<PropertyList<'a>> = function

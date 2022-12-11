@@ -160,6 +160,7 @@ and DecodeError =
     | PropertyNotFound of Property: string * Source: PropertyList<obj>
     | ParseError of DestinationType: Type * Exception: exn * Source: string
     | Uncategorized of Description: string
+    | Inner of Element: string * inner: DecodeError
     | Multiple of DecodeError list
 with
     static member (+) (x, y) =
@@ -173,11 +174,17 @@ with
         | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
         | NullString t            -> sprintf "Expected %s, got null" (string t)
         | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
-        | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else Environment.NewLine + s)
+        | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else "\r\n" + s)
         | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
         | ParseError (t, s, v)    -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
+        | Inner (element, inner)  ->
+            let rec getPath x = function
+            | Inner (e, i) -> getPath (e::x) i
+            | error        -> List.rev x, error //sprintf "Error while decoding element %s from %s" (string element) (string inner)
+            let (path, error) = getPath [element] inner
+            sprintf "Error in [%s]:%s%s" (String.concat " => " path) "\r\n" (string error)
 
 
 /// Helpers to deal with Decode errors.
@@ -195,6 +202,8 @@ module Decode =
         let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
         let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> obj) a))
+
+        let inline inner element inner = Error (DecodeError.Inner (element, inner))
         
         /// <summary>Creates an InvalidValue error.</summary>
         /// <param name="input">The source value used to create a type.</param>
@@ -885,7 +894,7 @@ module Operators =
         let getFromListWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key m
-            | value:: _ -> decoder value
+            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
         (fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode c) o prop)
         <-> (fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero)
 
@@ -893,7 +902,7 @@ module Operators =
         let getFromListWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key m
-            | value:: _ -> decoder value
+            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
         (fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop)
         <-> (fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero)
 
@@ -915,7 +924,7 @@ module Operators =
         let getFromListOptWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Ok z
-            | value:: _ -> decoder value
+            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
         (fun (o: PropertyList<'Encoding>) -> getFromListOptWith (Codec.decode c) o prop)
         <-> (fun x -> match getter x with (x: 'Value) when x <> z -> PropertyList [| prop, Codec.encode c x |] | _ -> zero)
 
@@ -925,7 +934,7 @@ module Operators =
         let getFromListOptWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Ok z
-            | value:: _ -> decoder value
+            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
         (fun (o: PropertyList<'Encoding>) -> getFromListOptWith (Codec.decode (c ())) o prop)
         <-> (fun x -> match getter x with (x: 'Value) when x <> z -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero)
 

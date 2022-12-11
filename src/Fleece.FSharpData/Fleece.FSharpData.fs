@@ -135,7 +135,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | x       -> Result.map Nullable (decoder x)
 
     static member arrayD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<'a array> = function
-        | JArray a -> Seq.traverse decoder a |> Result.map Seq.toArray
+        | JArray a -> traversei (fun i -> decoder >> Result.bindError (Decode.Fail.inner ($"#{i}"))) a |> Result.map Seq.toArray
         | a        -> Decode.Fail.arrExpected (Encoding a)
         
     static member propListD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<PropertyList<'a>> = function
