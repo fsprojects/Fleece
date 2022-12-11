@@ -674,7 +674,7 @@ module Internals =
                         let (t7: 't7 ParseResult) = (Codec.decode c7) (x.[6])
                         let (tr: 'tr ParseResult) = (Codec.decode cr) (x.[7..])
                         match tr with
-                        | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 8, Array.map (fun x -> x :> obj) x))
+                        | Error (DecodeError.IndexOutOfRange (i, _)) -> Error (DecodeError.IndexOutOfRange (i + 7, Array.map (fun x -> x :> obj) x))
                         | _ -> curryN (Tuple<_,_,_,_,_,_,_,_> >> retype : _ -> 'tuple) <!> t1 <*> t2 <*> t3 <*> t4 <*> t5 <*> t6 <*> t7 <*> tr)
                     (fun (t: 'tuple) ->
                         let t1 = (Codec.encode c1) (^tuple: (member Item1: 't1) t)
