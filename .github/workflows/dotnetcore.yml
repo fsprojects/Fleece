@@ -13,24 +13,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core 6
+    - name: Setup .NET Core 7
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.300
+        dotnet-version: 7.0.100
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build -c Release
     - name: Test SystemJson
-      run: dotnet run --no-build --project ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f net6
+      run: dotnet run --no-build --project ./test/Tests.SystemJson/Tests.SystemJson.fsproj -c Release -f net7
     - name: Test FSharpData
-      run: dotnet run --no-build --project ./test/Tests.FSharpData/Tests.FSharpData.fsproj -c Release -f net6
+      run: dotnet run --no-build --project ./test/Tests.FSharpData/Tests.FSharpData.fsproj -c Release -f net7
     - name: Test NewtonsoftJson
-      run: dotnet run --no-build --project ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f net6
+      run: dotnet run --no-build --project ./test/Tests.NewtonsoftJson/Tests.NewtonsoftJson.fsproj -c Release -f net7
     - name: Test SystemTextJson
-      run: dotnet run --no-build --project ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f net6
+      run: dotnet run --no-build --project ./test/Tests.SystemTextJson/Tests.SystemTextJson.fsproj -c Release -f net7
     - name: Test Integration
-      run: dotnet run --no-build --project ./test/IntegrationCompilationTests/IntegrationCompilationTests.fsproj -c Release -f net6
+      run: dotnet run --no-build --project ./test/IntegrationCompilationTests/IntegrationCompilationTests.fsproj -c Release -f net7
 
   docs:
 
@@ -38,10 +38,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET Core 6
+    - name: Setup .NET Core 7
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.300
+        dotnet-version: 7.0.100
     - name: Restore dotnet tools
       run: dotnet tool restore
     - name: Install dependencies

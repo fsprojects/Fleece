@@ -567,7 +567,9 @@ module TestInterfaces =
     let gcar =   { Vehicle = car }
     let gtruck = { Vehicle = truck }
     
-    do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Car> Car.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemJson.Encoding    , Car> Car.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.Newtonsoft.Encoding    , Car> Car.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemTextJson.Encoding, Car> Car.ObjCodec
 
     let stjGCarJson = Fleece.SystemTextJson.Operators.toJsonText gcar
     let stjCarJson  = Fleece.SystemTextJson.Operators.toJsonText car
@@ -577,7 +579,9 @@ module TestInterfaces =
     Assert.StringContains ("", "brand", stjCarJson)
     Assert.StringContains ("", "brand", stjGCarJson)
 
-    do ICodecInterface<IVehicle>.RegisterCodec<AdHocEncoding, Truck> Truck.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemJson.Encoding    , Truck> Truck.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.Newtonsoft.Encoding    , Truck> Truck.ObjCodec
+    do ICodecInterface<IVehicle>.RegisterCodec<Fleece.SystemTextJson.Encoding, Truck> Truck.ObjCodec
 
     let stjGTruckJson = Fleece.SystemTextJson.Operators.toJsonText gtruck    
     let stjTruckJson  = Fleece.SystemTextJson.Operators.toJsonText truck
@@ -671,4 +675,3 @@ module TestDateTime =
     let json = toJsonText x
     Assert.Equal ("DateOnly", "\"2022-05-22\"", json)
 #endif
-    

@@ -1,6 +1,7 @@
 namespace Fleece
 
 #nowarn "00042" // retype
+#nowarn "3535" // static interfaces
 
 open System
 open System.Collections.Generic
@@ -120,34 +121,34 @@ and Decoder<'S, 't> = ReaderT<'S, ParseResult<'t>>
 
 and ParseResult<'t> = Result<'t, DecodeError>
 
-and IEncoding =
-    abstract boolean        : Codec<IEncoding, bool>
-    abstract string         : Codec<IEncoding, string>
-    abstract dateTime       : ?dtc: DateTimeContents -> Codec<IEncoding, DateTime>
-    abstract dateTimeOffset : Codec<IEncoding, DateTimeOffset>
-    abstract timeSpan       : Codec<IEncoding, TimeSpan>
+and IEncoding<'Encoding> =
+    static abstract boolean        : Codec<'Encoding, bool>
+    static abstract string         : Codec<'Encoding, string>
+    static abstract dateTime       : ?dtc: DateTimeContents -> Codec<'Encoding, DateTime>
+    static abstract dateTimeOffset : Codec<'Encoding, DateTimeOffset>
+    static abstract timeSpan       : Codec<'Encoding, TimeSpan>
     
-    abstract decimal        : Codec<IEncoding, Decimal>
-    abstract float          : Codec<IEncoding, float>
-    abstract float32        : Codec<IEncoding, float32>
-    abstract int            : Codec<IEncoding, int>
-    abstract uint32         : Codec<IEncoding, uint32>
-    abstract int64          : Codec<IEncoding, int64>
-    abstract uint64         : Codec<IEncoding, uint64>
-    abstract int16          : Codec<IEncoding, int16>
-    abstract uint16         : Codec<IEncoding, uint16>
-    abstract byte           : Codec<IEncoding, byte>
-    abstract sbyte          : Codec<IEncoding, sbyte>
-    abstract char           : Codec<IEncoding, char>
-    abstract bigint         : Codec<IEncoding, bigint>
-    abstract guid           : Codec<IEncoding, Guid>
-    abstract result         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Result<'t1,'t2>>
-    abstract choice         : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, Choice<'t1,'t2>>
-    abstract choice3        : Codec<IEncoding, 't1> -> Codec<IEncoding, 't2> -> Codec<IEncoding, 't3> -> Codec<IEncoding, Choice<'t1,'t2,'t3>>
-    abstract option         : Codec<IEncoding, 't>  -> Codec<IEncoding, option<'t>>
-    abstract array          : Codec<IEncoding, 't>  -> Codec<IEncoding, 't []>
-    abstract propertyList   : Codec<IEncoding, 't>  -> Codec<IEncoding, PropertyList<'t>>
-    abstract enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> : unit -> Codec<IEncoding, 't>
+    static abstract decimal        : Codec<'Encoding, Decimal>
+    static abstract float          : Codec<'Encoding, float>
+    static abstract float32        : Codec<'Encoding, float32>
+    static abstract int            : Codec<'Encoding, int>
+    static abstract uint32         : Codec<'Encoding, uint32>
+    static abstract int64          : Codec<'Encoding, int64>
+    static abstract uint64         : Codec<'Encoding, uint64>
+    static abstract int16          : Codec<'Encoding, int16>
+    static abstract uint16         : Codec<'Encoding, uint16>
+    static abstract byte           : Codec<'Encoding, byte>
+    static abstract sbyte          : Codec<'Encoding, sbyte>
+    static abstract char           : Codec<'Encoding, char>
+    static abstract bigint         : Codec<'Encoding, bigint>
+    static abstract guid           : Codec<'Encoding, Guid>
+    static abstract result         : Codec<'Encoding, 't1> -> Codec<'Encoding, 't2> -> Codec<'Encoding, Result<'t1,'t2>>
+    static abstract choice         : Codec<'Encoding, 't1> -> Codec<'Encoding, 't2> -> Codec<'Encoding, Choice<'t1,'t2>>
+    static abstract choice3        : Codec<'Encoding, 't1> -> Codec<'Encoding, 't2> -> Codec<'Encoding, 't3> -> Codec<'Encoding, Choice<'t1,'t2,'t3>>
+    static abstract option         : Codec<'Encoding, 't>  -> Codec<'Encoding, option<'t>>
+    static abstract array          : Codec<'Encoding, 't>  -> Codec<'Encoding, 't []>
+    static abstract propertyList   : Codec<'Encoding, 't>  -> Codec<'Encoding, PropertyList<'t>>
+    static abstract enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> : unit -> Codec<'Encoding, 't>
 
     /// Returns a string representing the internal "case" (or type) of the encoding (ie: Array, Object, ... )
     abstract getCase : string
@@ -170,7 +171,7 @@ with
         | _                      -> Multiple [x; y]
     override x.ToString () =
         match x with
-        | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
+        | EncodingCaseMismatch (t, v, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
         | NullString t            -> sprintf "Expected %s, got null" (string t)
         | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
         | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
@@ -188,11 +189,11 @@ module Decode =
         | Error x -> Failure x
 
     module Fail =
-        let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Object", a))
-        let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
-        let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Number", a))
-        let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
-        let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
+        let inline objExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Object", a))
+        let inline arrExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
+        let inline numExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Number", a))
+        let inline strExpected  (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
+        let inline boolExpected (v: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> = let a = v.getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
         let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> obj) a))
         let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
@@ -205,79 +206,6 @@ module Decode =
         let parseError exn value : Result<'t, _> = Error (DecodeError.ParseError (typeof<'t>, exn, value))
 
 
-[<Struct>]
-type AdHocEncoding = AdHocEncoding of AdHocEncodingPassing: (IEncoding -> IEncoding) with
-
-    static member ofIEncoding (c1: Codec<IEncoding, 'T>) : _ -> Codec<IEncoding, 'T> =
-        let dec1 (x: IEncoding)   = ReaderT.run c1.Decoder (AdHocEncoding (fun _ -> x) :> IEncoding)
-        let enc1 (i: IEncoding) v = let (AdHocEncoding x) = Const.run (c1.Encoder v) :?> AdHocEncoding in x i
-        let codec1 i = { Decoder = ReaderT dec1; Encoder = (enc1 i) >> Const }
-        codec1
-
-    static member ($) (_: AdHocEncoding, (x1, x2)                    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x)
-    static member ($) (_: AdHocEncoding, (x1, x2, x3)                ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x)
-    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4)            ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x)
-    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5)        ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x)
-    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5, x6)    ) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x, AdHocEncoding.ofIEncoding x6 x)
-    static member ($) (_: AdHocEncoding, (x1, x2, x3, x4, x5, x6, x7)) = fun x -> (AdHocEncoding.ofIEncoding x1 x, AdHocEncoding.ofIEncoding x2 x, AdHocEncoding.ofIEncoding x3 x, AdHocEncoding.ofIEncoding x4 x, AdHocEncoding.ofIEncoding x5 x, AdHocEncoding.ofIEncoding x6 x, AdHocEncoding.ofIEncoding x7 x)
-
-    /// Evals the IEncoding parameter to get a concrete Codec.
-    static member toIEncoding (codec: IEncoding -> Codec<IEncoding, 't>) : Codec<IEncoding, 't> =
-        {
-            Decoder = ReaderT (fun (x: IEncoding) ->
-                let (AdHocEncoding x) = x :?> AdHocEncoding
-                let i = x Unchecked.defaultof<_>
-                ReaderT.run (codec i).Decoder i)
-            Encoder = (fun x -> AdHocEncoding (fun i -> Const.run ((codec i).Encoder x)) :> IEncoding) >> Const
-        }
-
-    /// Same as toIEncoding but with one parameter.
-    static member toIEncoding1 (codec: IEncoding -> _) codec1 =
-        let codec1 x = AdHocEncoding.ofIEncoding codec1 x
-        let codec s = (codec s) (codec1 s)
-        AdHocEncoding.toIEncoding codec
-
-    /// Same as toIEncoding but with many parameters in tupled form.
-    static member inline toIEncodingN (codec: IEncoding -> _) tupledCodecs =
-        let codecs = Unchecked.defaultof<AdHocEncoding> $ tupledCodecs
-        let codec s = uncurryN (codec s) (codecs s)
-        AdHocEncoding.toIEncoding codec
-
-    interface IEncoding with
-        member _.boolean        = AdHocEncoding.toIEncoding (fun x -> x.boolean)
-        member _.string         = AdHocEncoding.toIEncoding (fun x -> x.string)
-        member _.dateTime ?dtc  = AdHocEncoding.toIEncoding (fun x -> match dtc with Some d -> x.dateTime d | None -> x.dateTime ())
-        member _.dateTimeOffset = AdHocEncoding.toIEncoding (fun x -> x.dateTimeOffset)
-        member _.timeSpan       = AdHocEncoding.toIEncoding (fun x -> x.timeSpan)
-        member _.decimal        = AdHocEncoding.toIEncoding (fun x -> x.decimal)
-        member _.float          = AdHocEncoding.toIEncoding (fun x -> x.float)
-        member _.float32        = AdHocEncoding.toIEncoding (fun x -> x.float32)
-        member _.int            = AdHocEncoding.toIEncoding (fun x -> x.int)
-        member _.uint32         = AdHocEncoding.toIEncoding (fun x -> x.uint32)
-        member _.int64          = AdHocEncoding.toIEncoding (fun x -> x.int64)
-        member _.uint64         = AdHocEncoding.toIEncoding (fun x -> x.uint64)
-        member _.int16          = AdHocEncoding.toIEncoding (fun x -> x.int16)
-        member _.uint16         = AdHocEncoding.toIEncoding (fun x -> x.uint16)
-        member _.byte           = AdHocEncoding.toIEncoding (fun x -> x.byte)
-        member _.sbyte          = AdHocEncoding.toIEncoding (fun x -> x.sbyte)
-        member _.char           = AdHocEncoding.toIEncoding (fun x -> x.char)
-        member _.bigint         = AdHocEncoding.toIEncoding (fun x -> x.bigint)
-        member _.guid           = AdHocEncoding.toIEncoding (fun x -> x.guid)
-        member _.enum<'t, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType> () : Codec<IEncoding, 't> = AdHocEncoding.toIEncoding (fun x -> x.enum ())
-
-        member _.result c1 c2     = AdHocEncoding.toIEncodingN (fun x -> x.result)  (c1, c2)
-        member _.choice c1 c2     = AdHocEncoding.toIEncodingN (fun x -> x.choice)  (c1, c2)
-        member _.choice3 c1 c2 c3 = AdHocEncoding.toIEncodingN (fun x -> x.choice3) (c1, c2, c3)
-        member _.option c         = AdHocEncoding.toIEncoding1 (fun x -> x.option) c
-        member _.array c          = AdHocEncoding.toIEncoding1 (fun x -> x.array)  c
-        member _.propertyList c   = AdHocEncoding.toIEncoding1 (fun x -> x.propertyList) c
-
-        member x.getCase =
-            // Normally it won't get called as errors will access the getCase from the wrapped AdHocEncoding
-            let (AdHocEncoding f) = x
-            let i = f Unchecked.defaultof<IEncoding>
-            if not (Object.ReferenceEquals (i, null)) then i.getCase
-            else "Unknown case"
 
 /// Functions operating on Codecs
 module Codec =
@@ -318,16 +246,6 @@ module Codec =
                 | Error e -> Error e
                 | Ok a    -> Ok (f a))
             (encode field)
-
-    let downCast<'t, 'S when 'S :> IEncoding> (x: Codec<IEncoding, 't> ) : Codec<'S, 't> =
-        create
-            (fun (p: 'S) -> decode x (p :> IEncoding))
-            (fun (p: 't) -> encode x p :?> 'S)
-
-    let upCast<'t, 'S when 'S :> IEncoding> (x: Codec<'S, 't>) : Codec<IEncoding, 't> =
-        create
-            (fun (p: IEncoding) -> decode x (p :?> 'S))
-            (fun (p: 't) -> encode x p :> IEncoding)
 
     
     [<Obsolete("This function is no longer needed. You can safely remove it.")>]
@@ -376,55 +294,54 @@ type Codec<'S1, 'S2, 't1, 't2> with
 
 module Codecs =
 
-    let private instance<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = new 'Encoding ()
     let private (<->) decoder encoder : Codec<_, _> = Codec.create decoder encoder
 
-    let [<GeneralizableValue>] boolean<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.boolean        |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] bigint<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.bigint         |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] guid<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.guid           |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] char<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.char           |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] byte<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>           = instance<'Encoding>.byte           |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] sbyte<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.sbyte          |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] uint16<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.uint16         |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] uint32<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.uint32         |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] uint64<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.uint64         |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] int16<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.int16          |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] int<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>            = instance<'Encoding>.int            |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] int64<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.int64          |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] decimal<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.decimal        |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] float32<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>        = instance<'Encoding>.float32        |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] float<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>          = instance<'Encoding>.float          |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] string<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>         = instance<'Encoding>.string         |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] dateTime<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.dateTime ()    |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] dateTimeOffset<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.dateTimeOffset |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] timeSpan<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)>       = instance<'Encoding>.timeSpan       |> Codec.downCast : Codec<'Encoding, _>
-    let array        (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.array (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, array<'a>>
-    let list         (codec: Codec<'Encoding, 'a>) = (Ok << Array.toList <-> Array.ofList) >.> array codec
-    let set          (codec: Codec<'Encoding, 'a>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
-    let nonEmptyList (codec: Codec<'Encoding, 'a>) = (Array.toList >> NonEmptyList.tryOfList >> Option.toResultWith (DecodeError.Uncategorized "List is empty") <-> Array.ofSeq) >.> array codec
-    let nonEmptySet  (codec: Codec<'Encoding, 'a>) = (Set >> NonEmptySet.tryOfSet >> Option.toResultWith (DecodeError.Uncategorized "Set is empty") <-> Array.ofSeq) >.> array codec
-    let resizeArray  (codec: Codec<'Encoding, 'a>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
-    let propList     (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.propertyList (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, PropertyList<'a>>
-    let propMap      (codec: Codec<'Encoding, 'a>) = (Ok << Map.ofSeq << PropertyList.ToSeq <-> (Map.toArray >> PropertyList)) >.> propList codec
+    let [<GeneralizableValue>] boolean<'Encoding  when IEncoding<'Encoding>> = 'Encoding.boolean
+    let [<GeneralizableValue>] bigint<'Encoding   when IEncoding<'Encoding>> = 'Encoding.bigint
+    let [<GeneralizableValue>] guid<'Encoding     when IEncoding<'Encoding>> = 'Encoding.guid
+    let [<GeneralizableValue>] char<'Encoding     when IEncoding<'Encoding>> = 'Encoding.char
+    let [<GeneralizableValue>] byte<'Encoding     when IEncoding<'Encoding>> = 'Encoding.byte
+    let [<GeneralizableValue>] sbyte<'Encoding    when IEncoding<'Encoding>> = 'Encoding.sbyte
+    let [<GeneralizableValue>] uint16<'Encoding   when IEncoding<'Encoding>> = 'Encoding.uint16
+    let [<GeneralizableValue>] uint32<'Encoding   when IEncoding<'Encoding>> = 'Encoding.uint32
+    let [<GeneralizableValue>] uint64<'Encoding   when IEncoding<'Encoding>> = 'Encoding.uint64
+    let [<GeneralizableValue>] int16<'Encoding    when IEncoding<'Encoding>> = 'Encoding.int16
+    let [<GeneralizableValue>] int<'Encoding      when IEncoding<'Encoding>> = 'Encoding.int
+    let [<GeneralizableValue>] int64<'Encoding    when IEncoding<'Encoding>> = 'Encoding.int64
+    let [<GeneralizableValue>] decimal<'Encoding  when IEncoding<'Encoding>> = 'Encoding.decimal
+    let [<GeneralizableValue>] float32<'Encoding  when IEncoding<'Encoding>> = 'Encoding.float32
+    let [<GeneralizableValue>] float<'Encoding    when IEncoding<'Encoding>> = 'Encoding.float
+    let [<GeneralizableValue>] string<'Encoding   when IEncoding<'Encoding>> = 'Encoding.string
+    let [<GeneralizableValue>] dateTime<'Encoding when IEncoding<'Encoding>> = 'Encoding.dateTime ()
+    let [<GeneralizableValue>] dateTimeOffset<'Encoding when IEncoding<'Encoding>> = 'Encoding.dateTimeOffset
+    let [<GeneralizableValue>] timeSpan<'Encoding when IEncoding<'Encoding>> = 'Encoding.timeSpan
+    let array        (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = 'Encoding.array codec
+    let list         (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Ok << Array.toList <-> Array.ofList) >.> array codec
+    let set          (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Ok << Set <-> Array.ofSeq)           >.> array codec
+    let nonEmptyList (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Array.toList >> NonEmptyList.tryOfList >> Option.toResultWith (DecodeError.Uncategorized "List is empty") <-> Array.ofSeq) >.> array codec
+    let nonEmptySet  (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Set >> NonEmptySet.tryOfSet >> Option.toResultWith (DecodeError.Uncategorized "Set is empty") <-> Array.ofSeq) >.> array codec
+    let resizeArray  (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = Codec.compose (array codec) (Ok << ResizeArray <-> Array.ofSeq)
+    let propList     (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = 'Encoding.propertyList codec
+    let propMap      (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Ok << Map.ofSeq << PropertyList.ToSeq <-> (Map.toArray >> PropertyList)) >.> propList codec
     let propDictionary  (codec: Codec<'Encoding, 'a>) = (Ok << Dictionary.ofSeq << PropertyList.ToSeq <-> (Dictionary.toArray >> PropertyList)) >.> propList codec
-    let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (PropertyList.ToSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toArray >> PropertyList)) >.> propList codec    
-    let option   (codec: Codec<'Encoding, 'a>) = instance<'Encoding>.option (Codec.upCast codec) |> Codec.downCast : Codec<'Encoding, option<'a>>
-    let voption  (codec: Codec<'Encoding, 'a>) = (Ok << Option.toValueOption <-> Option.ofValueOption) >.> option codec : Codec<'Encoding, voption<'a>>
-    let nullable (codec: Codec<'Encoding, 'a>) = (Ok << Option.toNullable    <-> Option.ofNullable   ) >.> option codec : Codec<'Encoding, Nullable<'a>>
-    let result  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.result (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Result<'a,'b>>
-    let choice  (codec1: Codec<'Encoding, 'a>)  (codec2: Codec<'Encoding, 'b>) = instance<'Encoding>.choice (Codec.upCast codec1) (Codec.upCast codec2) |> Codec.downCast : Codec<'Encoding, Choice<'a,'b>>
-    let choice3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = instance<'Encoding>.choice3 (Codec.upCast codec1) (Codec.upCast codec2) (Codec.upCast codec3) |> Codec.downCast : Codec<'Encoding, _>
+    let nonEmptyPropMap (codec: Codec<'Encoding, 'a>) = (PropertyList.ToSeq >> Map.ofSeq >> NonEmptyMap.tryOfMap >> Option.toResultWith (DecodeError.Uncategorized "Map is empty") <-> (NonEmptyMap.toArray >> PropertyList)) >.> propList codec
+    let option   (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = 'Encoding.option codec : Codec<'Encoding, option<'a>>
+    let voption  (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Ok << Option.toValueOption <-> Option.ofValueOption) >.> option codec : Codec<'Encoding, voption<'a>>
+    let nullable (codec: Codec<'Encoding, 'a> when IEncoding<'Encoding>) = (Ok << Option.toNullable    <-> Option.ofNullable   ) >.> option codec : Codec<'Encoding, Nullable<'a>>
+    let result  (codec1: Codec<'Encoding, 'a> when IEncoding<'Encoding>)  (codec2: Codec<'Encoding, 'b>) = 'Encoding.result codec1 codec2 : Codec<'Encoding, Result<'a,'b>>
+    let choice  (codec1: Codec<'Encoding, 'a> when IEncoding<'Encoding>)  (codec2: Codec<'Encoding, 'b>) = 'Encoding.choice codec1 codec2 : Codec<'Encoding, Choice<'a,'b>>
+    let choice3 (codec1: Codec<'Encoding, 't1> when IEncoding<'Encoding>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) = 'Encoding.choice3 codec1 codec2 codec3 : Codec<'Encoding, _>
     
     #if NET6_0_OR_GREATER
-    let [<GeneralizableValue>] date<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = (Ok << DateOnly.FromDateTime <-> fun x -> x.ToDateTime (TimeOnly(0,0), DateTimeKind.Utc)) >.> instance<'Encoding>.dateTime DateTimeContents.Date |> Codec.downCast : Codec<'Encoding, _>
-    let [<GeneralizableValue>] time<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = (Ok << TimeOnly.FromDateTime <-> fun x -> DateTime x.Ticks)                               >.> instance<'Encoding>.dateTime DateTimeContents.Time |> Codec.downCast : Codec<'Encoding, _>
+    let [<GeneralizableValue>] date<'Encoding when IEncoding<'Encoding>> = (Ok << DateOnly.FromDateTime <-> fun x -> x.ToDateTime (TimeOnly(0,0), DateTimeKind.Utc)) >.> 'Encoding.dateTime DateTimeContents.Date : Codec<'Encoding, _>
+    let [<GeneralizableValue>] time<'Encoding when IEncoding<'Encoding>> = (Ok << TimeOnly.FromDateTime <-> fun x -> DateTime x.Ticks)                               >.> 'Encoding.dateTime DateTimeContents.Time : Codec<'Encoding, _>
     #endif
 
     let [<GeneralizableValue>]id<'T> : Codec<'T, 'T> = Ok <-> id
 
     [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
     module Internals =
-        let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) (a : 'Encoding []) = if length a <> c then Decode.Fail.count c a else t a
+        let inline createTuple c (t: 'Encoding [] -> _ when IEncoding<'Encoding>) (a : 'Encoding []) = if length a <> c then Decode.Fail.count c a else t a
 
         let ptuple1  (codec1: Codec<'Encoding, 't1>) =
             let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (decoder1 a.[0]) )
@@ -468,7 +385,7 @@ module Codecs =
         
     open Internals
     
-    let [<GeneralizableValue>] unit<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> =
+    let [<GeneralizableValue>] unit<'Encoding when IEncoding<'Encoding>> =
         let tuple0D : 'Encoding [] -> ParseResult<unit> = createTuple 0 (fun _ -> Ok ())
         let tuple0E () = [||]
         (tuple0D <-> tuple0E)
@@ -490,8 +407,8 @@ module Codecs =
     let vtuple6  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) = ((Ok << fun (x1, x2, x3, x4, x5, x6) -> struct (x1, x2, x3, x4, x5, x6)) <-> fun (struct (x1, x2, x3, x4, x5, x6)) -> (x1, x2, x3, x4, x5, x6)) >.> tuple6 codec1 codec2 codec3 codec4 codec5 codec6: Codec<'Encoding, _>
     let vtuple7  (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) (codec4: Codec<'Encoding, 't4>) (codec5: Codec<'Encoding, 't5>) (codec6: Codec<'Encoding, 't6>) (codec7: Codec<'Encoding, 't7>) = ((Ok << fun (x1, x2, x3, x4, x5, x6, x7) -> struct (x1, x2, x3, x4, x5, x6, x7)) <-> fun (struct (x1, x2, x3, x4, x5, x6, x7)) -> (x1, x2, x3, x4, x5, x6, x7)) >.> tuple7 codec1 codec2 codec3 codec4 codec5 codec6 codec7: Codec<'Encoding, _>
 
-    let enum<'Encoding, 't, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType and 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = instance<'Encoding>.enum () |> Codec.downCast : Codec<'Encoding, 't>
-    let [<GeneralizableValue>] base64Bytes<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> instance<'Encoding>.string |> Codec.downCast : Codec<'Encoding, _>
+    let enum<'Encoding, 't, 'u when 't : enum<'u> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType and IEncoding<'Encoding>> = 'Encoding.enum () : Codec<'Encoding, 't>
+    let [<GeneralizableValue>] base64Bytes<'Encoding when IEncoding<'Encoding>> = (Ok << Convert.FromBase64String <-> Convert.ToBase64String) >.> 'Encoding.string : Codec<'Encoding, _>
 
     #if !FABLE_COMPILER
     let arraySegment (codec: Codec<'Encoding, 'a>) = (Ok << ArraySegment<_> << Seq.toArray <-> ArraySegment.toArray) >.> array codec
@@ -604,7 +521,7 @@ module Internals =
         static member GetCodec (_: OpEncode, _: GetCodec, _, _: OpEncode) = invalidOp "Fleece internal error: this code should be unreachable." : Codec<'Encoding, OpEncode>
 
         /// Invoker for Codec
-        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
+        static member inline Invoke<'Encoding, 'Operation, .. when IEncoding<'Encoding>> (x: 't) : Codec<'Encoding, ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<GetCodec>, x)
 
@@ -612,7 +529,7 @@ module Internals =
         inherit GetCodec
      
         /// Invoker for Codec, originated from a Decoder Invoker.
-        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
+        static member inline Invoke<'Encoding, 'Operation, .. when IEncoding<'Encoding>> (x: 't) : Codec<'Encoding, ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<GetDec>, x)
 
@@ -620,30 +537,30 @@ module Internals =
         inherit GetDec
 
         /// Invoker for Codec, originated from an Encoder Invoker.
-        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding, ^t> =
+        static member inline Invoke<'Encoding, 'Operation, .. when IEncoding<'Encoding>> (x: 't) : Codec<'Encoding, ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetCodec: ^b * ^a* ^a * _ -> Codec<'Encoding, ^t>) b, a, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<GetEnc>, x)
 
     type GetCodec with
-        static member inline GetCodec (_: ValueTuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ValueTuple<'a>> = Codecs.vtuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
-        static member inline GetCodec (_: Tuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Tuple<'a>> = Codecs.tuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
-        static member inline GetCodec (_: 'a Id1    when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, _, _: 'Operation) = Ok (Id1<'a> Unchecked.defaultof<'a>), Map.empty
+        static member inline GetCodec (_: ValueTuple<'a> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ValueTuple<'a>> = Codecs.vtuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+        static member inline GetCodec (_: Tuple<'a> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Tuple<'a>> = Codecs.tuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+        static member inline GetCodec (_: 'a Id1    when IEncoding<'Encoding>, _: GetCodec, _, _: 'Operation) = Ok (Id1<'a> Unchecked.defaultof<'a>), Map.empty
 
     
     type GetArrCodec =
         interface IDefault0
 
-        static member inline GetArrCodec (_: Id2<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], Id2<'a>> = Unchecked.defaultof<_>
+        static member inline GetArrCodec (_: Id2<'a> when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], Id2<'a>> = Unchecked.defaultof<_>
 
-        static member inline GetArrCodec (_: Tuple<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], Tuple<'a>> =
+        static member inline GetArrCodec (_: Tuple<'a> when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], Tuple<'a>> =
             Codecs.Internals.ptuple1 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 
-        static member inline Invoke<'Encoding, 'Operation, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : Codec<'Encoding [], ^t> =
+        static member inline Invoke<'Encoding, 'Operation, .. when IEncoding<'Encoding>> (x: 't) : Codec<'Encoding [], ^t> =
             let inline call (a: ^a, b: ^b) = ((^a or ^b) : (static member GetArrCodec: ^b * ^a * _ -> Codec<'Encoding [], ^t>) b, a, Unchecked.defaultof<'Operation>)
             call (Unchecked.defaultof<GetArrCodec>, x)
 
     type GetArrCodec with
-        static member inline GetArrCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) , _: 'GetArrCodec, _: 'Operation) : Codec<'Encoding [], 'tuple> =                
+        static member inline GetArrCodec (_:'tuple when IEncoding<'Encoding> , _: 'GetArrCodec, _: 'Operation) : Codec<'Encoding [], 'tuple> =                
             CodecCache<'Operation, 'Encoding [], 'tuple>.Run (fun () ->
                 let c1 = GetCodec.Invoke<   'Encoding, 'Operation, _> Unchecked.defaultof<'t1>
                 let c2 = GetCodec.Invoke<   'Encoding, 'Operation, _> Unchecked.defaultof<'t2>
@@ -679,34 +596,34 @@ module Internals =
 
 
     type GetArrCodec with
-        static member inline GetArrCodec (_: 'a * 'b                          when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], 'a * 'b                         > = (fun () -> Codecs.Internals.ptuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)                                                                                                                                                                                                                                                                                                                                           ) |> CodecCache<'Operation, 'Encoding [], _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c                     when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c                    > = (fun () -> Codecs.Internals.ptuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                         ) |> CodecCache<'Operation, 'Encoding [], _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd                when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd               > = (fun () -> Codecs.Internals.ptuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                       ) |> CodecCache<'Operation, 'Encoding [], _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e           when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e          > = (fun () -> Codecs.Internals.ptuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                     ) |> CodecCache<'Operation, 'Encoding [], _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f      when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f     > = (fun () -> Codecs.Internals.ptuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                   ) |> CodecCache<'Operation, 'Encoding [], _>.Run
-        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f * 'g> = (fun () -> Codecs.Internals.ptuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>) ) |> CodecCache<'Operation, 'Encoding [], _>.Run
+        static member inline GetArrCodec (_: 'a * 'b                          when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], 'a * 'b                         > = (fun () -> Codecs.Internals.ptuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)                                                                                                                                                                                                                                                                                                                                           ) |> CodecCache<'Operation, 'Encoding [], _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c                     when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c                    > = (fun () -> Codecs.Internals.ptuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                         ) |> CodecCache<'Operation, 'Encoding [], _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd                when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd               > = (fun () -> Codecs.Internals.ptuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                       ) |> CodecCache<'Operation, 'Encoding [], _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e           when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e          > = (fun () -> Codecs.Internals.ptuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                     ) |> CodecCache<'Operation, 'Encoding [], _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f      when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f     > = (fun () -> Codecs.Internals.ptuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                   ) |> CodecCache<'Operation, 'Encoding [], _>.Run
+        static member inline GetArrCodec (_: 'a * 'b * 'c * 'd * 'e * 'f * 'g when IEncoding<'Encoding>, _, _: 'Operation) : Codec<'Encoding [], 'a * 'b * 'c * 'd * 'e * 'f * 'g> = (fun () -> Codecs.Internals.ptuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>) ) |> CodecCache<'Operation, 'Encoding [], _>.Run
 
     
-    type GetCodec with static member inline GetCodec (_: Result<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Result<'a,'b>> = (fun () -> Codecs.result (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: Choice<'a, 'b> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b>> = (fun () -> Codecs.choice (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: Choice<'a, 'b, 'c> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b,'c>> = (fun () -> Codecs.choice3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: 'a voption  when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, voption<'a>>  = (fun () -> Codecs.voption  (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: 'a option   when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, option<'a>>   = (fun () -> Codecs.option   (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: 'a Nullable when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Nullable<'a>> = (fun () -> Codecs.nullable (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: NonEmptyList<'T> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyList<'T>> = (fun () -> Codecs.nonEmptyList (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'T>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Result<'a, 'b> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Result<'a,'b>> = (fun () -> Codecs.result (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Choice<'a, 'b> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b>> = (fun () -> Codecs.choice (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Choice<'a, 'b, 'c> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Choice<'a,'b,'c>> = (fun () -> Codecs.choice3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a voption  when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, voption<'a>>  = (fun () -> Codecs.voption  (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a option   when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, option<'a>>   = (fun () -> Codecs.option   (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: 'a Nullable when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Nullable<'a>> = (fun () -> Codecs.nullable (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: NonEmptyList<'T> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyList<'T>> = (fun () -> Codecs.nonEmptyList (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'T>)) |> CodecCache<'Operation, 'Encoding, _>.Run
 
     type GetCodec with
-        static member inline GetCodec (_: 'a array  when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, array<'a>> = Codecs.array (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
+        static member inline GetCodec (_: 'a array  when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, array<'a>> = Codecs.array (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
 
         #if !FABLE_COMPILER
-        static member inline GetCodec (_: ArraySegment<'a>  when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ArraySegment<'a>> = (fun () -> Codecs.arraySegment (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetCodec (_: ArraySegment<'a>  when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ArraySegment<'a>> = (fun () -> Codecs.arraySegment (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
         #endif
 
-    type GetCodec with static member inline GetCodec (_: list<'a>        when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _          , c, _: 'Operation) : Codec<'Encoding, list<'a>>        = (fun () -> Codecs.list        (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: Set<'a>         when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>         = (fun () -> Codecs.set         (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>> = (fun () -> Codecs.nonEmptySet (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: list<'a>        when IEncoding<'Encoding>, _          , c, _: 'Operation) : Codec<'Encoding, list<'a>>        = (fun () -> Codecs.list        (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: Set<'a>         when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Set<'a>>         = (fun () -> Codecs.set         (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: NonEmptySet<'a> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptySet<'a>> = (fun () -> Codecs.nonEmptySet (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
     type GetCodec with
-        static member inline GetCodec (_: Map<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Map<'K, 'V>> =
+        static member inline GetCodec (_: Map<'K, 'V> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Map<'K, 'V>> =
             fun () ->
                 match typeof<'K> with
                 | t when t = typeof<string> 
@@ -715,11 +632,11 @@ module Internals =
             |> CodecCache<'Operation, 'Encoding, _>.Run
         
     type GetCodec with
-        static member inline GetCodec (_: PropertyList<'a> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, PropertyList<'a>> =
+        static member inline GetCodec (_: PropertyList<'a> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, PropertyList<'a>> =
             fun () -> Codecs.propList (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)
             |> CodecCache<'Operation, 'Encoding, _>.Run
 
-        static member inline GetCodec (_: NonEmptyMap<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyMap<'K, 'V>> =
+        static member inline GetCodec (_: NonEmptyMap<'K, 'V> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, NonEmptyMap<'K, 'V>> =
             fun () -> 
                 match typeof<'K> with
                 | t when t = typeof<string> 
@@ -727,7 +644,7 @@ module Internals =
                 | _ -> Codecs.nonEmptyMap     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'K>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>)
             |> CodecCache<'Operation, 'Encoding, _>.Run
 
-        static member inline GetCodec (_: Dictionary<'K, 'V> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Dictionary<'K, 'V>> =
+        static member inline GetCodec (_: Dictionary<'K, 'V> when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, Dictionary<'K, 'V>> =
             fun () ->
                 match typeof<'K> with
                 | t when t = typeof<string> 
@@ -735,36 +652,32 @@ module Internals =
                 | _ -> Codecs.dictionary     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'K>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'V>)
             |> CodecCache<'Operation, 'Encoding, _>.Run
         
-        static member inline GetCodec (_: ResizeArray<'a>         when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ResizeArray<'a>>        = (fun () -> Codecs.resizeArray     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
-        static member inline GetCodec (_: 'a Id2   when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, _, _: 'Operation)  = (Ok (Id2<'a> Unchecked.defaultof<'a>)), Map.empty
+        static member inline GetCodec (_: ResizeArray<'a>         when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, ResizeArray<'a>>        = (fun () -> Codecs.resizeArray     (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+        static member inline GetCodec (_: 'a Id2   when IEncoding<'Encoding>, _: GetCodec, _, _: 'Operation)  = (Ok (Id2<'a> Unchecked.defaultof<'a>)), Map.empty
 
-    type GetCodec with static member inline GetCodec (_: struct ('a * 'b                         ) when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b                         )> = (fun () -> Codecs.vtuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)                                                                                                                                                                                                                                                                                                                                          ) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c                    ) when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c                    )> = (fun () -> Codecs.vtuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                        ) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd               ) when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd               )> = (fun () -> Codecs.vtuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                      ) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd * 'e          ) when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd * 'e          )> = (fun () -> Codecs.vtuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                    ) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd * 'e * 'f     ) when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd * 'e * 'f     )> = (fun () -> Codecs.vtuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                  ) |> CodecCache<'Operation, 'Encoding, _>.Run
-    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd * 'e * 'f * 'g) when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd * 'e * 'f * 'g)> = (fun () -> Codecs.vtuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>)) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: struct ('a * 'b                         ) when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b                         )> = (fun () -> Codecs.vtuple2 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>)                                                                                                                                                                                                                                                                                                                                          ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c                    ) when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c                    )> = (fun () -> Codecs.vtuple3 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>)                                                                                                                                                                                                                                                                        ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd               ) when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd               )> = (fun () -> Codecs.vtuple4 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>)                                                                                                                                                                                                      ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd * 'e          ) when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd * 'e          )> = (fun () -> Codecs.vtuple5 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>)                                                                                                                                    ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd * 'e * 'f     ) when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd * 'e * 'f     )> = (fun () -> Codecs.vtuple6 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>)                                                                  ) |> CodecCache<'Operation, 'Encoding, _>.Run
+    type GetCodec with static member inline GetCodec (_: struct ('a * 'b * 'c * 'd * 'e * 'f * 'g) when IEncoding<'Encoding>, _: GetCodec, c, _: 'Operation) : Codec<'Encoding, struct ('a * 'b * 'c * 'd * 'e * 'f * 'g)> = (fun () -> Codecs.vtuple7 (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'a>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'b>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'c>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'d>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'e>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'f>) (GetEnc.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'g>)) |> CodecCache<'Operation, 'Encoding, _>.Run
 
     type GetCodec with static member inline GetCodec (_: 't when 't : enum<_> and 't : (new : unit -> 't) and 't : struct and 't :> ValueType, _: GetCodec, c, _: 'Operation) = Codecs.enum
 
     type GetCodec with
 
         // Overload to handle user-defined interfaces
-        static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) =
+        static member inline GetCodec (_: 'Base when 'Base :> ICodecInterface<'Base>, _: IDefault4, _, _: 'Operation) : Codec<'Encoding, 'Base> when IEncoding<'Encoding> =
             fun () ->
                 match CodecCollection<'Encoding, 'Base>.GetSubtypes |> NonEmptySeq.tryOfSeq with
-                | None ->
-                    match CodecCollection<AdHocEncoding, 'Base>.GetSubtypes |> NonEmptySeq.tryOfSeq with
-                    | None -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
-                    | Some codecs ->
-                        (codecs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id |> Codec.upCast |> AdHocEncoding.ofIEncoding) (new 'Encoding () :> IEncoding) |> Codec.downCast<_, 'Encoding>
+                | None -> failwithf "Unexpected error: codec list is empty for interface %A to Encoding %A." typeof<'Base> typeof<'Encoding>
                 | Some cs -> cs |> map (fun (KeyValue(_, x)) -> x ()) |> choice >.> Codecs.propList Codecs.id
             |> CodecCache<'Operation, 'Encoding, _>.RunForInterfaces
 
     type GetCodec with
 
         // Overload to "passthrough" an IEncoding
-        static member GetCodec (_: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: IDefault3, _, _: 'Operation) = Codecs.id : Codec<'Encoding, 'Encoding>
+        static member GetCodec (_: 'Encoding when IEncoding<'Encoding>, _: IDefault3, _, _: 'Operation) = Codecs.id : Codec<'Encoding, 'Encoding>
     
         // Main overload for external classes
         static member inline GetCodec (_: 'T, _: IDefault3, _, _: 'Operation) : Codec<'Encoding, 'T> =
@@ -790,7 +703,7 @@ module Internals =
             |> CodecCache<'Operation, 'Encoding, 'T>.Run
 
         // For tuples
-        static member inline GetCodec (_:'tuple when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding), _: IDefault8, c, _: 'Operation) : Codec<'Encoding, _> =
+        static member inline GetCodec (_:'tuple when IEncoding<'Encoding>, _: IDefault8, c, _: 'Operation) : Codec<'Encoding, _> =
             let _f t = (^tuple: (member Item1: 't1) t)
             GetArrCodec.Invoke<'Encoding, 'Operation, _> Unchecked.defaultof<'tuple> >.> Codecs.array Codecs.id
 
@@ -857,11 +770,11 @@ module Operators =
     // Extracts a decoder and an encoder function from a Codec.
     let (|Codec|) { Decoder = ReaderT x; Encoder = y } = (x, y >> Const.run)
 
-    let inline toEncoding< 'Encoding, .. when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> (x: 't) : 'Encoding =
+    let inline toEncoding< 'Encoding, .. when IEncoding<'Encoding>> (x: 't) : 'Encoding =
         let codec = GetEnc.Invoke<'Encoding, OpEncode, _> x
         Codec.encode codec x
 
-    let inline ofEncoding (x: 'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) : Result<'t, _> =
+    let inline ofEncoding (x: 'Encoding when IEncoding<'Encoding>) : Result<'t, _> =
         let codec = GetDec.Invoke<'Encoding, OpDecode, _> Unchecked.defaultof<'t>
         Codec.decode codec x
             
@@ -888,7 +801,7 @@ module Operators =
         <-> (fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero)
 
     /// Derive automatically a Codec from the type, based on GetCodec / Codec static members.
-    let inline defaultCodec<'Encoding, ^t when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding) and (GetCodec or ^t) : (static member GetCodec: ^t * GetCodec * GetCodec * OpCodec -> Codec<'Encoding, ^t>)> =
+    let inline defaultCodec<'Encoding, ^t when IEncoding<'Encoding> and (GetCodec or ^t) : (static member GetCodec: ^t * GetCodec * GetCodec * OpCodec -> Codec<'Encoding, ^t>)> =
         GetCodec.Invoke<'Encoding, OpCodec, 't> Unchecked.defaultof<'t>
 
 
@@ -933,7 +846,7 @@ module Operators =
     [<Obsolete("Use PropertyList instead.")>]
     let dictAsProps (x: IReadOnlyDictionary<string, 'Encoding>) = x |> Seq.map (|KeyValue|) |> Array.ofSeq |> PropertyList
 
-    let JNull<'Encoding when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)> : 'Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
+    let JNull<'Encoding when IEncoding<'Encoding>> : 'Encoding = (Codecs.option Codecs.unit |> Codec.encode) None
     let JBool   x = (Codecs.boolean |> Codec.encode) x
     let JNumber x = (Codecs.decimal |> Codec.encode) x
     let JString x = (Codecs.string  |> Codec.encode) x

@@ -10,8 +10,8 @@
         <WarningLevel>3</WarningLevel>
       <OtherFlags>--nowarn:3186 $(OtherFlags)</OtherFlags>
 
-        <VersionPrefix>0.10.0</VersionPrefix>
-        <VersionSuffix></VersionSuffix>
+        <VersionPrefix>0.11.0</VersionPrefix>
+        <VersionSuffix>static-interfaces.1</VersionSuffix>
         <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
         <Version Condition=" '$(VersionSuffix)' == '' ">$(VersionPrefix)</Version>
         <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>

@@ -2,7 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>net6;net461</TargetFrameworks>
+        <TargetFrameworks>net7</TargetFrameworks>
+        <IsPackable>false</IsPackable>
         <DefineConstants>SYSTEMJSON;$(DefineConstants)</DefineConstants>
     </PropertyGroup>
     <ItemGroup>

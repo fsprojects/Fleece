@@ -2,8 +2,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFrameworks>netcoreapp31;net6</TargetFrameworks>
+        <TargetFramework>net7</TargetFramework>
         <DefineConstants>NEWTONSOFT;$(DefineConstants)</DefineConstants>
+        <IsPackable>false</IsPackable>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
     <ItemGroup>
