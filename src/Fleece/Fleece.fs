@@ -173,7 +173,7 @@ with
         | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
         | NullString t            -> sprintf "Expected %s, got null" (string t)
         | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
-        | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
+        | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else Environment.NewLine + s)
         | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
         | ParseError (t, s, v)    -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
         | Uncategorized str       -> str
@@ -195,8 +195,18 @@ module Decode =
         let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
         let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> obj) a))
-        let invalidValue (v: 'Encoding) o : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, v, o))
-        let propertyNotFound p (o: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (p, map (fun x -> x :> obj) o))
+        
+        /// <summary>Creates an InvalidValue error.</summary>
+        /// <param name="input">The source value used to create a type.</param>
+        /// <param name="message">An optional error message.</param>
+        /// <returns>The resulting DecodeError.</returns>
+        let invalidValue (input: 'Encoding) message : Result<'t, _> = Error (DecodeError.InvalidValue (typeof<'t>, input, message))
+
+        /// <summary>Creates a PropertyNotFound error.</summary>
+        /// <param name="property">The property.</param>
+        /// <param name="propList">The property list where the property was not found.</param>
+        /// <returns>The resulting DecodeError.</returns>
+        let propertyNotFound property (propList: PropertyList<'Encoding>) = Error (DecodeError.PropertyNotFound (property, map (fun x -> x :> obj) propList))
         
         /// <summary>Creates a parsing error.</summary>
         /// <param name="exn">The source parsing exception.</param>
