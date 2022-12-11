@@ -140,7 +140,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | a        -> Decode.Fail.arrExpected (Encoding a)
         
     static member propListD (decoder: JsonValue -> ParseResult<'a>) : JsonValue -> ParseResult<PropertyList<'a>> = function
-        | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
+        | JObject o -> traversei (fun i -> decoder >> Result.bindError (Decode.Fail.inner i)) (o |> Seq.map (|KeyValue|) |> toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected (Encoding a)
 
     static member decimalD x = Encoding.tryRead<decimal> x

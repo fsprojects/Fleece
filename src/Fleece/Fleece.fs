@@ -61,6 +61,10 @@ type PropertyList<'Encoding> (properties: (string * 'Encoding) []) =
                 t.[i] <- (key, x)
                 PropertyList t
             | None   -> PropertyList (t.Properties ++ [|(key, x)|])
+        static member TraverseIndexed (t: PropertyList<'Enc>, f: string -> 'Enc -> _) =
+            t.Properties
+            |> traverse (fun (i, x) -> Result.map (fun x -> (i, x)) (f i x))
+            |> Result.map PropertyList
 
 [<ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)>]
 module Helpers =

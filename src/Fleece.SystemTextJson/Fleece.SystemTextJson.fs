@@ -215,7 +215,7 @@ and Encoding (j: JsonElementOrWriter) =
         | a        -> Decode.Fail.arrExpected a
         
     static member propListD (decoder: Encoding -> ParseResult<'a>) : Encoding -> ParseResult<PropertyList<'a>> = function
-        | JObject o -> Seq.traverse decoder (IReadOnlyDictionary.values o) |> Result.map (fun values -> Seq.zip (IReadOnlyDictionary.keys o) values |> Seq.toArray |> PropertyList)
+        | JObject o -> traversei (fun i -> decoder >> Result.bindError (Decode.Fail.inner i)) (o |> Seq.map (|KeyValue|) |> toArray |> PropertyList)
         | a         -> Decode.Fail.objExpected a
 
     static member decimalD x = Encoding.tryRead<decimal> x
