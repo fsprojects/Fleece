@@ -176,7 +176,7 @@ with
         | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
         | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else " " + s)
         | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
-        | ParseError (t, s, v) -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
+        | ParseError (t, s, v)    -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
 
