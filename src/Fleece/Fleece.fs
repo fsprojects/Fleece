@@ -446,18 +446,18 @@ module Codecs =
         let inline createTuple c (t: 'Encoding [] -> _ when 'Encoding :> IEncoding and 'Encoding : (new : unit -> 'Encoding)) (a : 'Encoding []) = if length a <> c then Decode.Fail.count c a else t a
 
         let ptuple1  (codec1: Codec<'Encoding, 't1>) =
-            let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (Result.bindError (Decode.Fail.inner $"#0") (decoder1 a.[0])))
+            let tuple1D (decoder1: 'Encoding -> ParseResult<'a>) : 'Encoding [] -> ParseResult<Tuple<'a>> = createTuple 1 (fun a -> Result.map (fun a -> (Tuple<_> a)) (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0"))
             let tuple1E (encoder1: 'a -> 'Encoding) (a: Tuple<_>) = [|encoder1 a.Item1|]
             tuple1D (Codec.decode codec1) <-> tuple1E (Codec.encode codec1)
 
         let ptuple2 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) =
-            let tuple2D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) : 'Encoding [] -> ParseResult<'a * 'b> = createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (Result.bindError (Decode.Fail.inner $"#0") (decoder1 a.[0])) (Result.bindError (Decode.Fail.inner $"#1") (decoder2 a.[1])))
+            let tuple2D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) : 'Encoding [] -> ParseResult<'a * 'b> = createTuple 2 (fun a -> Result.map2 (fun a b -> (a, b)) (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0") (decoder2 a.[1] </catch/> Decode.Fail.inner $"#1"))
             let tuple2E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (a, b) = [|encoder1 a; encoder2 b|]
             tuple2D (Codec.decode codec1) (Codec.decode codec2) <-> tuple2E (Codec.encode codec1) (Codec.encode codec2)
 
         let ptuple3 (codec1: Codec<'Encoding, 't1>) (codec2: Codec<'Encoding, 't2>) (codec3: Codec<'Encoding, 't3>) =
             let tuple3D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) : 'Encoding [] -> ParseResult<'a * 'b * 'c> =
-                createTuple 3 (fun a -> Result.map3 (fun a b c -> (a, b, c)) (Result.bindError (Decode.Fail.inner $"#0") (decoder1 a.[0])) (Result.bindError (Decode.Fail.inner $"#1") (decoder2 a.[1])) (Result.bindError (Decode.Fail.inner $"#2") (decoder3 a.[2])))
+                createTuple 3 (fun a -> Result.map3 (fun a b c -> (a, b, c)) (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0") (decoder2 a.[1] </catch/> Decode.Fail.inner $"#1") (decoder3 a.[2] </catch/> Decode.Fail.inner $"#2"))
             let tuple3E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (a, b, c) = [|encoder1 a; encoder2 b; encoder3 c|]
             tuple3D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) <-> tuple3E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3)
 
@@ -465,10 +465,10 @@ module Codecs =
             let tuple4D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd> =
                 createTuple 4 (fun a ->
                     tuple4
-                    <!> (decoder1 a.[0] |> Result.bindError (Decode.Fail.inner $"#0"))
-                    <*> (decoder2 a.[1] |> Result.bindError (Decode.Fail.inner $"#1"))
-                    <*> (decoder3 a.[2] |> Result.bindError (Decode.Fail.inner $"#2"))
-                    <*> (decoder4 a.[3] |> Result.bindError (Decode.Fail.inner $"#3")))
+                    <!> (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0")
+                    <*> (decoder2 a.[1] </catch/> Decode.Fail.inner $"#1")
+                    <*> (decoder3 a.[2] </catch/> Decode.Fail.inner $"#2")
+                    <*> (decoder4 a.[3] </catch/> Decode.Fail.inner $"#3"))
             let tuple4E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (a, b, c, d) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d|]
             tuple4D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) <-> tuple4E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4)
 
@@ -476,11 +476,11 @@ module Codecs =
             let tuple5D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e> =
                 createTuple 5 (fun a ->
                     tuple5
-                    <!> (decoder1 a.[0] |> Result.bindError (Decode.Fail.inner $"#0"))
-                    <*> (decoder2 a.[1] |> Result.bindError (Decode.Fail.inner $"#1"))
-                    <*> (decoder3 a.[2] |> Result.bindError (Decode.Fail.inner $"#2"))
-                    <*> (decoder4 a.[3] |> Result.bindError (Decode.Fail.inner $"#3"))
-                    <*> (decoder5 a.[4] |> Result.bindError (Decode.Fail.inner $"#4")))
+                    <!> (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0")
+                    <*> (decoder2 a.[1] </catch/> Decode.Fail.inner $"#1")
+                    <*> (decoder3 a.[2] </catch/> Decode.Fail.inner $"#2")
+                    <*> (decoder4 a.[3] </catch/> Decode.Fail.inner $"#3")
+                    <*> (decoder5 a.[4] </catch/> Decode.Fail.inner $"#4"))
             let tuple5E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (a, b, c, d, e) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e|]
             tuple5D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) <-> tuple5E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5)
 
@@ -488,12 +488,12 @@ module Codecs =
             let tuple6D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f> =
                 createTuple 6 (fun a ->
                     tuple6
-                    <!> (decoder1 a.[0] |> Result.bindError (Decode.Fail.inner $"#0"))
-                    <*> (decoder2 a.[1] |> Result.bindError (Decode.Fail.inner $"#1"))
-                    <*> (decoder3 a.[2] |> Result.bindError (Decode.Fail.inner $"#2"))
-                    <*> (decoder4 a.[3] |> Result.bindError (Decode.Fail.inner $"#3"))
-                    <*> (decoder5 a.[4] |> Result.bindError (Decode.Fail.inner $"#4"))
-                    <*> (decoder6 a.[5] |> Result.bindError (Decode.Fail.inner $"#5")))
+                    <!> (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0")
+                    <*> (decoder2 a.[1] </catch/> Decode.Fail.inner $"#1")
+                    <*> (decoder3 a.[2] </catch/> Decode.Fail.inner $"#2")
+                    <*> (decoder4 a.[3] </catch/> Decode.Fail.inner $"#3")
+                    <*> (decoder5 a.[4] </catch/> Decode.Fail.inner $"#4")
+                    <*> (decoder6 a.[5] </catch/> Decode.Fail.inner $"#5"))
             let tuple6E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (a, b, c, d, e, f) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f|]
             tuple6D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) <-> tuple6E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6)
 
@@ -501,13 +501,13 @@ module Codecs =
             let tuple7D (decoder1: 'Encoding -> ParseResult<'a>) (decoder2: 'Encoding -> ParseResult<'b>) (decoder3: 'Encoding -> ParseResult<'c>) (decoder4: 'Encoding -> ParseResult<'d>) (decoder5: 'Encoding -> ParseResult<'e>) (decoder6: 'Encoding -> ParseResult<'f>) (decoder7: 'Encoding -> ParseResult<'g>) : 'Encoding [] -> ParseResult<'a * 'b * 'c * 'd * 'e * 'f * 'g> =
                 createTuple 7 (fun a ->
                     tuple7
-                    <!> (decoder1 a.[0] |> Result.bindError (Decode.Fail.inner $"#0"))
-                    <*> (decoder2 a.[1] |> Result.bindError (Decode.Fail.inner $"#1"))
-                    <*> (decoder3 a.[2] |> Result.bindError (Decode.Fail.inner $"#2"))
-                    <*> (decoder4 a.[3] |> Result.bindError (Decode.Fail.inner $"#3"))
-                    <*> (decoder5 a.[4] |> Result.bindError (Decode.Fail.inner $"#4"))
-                    <*> (decoder6 a.[5] |> Result.bindError (Decode.Fail.inner $"#5"))
-                    <*> (decoder7 a.[6] |> Result.bindError (Decode.Fail.inner $"#6")))
+                    <!> (decoder1 a.[0] </catch/> Decode.Fail.inner $"#0")
+                    <*> (decoder2 a.[1] </catch/> Decode.Fail.inner $"#1")
+                    <*> (decoder3 a.[2] </catch/> Decode.Fail.inner $"#2")
+                    <*> (decoder4 a.[3] </catch/> Decode.Fail.inner $"#3")
+                    <*> (decoder5 a.[4] </catch/> Decode.Fail.inner $"#4")
+                    <*> (decoder6 a.[5] </catch/> Decode.Fail.inner $"#5")
+                    <*> (decoder7 a.[6] </catch/> Decode.Fail.inner $"#6"))
             let tuple7E (encoder1: 'a -> 'Encoding) (encoder2: 'b -> 'Encoding) (encoder3: 'c -> 'Encoding) (encoder4: 'd -> 'Encoding) (encoder5: 'e -> 'Encoding) (encoder6: 'f -> 'Encoding) (encoder7: 'g -> 'Encoding) (a, b, c, d, e, f, g) = [|encoder1 a; encoder2 b; encoder3 c; encoder4 d; encoder5 e; encoder6 f; encoder7 g|]
             tuple7D (Codec.decode codec1) (Codec.decode codec2) (Codec.decode codec3) (Codec.decode codec4) (Codec.decode codec5) (Codec.decode codec6) (Codec.decode codec7) <-> tuple7E (Codec.encode codec1) (Codec.encode codec2) (Codec.encode codec3) (Codec.encode codec4) (Codec.encode codec5) (Codec.encode codec6) (Codec.encode codec7)
         
@@ -921,7 +921,7 @@ module Operators =
         let getFromListWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key m
-            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
+            | value:: _ -> decoder value </catch/> Decode.Fail.inner key
         (fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode c) o prop)
         <-> (fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode c x |] | _ -> zero)
 
@@ -929,7 +929,7 @@ module Operators =
         let getFromListWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Decode.Fail.propertyNotFound key m
-            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
+            | value:: _ -> decoder value </catch/> Decode.Fail.inner key
         (fun (o: PropertyList<'Encoding>) -> getFromListWith (Codec.decode (c ())) o prop)
         <-> (fun x -> match getter x with Some (x: 'Value) -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero)
 
@@ -951,7 +951,7 @@ module Operators =
         let getFromListOptWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Ok z
-            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
+            | value:: _ -> decoder value </catch/> Decode.Fail.inner key
         (fun (o: PropertyList<'Encoding>) -> getFromListOptWith (Codec.decode c) o prop)
         <-> (fun x -> match getter x with (x: 'Value) when x <> z -> PropertyList [| prop, Codec.encode c x |] | _ -> zero)
 
@@ -961,7 +961,7 @@ module Operators =
         let getFromListOptWith decoder (m: PropertyList<_>) key =
             match m.[key] with
             | []        -> Ok z
-            | value:: _ -> decoder value |> Result.bindError (Decode.Fail.inner key)
+            | value:: _ -> decoder value </catch/> Decode.Fail.inner key
         (fun (o: PropertyList<'Encoding>) -> getFromListOptWith (Codec.decode (c ())) o prop)
         <-> (fun x -> match getter x with (x: 'Value) when x <> z -> PropertyList [| prop, Codec.encode (c ()) x |] | _ -> zero)
 
