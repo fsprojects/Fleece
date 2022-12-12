@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <RepositoryUrl>https://github.com/fsprojects/Fleece</RepositoryUrl>
         <PackageProjectUrl>https://github.com/fsprojects/Fleece</PackageProjectUrl>
-        <Authors>Mauricio Scheffer,Lev Gorodinski,Oskar Gewalli, Gustavo P. Leon</Authors>
+        <PackageProjectUrl>https://github.com/fsprojects/Fleece</PackageProjectUrl>
+        <Authors>Mauricio Scheffer, Lev Gorodinski, Oskar Gewalli, Gustavo M. Wild</Authors>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>json fsharp</PackageTags>
-
         <WarningLevel>3</WarningLevel>
-      <OtherFlags>--nowarn:3186 $(OtherFlags)</OtherFlags>
-
+        <OtherFlags>--nowarn:3186 $(OtherFlags)</OtherFlags>
         <VersionPrefix>0.11.0-RC1</VersionPrefix>
         <VersionSuffix></VersionSuffix>
         <Version Condition=" '$(VersionSuffix)' != '' ">$(VersionPrefix)-$(VersionSuffix)</Version>
@@ -17,6 +16,9 @@
         <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
         <FileVersion>$(VersionPrefix).0</FileVersion>
     </PropertyGroup>
+    <ItemGroup>
+      <None Include="$(MSBuildThisFileDirectory)/README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0">
