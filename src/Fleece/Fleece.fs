@@ -175,19 +175,19 @@ with
         | _                      -> Multiple (nelist {x; y})
     override x.ToString () =
         match x with
-        | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %A as %s" (string expected) (string actual) v (string t)
-        | NullString t            -> sprintf "Expected %s, got null" (string t)
-        | IndexOutOfRange (e, a)  -> sprintf "Expected array with %i items, was: %A" e a
-        | InvalidValue (t, v, s)  -> sprintf "Value %A is invalid for %s%s" v (string t) (if String.IsNullOrEmpty s then "" else "\r\n" + s)
-        | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%A'" p o
-        | ParseError (t, s, v)    -> sprintf "Parsing error decoding %s as %s: %s" v (string t) s.Message
-        | Uncategorized str       -> str
-        | Multiple lst            -> NonEmptyList.map string lst |> String.concat "\r\n"
-        | Inner (element, inner)  ->
+        | EncodingCaseMismatch (t, source, expected, actual) -> sprintf "%s expected but got %s while decoding %A as %s" (string expected) (string actual) source (string t)
+        | NullString t                 -> sprintf "Expected %s, got null" (string t)
+        | IndexOutOfRange (e, source)  -> sprintf "Expected array with %i items, was: %A" e source
+        | InvalidValue (t, source, s)  -> sprintf "Value %A is invalid for %s%s" source (string t) (if String.IsNullOrEmpty s then "" else "\r\n" + s)
+        | PropertyNotFound (p, source) -> sprintf "Property: '%s' not found in object '%A'" p source
+        | ParseError (t, s, source)    -> sprintf "Parsing error decoding %s as %s: %s" source (string t) s.Message
+        | Uncategorized str            -> str
+        | Multiple errors              -> NonEmptyList.map string errors |> String.concat "\r\n"
+        | Inner (element, innerError)  ->
             let rec getPath x = function
             | Inner (e, i) -> getPath (e::x) i
             | error        -> List.rev x, error
-            let (path, error) = getPath [element] inner
+            let (path, error) = getPath [element] innerError
             sprintf "Error in [%s]%s%s" (String.concat " => " path) "\r\n" (string error)
 
 
@@ -199,11 +199,11 @@ module Decode =
         | Error x -> Failure x
 
     module Fail =
-        let inline objExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Object", a))
-        let inline arrExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Array" , a))
-        let inline numExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Number", a))
-        let inline strExpected  (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "String", a))
-        let inline boolExpected (v: 'Encoding) : Result<'t, _> = let a = (v :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, v, "Bool"  , a))
+        let inline objExpected  (source: 'Encoding) : Result<'t, _> = let a = (source :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, source, "Object", a))
+        let inline arrExpected  (source: 'Encoding) : Result<'t, _> = let a = (source :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, source, "Array" , a))
+        let inline numExpected  (source: 'Encoding) : Result<'t, _> = let a = (source :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, source, "Number", a))
+        let inline strExpected  (source: 'Encoding) : Result<'t, _> = let a = (source :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, source, "String", a))
+        let inline boolExpected (source: 'Encoding) : Result<'t, _> = let a = (source :> IEncoding).getCase in Error (DecodeError.EncodingCaseMismatch (typeof<'t>, source, "Bool"  , a))
         let [<GeneralizableValue>]nullString<'t> : Result<'t, _> = Error (DecodeError.NullString typeof<'t>)
         let inline count e (a: 'Encoding []) = Error (DecodeError.IndexOutOfRange (e, map (fun x -> x :> obj) a))
 
