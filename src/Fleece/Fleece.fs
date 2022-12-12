@@ -165,14 +165,14 @@ and DecodeError =
     | ParseError of DestinationType: Type * Exception: exn * Source: string
     | Uncategorized of Description: string
     | Inner of Element: string * inner: DecodeError
-    | Multiple of DecodeError list
+    | Multiple of DecodeError NonEmptyList
 with
     static member (+) (x, y) =
         match x, y with
-        | Multiple x, Multiple y -> Multiple (x @ y)
-        | Multiple x,  y         -> Multiple (x @ [y])
-        | x, Multiple  y         -> Multiple (x::y)
-        | _                      -> Multiple [x; y]
+        | Multiple x, Multiple y -> Multiple (x ++ y)
+        | Multiple x,  y         -> Multiple (x ++ nelist {y})
+        | x, Multiple  y         -> Multiple (nelist {x} ++ y)
+        | _                      -> Multiple (nelist {x; y})
     override x.ToString () =
         match x with
         | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %A as %s" (string expected) (string actual) v (string t)
@@ -182,7 +182,7 @@ with
         | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%A'" p o
         | ParseError (t, s, v)    -> sprintf "Parsing error decoding %s as %s: %s" v (string t) s.Message
         | Uncategorized str       -> str
-        | Multiple lst            -> List.map string lst |> String.concat "\r\n"
+        | Multiple lst            -> NonEmptyList.map string lst |> String.concat "\r\n"
         | Inner (element, inner)  ->
             let rec getPath x = function
             | Inner (e, i) -> getPath (e::x) i
