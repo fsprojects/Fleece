@@ -175,18 +175,18 @@ with
         | _                      -> Multiple [x; y]
     override x.ToString () =
         match x with
-        | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %s as %s" (string expected) (string actual) (string v) (string t)
+        | EncodingCaseMismatch (t, v: obj, expected, actual) -> sprintf "%s expected but got %s while decoding %A as %s" (string expected) (string actual) v (string t)
         | NullString t            -> sprintf "Expected %s, got null" (string t)
-        | IndexOutOfRange (e, a)  -> sprintf "Expected array with %s items, was: %s" (string e) (string a)
-        | InvalidValue (t, v, s)  -> sprintf "Value %s is invalid for %s%s" (string v) (string t) (if String.IsNullOrEmpty s then "" else "\r\n" + s)
-        | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%s'" p (string o)
-        | ParseError (t, s, v)    -> sprintf "Error decoding %s from %s: %s" v (string t) (string s)
+        | IndexOutOfRange (e, a)  -> sprintf "Expected array with %i items, was: %A" e a
+        | InvalidValue (t, v, s)  -> sprintf "Value %A is invalid for %s%s" v (string t) (if String.IsNullOrEmpty s then "" else "\r\n" + s)
+        | PropertyNotFound (p, o) -> sprintf "Property: '%s' not found in object '%A'" p o
+        | ParseError (t, s, v)    -> sprintf "Parsing error decoding %s as %s: %s" v (string t) s.Message
         | Uncategorized str       -> str
         | Multiple lst            -> List.map string lst |> String.concat "\r\n"
         | Inner (element, inner)  ->
             let rec getPath x = function
             | Inner (e, i) -> getPath (e::x) i
-            | error        -> List.rev x, error //sprintf "Error while decoding element %s from %s" (string element) (string inner)
+            | error        -> List.rev x, error
             let (path, error) = getPath [element] inner
             sprintf "Error in [%s]%s%s" (String.concat " => " path) "\r\n" (string error)
 
