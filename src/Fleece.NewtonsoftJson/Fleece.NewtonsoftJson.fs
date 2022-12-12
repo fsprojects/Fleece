@@ -79,7 +79,7 @@ open Internals
 
 type [<Struct>] Encoding = Encoding of JsonValue with
 
-    override this.ToString () = let (Encoding x) = this in x.ToString ()
+    override this.ToString () = let (Encoding x) = this in x.ToString Newtonsoft.Json.Formatting.Indented
         
     static member Parse (x: string) = Encoding (JsonValue.Parse x)
         
@@ -193,7 +193,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         | JString s    -> Ok s.[0]
         | a -> Decode.Fail.strExpected (Encoding a)
 
-    static member bigintD x = Encoding.tryRead<bigint>  x
+    static member bigintD x = Encoding.tryRead<bigint> x
 
     static member guidD x =
         match x with
@@ -383,7 +383,7 @@ type [<Struct>] Encoding = Encoding of JsonValue with
         member x.getCase =
             match x with
             | Encoding (JNull    ) -> "JNull"
-            | Encoding (JBool   _) -> "JBool" 
+            | Encoding (JBool   _) -> "JBool"
             | Encoding (JNumber _) -> "JNumber"
             | Encoding (JString _) -> "JString"
             | Encoding (JArray  _) -> "JArray"

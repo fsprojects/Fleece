@@ -391,55 +391,31 @@ let tests = [
             }
 
             test "DateTime" {
-                let expected = 
-                #if NEWTONSOFT
-                    "2000-03-01T16:23:34.000Z"
-                #else
-                    "\"2000-03-01T16:23:34.000Z\""
-                #endif
+                let expected = "\"2000-03-01T16:23:34.000Z\""
                 Assert.JSON(expected, DateTime(2000, 3, 1, 16, 23, 34))
             }
 
             test "DateTime with milliseconds" {
-                let expected = 
-                #if NEWTONSOFT
-                    "2000-03-01T16:23:34.123Z"
-                #else
-                    "\"2000-03-01T16:23:34.123Z\""
-                #endif
+                let expected = "\"2000-03-01T16:23:34.123Z\""
                 Assert.JSON(expected, DateTime(2000, 3, 1, 16, 23, 34, 123))
             }
 
             test "DateTimeOffset" {
                 let expected = 
-                #if NEWTONSOFT
-                    "2000-03-01T16:23:34.000+03:00"
-                #endif
-                #if FSHARPDATA
-                    "\"2000-03-01T16:23:34.000+03:00\""
-                #endif
-                #if SYSTEMJSON
-                    "\"2000-03-01T16:23:34.000+03:00\""
-                #endif
                 #if SYSTEMTEXTJSON
                     "\"2000-03-01T16:23:34.000\u002B03:00\""
+                #else
+                    "\"2000-03-01T16:23:34.000+03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, TimeSpan(3, 0, 0)))
             }
 
             test "DateTimeOffset with milliseconds" {
                 let expected = 
-                #if NEWTONSOFT
-                    "2000-03-01T16:23:34.078+03:00"
-                #endif
-                #if FSHARPDATA
-                    "\"2000-03-01T16:23:34.078+03:00\""
-                #endif
-                #if SYSTEMJSON
-                    "\"2000-03-01T16:23:34.078+03:00\""
-                #endif
                 #if SYSTEMTEXTJSON
                     "\"2000-03-01T16:23:34.078\u002B03:00\""
+                #else
+                    "\"2000-03-01T16:23:34.078+03:00\""
                 #endif
                 Assert.JSON(expected, DateTimeOffset(2000, 3, 1, 16, 23, 34, 78, TimeSpan(3, 0, 0)))
             }
@@ -498,12 +474,12 @@ let tests = [
                 let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200}}]\""
                 #endif
                 #if NEWTONSOFT
-                let expectedU = "[{bike:[]}]"
-                let expectedV = "[{motorBike:[]}]"
-                let expectedW = "[{car:Renault}]"
-                let expectedX = "[{van:[Fiat,5.8]}]"
-                let expectedY = "[{truck:{make:Ford,capacity:20.0}}]"
-                let expectedZ = "[{aircraft:{make:Airbus,capacity:200.0}}]"
+                let expectedU = "\"[{bike:[]}]\""
+                let expectedV = "\"[{motorBike:[]}]\""
+                let expectedW = "\"[{car:Renault}]\""
+                let expectedX = "\"[{van:[Fiat,5.8]}]\""
+                let expectedY = "\"[{truck:{make:Ford,capacity:20.0}}]\""
+                let expectedZ = "\"[{aircraft:{make:Airbus,capacity:200.0}}]\""
                 #endif
                 #if SYSTEMJSON
                 let expectedU = "\"[{bike:[]}]\""
@@ -629,7 +605,22 @@ let tests = [
                 if not ok then printfn "Got %A from %A" actual p
                 ok
 
+            let inline roundtripToTextEq (isEq: 'a -> 'a -> bool) p =
+                let actual = p |> toJsonText |> ofJsonText
+                let ok = 
+                    match actual with
+                    | Ok actual -> isEq actual p
+                    | _ -> false
+                if not ok then printfn "Got %A from %A" actual p
+                ok
+
             let inline roundtrip p = roundtripEq (=) p
+
+            #if NEWTONSOFT
+            let inline roundtripToText p = roundtripToTextEq (=) p
+            #else
+            let inline roundtripToText _ = true
+            #endif
 
             let inline eq (a: float) (b: float) = 
                 a.CompareTo(b) = 0
@@ -663,15 +654,18 @@ let tests = [
             #endif
             //yield testProperty "float32" (roundtrip<float32>)  // not handled by FsCheck
             yield testProperty "string" (roundtrip<string>)
+            yield testProperty "string" (roundtripToText<string>)
             yield testProperty "decimal" (roundtrip<decimal>)
             yield testProperty "DateTime" (roundtrip<DateTime>)
             yield testProperty "DateTimeOffset" (roundtrip<DateTimeOffset>)
             yield testProperty "char" (roundtrip<char>)
+            yield testProperty "char" (roundtripToText<char>)
             yield testProperty "byte" (roundtrip<byte>)
             yield testProperty "sbyte" (roundtrip<sbyte>)
             yield testProperty "int16" (roundtrip<int16>)
             yield testProperty "bigint" (roundtrip<bigint>)
             yield testProperty "Guid" (roundtrip<Guid>)
+            yield testProperty "Guid" (roundtripToText<Guid>)
             yield testProperty "attribute" (Prop.forAll attributeArb.Value roundtrip<Attribute>)
             yield testProperty "string list" (roundtrip<string list>)
             yield testProperty "string set" (roundtrip<string Set>)
