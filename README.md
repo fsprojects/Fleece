@@ -279,11 +279,12 @@ let colorEncoder = function
 let colorCodec () = colorDecoder <-> colorEncoder
     
 let carCodec () =
-    fun i c k -> { Id = i; Color = c; Kms = k }
-    |> withFields
-    |> jfieldWith Codecs.string "id"    (fun x -> x.Id)
-    |> jfieldWith (colorCodec ())    "color" (fun x -> x.Color)
-    |> jfieldWith Codecs.int    "kms"   (fun x -> x.Kms)
+    codec {
+        let! i = jreqWith Codecs.string "id"    (fun x -> Some x.Id)
+        and! c = jreqWith colorCodec    "color" (fun x -> Some x.Color)
+        and! k = jreqWith Codecs.int    "kms"   (fun x -> Some x.Kms)
+        return { Id = i; Color = c; Kms = k }
+    }
     |> Codec.compose (Codecs.propList Codecs.id)
 
 let car = { Id = "xyz"; Color = Red; Kms = 0 }
@@ -291,6 +292,13 @@ let car = { Id = "xyz"; Color = Red; Kms = 0 }
 let jsonCar : Fleece.SystemTextJson.Encoding = Codec.encode (carCodec ()) car
 // val jsonCar: SystemTextJson.Encoding = {"id":"xyz","color":"red","kms":0}
 ```
+
+### Json Lenses
+
+Json lenses allow to focus on a specific part of the json structure to perform operations like view, write and update.
+
+For a quick reference have a look at [this test file](https://github.com/fsprojects/Fleece/blob/master/test/Tests/Lenses.fs)
+
 
 ## Maintainer(s)
 

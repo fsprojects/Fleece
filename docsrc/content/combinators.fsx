@@ -6,16 +6,19 @@
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.dll"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.SystemJson.dll"
 
-open Fleece
-open Fleece.Operators
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
 
 (**
 ```f#
 #r "nuget: Fleece.SystemJson"
-open Fleece.SystemJson
 ```
+
+*)
+
+open Fleece
+open Fleece.SystemJson
+open Fleece.SystemJson.Operators
+
+(**
 
 ## Combinators
 
@@ -50,12 +53,13 @@ let colorEncoder = function
 let colorCodec = colorDecoder <-> colorEncoder
 
 let [<GeneralizableValue>]carCodec<'t> =
-    fun i c k -> { Id = i; Color = c; Kms = k }
-    |> withFields
-    |> jfieldWith Codecs.string "id"    (fun x -> x.Id)
-    |> jfieldWith colorCodec    "color" (fun x -> x.Color)
-    |> jfieldWith Codecs.int    "kms"   (fun x -> x.Kms)
-    |> Codec.compose jsonObjToValueCodec
+    codec {
+        let! i = jreqWith Codecs.string "id"    (fun x -> Some x.Id)
+        and! c = jreqWith colorCodec    "color" (fun x -> Some x.Color)
+        and! k = jreqWith Codecs.int    "kms"   (fun x -> Some x.Kms)
+        return { Id = i; Color = c; Kms = k }
+    }
+    |> Codec.compose (Codecs.propList Codecs.id)
 
 let car = { Id = "xyz"; Color = Red; Kms = 0 }
 

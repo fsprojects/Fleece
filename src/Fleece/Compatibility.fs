@@ -229,7 +229,8 @@ module Operators =
     /// A codec to encode a Json value to a Json text and the other way around.
     let jsonValueToTextCodec = (fun x -> try Ok (Encoding.Parse x) with e -> Decode.Fail.parseError e x) <-> (fun (x: Encoding) -> string x)
 
-    let inline parseJson (x: string) : ParseResult<'T> = Codec.decode jsonValueToTextCodec x >>= Operators.ofJson
+    let inline parseJson<'T when (Internals.GetDec or ^T) : (static member GetCodec: ^T * Internals.GetDec * Internals.GetDec * Internals.OpDecode -> Codec<Encoding, ^T>)> (x: string) : ParseResult<'T> =
+        Codec.decode jsonValueToTextCodec x >>= Operators.ofJson
 
     let inline jreq name getter = jreq name getter : Codec<PropertyList<Encoding>,_,_,_>
     let inline jopt name getter = jopt name getter : Codec<PropertyList<Encoding>,_,_,_>

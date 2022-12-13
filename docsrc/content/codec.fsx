@@ -6,21 +6,20 @@
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.dll"
 #r @"../../src/Fleece.SystemJson/bin/Release/netstandard2.0/Fleece.SystemJson.dll"
 
-open Fleece
-open Fleece.SystemJson
-open Fleece.SystemJson.Operators
-
-
 (**
 
 ## CODEC
 
 ```f#
 #r "nuget: Fleece.SystemJson"
+```
+*)
+
+open Fleece
 open Fleece.SystemJson
 open Fleece.SystemJson.Operators
-```
 
+(**
 For types that deserialize to Json Objets, typically (but not limited to) records, you can alternatively use codecs and have a single method which maps between fields and values.
 *)
 
@@ -31,8 +30,8 @@ type Person = {
     with
     static member JsonObjCodec =
         fun f l a c -> { name = (f, l); age = a; children = c }
-        <!> jreq  "firstName" (Some << fun x -> fst x.name)
-        <*> jreq  "lastName"  (Some << fun x -> snd x.name)
+        <!> jreq  "firstName" (fun x -> Some (fst x.name))
+        <*> jreq  "lastName"  (fun x -> Some (snd x.name))
         <*> jopt  "age"       (fun x -> x.age) // Optional fields: use 'jopt'
         <*> jreq  "children"  (fun x -> Some x.children)
 
@@ -40,7 +39,7 @@ type Person = {
 let p = {name = ("John", "Doe"); age = None; children = [{name = ("Johnny", "Doe"); age = Some 21; children = []}]}
 //printfn "%s" (string (toJson p))
 
-let john = parseJson<Person> """{
+let john = ofJsonText<Person> """{
     "children": [{
         "children": [],
         "age": 21,
@@ -52,7 +51,7 @@ let john = parseJson<Person> """{
 }"""
 
 (**
-If you prefer you can write the same with functions:
+If you prefer you can write the same with a codec computation expression:
 *)
 
 type PersonF = {
@@ -60,13 +59,13 @@ type PersonF = {
     age : int option
     children: PersonF list }
     with
-    static member JsonObjCodec =
-        fun f l a c -> { name = (f, l); age = a; children = c }
-        |> withFields
-        |> jfield    "firstName" (fun x -> fst x.name)
-        |> jfield    "lastName"  (fun x -> snd x.name)
-        |> jfieldOpt "age"       (fun x -> x.age)
-        |> jfieldWithLazy (fun () -> jsonValueCodec) "children"  (fun x -> x.children)
+    static member JsonObjCodec = codec {
+        let! f = jreq "firstName" (fun x -> Some (fst x.name))
+        and! l = jreq "lastName"  (fun x -> Some (snd x.name))
+        and! a = jopt "age"       (fun x -> x.age)
+        and! c = jreq "children"  (fun x -> Some x.children)
+        return { name = (f, l); age = a; children = c }
+    }
 
 (**
 Both approaches build a codec from the same pieces:
@@ -79,16 +78,16 @@ Discriminated unions can be modeled with alternatives:
 *)
 
 type Shape =
-    | Rectangle of width : float * length : float
-    | Circle of radius : float
-    | Prism of width : float * float * height : float
+    | Rectangle of width  : float * length : float
+    | Circle    of radius : float
+    | Prism     of width  : float * float * height : float
     with
         static member JsonObjCodec =
             Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
             <|> ( Circle <!> jreq "radius" (function Circle x -> Some x | _ -> None) )
             <|> ( Prism <!> jreq "prism"   (function Prism (x, y, z) -> Some (x, y, z) | _ -> None) )
 (**
-or using the jchoice combinator:
+or using the codec computation expression:
 *)
 
 type ShapeC =
@@ -96,13 +95,11 @@ type ShapeC =
     | Circle of radius : float
     | Prism of width : float * float * height : float
     with
-        static member JsonObjCodec =
-            jchoice
-                [
-                    Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
-                    Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
-                    Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
-                ]
+        static member JsonObjCodec = codec {
+            Rectangle <!> jreq "rectangle" (function Rectangle (x, y) -> Some (x, y) | _ -> None)
+            Circle    <!> jreq "radius"    (function Circle x -> Some x | _ -> None)
+            Prism     <!> jreq "prism"     (function Prism (x, y, z) -> Some (x, y, z) | _ -> None)
+        }
 
 (**
 What's happening here is that we're getting a Codec to/from a Json Object (not neccesarily a JsonValue) which Fleece is able to take it and fill the gap by composing it with a codec from JsonObject to/from JsonValue.
@@ -116,14 +113,12 @@ type CompassDirection =
     | South
     | West
     with
-        static member JsonObjCodec =
-            jchoice
-                [
-                    (fun () -> North) <!> jreq "north" (function North -> Some () | _ -> None)
-                    (fun () -> South) <!> jreq "south" (function South -> Some () | _ -> None)
-                    (fun () -> East) <!> jreq "east" (function East -> Some () | _ -> None)
-                    (fun () -> West) <!> jreq "west" (function West -> Some () | _ -> None)
-                ]
+        static member JsonObjCodec = codec {
+            (fun () -> North) <!> jreq "north" (function North -> Some () | _ -> None)
+            (fun () -> South) <!> jreq "south" (function South -> Some () | _ -> None)
+            (fun () -> East)  <!> jreq "east"  (function East  -> Some () | _ -> None)
+            (fun () -> West)  <!> jreq "west"  (function West  -> Some () | _ -> None)
+        }
 
 
 (**
@@ -152,51 +147,47 @@ let someShapes = """
 
 open FSharpPlus
 open FSharpPlus.Operators
-open FSharpPlus.Data
 
-open Fleece.Operators
 
 type ShapeD =
-    | Rectangle of width : float * length : float
-    | Circle of radius : float
-    | Prism of width : float * float * height : float
+    | Rectangle of width  : float * length : float
+    | Circle    of radius : float
+    | Prism     of width  : float * float * height : float
     with
         static member JsonObjCodec =
-            /// Derives a concrete field codec for a required field and value
+            /// Derives a field codec for a required field and value
             let inline jreqValue prop value codec =
                 let matchPropValue o =
                      match IReadOnlyDictionary.tryGetValue prop o with
-                     | Some a when (ofJson a) = Ok value -> Ok o
+                     | Some a when ofJson a = Ok value -> Ok o
                      | Some a -> Decode.Fail.invalidValue a value
-                     | None -> Decode.Fail.propertyNotFound prop o
-                Codec.ofConcrete codec
+                     | None   -> Decode.Fail.propertyNotFound prop o
+                codec
                 |> Codec.compose (
-                                    matchPropValue <->
-                                    fun (encoded: PropertyList<Encoding>) ->
-                                      if encoded.Count=0 then encoded // we have not encoded anything so no need to add property and value 
-                                      else PropertyList [|prop, toJson value|] ++ encoded
-                                 )
-                |> Codec.toConcrete
-
+                    matchPropValue <->
+                    fun (encoded: PropertyList<Encoding>) ->
+                        if encoded.Count = 0 then encoded // we have not encoded anything so no need to add property and value 
+                        else PropertyList [|prop, toJson value|] ++ encoded
+                    )
 
             jchoice
                 [
-                    fun w l -> Rectangle (w,l)
-                    <!> jreq "width" (function Rectangle(w, _) -> Some w | _ -> None)
+                    fun w l -> Rectangle (w, l)
+                    <!> jreq "width"  (function Rectangle(w, _) -> Some w | _ -> None)
                     <*> jreq "length" (function Rectangle(_, l) -> Some l | _ -> None)
                     |> jreqValue "type" "rectangle"
 
                     Circle
-                    <!> jreq "radius" (function Circle (r) -> Some r | _ -> None)
+                    <!> jreq "radius" (function Circle r -> Some r | _ -> None)
                     |> jreqValue "type" "circle"
 
-                    fun (w,w2) h -> Prism (w,w2,h)
-                    <!> jreq "width" (function Prism (x, y, _) -> Some (x, y) | _ -> None)
-                    <*> jreq "height" (function Prism (_, _, h) -> Some h | _ -> None)
+                    fun (w, w2) h -> Prism (w, w2, h)
+                    <!> jreq "width"  (function Prism (x, y, _) -> Some (x, y) | _ -> None)
+                    <*> jreq "height" (function Prism (_, _, h) -> Some h      | _ -> None)
                     |> jreqValue "type" "prism"
                 ]
 
-let parsedShapedD = parseJson<ShapeD list> someShapes
+let parsedShapedD = ofJsonText<ShapeD list> someShapes
 
 (**
 We can manipulate codecs by using functions in the Codec module. Here's an example:
@@ -207,22 +198,10 @@ let pf : PersonF= {name = ("John", "Doe"); age = None; children = [{name = ("Joh
 let personBytesCodec =
     let getString (bytes:byte array) = Encoding.UTF8.GetString bytes
     PersonF.JsonObjCodec
-    |> Codec.compose jsonObjToValueCodec    // this is the codec that fills the gap to/from JsonValue
-    |> Codec.compose jsonValueToTextCodec   // this is a codec between JsonValue and JsonText
-    |> Codec.invmap getString Encoding.UTF8.GetBytes    // This is a pair of of isomorphic functions
+    |> Codec.compose jsonObjToValueCodec               // this is the codec that fills the gap to/from JsonValue
+    |> Codec.compose jsonValueToTextCodec              // this is a codec between JsonValue and JsonText
+    |> Codec.invmap getString Encoding.UTF8.GetBytes   // This is a pair of of isomorphic functions
 
 let bytePerson = Codec.encode personBytesCodec pf
 // val bytePerson : byte [] = [|123uy; 13uy; 10uy; 32uy; 32uy; ... |]
 let p' = Codec.decode personBytesCodec bytePerson
-
-(**
-While if the type of codec is concrete then we need to convert it to before composing it
-*)
-
-let personBytesCodec2 =
-    let getString (bytes:byte array) = Encoding.UTF8.GetString bytes
-    Person.JsonObjCodec
-    |> Codec.ofConcrete
-    |> Codec.compose jsonObjToValueCodec    // this is the codec that fills the gap to/from JsonValue
-    |> Codec.compose jsonValueToTextCodec   // this is a codec between JsonValue and JsonText
-    |> Codec.invmap getString Encoding.UTF8.GetBytes    // This is a pair of of isomorphic functions
