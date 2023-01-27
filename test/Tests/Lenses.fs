@@ -277,8 +277,12 @@ module Specialized =
                     let expected = 123m
                     Assert.Equal("item", Some expected, actual)
                 }
-                test "example 3: read for missing index" {
+                test "example 3.1: read for missing index" {
                     let actual = JsonValue.Parse ("[1,2,3]") ^? (_jnth 4 << _JNumber)
+                    Assert.Equal("item", None, actual)
+                }
+                test "example 3.2: read for missing index" {
+                    let actual = JsonValue.Parse ("[1,2,3]") ^? _jnth 4
                     Assert.Equal("item", None, actual)
                 }
                 test "example 4: write" {
