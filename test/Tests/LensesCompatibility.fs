@@ -1,4 +1,4 @@
-module Tests.Lenses
+module Tests.LensesCompatibility
 open System
 open System.Collections.Generic
 open System.Linq
@@ -10,58 +10,50 @@ open FSharpPlus.Lens
 #if FSHARPDATA
 open FSharp.Data
 open Fleece.FSharpData
+open Fleece.FSharpData.Operators
 open Fleece.FSharpData.Lens
+
+type FdEncoding = Fleece.FSharpData.Encoding
+let JString = (JString >> FdEncoding.Unwrap)
 
 #endif
 
 
 #if NEWTONSOFT
 open Fleece.Newtonsoft
+open Fleece.Newtonsoft.Operators
 open Fleece.Newtonsoft.Lens
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
+
+type NsjEncoding = Fleece.Newtonsoft.Encoding
+let JString = (JString >> NsjEncoding.Unwrap)
 
 #endif
 
 #if SYSTEMJSON
 open System.Json
 open Fleece.SystemJson
+open Fleece.SystemJson.Operators
 open Fleece.SystemJson.Lens
+
+type SjEncoding = Fleece.SystemJson.Encoding
+let JString = (JString >> SjEncoding.Unwrap)
 
 #endif
 
 #if SYSTEMTEXTJSON
 open Fleece.SystemTextJson
+open Fleece.SystemTextJson.Operators
 open System.Text.Json
 open Fleece.SystemTextJson.Lens
+
+type StjEncoding = Fleece.SystemTextJson.Encoding
+let JString = (JString >> StjEncoding.Unwrap)
 
 #endif
 
 let strCleanUp x = System.Text.RegularExpressions.Regex.Replace(x, @"\s|\r\n?|\n", "")
-#if FSHARPDATA
-type FdEncoding = Fleece.FSharpData.Encoding
-let JString = (JString<FdEncoding> >> FdEncoding.Unwrap)
-
-#endif
-
-
-#if NEWTONSOFT
-type NsjEncoding = Fleece.Newtonsoft.Encoding
-let JString = (JString<NsjEncoding> >> NsjEncoding.Unwrap)
-
-#endif
-
-#if SYSTEMJSON
-type SjEncoding = Fleece.SystemJson.Encoding
-let JString = (JString<SjEncoding> >> SjEncoding.Unwrap)
-
-#endif
-
-#if SYSTEMTEXTJSON
-type StjEncoding = Fleece.SystemTextJson.Encoding
-let JString = (JString<StjEncoding> >> StjEncoding.Unwrap)
-
-#endif
 
 let tests = [
         testList "key" [
@@ -75,12 +67,8 @@ let tests = [
                 let expected = 200m
                 Assert.Equal("item", Some expected, actual)
             }
-            test "example 3.1: read with missing key" {
+            test "example 3: read with missing key" {
                 let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? (_jkey "c" << _JNumber)
-                Assert.Equal("item", None, actual)
-            }
-            test "example 3.2: read with missing key" {
-                let actual = JsonValue.Parse( "{\"a\": true, \"b\": 200}" ) ^? _jkey "c"
                 Assert.Equal("item", None, actual)
             }
             test "example 4.1: write with missing key" {
@@ -149,12 +137,8 @@ let tests = [
                 let expected = 123m
                 Assert.Equal("item", Some expected, actual)
             }
-            test "example 3.1: read for missing index" {
+            test "example 3: read for missing index" {
                 let actual = JsonValue.Parse ("[1,2,3]") ^? (_jnth 4 << _JNumber)
-                Assert.Equal("item", None, actual)
-            }
-            test "example 3.2: read for missing index" {
-                let actual = JsonValue.Parse ("[1,2,3]") ^? _jnth 4
                 Assert.Equal("item", None, actual)
             }
             test "example 4: write" {
