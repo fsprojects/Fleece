@@ -1138,12 +1138,12 @@ module Lens =
 
     /// Prism into an Json Object property over a JsonValue.
     let inline _jkey i =
-        let inline dkey i f t = map (fun x -> PropertyList.add i x t) (f (t.[i] |> function [] -> JNull | x::_ -> x))
+        let inline dkey i f t = map (fun x -> PropertyList.add i x t) (f (t.[i] |> function [] -> None | x::_ -> Some x))
         _JObject << dkey i
 
     /// Prism into an array index over a JsonValue.
     let inline _jnth i =
-        let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t |> Option.defaultValue JNull))
+        let inline dnth i f t = map (fun x -> t |> IReadOnlyList.trySetItem i x |> Option.defaultValue t) (f (IReadOnlyList.tryItem i t))
         _JArray << dnth i
 
     // Reimport some basic Lens operations from F#+
