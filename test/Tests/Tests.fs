@@ -717,6 +717,8 @@ let tests = [
 [<EntryPoint>]
 let main _ = 
     printfn "Running tests..."
+    let tests=
+        TestList (tests @ [testList "Lenses" Lenses.tests] @ [testList "LensesCompatibility" LensesCompatibility.tests])
 (*
     let tests = 
         tests 
@@ -729,7 +731,7 @@ let main _ =
                                     })
 *)
     Fleece.Config.codecCacheEnabled <- false
-    runParallel (TestList (tests @ Lenses.tests))
+    runParallel tests
     printfn "Running tests with cache enabled..."
     Fleece.Config.codecCacheEnabled <- true
-    runParallel (TestList (tests @ Lenses.tests))
+    runParallel tests 
