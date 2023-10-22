@@ -17,6 +17,10 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.300
+    - name: Set Timezone
+      uses: szenius/set-timezone@v1.2
+      with:
+        timezoneWindows: "Nepal Standard Time"
     - name: Install dependencies
       run: dotnet restore
     - name: Build
