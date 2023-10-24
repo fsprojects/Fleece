@@ -59,6 +59,38 @@ type Person with
             "children" .= x.Children
         ] 
 
+type Person2 = {
+    Name: string
+    Age: int
+    Gender: Gender
+}
+
+type Person2 with
+    static member Create name age gender = { Person2.Name = name; Age = age; Gender = gender; }
+
+    static member OfJson json = 
+        match json with
+        | JObject o -> 
+            let name = o .@ "name"
+            let age = o .@ "age"
+            let cgender = o .@ "gender"
+            let gender = 
+                match cgender with 
+                | Ok 0 -> Decode.Success Gender.Male 
+                | Ok 1 -> Decode.Success Gender.Female
+                | Ok x -> Decode.Fail.invalidValue (JString <| string x ) "Unexpected value"
+                | Error y -> Error y
+
+            Person2.Create <!> name <*> age <*> gender
+        | x -> Decode.Fail.objExpected x
+
+    static member ToJson (x: Person2) =
+        jobj [ 
+            "name" .= x.Name
+            "age" .= x.Age
+            "gender" .= (match x.Gender with |Gender.Male -> 0 | Gender.Female -> 1)
+        ] 
+
 type Attribute = {
     Name: string
     Value: string
@@ -324,6 +356,14 @@ let tests = [
                       ] }
                 Assert.Equal("Person", Some expectedPerson, Option.ofResult actual)
             }
+            test "Person2 different representation" {
+                let actual : Person2 ParseResult = parseJson """{"name": "John", "age": 44, "gender": 0}"""
+                let expectedPerson = 
+                    { Person2.Name = "John"
+                      Age = 44
+                      Gender = Gender.Male }
+                Assert.Equal("Person", Some expectedPerson, Option.ofResult actual)
+            }
             #if SYSTEMJSON
             test "DateTime with milliseconds" {
                 let actual : DateTime ParseResult = ofJson (Fleece.SystemJson.Encoding (JsonPrimitive "2014-09-05T04:38:07.862Z"))
@@ -441,22 +481,37 @@ let tests = [
                       ] }
                 #if NEWTONSOFT
                 let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if FSHARPDATA
                 let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMJSON
                 let expected = """{"age":44,"children":[{"age":5,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Female","name":"Katy"},{"age":7,"children":[],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"Johnny"}],"dob":"1975-01-01T00:00:00.000Z","gender":"Male","name":"John"}"""
-                Assert.JSON(expected, p)
                 #endif
                 #if SYSTEMTEXTJSON
                 let expected = """{"name":"John","age":44,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[{"name":"Katy","age":5,"gender":"Female","dob":"1975-01-01T00:00:00.000Z","children":[]},{"name":"Johnny","age":7,"gender":"Male","dob":"1975-01-01T00:00:00.000Z","children":[]}]}"""
-                Assert.JSON(expected, p)
                 #endif
+                Assert.JSON(expected, p)
             }
-
+            test "Person2" {
+                let p = 
+                    { Person2.Name = "John"
+                      Age = 44
+                      Gender = Gender.Male }
+                #if NEWTONSOFT
+                let expected = """{"name":"John","age":44,"gender":0}"""
+                #endif
+                #if FSHARPDATA
+                let expected = """{"name":"John","age":44,"gender":0}"""
+                #endif
+                #if SYSTEMJSON
+                let expected = """{"age":44,"gender":0,"name":"John"}"""
+                #endif
+                #if SYSTEMTEXTJSON
+                let expected = """{"name":"John","age":44,"gender":0}"""
+                #endif
+                Assert.JSON(expected, p)
+            }
             test "Vehicle" {
                 let u = [ Bike                       ] |> toJson |> string |> strCleanUpAll
                 let v = [ MotorBike ()               ] |> toJson |> string |> strCleanUpAll
